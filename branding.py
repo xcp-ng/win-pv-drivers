@@ -1,0 +1,3 @@
+branding = {
+    "manufacturer": "XCP-ng",
+}

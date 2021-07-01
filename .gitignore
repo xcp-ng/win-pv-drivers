@@ -1,0 +1,11 @@
+output/
+win-installer/
+win-xenbus/
+win-xenguestagent/
+win-xeniface/
+win-xennet/
+win-xenvbd/
+win-xenvif/
+win-xenvss/
+*.cer
+__pycache__/
