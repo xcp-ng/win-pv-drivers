@@ -7,12 +7,14 @@ import pprint
 import shutil
 import sys
 import tempfile
+import time
 from contextlib import contextmanager
 from subprocess import PIPE, SubprocessError, call, run, CompletedProcess
 from typing import Iterable, NoReturn, Optional
 from zipfile import ZipFile
 import branding
 
+TIME = time.time_ns()
 DRIVES = [letter + ":" for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ']
 
 PROG = os.path.basename(sys.argv[0])
@@ -270,7 +272,7 @@ def create_installer_dep_directory() -> str:
 
 def get_certname() -> str:
     """Returns the certificate name as defined by branding."""
-    return "%s(test)" % branding.branding["manufacturer"]
+    return "%s(test)-%s" % (branding.branding["manufacturer"], TIME)
 
 
 def authenticode_thumbprint(file: str) -> str:
@@ -328,11 +330,13 @@ def build_installer(debug: bool = False) -> None:
     depdir = create_installer_dep_directory()
 
     certname = get_certname()
+    fname = "%s-%s.cer" % (branding.branding["manufacturer"], TIME)
+
     if debug:
-        certfile = os.path.abspath("%s.cer" % branding.branding["manufacturer"])
+        certfile = os.path.abspath(fname)
         makecert(certfile, certname)
     else:
-        certfile = os.path.join("certs", "%s.cer" % branding.branding["manufacturer"])
+        certfile = os.path.join("certs", fname)
         certmgr_remove(certname)
         if not certmgr_add(certfile):
             die(("Failed to add %s to cert store. If this is a test build, "
