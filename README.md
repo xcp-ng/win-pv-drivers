@@ -23,6 +23,8 @@ The relevant source code may be found in these locations:
 * WDK 8
 * WDK 8 Redistributable Components
 * WIX (tested with v3.6)
+	* Starting with WIX v4, wix is available as a .NET tool that can be obtained as following
+		* dotnet tool install --global wix
 * EWDK for Windows 10, version 1903 with Visual Studio Build Tools 16.0
 * git
 

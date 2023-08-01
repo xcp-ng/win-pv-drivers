@@ -8,6 +8,7 @@ import shutil
 import sys
 import tempfile
 import time
+import subprocess
 from contextlib import contextmanager
 from subprocess import PIPE, SubprocessError, call, run, CompletedProcess
 from typing import Iterable, NoReturn, Optional
@@ -58,42 +59,80 @@ def die(message) -> NoReturn:
     """Print an error message to stderr and exit with exit code 1."""
     perror(message)
     sys.exit(1)
+      
+def is_wix_dotnet_tool_installed() -> bool:
+    """Check if WiX is installed as a .NET global tool."""
+    logging.debug("Checking if WiX is installed as a .NET global tool")
+    try:
+        subprocess.run(["wix", "--version"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        result = True
+    except subprocess.CalledProcessError:
+        result = False
+    logging.debug(f"WiX is installed as a .NET global tool: {result}")
+    return result
+    
+def find_file_in_drives(file_path):
+    for drive in DRIVES:
+        for directory, _, _ in os.walk(os.path.join(drive, '/')):
+            path = os.path.join(directory, file_path)
+            if os.path.exists(path):
+                return os.path.normpath(directory)
+    return None
+
+EWDK_FILE_PATH = "SetupBuildEnv.cmd"
+VS_FILE_PATH = os.path.join("VC", "Auxiliary", "Build", "vcvarsall.bat")
+
+def find_file_in_drives(file_path):
+    for drive in DRIVES:
+        for directory, _, _ in os.walk(os.path.join(drive, '/')):
+            path = os.path.join(directory, file_path)
+            if os.path.exists(path):
+                return os.path.normpath(directory)
+    return None
+
+def is_valid_build_env(path):
+    return os.path.exists(os.path.join(path, EWDK_FILE_PATH)) or os.path.exists(os.path.join(path, VS_FILE_PATH))
 
 def setup_env() -> None:
     """Setup environment variables used by the build system."""
 
-    if not os.environ.get("BUILD_ENV", None):
-        logging.debug("Enviroment variable BUILD_ENV not found")
-        for drive in DRIVES:
-            path = os.path.normpath(os.path.join(drive, "BuildEnv"))
-            logging.debug(f"Searching for {path}")
-            
-            if os.path.exists(os.path.join(path, "SetupBuildEnv.cmd")):
-                os.environ["BUILD_ENV"] = os.path.normpath(path)
-                logging.debug(f'Environment variable BUILD_ENV set to {os.environ["BUILD_ENV"]}')
-                break
-
-    if not os.environ.get("VS", None):
-        logging.debug("Environment variable VS not found")
-        for directory, _, _ in os.walk(os.path.join('C:', '/')):
-            path = os.path.join(directory, "VC", "vcvarsall.bat")
-            logging.debug(f"Searching for path {path}")
-            if os.path.exists(path):
-                os.environ["VS"] = os.path.normpath(directory)
-                logging.debug(f'Environment variable VS set to {os.environ["VS"]}')
-                break
-
-    systemdir = os.path.join("C:", "/", "Program Files (x86)")
-    if not os.environ.get("WIX", None):
+    """BUILD_ENV"""
+    if "BUILD_ENV" in os.environ:
+        if not is_valid_build_env(os.environ["BUILD_ENV"]):
+            logging.error(f'Environment variable BUILD_ENV does not point to a valid build environment: {os.environ["BUILD_ENV"]}')
+    else:
+        logging.debug("Environment variable BUILD_ENV not found")
+        build_env_path = find_file_in_drives(EWDK_FILE_PATH)
+        if build_env_path:
+            os.environ["BUILD_ENV"] = os.path.join(build_env_path, EWDK_FILE_PATH)
+        else:
+            logging.debug("EWDK not found, searching for Visual Studio installation")
+            vs_path = find_file_in_drives(VS_FILE_PATH)
+            if vs_path:
+                os.environ["BUILD_ENV"] = os.path.join(vs_path, VS_FILE_PATH)
+            else:
+                logging.error("Neither EWDK nor Visual Studio installation found.")
+        
+    if "BUILD_ENV" in os.environ:
+        logging.debug(f'Environment variable BUILD_ENV set to {os.environ["BUILD_ENV"]}')
+      
+    """WIX"""
+    if not os.environ.get("WIX", None) and not os.environ.get("WIX_DOTNET_TOOL", None):
         logging.debug("Environment variable WIX not found")
-        logging.debug("Searching for directory with substring WiX Toolset")
-        for directory, _, _ in os.walk(systemdir):
-            if "WiX Toolset" in directory:
-                os.environ["WIX"] = os.path.normpath(directory)
-                break
-        if "WIX" in os.environ:
-            logging.info(f"Environment variable WIX set to {os.environ['WIX']}")
+        if is_wix_dotnet_tool_installed():
+            os.environ["WIX_DOTNET_TOOL"] = "1"
+            logging.info("WiX is installed as a .NET global tool")
+        else:
+            logging.debug("WiX is not installed as a .NET global tool")
+            wix_path = find_file_in_drives(os.path.join("wix", "candle.exe"))
+            if wix_path:
+                os.environ["WIX"] = wix_path
+                logging.info(f'Environment variable WIX set to {os.environ["WIX"]}')
+            else:
+                logging.error("WiX not found")
 
+    """KIT"""
+    systemdir = os.path.join('C:', os.sep, 'Program Files (x86)')          
     if not os.environ.get("KIT", None):
         logging.debug("Environment variable KIT not found")
         logging.debug("Searching for highest version path C:/Program Files (x86)/Windows Kits/X.Y/")
@@ -109,15 +148,17 @@ def setup_env() -> None:
             logging.info(f"Environment variable KIT set to {os.environ['KIT']}")
 
 def check_env() -> None:
-    """Check that all required enviornment variables are defined."""
+    """Check that all required environment variables are defined."""
     vars = set([
         "BUILD_ENV",
-        "WIX",
-        "KIT",
-        "VS",
+        "KIT"
     ])
 
     missing = vars - set(os.environ.keys())
+    
+    if "WIX" not in os.environ and "WIX_DOTNET_TOOL" not in os.environ:
+        vars.add("WIX")
+        
     if missing:
         die("Please set the following environment variables: %s" % ', '.join(missing))
     else:
@@ -166,17 +207,20 @@ def change_dir(directory: str, *args, **kwds):
 
     Returns None.
     """
-
+    logging.info("Changing working directory to %s" % directory)
     def __chdir(path):
         os.chdir(path)
-        logging.info("Changed working directory to %s" % os.path.abspath(path))
+        logging.info("Changed working directory to %s" % os.path.abspath(os.curdir))
 
     prevdir = os.path.abspath(os.curdir)
+    logging.info("Previous working directory was %s" % prevdir)  # Log the previous directory
     __chdir(directory)
     try:
         yield
     finally:
         __chdir(prevdir)
+        logging.info("Returned to previous directory %s" % os.path.abspath(os.curdir))  # Log the returned directory
+
 
 
 def fetch() -> None:
@@ -197,21 +241,6 @@ def check_projects(projects: Iterable[str]) -> None:
     if rem:
         die("project(s) %s not valid.  Options are: %s" % (', '.join(rem), ALL_PROJECTS))
 
-
-def ewdk_cmd(cmd: str, *args, **kwargs) -> CompletedProcess:
-    """
-    Execute a command inside a EWDK build environment.
-
-    Returns a CompletedProcess.
-    """
-    build_env = os.path.normpath(os.path.join(
-        os.environ["BUILD_ENV"],
-        "SetupBuildEnv.cmd")
-    )
-    kwargs['shell'] = True
-    return do_run(['cmd.exe', '/C', 'call %s && %s' % (build_env, cmd)], env=os.environ.copy(), *args, **kwargs)
-
-
 def do_cmd(cmd: str, *args, **kwargs) -> CompletedProcess:
     """
     Execute a simple command.
@@ -226,6 +255,16 @@ def build(projects: Iterable[str], checked: bool) -> None:
     global ALL_PROJECTS    
 
     check_projects(projects)
+    
+    # Call vcvarsall.bat once at the beginning
+    build_env = os.environ.get("BUILD_ENV", None)
+    if not build_env:
+        logging.error("Environment variable BUILD_ENV not found.")
+        return
+
+    build_env_args = ["x86_amd64"] if "vcvarsall.bat" in build_env else []
+    build_env_cmd = ['cmd.exe', '/C', 'call', build_env] + build_env_args
+    do_run(build_env_cmd, shell=True)
 
     for i, dirname in enumerate(ALL_PROJECTS):
         assert os.path.exists(dirname), \
@@ -234,20 +273,15 @@ def build(projects: Iterable[str], checked: bool) -> None:
         if dirname not in projects:
             continue
 
-        if "win-xenguestagent" in dirname:
-            exec_cmd = do_cmd
-        else:
-            exec_cmd = ewdk_cmd
-
         with change_dir(dirname):
             py_script = os.path.join(os.curdir, "build.py")
             ps_script = os.path.join(os.curdir, "build.ps1")
             buildarg = "checked" if checked else "free"
             # TODO: make toggleable the "checked" option by a --debug flag
             if os.path.exists(py_script):
-                p = exec_cmd("python %s %s" % (py_script, buildarg))
+                p = do_cmd("python %s %s" % (py_script, buildarg))
             elif os.path.exists(ps_script):
-                p = exec_cmd("powershell -file %s %s" % (ps_script, buildarg))
+                p = do_cmd("powershell -file %s %s" % (ps_script, buildarg))
             else:
                 die("No %s or %s found" % (ps_script, py_script))
 
