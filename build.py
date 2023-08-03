@@ -9,7 +9,6 @@ import sys
 import tempfile
 import time
 import subprocess
-import shlex
 from contextlib import contextmanager
 from subprocess import PIPE, SubprocessError, call, run, CompletedProcess
 from typing import Iterable, NoReturn, Optional
@@ -23,6 +22,7 @@ PROG = os.path.basename(sys.argv[0])
 
 def do_run(*args, **kwargs) -> CompletedProcess:
     args_string = ", ".join(pprint.pformat(x) for x in args)
+    # Environments are very large, so lets not print those
     copy = kwargs.copy()
     copy.pop("env", None)
     kwargs_string = pprint.pformat(copy)
@@ -49,6 +49,7 @@ def do_run(*args, **kwargs) -> CompletedProcess:
     return ret
 
 def perror(message) -> None:
+    """Print an error message to stderr."""
     print('ERROR: ' + message, file=sys.stderr)
     logging.error(message)
 
@@ -57,6 +58,7 @@ def die(message) -> NoReturn:
     sys.exit(1)
 
 def is_wix_dotnet_tool_installed() -> bool:
+    """Check if WiX is installed as a .NET global tool."""
     logging.debug("Checking if WiX is installed as a .NET global tool")
     try:
         subprocess.run(["wix", "--version"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -81,6 +83,9 @@ def is_valid_build_env(path):
     return os.path.exists(os.path.join(path, EWDK_FILE_PATH)) or os.path.exists(os.path.join(path, VS_FILE_PATH))
 
 def setup_env() -> None:
+    """Setup environment variables used by the build system."""
+    
+    """BUILD_ENV"""
     if "BUILD_ENV" in os.environ:
         if not is_valid_build_env(os.environ["BUILD_ENV"]):
             logging.error(f'Environment variable BUILD_ENV does not point to a valid build environment: {os.environ["BUILD_ENV"]}')
@@ -122,6 +127,7 @@ def setup_env() -> None:
         logging.debug("Environment variable KIT not found")
         logging.debug("Searching for highest version path C:/Program Files (x86)/Windows Kits/X.Y/")
 
+        # Find highest version from 0.0 to 100.100
         for major in range(100):
             for minor in range(100):
                 version = f"{major}.{minor}"
@@ -135,6 +141,7 @@ def setup_env() -> None:
             sys.exit(1)
 
 def check_env() -> None:
+    """Check that all required environment variables are defined."""
     vars = set([
         "BUILD_ENV",
         "KIT"
@@ -162,12 +169,33 @@ urls = [
 ]
 
 def url_to_simple_name(url) -> str:
+    """
+    Reduce URL to name of git repo.
+    
+    For example, "https://www.github.com/xcp-ng/win-xenbus.git" becomes "win-xenbus"
+    
+    Returns the name of the git repo with no .git extension.
+    """
     return os.path.basename(url).split('.git')[0]
 
 ALL_PROJECTS = [url_to_simple_name(url) for url in urls]
 
 @contextmanager
 def change_dir(directory: str, *args, **kwds):
+    """
+    Temporarily changes the current directory.
+    
+    Changes to a directory when entering the context, returns to
+    the previous directory when exiting the context.
+    
+    Usage:
+    
+    >>> with change_dir("path/to/dir/"):
+    >>>     do_stuff_in_new_directory()
+    >>> do_stuff_in_previous_directory()
+    
+    Returns None.
+    """
     logging.info("Changing working directory to %s" % directory)
     def __chdir(path):
         os.chdir(path)
@@ -183,12 +211,18 @@ def change_dir(directory: str, *args, **kwds):
         logging.info("Returned to previous directory %s" % os.path.abspath(os.curdir))
 
 def fetch() -> None:
+    """Fetch all repos."""
+
     for url in urls:
         do_run(["git", "clone", url])
 
+    # Also download the installer
     do_run(["git", "clone", "https://github.com/xcp-ng/win-installer.git"])
 
 def check_projects(projects: Iterable[str]) -> None:
+    """Check that a list of projects is valid."""
+    global ALL_PROJECTS
+
     rem = set(projects) - set(ALL_PROJECTS + ["win-installer"])
     if rem:
         die("project(s) %s not valid.  Options are: %s" % (', '.join(rem), ALL_PROJECTS))
@@ -220,9 +254,17 @@ def build_env_cmd(cmd: List[str], *args, **kwargs) -> CompletedProcess:
 
 
 def do_cmd(cmd: List[str], *args, **kwargs) -> CompletedProcess:
+    """
+    Execute a simple command.
+    
+    Returns a CompletedProcess.
+    """
     return do_run(cmd, env=os.environ.copy(), *args, **kwargs)
 
 def build(projects: Iterable[str], checked: bool) -> None:
+    """Build all source repos if projects is empty, otherwise build only those repos found in projects."""
+    global ALL_PROJECTS 
+    
     check_projects(projects)
     
     build_env = os.environ.get("BUILD_ENV", None)
@@ -249,6 +291,7 @@ def build(projects: Iterable[str], checked: bool) -> None:
             py_script = os.path.join(os.curdir, "build.py")
             ps_script = os.path.join(os.curdir, "build.ps1")
             buildarg = "checked" if checked else "free"
+            # TODO: make toggleable the "checked" option by a --debug flag
             if os.path.exists(py_script):
                 p = build_env_cmd(['python', py_script, buildarg], shell=True)
             elif os.path.exists(ps_script):
@@ -408,6 +451,7 @@ def makecert(filename: str, certname: str) -> None:
 def certmgr_remove(certname: str, store: str = "my") -> None:
     """
     Remove a certificate from the Windows certificate store.
+    
     Arguments
     ---------
         certname: the name of the certificate to remove.
@@ -419,13 +463,17 @@ def certmgr_remove(certname: str, store: str = "my") -> None:
         do_cmd(remove, stdout=PIPE, stderr=PIPE)
     except SubprocessError as e:
         print("WARNING: %s" % str(e))
+        
+        
 def certmgr_add(certfile: str, store: str = "my") -> bool:
     """
     Add certificate to the Windows certificate store.
+    
     Arguments
     ---------
         certfile: the path to the certificate file
         store: the name of the certificate store
+        
     Return True if successful, otherwise False.
     """
     certmgr = os.path.join(os.environ["KIT"], "bin", "x64", "certmgr.exe")
@@ -464,5 +512,8 @@ if __name__ == "__main__":
         check_env()
         build_all = not args.projects
         build(ALL_PROJECTS if build_all else args.projects, checked=args.debug)
+        if "win-installer" in args.projects or build_all:
+            build_installer(args.debug)
     else:
         parser.print_help()
+        sys.exit(1)
