@@ -227,31 +227,6 @@ def check_projects(projects: Iterable[str]) -> None:
     if rem:
         die("project(s) %s not valid.  Options are: %s" % (', '.join(rem), ALL_PROJECTS))
 
-def build_env_cmd(cmd: List[str], *args, **kwargs) -> CompletedProcess:
-    """
-    Execute a command inside a build environment (EWDK or Visual Studio).
-    Returns a CompletedProcess.
-    """
-    build_env = os.environ.get("BUILD_ENV", None)
-    if not build_env:
-        logging.error("Environment variable BUILD_ENV not found.")
-        return
-
-    # Determine the build environment setup script
-    if "vcvarsall.bat" in build_env:
-        build_env_setup = build_env
-        build_env_args = ["x86_amd64"]
-    else:
-        build_env_setup = os.path.normpath(os.path.join(build_env, "SetupBuildEnv.cmd"))
-        build_env_args = []
-
-    kwargs['shell'] = True
-
-    # Construct the command as a list
-    command = ['cmd.exe', '/C', 'call', build_env_setup] + build_env_args + ['&&'] + cmd
-
-    return do_run(command, env=os.environ.copy(), *args, **kwargs)
-
 
 def do_cmd(cmd: List[str], *args, **kwargs) -> CompletedProcess:
     """
@@ -261,19 +236,47 @@ def do_cmd(cmd: List[str], *args, **kwargs) -> CompletedProcess:
     """
     return do_run(cmd, env=os.environ.copy(), *args, **kwargs)
 
+def get_build_env_config():
+    build_env = os.environ.get("BUILD_ENV", None)
+    if not build_env:
+        logging.error("Environment variable BUILD_ENV not found.")
+        return None, None
+
+    # Determine the build environment setup script
+    if "vcvarsall.bat" in build_env:
+        build_env_setup = build_env
+        build_env_args = ["x86_amd64"]
+    else:
+        build_env_setup = os.path.normpath(os.path.join(build_env, "SetupBuildEnv.cmd"))
+        build_env_args = []
+
+    return build_env_setup, build_env_args
+
+def build_env_cmd(cmd: List[str], *args, **kwargs) -> CompletedProcess:
+    """
+    Execute a command inside a build environment (EWDK or Visual Studio).
+    Returns a CompletedProcess.
+    """
+    build_env_setup, build_env_args = get_build_env_config()
+    if not build_env_setup:
+        return
+
+    kwargs['shell'] = True
+
+    # Construct the command as a list
+    command = ['cmd.exe', '/C', 'call', build_env_setup] + build_env_args + ['&&'] + cmd
+
+    return do_run(command, env=os.environ.copy(), *args, **kwargs)
+
 def build(projects: Iterable[str], checked: bool) -> None:
     """Build all source repos if projects is empty, otherwise build only those repos found in projects."""
     global ALL_PROJECTS 
     
     check_projects(projects)
-    
-    build_env = os.environ.get("BUILD_ENV", None)
-    if not build_env:
-        logging.error("Environment variable BUILD_ENV not found.")
-        return
 
-    build_env_args = ["x86_amd64"] if "vcvarsall.bat" in build_env else []
-    build_env_config_cmd = ['cmd.exe', '/C', 'call', build_env] + build_env_args
+    # Complete path of the common PowerShell script
+    ps_script = os.path.join(os.getcwd(), "build.ps1")
+    buildarg = "checked" if checked else "free"
 
     for i, dirname in enumerate(ALL_PROJECTS):
         assert os.path.exists(dirname), \
@@ -287,20 +290,10 @@ def build(projects: Iterable[str], checked: bool) -> None:
         else:
             exec_cmd = build_env_cmd
 
-        with change_dir(dirname):
-            py_script = os.path.join(os.curdir, "build.py")
-            ps_script = os.path.join(os.curdir, "build.ps1")
-            buildarg = "checked" if checked else "free"
-            # TODO: make toggleable the "checked" option by a --debug flag
-            if os.path.exists(py_script):
-                p = build_env_cmd(['python', py_script, buildarg], shell=True)
-            elif os.path.exists(ps_script):
-                p = build_env_cmd(['powershell', '-file', ps_script, buildarg], shell=True)
-            else:
-                die("No %s or %s found" % (ps_script, py_script))
+        p = exec_cmd(['powershell', '-file', ps_script, '-RepoName', dirname, buildarg], shell=True)
 
-            if p and p.returncode != 0:
-                die("Built %s projects, but building %s failed. Stopped." % (i, dirname))
+        if p and p.returncode != 0:
+            die("Built %s projects, but building %s failed. Stopped." % (i, dirname))
 
 
 def create_installer_dep_directory() -> str:
