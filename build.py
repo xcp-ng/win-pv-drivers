@@ -161,11 +161,11 @@ def check_env() -> None:
 
 urls = [
     "https://www.github.com/xcp-ng/win-xenbus.git",
-    "https://www.github.com/xcp-ng/win-xenguestagent.git",
     "https://www.github.com/xcp-ng/win-xeniface.git",
     "https://www.github.com/xcp-ng/win-xenvif.git",
     "https://www.github.com/xcp-ng/win-xennet.git",
     "https://www.github.com/xcp-ng/win-xenvbd.git",
+    "https://www.github.com/xcp-ng/win-xenguestagent.git",
 ]
 
 def url_to_simple_name(url) -> str:
@@ -261,10 +261,10 @@ def build_env_cmd(cmd: List[str], *args, **kwargs) -> CompletedProcess:
     if not build_env_setup:
         return
 
-    kwargs['shell'] = True
-
-    # Construct the command as a list
-    command = ['cmd.exe', '/C', 'call', build_env_setup] + build_env_args + ['&&'] + cmd
+    # Construct the command as a single string
+    cmd_str = ' '.join(cmd)
+    build_env_setup = '"' + build_env_setup + '"' if ' ' in build_env_setup else build_env_setup
+    command = ' '.join(['cmd.exe', '/C', 'call', build_env_setup] + build_env_args + ['&&'] + [cmd_str])
 
     return do_run(command, env=os.environ.copy(), *args, **kwargs)
 
@@ -276,6 +276,7 @@ def build(projects: Iterable[str], checked: bool) -> None:
 
     # Complete path of the common PowerShell script
     ps_script = os.path.join(os.getcwd(), "build.ps1")
+    ps_script = '"' + ps_script + '"' if ' ' in ps_script else ps_script
     buildarg = "checked" if checked else "free"
 
     for i, dirname in enumerate(ALL_PROJECTS):
@@ -286,11 +287,9 @@ def build(projects: Iterable[str], checked: bool) -> None:
             continue
             
         if "win-xenguestagent" in dirname:
-            exec_cmd = do_cmd
+            p = do_cmd(['python', os.path.join(dirname, 'build.py'), buildarg])
         else:
-            exec_cmd = build_env_cmd
-
-        p = exec_cmd(['powershell', '-file', ps_script, '-RepoName', dirname, buildarg], shell=True)
+            p = build_env_cmd(['powershell', '-file', ps_script, '-RepoName', f'"{dirname}"', buildarg])
 
         if p and p.returncode != 0:
             die("Built %s projects, but building %s failed. Stopped." % (i, dirname))

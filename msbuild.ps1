@@ -74,7 +74,7 @@ Function Run-MSBuildSDV {
 
 $configuration = @{ "free" = "$ConfigurationBase Release"; "checked" = "$ConfigurationBase Debug"; "sdv" = "$ConfigurationBase Release"; }
 $platform = @{ "x86" = "Win32"; "x64" = "x64" }
-$solutionpath = Resolve-Path $SolutionDir
+$solutionpath = Resolve-Path "$RepoName\$SolutionDir"
 
 Set-ExecutionPolicy -Scope CurrentUser -Force Bypass
 
