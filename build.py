@@ -9,20 +9,20 @@ import sys
 import tempfile
 import time
 import subprocess
+import shlex
 from contextlib import contextmanager
 from subprocess import PIPE, SubprocessError, call, run, CompletedProcess
 from typing import Iterable, NoReturn, Optional
 from zipfile import ZipFile
+from typing import List
 import branding
 
 TIME = time.time_ns()
 DRIVES = [letter + ":" for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ']
-
 PROG = os.path.basename(sys.argv[0])
 
 def do_run(*args, **kwargs) -> CompletedProcess:
     args_string = ", ".join(pprint.pformat(x) for x in args)
-    # Environments are very large, so lets not print those
     copy = kwargs.copy()
     copy.pop("env", None)
     kwargs_string = pprint.pformat(copy)
@@ -48,20 +48,15 @@ def do_run(*args, **kwargs) -> CompletedProcess:
 
     return ret
 
-
 def perror(message) -> None:
-    """Print an error message to stderr."""
     print('ERROR: ' + message, file=sys.stderr)
     logging.error(message)
 
-
 def die(message) -> NoReturn:
-    """Print an error message to stderr and exit with exit code 1."""
     perror(message)
     sys.exit(1)
-      
+
 def is_wix_dotnet_tool_installed() -> bool:
-    """Check if WiX is installed as a .NET global tool."""
     logging.debug("Checking if WiX is installed as a .NET global tool")
     try:
         subprocess.run(["wix", "--version"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -70,14 +65,6 @@ def is_wix_dotnet_tool_installed() -> bool:
         result = False
     logging.debug(f"WiX is installed as a .NET global tool: {result}")
     return result
-    
-def find_file_in_drives(file_path):
-    for drive in DRIVES:
-        for directory, _, _ in os.walk(os.path.join(drive, '/')):
-            path = os.path.join(directory, file_path)
-            if os.path.exists(path):
-                return os.path.normpath(directory)
-    return None
 
 EWDK_FILE_PATH = "SetupBuildEnv.cmd"
 VS_FILE_PATH = os.path.join("VC", "Auxiliary", "Build", "vcvarsall.bat")
@@ -94,12 +81,10 @@ def is_valid_build_env(path):
     return os.path.exists(os.path.join(path, EWDK_FILE_PATH)) or os.path.exists(os.path.join(path, VS_FILE_PATH))
 
 def setup_env() -> None:
-    """Setup environment variables used by the build system."""
-
-    """BUILD_ENV"""
     if "BUILD_ENV" in os.environ:
         if not is_valid_build_env(os.environ["BUILD_ENV"]):
             logging.error(f'Environment variable BUILD_ENV does not point to a valid build environment: {os.environ["BUILD_ENV"]}')
+            sys.exit(1)
     else:
         logging.debug("Environment variable BUILD_ENV not found")
         build_env_path = find_file_in_drives(EWDK_FILE_PATH)
@@ -112,11 +97,11 @@ def setup_env() -> None:
                 os.environ["BUILD_ENV"] = os.path.join(vs_path, VS_FILE_PATH)
             else:
                 logging.error("Neither EWDK nor Visual Studio installation found.")
-        
+                sys.exit(1)
+
     if "BUILD_ENV" in os.environ:
         logging.debug(f'Environment variable BUILD_ENV set to {os.environ["BUILD_ENV"]}')
-      
-    """WIX"""
+
     if not os.environ.get("WIX", None) and not os.environ.get("WIX_DOTNET_TOOL", None):
         logging.debug("Environment variable WIX not found")
         if is_wix_dotnet_tool_installed():
@@ -130,14 +115,13 @@ def setup_env() -> None:
                 logging.info(f'Environment variable WIX set to {os.environ["WIX"]}')
             else:
                 logging.error("WiX not found")
+                sys.exit(1)
 
-    """KIT"""
     systemdir = os.path.join('C:', os.sep, 'Program Files (x86)')          
     if not os.environ.get("KIT", None):
         logging.debug("Environment variable KIT not found")
         logging.debug("Searching for highest version path C:/Program Files (x86)/Windows Kits/X.Y/")
 
-        # Find highest version from 0.0 to 100.100
         for major in range(100):
             for minor in range(100):
                 version = f"{major}.{minor}"
@@ -146,9 +130,11 @@ def setup_env() -> None:
                     os.environ["KIT"] = path
         if "KIT" in os.environ:
             logging.info(f"Environment variable KIT set to {os.environ['KIT']}")
+        else:
+            logging.error("Windows Kits not found")
+            sys.exit(1)
 
 def check_env() -> None:
-    """Check that all required environment variables are defined."""
     vars = set([
         "BUILD_ENV",
         "KIT"
@@ -166,7 +152,6 @@ def check_env() -> None:
         for var in sorted(list(vars)):
             logging.info("%s = %s" % (var, os.environ[var]))
 
-
 urls = [
     "https://www.github.com/xcp-ng/win-xenbus.git",
     "https://www.github.com/xcp-ng/win-xenguestagent.git",
@@ -176,95 +161,77 @@ urls = [
     "https://www.github.com/xcp-ng/win-xenvbd.git",
 ]
 
-
 def url_to_simple_name(url) -> str:
-    """
-    Reduce URL to name of git repo.
-
-    For example, "https://www.github.com/xcp-ng/win-xenbus.git" becomes "win-xenbus"
-
-    Returns the name of the git repo with no .git extension.
-    """
     return os.path.basename(url).split('.git')[0]
-
 
 ALL_PROJECTS = [url_to_simple_name(url) for url in urls]
 
-
 @contextmanager
 def change_dir(directory: str, *args, **kwds):
-    """
-    Temporarily changes the current directory.
-
-    Changes to a directory when entering the context, returns to
-    the previous directory when exiting the context.
-
-    Usage:
-
-    >>> with change_dir("path/to/dir/"):
-    >>>     do_stuff_in_new_directory()
-    >>> do_stuff_in_previous_directory()
-
-    Returns None.
-    """
     logging.info("Changing working directory to %s" % directory)
     def __chdir(path):
         os.chdir(path)
         logging.info("Changed working directory to %s" % os.path.abspath(os.curdir))
 
     prevdir = os.path.abspath(os.curdir)
-    logging.info("Previous working directory was %s" % prevdir)  # Log the previous directory
+    logging.info("Previous working directory was %s" % prevdir)
     __chdir(directory)
     try:
         yield
     finally:
         __chdir(prevdir)
-        logging.info("Returned to previous directory %s" % os.path.abspath(os.curdir))  # Log the returned directory
-
-
+        logging.info("Returned to previous directory %s" % os.path.abspath(os.curdir))
 
 def fetch() -> None:
-    """Fetch all repos."""
-
     for url in urls:
         do_run(["git", "clone", url])
 
-    # Also download the installer
     do_run(["git", "clone", "https://github.com/xcp-ng/win-installer.git"])
 
-
 def check_projects(projects: Iterable[str]) -> None:
-    """Check that a list of projects is valid."""
-    global ALL_PROJECTS
-
     rem = set(projects) - set(ALL_PROJECTS + ["win-installer"])
     if rem:
         die("project(s) %s not valid.  Options are: %s" % (', '.join(rem), ALL_PROJECTS))
 
-def do_cmd(cmd: str, *args, **kwargs) -> CompletedProcess:
+def build_env_cmd(cmd: List[str], *args, **kwargs) -> CompletedProcess:
     """
-    Execute a simple command.
-
+    Execute a command inside a build environment (EWDK or Visual Studio).
     Returns a CompletedProcess.
     """
-    return do_run(cmd.split(), env=os.environ.copy(), *args, **kwargs)
+    build_env = os.environ.get("BUILD_ENV", None)
+    if not build_env:
+        logging.error("Environment variable BUILD_ENV not found.")
+        return
 
+    # Determine the build environment setup script
+    if "vcvarsall.bat" in build_env:
+        build_env_setup = build_env
+        build_env_args = ["x86_amd64"]
+    else:
+        build_env_setup = os.path.normpath(os.path.join(build_env, "SetupBuildEnv.cmd"))
+        build_env_args = []
+
+    kwargs['shell'] = True
+
+    # Construct the command as a list
+    command = ['cmd.exe', '/C', 'call', build_env_setup] + build_env_args + ['&&'] + cmd
+
+    return do_run(command, env=os.environ.copy(), *args, **kwargs)
+
+
+def do_cmd(cmd: List[str], *args, **kwargs) -> CompletedProcess:
+    return do_run(cmd, env=os.environ.copy(), *args, **kwargs)
 
 def build(projects: Iterable[str], checked: bool) -> None:
-    """Build all source repos if projects is empty, otherwise build only those repos found in projects."""
-    global ALL_PROJECTS    
-
     check_projects(projects)
     
-    # Call vcvarsall.bat once at the beginning
     build_env = os.environ.get("BUILD_ENV", None)
     if not build_env:
         logging.error("Environment variable BUILD_ENV not found.")
         return
 
     build_env_args = ["x86_amd64"] if "vcvarsall.bat" in build_env else []
-    build_env_cmd = ['cmd.exe', '/C', 'call', build_env] + build_env_args
-    do_run(build_env_cmd, shell=True)
+    build_env_config_cmd = ['cmd.exe', '/C', 'call', build_env] + build_env_args
 
     for i, dirname in enumerate(ALL_PROJECTS):
         assert os.path.exists(dirname), \
@@ -272,16 +239,20 @@ def build(projects: Iterable[str], checked: bool) -> None:
 
         if dirname not in projects:
             continue
+            
+        if "win-xenguestagent" in dirname:
+            exec_cmd = do_cmd
+        else:
+            exec_cmd = build_env_cmd
 
         with change_dir(dirname):
             py_script = os.path.join(os.curdir, "build.py")
             ps_script = os.path.join(os.curdir, "build.ps1")
             buildarg = "checked" if checked else "free"
-            # TODO: make toggleable the "checked" option by a --debug flag
             if os.path.exists(py_script):
-                p = do_cmd("python %s %s" % (py_script, buildarg))
+                p = build_env_cmd(['python', py_script, buildarg], shell=True)
             elif os.path.exists(ps_script):
-                p = do_cmd("powershell -file %s %s" % (ps_script, buildarg))
+                p = build_env_cmd(['powershell', '-file', ps_script, buildarg], shell=True)
             else:
                 die("No %s or %s found" % (ps_script, py_script))
 
@@ -437,7 +408,6 @@ def makecert(filename: str, certname: str) -> None:
 def certmgr_remove(certname: str, store: str = "my") -> None:
     """
     Remove a certificate from the Windows certificate store.
-
     Arguments
     ---------
         certname: the name of the certificate to remove.
@@ -449,17 +419,13 @@ def certmgr_remove(certname: str, store: str = "my") -> None:
         do_cmd(remove, stdout=PIPE, stderr=PIPE)
     except SubprocessError as e:
         print("WARNING: %s" % str(e))
-
-
 def certmgr_add(certfile: str, store: str = "my") -> bool:
     """
     Add certificate to the Windows certificate store.
-
     Arguments
     ---------
         certfile: the path to the certificate file
         store: the name of the certificate store
-
     Return True if successful, otherwise False.
     """
     certmgr = os.path.join(os.environ["KIT"], "bin", "x64", "certmgr.exe")
@@ -498,8 +464,5 @@ if __name__ == "__main__":
         check_env()
         build_all = not args.projects
         build(ALL_PROJECTS if build_all else args.projects, checked=args.debug)
-        if "win-installer" in args.projects or build_all:
-            build_installer(args.debug)
     else:
         parser.print_help()
-        sys.exit(1)
