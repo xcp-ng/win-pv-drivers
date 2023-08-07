@@ -247,7 +247,7 @@ def get_build_env_config():
         build_env_setup = build_env
         build_env_args = ["x86_amd64"]
     else:
-        build_env_setup = os.path.normpath(os.path.join(build_env, "SetupBuildEnv.cmd"))
+        build_env_setup = os.path.normpath(build_env)
         build_env_args = []
 
     return build_env_setup, build_env_args
