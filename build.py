@@ -243,7 +243,7 @@ def get_build_env_config():
         return None, None
 
     # Determine the build environment setup script
-    if "vcvarsall.bat" in build_env:
+    if VS_FILE_PATH in build_env:
         build_env_setup = build_env
         build_env_args = ["x86_amd64"]
     else:
