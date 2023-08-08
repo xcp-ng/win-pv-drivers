@@ -216,8 +216,11 @@ def fetch() -> None:
     # Get the current branch name of the win-pv-drivers repository
     win_pv_drivers_branch = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).strip().decode()
 
+    # Get the URL of the win-pv-drivers repository
+    win_pv_drivers_url = subprocess.check_output(["git", "remote", "get-url", "origin"]).strip().decode() 
+    
     # Extract the repo name from the URL
-    win_pv_drivers_repo_name = url_to_simple_name(urls[0])
+    win_pv_drivers_repo_name = url_to_simple_name(win_pv_drivers_url)
 
     # Check if the win-pv-drivers branch ends with the repo name
     if win_pv_drivers_branch.endswith(win_pv_drivers_repo_name):
