@@ -211,10 +211,29 @@ def change_dir(directory: str, *args, **kwds):
         logging.info("Returned to previous directory %s" % os.path.abspath(os.curdir))
 
 def fetch() -> None:
-    """Fetch all repos."""
+    """Fetch all repos with branches that match the prefix of the win-pv-drivers repository."""
+
+    # Get the current branch name of the win-pv-drivers repository
+    win_pv_drivers_branch = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).strip().decode()
+
+    # Extract the repo name from the URL
+    win_pv_drivers_repo_name = url_to_simple_name(urls[0])
+
+    # Check if the win-pv-drivers branch ends with the repo name
+    if win_pv_drivers_branch.endswith(win_pv_drivers_repo_name):
+        prefix = win_pv_drivers_branch[:-len(win_pv_drivers_repo_name)]
+    else:
+        prefix = None
 
     for url in urls:
-        do_run(["git", "clone", url])
+        # Extract the repo name from the URL
+        repo_name = url_to_simple_name(url)
+
+        # Determine the branch name to use for extraction
+        branch_name = f"{prefix}{repo_name}" if prefix else "master"
+
+        # Clone the repo using the specified branch
+        do_run(["git", "clone", "-b", branch_name, url])
 
     # Also download the installer
     do_run(["git", "clone", "https://github.com/xcp-ng/win-installer.git"])
