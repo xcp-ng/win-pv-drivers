@@ -75,10 +75,10 @@ Set-Item -Path Env:MAJOR_VERSION -Value '9'
 Set-Item -Path Env:MINOR_VERSION -Value '1'
 Set-Item -Path Env:MICRO_VERSION -Value '0'
 
+# Build 32 bits only for Windows 8
 if ($ConfigurationBase -eq "Windows 8") {
 	Build "x86" $Type $ConfigurationBase $RepoName
-	Build "x64" $Type $ConfigurationBase $RepoName
-} else {
-	Build "x64" $Type $ConfigurationBase $RepoName
 }
+
+Build "x64" $Type $ConfigurationBase $RepoName
 

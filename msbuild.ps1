@@ -72,23 +72,35 @@ Function Run-MSBuildSDV {
 # Script Body
 #
 
-$configuration = @{ "free" = "$ConfigurationBase Release"; "checked" = "$ConfigurationBase Debug"; "sdv" = "$ConfigurationBase Release"; }
-$platform = @{ "x86" = "Win32"; "x64" = "x64" }
+$configuration = @{
+    "free" = "$ConfigurationBase Release";
+    "checked" = "$ConfigurationBase Debug";
+    "sdv" = "$ConfigurationBase Release";
+}
+$platform = @{
+    "x86" = "Win32";
+    "x64" = "x64"
+}
 $solutionpath = Resolve-Path "$RepoName\$SolutionDir"
+
+$repoNameWithoutPrefix = $RepoName -replace '^win-', ''
+$solutionName = "$repoNameWithoutPrefix.sln"
 
 Set-ExecutionPolicy -Scope CurrentUser -Force Bypass
 
 if ($Type -eq "sdv") {
-	$archivepath = $RepoName
+    $archivepath = $repoNameWithoutPrefix
 
 	if (-Not (Test-Path -Path $archivepath)) {
 		New-Item -Name $archivepath -ItemType Directory | Out-Null
 	}
 
-	Run-MSBuildSDV $solutionpath $RepoName $configuration["sdv"] $platform[$Arch]
+	Run-MSBuildSDV $solutionpath $solutionName $configuration["sdv"] $platform[$Arch]
 
 	Copy-Item -Path (Join-Path -Path $SolutionPath -ChildPath "*DVL*") -Destination $archivepath
 }
 else {
-	Run-MSBuild $solutionpath "$RepoName.sln" $configuration[$Type] $platform[$Arch]
+    # Utilisez le nom du repo sans préfixe pour l'appel à Run-MSBuild
+    Run-MSBuild $solutionpath $solutionName $configuration[$Type] $platform[$Arch]
 }
+
