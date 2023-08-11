@@ -29,7 +29,11 @@ Function Run-MSBuild {
 	if ($Inputs) {
 		$c += [string]::Format(" /p:Inputs=""{0}"" ", $Inputs)
 	}
-	$c += '"' + (Join-Path -Path $SolutionPath -ChildPath $Name) + '"'
+	
+	# Add flag /Wv:18 in order to disable warning C5250
+    $c += " /p:WarningLevel=18 /p:AdditionalOptions=""/Wv:19.29"""
+	
+	$c += ' "' + (Join-Path -Path $SolutionPath -ChildPath $Name) + '"'
 
 	Invoke-Expression $c
 	if ($LASTEXITCODE -ne 0) {
