@@ -75,17 +75,20 @@ $Replacements | Out-String | Write-Host
 
 $includepath = Resolve-Path $Env:IncludeDir
 $sourcepath = Resolve-Path $Env:SourceDir
-$solutionpath = Resolve-Path $Env:SolutionDir
 
 $src = Join-Path -Path $includepath -ChildPath "version.tmpl"
 $dst = Join-Path -Path $includepath -ChildPath "version.h"
 Copy-FileWithReplacements $src $dst -Replacements $Replacements
-Write-Host "File copied successfully."
 
-$SolutionName = [System.IO.Path]::GetFileNameWithoutExtension($SolutionDir)
-$InfFileName = $SolutionName + ".inf"
+# Retrieve the full path of the first .inf file in the source directory
+$infFilePath = Get-ChildItem -Path $Env:SourceDir -Filter "*.inf" | Select-Object -First 1 -ExpandProperty FullName
 
-$src = Join-Path -Path $sourcepath -ChildPath $InfFileName
-$dst = Join-Path -Path $solutionpath -ChildPath $InfFileName
-Copy-FileWithReplacements $src $dst -Replacements $Replacements
-Write-Host "File copied successfully."
+# Check if a .inf file was found
+if ($infFilePath) {
+    # Use the .inf file path as both source and destination path
+    # Call the Copy-FileWithReplacements function using the new source path
+    Copy-FileWithReplacements $infFilePath $infFilePath -Replacements $Replacements
+} else {
+    Write-Host "No .inf file found in the directory $Env:SourceDir."
+}
+
