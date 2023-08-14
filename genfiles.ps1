@@ -55,6 +55,7 @@ $Replacements = [ordered]@{
 	'PRODUCT_NAME' = $Env:PRODUCT_NAME;
 	'VENDOR_DEVICE_ID' = $Env:VENDOR_DEVICE_ID;
 	'VENDOR_PREFIX' = $Env:VENDOR_PREFIX;
+	'OBJECT_PREFIX' = $Env:OBJECT_PREFIX;
 
 	'MAJOR_VERSION' = $Env:MAJOR_VERSION;
 	'MINOR_VERSION' = $Env:MINOR_VERSION;
@@ -93,4 +94,8 @@ if ($infFilePath) {
     Write-Host "No .inf file found in the directory $Env:SourceDir."
 }
 
-
+# Use the specific replacements if SpecificFileIn and SpecificFileOut are defined
+if ($Env:SpecificFileIn -and $Env:SpecificFileOut) {
+    # Call the Copy-FileWithReplacements function using the source and destination paths
+    Copy-FileWithReplacements $Env:SpecificFileIn $Env:SpecificFileOut -Replacements $Replacements
+}

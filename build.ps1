@@ -60,6 +60,10 @@ if ([string]::IsNullOrEmpty($Env:PRODUCT_NAME)) {
 	Set-Item -Path Env:PRODUCT_NAME -Value 'Xen'
 }
 
+if ([string]::IsNullOrEmpty($Env:OBJECT_PREFIX)) {
+	Set-Item -Path Env:OBJECT_PREFIX -Value 'XenProject'
+}
+
 if ([string]::IsNullOrEmpty($Env:BUILD_NUMBER)) {
 	if (Test-Path ".build_number") {
 		$BuildNum = Get-Content -Path ".build_number"
