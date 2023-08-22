@@ -8,6 +8,7 @@ import shutil
 import sys
 import tempfile
 import time
+import subprocess
 from typing import Iterable
 from contextlib import contextmanager
 from zipfile import ZipFile

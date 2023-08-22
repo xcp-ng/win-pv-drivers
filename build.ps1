@@ -17,7 +17,7 @@ if (!$Env:VisualStudioVersion) {
     Write-Host "VisualStudioVersion environment variable is not set"
     exit -1
 }
-$solutiondir = @{ "14.0" = "vs2015"; "15.0" = "vs2017"; "16.0" = "vs2019"; "17.0" = "vs2022"; }
+$solutiondir = @{ "14.0" = "vs2015"; "15.0" = "vs2017"; "16.0" = "vs2019"; "17.0" = "vs2019"; }
 $SolutionDir = $solutiondir[$visualstudioversion]
 
 # Script Body
