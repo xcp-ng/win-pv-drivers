@@ -10,3 +10,5 @@ win-xenvss/
 *.cer
 __pycache__/
 .build_number
+*.tar
+*.tgz
