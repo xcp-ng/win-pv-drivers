@@ -95,15 +95,13 @@ if ($Type -eq "free" -or $Type -eq "checked") {
 	Run-MSBuild $solutionpath "$SolutionName.sln" $configuration[$Type] $platform[$Arch]
 }
 elseif ($Type -eq "sdv") {
-	$archivepath = "xenvbd"
-
-	if (-Not (Test-Path -Path $archivepath)) {
-		New-Item -Name $archivepath -ItemType Directory | Out-Null
+	if (-Not (Test-Path -Path $SolutionName)) {
+		New-Item -Name $SolutionName -ItemType Directory | Out-Null
 	}
 	
 	foreach ($ProjectName in $ProjectNames) {
 		Run-MSBuildSDV $solutionpath $ProjectName $configuration["sdv"] $platform[$Arch]
 	}
 
-	Copy-Item -Path (Join-Path -Path $solutionPath -ChildPath "*DVL*") -Destination $archivepath
+	Copy-Item -Path (Join-Path -Path $solutionPath -ChildPath "*DVL*") -Destination $SolutionName
 }
