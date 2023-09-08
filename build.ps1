@@ -1,41 +1,64 @@
+#
 # Main build script
+#
+
 param(
 	[Parameter(Mandatory = $true)]
-	[string]$Type,
+	[string]$RepoName,
 	[Parameter(Mandatory = $true)]
-	[string]$ConfigurationBase,
-	[switch]$Sdv,
-    [Parameter(Mandatory = $true)]
-    [string]$RepoName
+	[string]$Type,
+	[switch]$Sdv
 )
 
-Write-Host "Building PV driver:" $RepoName
-
-#common
-$visualstudioversion = $Env:VisualStudioVersion
-if (!$Env:VisualStudioVersion) {
-    Write-Host "VisualStudioVersion environment variable is not set"
-    exit -1
-}
-$solutiondir = @{ "14.0" = "vs2015"; "15.0" = "vs2017"; "16.0" = "vs2019"; "17.0" = "vs2019"; }
-$SolutionDir = $solutiondir[$visualstudioversion]
-
+#
 # Script Body
-Function Build {
-	param(
-		[string]$Arch,
-		[string]$Type,
-		[string]$ConfigurationBase,
-        [string]$RepoName
-	)
+#
 
+$solutiondir = @{
+	"14.0" = "vs2015";
+	"15.0" = "vs2017";
+	"16.0" = "vs2019";
+	"17.0" = "vs2019";
+	"EWDK" = "ewdk";
+}
+
+$configurationbase = @{
+	"14.0" = "Windows 8";
+	"15.0" = "Windows 8";
+	"16.0" = "Windows 8";
+	"17.0" = "Windows 10";
+	"EWDK" = "Windows 10";
+}
+
+Function UnifiedBuild {
+	param(
+		[Parameter(Mandatory = $true)]
+		[string]$RepoName,
+		[string]$Arch = "x64",
+		[string]$Type = "free",
+		[string]$BuildType = "normal"
+	)
+	
+	Write-Host "RepoName is: $RepoName"
+	if (-Not (Test-Path -Path $RepoName)) {
+		Write-Host "Path does not exist: $RepoName"
+		Exit -1
+	}
+	
+	$visualstudioversion = $Env:VisualStudioVersion
 	$params = @{
-		SolutionDir = $SolutionDir;
-		ConfigurationBase = $ConfigurationBase;
+		SolutionDir = $solutiondir[$visualstudioversion];
+		ConfigurationBase = $configurationbase[$visualstudioversion];
+		RepoName = $RepoName;
 		Arch = $Arch;
-		Type = $Type;
-        RepoName = $RepoName;
-		}
+		Type = $Type
+	}
+	
+	if ($BuildType -eq "sdv") {
+		$params["ConfigurationBase"] = "Windows 10"
+		$params["Type"] = "sdv"
+	}
+	
 	& ".\msbuild.ps1" @params
 	if ($LASTEXITCODE -ne 0) {
 		Write-Host -ForegroundColor Red "ERROR: Build failed, code:" $LASTEXITCODE
@@ -60,10 +83,6 @@ if ([string]::IsNullOrEmpty($Env:PRODUCT_NAME)) {
 	Set-Item -Path Env:PRODUCT_NAME -Value 'Xen'
 }
 
-if ([string]::IsNullOrEmpty($Env:OBJECT_PREFIX)) {
-	Set-Item -Path Env:OBJECT_PREFIX -Value 'XenProject'
-}
-
 if ([string]::IsNullOrEmpty($Env:BUILD_NUMBER)) {
 	if (Test-Path ".build_number") {
 		$BuildNum = Get-Content -Path ".build_number"
@@ -79,10 +98,8 @@ Set-Item -Path Env:MAJOR_VERSION -Value '9'
 Set-Item -Path Env:MINOR_VERSION -Value '1'
 Set-Item -Path Env:MICRO_VERSION -Value '0'
 
-# Build 32 bits only for Windows 8
-if ($ConfigurationBase -eq "Windows 8") {
-	Build "x86" $Type $ConfigurationBase $RepoName
+UnifiedBuild -RepoName $RepoName -Arch "x64" -Type $Type
+
+if ($Sdv) {
+	UnifiedBuild -RepoName $RepoName -BuildType "sdv"
 }
-
-Build "x64" $Type $ConfigurationBase $RepoName
-

@@ -93,7 +93,9 @@ def build(projects: Iterable[str], checked: bool, sdv: bool) -> None:
     
     check_projects(projects)
 
-    ps_script = os.path.join(os.getcwd(), "build.ps1")
+#   ps_script = os.path.join(os.getcwd(), "build.ps1")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    ps_script = os.path.join(script_dir, "build.ps1")
     ps_script = '"' + ps_script + '"' if ' ' in ps_script else ps_script
     buildarg = "checked" if checked else "free"
     sdvarg = "sdv" if sdv else ""

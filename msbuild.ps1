@@ -3,14 +3,17 @@ param(
 	[string]$SolutionDir = "vs2019",
 	[string]$ConfigurationBase = "Windows 10",
 	[Parameter(Mandatory = $true)]
+	[string]$RepoName,
+	[Parameter(Mandatory = $true)]
 	[string]$Arch,
 	[Parameter(Mandatory = $true)]
 	[string]$Type,
-    [Parameter(Mandatory = $true)]
-    [string]$RepoName
+	[string[]]$ProjectNames = @("xencrsh", "xendisk", "xenvbd")
 )
 
+$SolutionName = $RepoName -replace 'win-', ''
 
+# Function to run MSBuild with specified parameters
 Function Run-MSBuild {
 	param(
 		[string]$SolutionPath,
@@ -21,27 +24,30 @@ Function Run-MSBuild {
 		[string]$Inputs = ""
 	)
 
-	$c = "msbuild.exe"
-	$c += " /m:4"
-	$c += [string]::Format(" /p:Configuration=""{0}""", $Configuration)
-	$c += [string]::Format(" /p:Platform=""{0}""", $Platform)
-	$c += [string]::Format(" /t:""{0}"" ", $Target)
-	if ($Inputs) {
-		$c += [string]::Format(" /p:Inputs=""{0}"" ", $Inputs)
-	}
-	
-	# Add flag /Wv:18 in order to disable warning C5250
-    $c += " /p:WarningLevel=18 /p:AdditionalOptions=""/Wv:19.29"""
-	
-	$c += ' "' + (Join-Path -Path $SolutionPath -ChildPath $Name) + '"'
+	# Construct options in a structured manner
+	$options = @(
+		"/m:4",
+		"/p:Configuration=`"$Configuration`"",
+		"/p:Platform=`"$Platform`"",
+		"/t:`"$Target`""
+	)
 
-	Invoke-Expression $c
+	if ($Inputs) {
+		$options += "/p:Inputs=`"$Inputs`""
+	}
+
+	$options += ('"{0}"' -f (Join-Path -Path $SolutionPath -ChildPath $Name))
+
+	# Execute MSBuild with the options
+	Invoke-Expression -Command ("msbuild.exe " + [string]::Join(" ", $options))
+
 	if ($LASTEXITCODE -ne 0) {
 		Write-Host -ForegroundColor Red "ERROR: MSBuild failed, code:" $LASTEXITCODE
 		Exit $LASTEXITCODE
 	}
 }
 
+# Function to run MSBuild for SDV analysis with specific parameters
 Function Run-MSBuildSDV {
 	param(
 		[string]$SolutionPath,
@@ -72,39 +78,32 @@ Function Run-MSBuildSDV {
 	Set-Location $basepath
 }
 
-#
-# Script Body
-#
-
+# Main script body
 $configuration = @{
-    "free" = "$ConfigurationBase Release";
-    "checked" = "$ConfigurationBase Debug";
-    "sdv" = "$ConfigurationBase Release";
+	"free" = "$ConfigurationBase Release";
+	"checked" = "$ConfigurationBase Debug";
+	"sdv" = "$ConfigurationBase Release"
 }
-$platform = @{
-    "x86" = "Win32";
-    "x64" = "x64"
-}
-$solutionpath = Resolve-Path "$RepoName\$SolutionDir"
+$platform = @{ "x86" = "Win32"; "x64" = "x64" }
 
-$repoNameWithoutPrefix = $RepoName -replace '^win-', ''
-$solutionName = "$repoNameWithoutPrefix.sln"
+Set-Location -Path $RepoName
+$solutionpath = Resolve-Path $SolutionDir
 
 Set-ExecutionPolicy -Scope CurrentUser -Force Bypass
 
-if ($Type -eq "sdv") {
-    $archivepath = $repoNameWithoutPrefix
+if ($Type -eq "free" -or $Type -eq "checked") {
+	Run-MSBuild $solutionpath "$SolutionName.sln" $configuration[$Type] $platform[$Arch]
+}
+elseif ($Type -eq "sdv") {
+	$archivepath = "xenvbd"
 
 	if (-Not (Test-Path -Path $archivepath)) {
 		New-Item -Name $archivepath -ItemType Directory | Out-Null
 	}
+	
+	foreach ($ProjectName in $ProjectNames) {
+		Run-MSBuildSDV $solutionpath $ProjectName $configuration["sdv"] $platform[$Arch]
+	}
 
-	Run-MSBuildSDV $solutionpath $solutionName $configuration["sdv"] $platform[$Arch]
-
-	Copy-Item -Path (Join-Path -Path $SolutionPath -ChildPath "*DVL*") -Destination $archivepath
+	Copy-Item -Path (Join-Path -Path $solutionPath -ChildPath "*DVL*") -Destination $archivepath
 }
-else {
-    # Utilisez le nom du repo sans préfixe pour l'appel à Run-MSBuild
-    Run-MSBuild $solutionpath $solutionName $configuration[$Type] $platform[$Arch]
-}
-
