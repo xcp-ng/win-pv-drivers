@@ -98,7 +98,9 @@ elseif ($Type -eq "sdv") {
 	if (-Not (Test-Path -Path $SolutionName)) {
 		New-Item -Name $SolutionName -ItemType Directory | Out-Null
 	}
-	
+	if (-not $ProjectNames) {
+		$ProjectNames = @($SolutionName)
+	}
 	foreach ($ProjectName in $ProjectNames) {
 		Run-MSBuildSDV $solutionpath $ProjectName $configuration["sdv"] $platform[$Arch]
 	}
