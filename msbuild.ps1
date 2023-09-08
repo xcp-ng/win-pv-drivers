@@ -7,8 +7,7 @@ param(
 	[Parameter(Mandatory = $true)]
 	[string]$Arch,
 	[Parameter(Mandatory = $true)]
-	[string]$Type,
-	[string[]]$ProjectNames = @("xencrsh", "xendisk", "xenvbd")
+	[string]$Type
 )
 
 $SolutionName = $RepoName -replace 'win-', ''
@@ -98,9 +97,15 @@ elseif ($Type -eq "sdv") {
 	if (-Not (Test-Path -Path $SolutionName)) {
 		New-Item -Name $SolutionName -ItemType Directory | Out-Null
 	}
-	if (-not $ProjectNames) {
+	
+	if ($SolutionName -eq "xenvbd") {
+		$ProjectNames = @("xencrsh", "xendisk", "xenvbd")
+	} elseif ($SolutionName -eq "xenbus") {
+		$ProjectNames = @("xen", "xenfilt", "xenbus")
+	} else {
 		$ProjectNames = @($SolutionName)
 	}
+	
 	foreach ($ProjectName in $ProjectNames) {
 		Run-MSBuildSDV $solutionpath $ProjectName $configuration["sdv"] $platform[$Arch]
 	}
