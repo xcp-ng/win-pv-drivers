@@ -87,7 +87,7 @@ def check_projects(projects: Iterable[str]) -> None:
     if rem:
         die("project(s) %s not valid.  Options are: %s" % (', '.join(rem), ALL_PROJECTS))
         
-def build(projects: Iterable[str], checked: bool) -> None:
+def build(projects: Iterable[str], checked: bool, sdv: bool) -> None:
     """Build all source repos if projects is empty, otherwise build only those repos found in projects."""
     global ALL_PROJECTS 
     
@@ -96,6 +96,7 @@ def build(projects: Iterable[str], checked: bool) -> None:
     ps_script = os.path.join(os.getcwd(), "build.ps1")
     ps_script = '"' + ps_script + '"' if ' ' in ps_script else ps_script
     buildarg = "checked" if checked else "free"
+    sdvarg = "sdv" if sdv else ""
 
     for i, dirname in enumerate(ALL_PROJECTS):
         assert os.path.exists(dirname), \
@@ -107,7 +108,7 @@ def build(projects: Iterable[str], checked: bool) -> None:
         if "win-xenguestagent" in dirname:
             p = build_env_cmd(['python', os.path.join(dirname, 'build.py'), buildarg])
         else:
-            p = build_env_cmd(['powershell', '-file', ps_script, '-RepoName', f'"{dirname}"', buildarg])
+            p = build_env_cmd(['powershell', '-file', ps_script, '-RepoName', f'"{dirname}"', buildarg, sdvarg])
 
         if p and p.returncode != 0:
             die("Built %s projects, but building %s failed. Stopped." % (i, dirname))
@@ -127,6 +128,7 @@ if __name__ == "__main__":
     build_parser.set_defaults(action="build")
     build_parser.add_argument("projects", nargs="*", choices=ALL_PROJECTS + ["win-installer", []], help="The projects to build.")
     build_parser.add_argument("--debug", "-d", action="store_true", help="Build projects with debug config.")
+    build_parser.add_argument("--sdv", action="store_true", help="Run SDV analysis.")
 
     args = parser.parse_args()
 
@@ -143,7 +145,7 @@ if __name__ == "__main__":
         setup_env()
         check_env()
         build_all = not args.projects
-        build(ALL_PROJECTS if build_all else args.projects, checked=args.debug)
+        build(ALL_PROJECTS if build_all else args.projects, checked=args.debug, sdv=args.sdv)
         if "win-installer" in args.projects or build_all:
             build_installer(args.debug)
     else:
