@@ -6,14 +6,11 @@ import os
 import pprint
 import shutil
 import sys
-import tempfile
-import time
 import subprocess
 from typing import Iterable
-from contextlib import contextmanager
 from zipfile import ZipFile
-import branding
 from command_utils import (
+    TIME, PROG, die,
     do_run, 
     is_wix_dotnet_tool_installed,
     find_file_in_drives,
@@ -24,17 +21,11 @@ from command_utils import (
     get_build_env_config,
     build_env_cmd
 )
-
-TIME = time.time_ns()
-PROG = os.path.basename(sys.argv[0])
+from installer_builder import build_installer
 
 def perror(message) -> None:
     print('ERROR: ' + message, file=sys.stderr)
     logging.error(message)
-
-def die(message):
-    perror(message)
-    sys.exit(1)
 
 urls = [
     "https://www.github.com/xcp-ng/win-xenbus.git",
@@ -49,22 +40,6 @@ def url_to_simple_name(url) -> str:
     return os.path.basename(url).split('.git')[0]
 
 ALL_PROJECTS = [url_to_simple_name(url) for url in urls]
-
-@contextmanager
-def change_dir(directory: str, *args, **kwds):
-    logging.info("Changing working directory to %s" % directory)
-    def __chdir(path):
-        os.chdir(path)
-        logging.info("Changed working directory to %s" % os.path.abspath(os.curdir))
-
-    prevdir = os.path.abspath(os.curdir)
-    logging.info("Previous working directory was %s" % prevdir)
-    __chdir(directory)
-    try:
-        yield
-    finally:
-        __chdir(prevdir)
-        logging.info("Returned to previous directory %s" % os.path.abspath(os.curdir))
 
 def fetch() -> None:
     win_pv_drivers_branch = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).strip().decode()
@@ -93,7 +68,6 @@ def build(projects: Iterable[str], checked: bool, sdv: bool) -> None:
     
     check_projects(projects)
 
-#   ps_script = os.path.join(os.getcwd(), "build.ps1")
     script_dir = os.path.dirname(os.path.abspath(__file__))
     ps_script = os.path.join(script_dir, "build.ps1")
     ps_script = '"' + ps_script + '"' if ' ' in ps_script else ps_script

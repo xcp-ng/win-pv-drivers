@@ -1,13 +1,36 @@
 import logging
 import os
+import sys
 import subprocess
 import pprint
+import time
 from subprocess import run, CompletedProcess, PIPE, SubprocessError
 from typing import List
+
+TIME = time.time_ns()
+PROG = os.path.basename(sys.argv[0])
 
 DRIVES = [letter + ":" for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ']
 EWDK_FILE_PATH = "SetupBuildEnv.cmd"
 VS_FILE_PATH = os.path.join("VC", "Auxiliary", "Build", "vcvarsall.bat")
+
+urls = [
+    "https://www.github.com/xcp-ng/win-xenbus.git",
+    "https://www.github.com/xcp-ng/win-xeniface.git",
+    "https://www.github.com/xcp-ng/win-xenvif.git",
+    "https://www.github.com/xcp-ng/win-xennet.git",
+    "https://www.github.com/xcp-ng/win-xenvbd.git",
+    "https://www.github.com/xcp-ng/win-xenguestagent.git",
+]
+
+def url_to_simple_name(url) -> str:
+    return os.path.basename(url).split('.git')[0]
+
+ALL_PROJECTS = [url_to_simple_name(url) for url in urls]
+
+def die(message):
+    perror(message)
+    sys.exit(1)
 
 def do_run(*args, **kwargs) -> CompletedProcess:
     args_string = ", ".join(pprint.pformat(x) for x in args)
