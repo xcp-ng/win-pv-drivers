@@ -28,6 +28,10 @@ def url_to_simple_name(url) -> str:
 
 ALL_PROJECTS = [url_to_simple_name(url) for url in urls]
 
+def perror(message) -> None:
+    print('ERROR: ' + message, file=sys.stderr)
+    logging.error(message)
+
 def die(message):
     perror(message)
     sys.exit(1)

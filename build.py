@@ -10,8 +10,7 @@ import subprocess
 from typing import Iterable
 from zipfile import ZipFile
 from command_utils import (
-    TIME, PROG, die,
-    do_run, 
+    TIME, PROG, die, perror, do_run, 
     is_wix_dotnet_tool_installed,
     find_file_in_drives,
     is_valid_build_env,
@@ -22,10 +21,6 @@ from command_utils import (
     build_env_cmd
 )
 from installer_builder import build_installer
-
-def perror(message) -> None:
-    print('ERROR: ' + message, file=sys.stderr)
-    logging.error(message)
 
 urls = [
     "https://www.github.com/xcp-ng/win-xenbus.git",

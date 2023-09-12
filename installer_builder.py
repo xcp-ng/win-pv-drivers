@@ -1,4 +1,4 @@
-from command_utils import TIME, PROG, die, do_cmd, ALL_PROJECTS
+from command_utils import TIME, PROG, perror, die, do_cmd, ALL_PROJECTS
 import os
 import shutil
 import tempfile
