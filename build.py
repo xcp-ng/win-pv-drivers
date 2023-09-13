@@ -11,6 +11,7 @@ from typing import Iterable
 from zipfile import ZipFile
 from command_utils import (
     TIME, PROG, die, perror, do_run, 
+    urls, url_to_simple_name, ALL_PROJECTS,
     is_wix_dotnet_tool_installed,
     find_file_in_drives,
     is_valid_build_env,
@@ -21,20 +22,6 @@ from command_utils import (
     build_env_cmd
 )
 from installer_builder import build_installer
-
-urls = [
-    "https://www.github.com/xcp-ng/win-xenbus.git",
-    "https://www.github.com/xcp-ng/win-xeniface.git",
-    "https://www.github.com/xcp-ng/win-xenvif.git",
-    "https://www.github.com/xcp-ng/win-xennet.git",
-    "https://www.github.com/xcp-ng/win-xenvbd.git",
-    "https://www.github.com/xcp-ng/win-xenguestagent.git",
-]
-
-def url_to_simple_name(url) -> str:
-    return os.path.basename(url).split('.git')[0]
-
-ALL_PROJECTS = [url_to_simple_name(url) for url in urls]
 
 def fetch() -> None:
     win_pv_drivers_branch = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).strip().decode()
