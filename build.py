@@ -36,7 +36,6 @@ def fetch() -> None:
         repo_name = url_to_simple_name(url)
         branch_name = f"{prefix}{repo_name}" if prefix else "master"
         do_run(["git", "clone", "-b", branch_name, url])
-    do_run(["git", "clone", "https://github.com/xcp-ng/win-installer.git"])
 
 def check_projects(projects: Iterable[str]) -> None:
     global ALL_PROJECTS
