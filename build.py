@@ -64,12 +64,13 @@ def build(projects: Iterable[str], checked: bool, sdv: bool) -> None:
             
         if "win-xenguestagent" in dirname:
             p = build_env_cmd(['python', os.path.join(dirname, 'build.py'), buildarg])
+        elif "win-installer" in dirname:
+            build_installer(debug=(buildarg == "checked"))
         else:
             p = build_env_cmd(['powershell', '-file', ps_script, '-RepoName', f'"{dirname}"', buildarg, sdvarg])
 
         if p and p.returncode != 0:
             die("Built %s projects, but building %s failed. Stopped." % (i, dirname))
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="The Windows PV drivers builder.")
@@ -103,8 +104,6 @@ if __name__ == "__main__":
         check_env()
         build_all = not args.projects
         build(ALL_PROJECTS if build_all else args.projects, checked=args.debug, sdv=args.sdv)
-        if "win-installer" in args.projects or build_all:
-            build_installer(args.debug)
     else:
         parser.print_help()
         sys.exit(1)
