@@ -82,7 +82,17 @@ def find_file_in_drives(file_path):
     return None
 
 def is_valid_build_env(path):
-    return os.path.exists(os.path.join(path, EWDK_FILE_PATH)) or os.path.exists(os.path.join(path, VS_FILE_PATH))
+    if EWDK_FILE_PATH in path:
+        ewdk_path = path
+    else:
+        ewdk_path = os.path.join(path, EWDK_FILE_PATH)
+    
+    if VS_FILE_PATH in path:
+        vs_path = path
+    else:
+        vs_path = os.path.join(path, VS_FILE_PATH)
+
+    return os.path.exists(ewdk_path) or os.path.exists(vs_path)
 
 def setup_env() -> None:
     if "BUILD_ENV" in os.environ:

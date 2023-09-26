@@ -1,6 +1,38 @@
 #
-# Generate version.h and inf file for driver
+# Generate version.h and inf file
 #
+param(
+	[string]$DriverName,
+	[string]$Platform = "Win32",
+	[string]$SolutionDir = "vs2017",
+	[string]$IncludeDir = "include",
+	[string]$SourceDir = "src",
+	[string]$SpecificFileIn,
+	[string]$SpecificFileOut
+)
+
+Function Import-EnvVarsFromJson {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$jsonFilePath
+    )
+
+    # Vérifier si le fichier existe
+    if (Test-Path -Path $jsonFilePath -PathType Leaf) {
+        # Charger le contenu JSON dans un objet PowerShell
+        $jsonContent = Get-Content $jsonFilePath | ConvertFrom-Json
+
+        # Parcourir chaque clé-valeur dans l'objet
+        foreach ($key in $jsonContent.PSObject.Properties.Name) {
+            $value = $jsonContent.$key
+
+            # Définir la variable d'environnement
+            [System.Environment]::SetEnvironmentVariable($key, $value, [System.EnvironmentVariableTarget]::Process)
+        }
+    } else {
+        Write-Host -ForegroundColor Red "File not found: $jsonFilePath"
+    }
+}
 
 # Copy $InFileName -> $OutFileName replacing $Token$_.Key$Token with $_.Value from
 # $Replacements
@@ -36,6 +68,8 @@ Function Copy-FileWithReplacements {
 #
 # Script Body
 #
+$variablesJsonPath = Join-Path -Path $PSScriptRoot -ChildPath "variables.json"
+Import-EnvVarsFromJson -jsonFilePath $variablesJsonPath
 $TheYear = [int](Get-Date -UFormat "%Y")
 $TheMonth = [int](Get-Date -UFormat "%m")
 $TheDay = [int](Get-Date -UFormat "%d")
@@ -55,8 +89,8 @@ $Replacements = [ordered]@{
 	'PRODUCT_NAME' = $Env:PRODUCT_NAME;
 	'VENDOR_DEVICE_ID' = $Env:VENDOR_DEVICE_ID;
 	'VENDOR_PREFIX' = $Env:VENDOR_PREFIX;
+	'COPYRIGHT' = $Env:COPYRIGHT;
 	'OBJECT_PREFIX' = $Env:OBJECT_PREFIX;
-
 	'MAJOR_VERSION' = $Env:MAJOR_VERSION;
 	'MINOR_VERSION' = $Env:MINOR_VERSION;
 	'MICRO_VERSION' = $Env:MICRO_VERSION;
@@ -66,7 +100,7 @@ $Replacements = [ordered]@{
 	'GIT_REVISION' = $GitRevision;
 
 	'INF_DATE' = $InfDate;
-	'INF_ARCH' = $InfArch[$Env:Platform];
+	'INF_ARCH' = $InfArch[$Platform];
 	'YEAR' = $TheYear;
 	'MONTH' = $TheMonth;
 	'DAY' = $TheDay
@@ -74,28 +108,20 @@ $Replacements = [ordered]@{
 
 $Replacements | Out-String | Write-Host
 
-$includepath = Resolve-Path $Env:IncludeDir
-$sourcepath = Resolve-Path $Env:SourceDir
-
+$includepath = Resolve-Path $IncludeDir
 $src = Join-Path -Path $includepath -ChildPath "version.tmpl"
 $dst = Join-Path -Path $includepath -ChildPath "version.h"
 Copy-FileWithReplacements $src $dst -Replacements $Replacements
 
-# Use the SourceDir environment variable to construct the source directory path
-# Retrieve the full path of the first .inf file in the source directory
-$infFilePath = Get-ChildItem -Path $Env:SourceDir -Filter "*.inf" | Select-Object -First 1 -ExpandProperty FullName
+$sourcepath = Resolve-Path $SourceDir
+$solutionpath = Resolve-Path $SolutionDir
+$infFile = "$DriverName.inf"
+$src = Join-Path -Path $sourcepath -ChildPath $infFile
+$dst = Join-Path -Path $solutionpath -ChildPath $infFile
+Copy-FileWithReplacements $src $dst -Replacements $Replacements
 
-# Check if a .inf file was found
-if ($infFilePath) {
-    # Construct the destination path in the solution directory
-	$destinationPath = Join-Path -Path $Env:SolutionDir -ChildPath (Split-Path $infFilePath -Leaf)
-	Copy-FileWithReplacements $infFilePath $destinationPath -Replacements $Replacements
-} else {
-    Write-Host "No .inf file found in the directory $Env:SourceDir."
-}
-
-# Use the specific replacements if SpecificFileIn and SpecificFileOut are defined
-if ($Env:SpecificFileIn -and $Env:SpecificFileOut) {
-    # Call the Copy-FileWithReplacements function using the source and destination paths
-    Copy-FileWithReplacements $Env:SpecificFileIn $Env:SpecificFileOut -Replacements $Replacements
+if ($SpecificFileIn -and $SpecificFileOut) {
+	$fileIn = Resolve-Path $SpecificFileIn
+	$fileOut = Resolve-Path $SpecificFileOut
+	Copy-FileWithReplacements $fileIn $fileOut -Replacements $Replacements
 }

@@ -13,3 +13,4 @@ __pycache__/
 .build_number
 *.tar
 *.tgz
+BrandSupport/brandsat.en-us.dll

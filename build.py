@@ -65,7 +65,7 @@ def build(projects: Iterable[str], checked: bool, sdv: bool) -> None:
         if "win-xenguestagent" in dirname:
             p = build_env_cmd(['python', os.path.join(dirname, 'build.py'), buildarg])
         elif "win-installer" in dirname:
-            build_installer(debug=(buildarg == "checked"))
+            build_installer()
         else:
             p = build_env_cmd(['powershell', '-file', ps_script, '-RepoName', f'"{dirname}"', buildarg, sdvarg])
 

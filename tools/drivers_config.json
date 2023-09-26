@@ -1,0 +1,10 @@
+{
+    "win-xenbus": ["xen", "xenfilt", "xenbus"],
+    "win-xencons": ["xencons"],
+    "win-xenhid": ["xenhid"],
+    "win-xeniface": ["xeniface"],
+    "win-xennet": ["xennet"],
+    "win-xenvbd": ["xencrsh", "xendisk", "xenvbd"],
+    "win-xenvif": ["xenvif"],
+    "win-xenvkbd": ["xenvkbd"]
+}

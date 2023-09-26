@@ -1,42 +1,14 @@
-from command_utils import TIME, PROG, perror, die, do_cmd, ALL_PROJECTS
+from command_utils import TIME, PROG, perror, die, do_cmd, ALL_PROJECTS, build_env_cmd
 import os
 import shutil
 import tempfile
 from zipfile import ZipFile
-from contextlib import contextmanager
-from subprocess import PIPE, SubprocessError
+import subprocess
+from subprocess import PIPE, run, SubprocessError
 import sys
 import argparse
 import logging
 import branding
-
-@contextmanager
-def change_dir(directory: str, *args, **kwds):
-    """
-    Temporarily changes the current directory.
-
-    Changes to a directory when entering the context, returns to
-    the previous directory when exiting the context.
-
-    Usage:
-
-    >>> with change_dir("path/to/dir/"):
-    >>>     do_stuff_in_new_directory()
-    >>> do_stuff_in_previous_directory()
-
-    Returns None.
-    """
-
-    def __chdir(path):
-        os.chdir(path)
-        logging.info("Changed working directory to %s" % os.path.abspath(path))
-
-    prevdir = os.path.abspath(os.curdir)
-    __chdir(directory)
-    try:
-        yield
-    finally:
-        __chdir(prevdir)
 
 def create_installer_dep_directory() -> str:
     """Create the directory of dependencies that the installer build requires."""
@@ -110,7 +82,7 @@ def validate_authenticode_cert(cert: str, authenticode_file: str) -> None:
         die("{}'s thumbprint ({}) does not match {}'s thumbprint ({})".format(
             cert, cert_thumb, authenticode_file, auth_thumb))
 
-def build_installer(debug: bool = False) -> None:
+def build_installer(debug: bool = True) -> None:
     """Build the installer and print out its location."""
     if not os.path.exists("win-installer"):
         die("Source directory 'win-installer' does not exist, has '%s fetch' been executed?" % PROG)
@@ -130,10 +102,13 @@ def build_installer(debug: bool = False) -> None:
             die(("Failed to add %s to cert store. If this is a test build, "
                  " be sure to use the --debug flag.") % certfile)
 
-    with change_dir("win-installer"):
-        ret = do_cmd("python build.py --local %s --sign %s" % (depdir, certname))
+    try:
+        ret = subprocess.run(["python", "win-installer/build.py", "--local", "depdir", "--sign", "certname"], check=True)
         if ret.returncode != 0:
-            die("failed: python build.py --local %s --sign %s" % (depdir, certname))
+            raise Exception(f"Build failed with return code {ret.returncode}")
+    except Exception as e:
+        print(f"Error encountered: {e}")
+        die(f"failed: python build.py --local {depdir} --sign {certname}")
 
     outdir = os.path.abspath("output")
     if not os.path.exists(outdir):
@@ -168,7 +143,7 @@ def build_installer(debug: bool = False) -> None:
 def makecert(filename: str, certname: str) -> None:
     """
     Create a test signing cert using makecert.exe.
-    
+
     This cert will be used by win-installer to sign the installer and drivers,
     and the cert may used for testing on a test machine.
 
@@ -179,14 +154,13 @@ def makecert(filename: str, certname: str) -> None:
     Returns the path to the cert.
     """
     certmgr_remove(certname)
-    do_run([
-        os.path.join(os.environ["KIT"], "bin", "x64", "makecert.exe"),
+    build_env_cmd([
+        "makecert.exe",
         "-r", "-pe",
         "-ss", "my", # the Personal store, required by win-installer
-        "-n", "CN=%s" % certname,
-        "-eku", "1.3.6.1.5.5.7.3.3", filename
-    ], env=os.environ.copy())
-
+        "-n", f"CN={certname}",
+        "-eku", "1.3.6.1.5.5.7.3.3", f'"{filename}"'
+    ])
 
 def certmgr_remove(certname: str, store: str = "my") -> None:
     """
@@ -197,12 +171,10 @@ def certmgr_remove(certname: str, store: str = "my") -> None:
         certname: the name of the certificate to remove.
         store: the certificate store that contains the certificate.
     """
-    certmgr = os.path.join(os.environ["KIT"], "bin", "x64", "certmgr.exe")
-    remove = certmgr + " -del -all -n %s -s -r currentUser -c %s" % (certname, store)
     try:
-        do_cmd(remove, stdout=PIPE, stderr=PIPE)
+        build_env_cmd(["certmgr.exe", "-del", "-all", "-n", certname, "-s", "-r", "currentUser", "-c", store], stdout=PIPE, stderr=PIPE)
     except SubprocessError as e:
-        print("WARNING: %s" % str(e))
+        print(f"WARNING: {str(e)}")
 
 
 def certmgr_add(certfile: str, store: str = "my") -> bool:
@@ -216,6 +188,4 @@ def certmgr_add(certfile: str, store: str = "my") -> bool:
 
     Return True if successful, otherwise False.
     """
-    certmgr = os.path.join(os.environ["KIT"], "bin", "x64", "certmgr.exe")
-    add = certmgr + " -add %s -s -r currentUser %s" % (certfile, store)
-    return do_cmd(add).returncode == 0
+    return build_env_cmd(["certmgr.exe", "-add", certfile, "-s", "-r", "currentUser", store]).returncode == 0
