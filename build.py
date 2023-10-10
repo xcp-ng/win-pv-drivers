@@ -27,15 +27,23 @@ def fetch() -> None:
     win_pv_drivers_branch = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).strip().decode()
     win_pv_drivers_url = subprocess.check_output(["git", "remote", "get-url", "origin"]).strip().decode() 
     win_pv_drivers_repo_name = url_to_simple_name(win_pv_drivers_url)
+    
     if win_pv_drivers_branch.endswith(win_pv_drivers_repo_name):
         prefix = win_pv_drivers_branch[:-len(win_pv_drivers_repo_name)]
     else:
         prefix = None
-
+        
     for url in urls:
         repo_name = url_to_simple_name(url)
-        branch_name = f"{prefix}{repo_name}" if prefix else "master"
-        do_run(["git", "clone", "-b", branch_name, url])
+        branch_name = f"{prefix}{repo_name}" if prefix else None
+
+        do_run(["git", "clone", url])
+
+        if branch_name:
+            try:
+                do_run(["git", "-C", repo_name, "checkout", branch_name])
+            except subprocess.CalledProcessError:
+                print(f"Branch {branch_name} doesn't exist in {repo_name}. Staying on the default branch.")
 
 def check_projects(projects: Iterable[str]) -> None:
     global ALL_PROJECTS
