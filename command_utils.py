@@ -20,7 +20,7 @@ urls = [
     "https://www.github.com/xcp-ng/win-xenvif.git",
     "https://www.github.com/xcp-ng/win-xennet.git",
     "https://www.github.com/xcp-ng/win-xenvbd.git",
-    "https://www.github.com/xcp-ng/win-xenvkbd",
+    "https://www.github.com/xcp-ng/win-xenvkbd.git",
     "https://www.github.com/xcp-ng/win-xenguestagent.git",
     "https://www.github.com/xcp-ng/win-installer.git"
 ]
