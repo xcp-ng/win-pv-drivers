@@ -122,6 +122,6 @@ Copy-FileWithReplacements $src $dst -Replacements $Replacements
 
 if ($SpecificFileIn -and $SpecificFileOut) {
 	$fileIn = Resolve-Path $SpecificFileIn
-	$fileOut = Resolve-Path $SpecificFileOut
+	$fileOut = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine((Get-Location), $SpecificFileOut))
 	Copy-FileWithReplacements $fileIn $fileOut -Replacements $Replacements
 }
