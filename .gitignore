@@ -7,6 +7,7 @@ win-xennet/
 win-xenvbd/
 win-xenvif/
 win-xenvss/
+win-xenvkbd/
 xenguestagent/
 *.cer
 __pycache__/
@@ -14,3 +15,8 @@ __pycache__/
 *.tar
 *.tgz
 BrandSupport/brandsat.en-us.dll
+include/branding.en-us.wxi
+include/branding.h
+include/setupbranding.h
+include/VerInfo.cs
+include/verinfo.wxi

@@ -153,9 +153,9 @@ $configuration = @{ "free" = "$ConfigurationBase Release"; "checked" = "$Configu
 $platform = @{ "x86" = "Win32"; "x64" = "x64" }
 
 # Read the driver-project mapping from JSON file
-$toolsDir = "$PSScriptRoot"
+$toolsDir = Split-Path -Path $MyInvocation.MyCommand.Path
 $configFilePath = Join-Path -Path $toolsDir -ChildPath "drivers_config.json"
-$jsonContent = Get-Content -Path "drivers_config.json" | ConvertFrom-Json
+$jsonContent = Get-Content -Path $configFilePath | ConvertFrom-Json
 $projectlist = $jsonContent.$DriverName
 
 if ($null -eq $projectlist) {
@@ -163,7 +163,7 @@ if ($null -eq $projectlist) {
 	Exit -1
 }
 
-$parentDir = [System.IO.Path]::GetDirectoryName((Get-Location).Path)
+$parentDir = [System.IO.Path]::GetDirectoryName($toolsDir)
 $solutionpath = Resolve-Path (Join-Path -Path $parentDir -ChildPath "$DriverName\$SolutionDir")
 $solutionName = $DriverName -replace "^win-", "" # Remove "win-" prefix
 

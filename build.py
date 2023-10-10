@@ -50,7 +50,7 @@ def build(projects: Iterable[str], checked: bool, sdv: bool) -> None:
     check_projects(projects)
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    ps_script = os.path.join(script_dir, "build.ps1")
+    ps_script = os.path.join(script_dir, "tools/build.ps1")
     ps_script = '"' + ps_script + '"' if ' ' in ps_script else ps_script
     buildarg = "checked" if checked else "free"
     sdvarg = "sdv" if sdv else ""
@@ -67,7 +67,7 @@ def build(projects: Iterable[str], checked: bool, sdv: bool) -> None:
         elif "win-installer" in dirname:
             build_installer()
         else:
-            p = build_env_cmd(['powershell', '-file', ps_script, '-RepoName', f'"{dirname}"', buildarg, sdvarg])
+            p = build_env_cmd(['powershell', '-file', ps_script, '-DriverName', f'"{dirname}"', buildarg, sdvarg])
 
         if p and p.returncode != 0:
             die("Built %s projects, but building %s failed. Stopped." % (i, dirname))
