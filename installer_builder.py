@@ -103,7 +103,7 @@ def build_installer(debug: bool = True) -> None:
                  " be sure to use the --debug flag.") % certfile)
 
     try:
-        ret = subprocess.run(["python", "win-installer/build.py", "--local", "depdir", "--sign", "certname"], check=True)
+        ret = subprocess.run(["python", "win-installer/build.py", "--local", depdir, "--sign", certname], check=True)
         if ret.returncode != 0:
             raise Exception(f"Build failed with return code {ret.returncode}")
     except Exception as e:
