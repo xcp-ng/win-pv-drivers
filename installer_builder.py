@@ -31,7 +31,7 @@ def create_installer_dep_directory() -> str:
             print(f"Error: The directory {olddir} does not exist.")
             # Vous pourriez choisir de quitter le script ici avec une erreur
 
-    shutil.copytree(os.path.join('win-installer', 'vmcleaner'), os.path.join(depdir, 'vmcleaner'))
+#    shutil.copytree(os.path.join('win-installer', 'vmcleaner'), os.path.join(depdir, 'vmcleaner'))
     return depdir
     
 def get_certname() -> str:
