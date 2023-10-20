@@ -47,8 +47,8 @@ def authenticode_thumbprint(file: str) -> str:
     
     Returns the thumbprint as a string.
     """
-    command = "powershell.exe (Get-AuthenticodeSignature -FilePath {}).SignerCertificate.Thumbprint"\
-                    .format(file)
+    command = "powershell.exe [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; (Get-AuthenticodeSignature -FilePath {}).SignerCertificate.Thumbprint".format(file)
+
     return do_cmd(command, stdout=PIPE).stdout.strip().decode()
 
 def certificate_thumbprint(cert: str) -> str:
@@ -113,10 +113,10 @@ def build_installer(debug: bool = True) -> None:
     outdir = os.path.abspath("output")
     if not os.path.exists(outdir):
         os.mkdir(outdir)
-    builddir = os.path.join("win-installer", "installer")
+    builddir = os.path.abspath("installer")
 
     for fname in ["managementagentx64.msi", "managementagentx86.msi", "Setup.exe"]:
-        fpath = os.path.join(builddir, fname)
+        fpath = os.path.abspath(os.path.join(builddir, fname))
         validate_authenticode_cert(certfile, fpath)
         shutil.copy(fpath, outdir)
 

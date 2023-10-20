@@ -14,9 +14,10 @@ __pycache__/
 .build_number
 *.tar
 *.tgz
-BrandSupport/brandsat.en-us.dll
+BrandSupport/brandsat*.dll
 include/branding.en-us.wxi
 include/branding.h
 include/setupbranding.h
 include/VerInfo.cs
 include/verinfo.wxi
+installer/
