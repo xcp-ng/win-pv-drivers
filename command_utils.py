@@ -94,8 +94,20 @@ def is_valid_build_env(path):
         vs_path = os.path.join(path, VS_FILE_PATH)
 
     return os.path.exists(ewdk_path) or os.path.exists(vs_path)
+    
+def set_build_variables():
+    os.environ["VENDOR_NAME"] = "XCP new generation"
+    os.environ["VENDOR_PREFIX"] = "XCP-ng"
+    os.environ["PRODUCT_NAME"] = "XCP"
+    os.environ["OBJECT_PREFIX"] = "xcpng"
+    os.environ["COPYRIGHT"] = "Copyright (c) XCP-ng Project."
+    os.environ["BUILD_NUMBER"] = "0"
+    os.environ["MAJOR_VERSION"] = "9"
+    os.environ["MINOR_VERSION"] = "1"
+    os.environ["MICRO_VERSION"] = "0"
 
 def setup_env() -> None:
+    set_build_variables()
     if "BUILD_ENV" in os.environ:
         if not is_valid_build_env(os.environ["BUILD_ENV"]):
             logging.error(f'Environment variable BUILD_ENV does not point to a valid build environment: {os.environ["BUILD_ENV"]}')

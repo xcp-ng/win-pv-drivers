@@ -11,29 +11,6 @@ param(
 	[string]$SpecificFileOut
 )
 
-Function Import-EnvVarsFromJson {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$jsonFilePath
-    )
-
-    # Vérifier si le fichier existe
-    if (Test-Path -Path $jsonFilePath -PathType Leaf) {
-        # Charger le contenu JSON dans un objet PowerShell
-        $jsonContent = Get-Content $jsonFilePath | ConvertFrom-Json
-
-        # Parcourir chaque clé-valeur dans l'objet
-        foreach ($key in $jsonContent.PSObject.Properties.Name) {
-            $value = $jsonContent.$key
-
-            # Définir la variable d'environnement
-            [System.Environment]::SetEnvironmentVariable($key, $value, [System.EnvironmentVariableTarget]::Process)
-        }
-    } else {
-        Write-Host -ForegroundColor Red "File not found: $jsonFilePath"
-    }
-}
-
 # Copy $InFileName -> $OutFileName replacing $Token$_.Key$Token with $_.Value from
 # $Replacements
 Function Copy-FileWithReplacements {
@@ -68,8 +45,6 @@ Function Copy-FileWithReplacements {
 #
 # Script Body
 #
-$variablesJsonPath = Join-Path -Path $PSScriptRoot -ChildPath "variables.json"
-Import-EnvVarsFromJson -jsonFilePath $variablesJsonPath
 $TheYear = [int](Get-Date -UFormat "%Y")
 $TheMonth = [int](Get-Date -UFormat "%m")
 $TheDay = [int](Get-Date -UFormat "%d")
