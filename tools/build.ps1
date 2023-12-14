@@ -16,8 +16,8 @@ param(
 #
 
 $visualstudioversion = $Env:VisualStudioVersion
-$solutiondir = @{ "14.0" = "vs2015"; "15.0" = "vs2017"; "16.0" = "vs2019"; "17.0" = "vs2022"; }
-$configurationbase = @{ "14.0" = "Windows 8"; "15.0" = "Windows 8"; "16.0" = "Windows 8"; "17.0" = "Windows 10"; }
+$solutiondir = @{ "16.0" = "vs2019"; "17.0" = "vs2022"; }
+$configurationbase = @{ "16.0" = "Windows 10"; "17.0" = "Windows 10"; }
 $toolsDir = "$PSScriptRoot"
 
 Function Build {
@@ -48,6 +48,13 @@ Function Build {
 	if ($LASTEXITCODE -ne 0) {
 		Write-Host -ForegroundColor Red "ERROR: Build failed, code:" $LASTEXITCODE
 		Exit $LASTEXITCODE
+	}
+	 # Find and Move map files
+	foreach ($item in Get-ChildItem -Path "$DriverName\$solutiondir[$visualstudioversion]" -Include *.map -Recurse)
+	{
+		$filename = Split-Path -Path $item -Leaf -Resolve
+		$newpath = "$DriverName\$Arch\$filename"
+		Move-Item $item -Destination $newpath -Force
 	}
 }
 

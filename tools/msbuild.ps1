@@ -33,10 +33,10 @@ Function Run-MSBuild {
 	if ($Inputs) {
 		$c += [string]::Format(" /p:Inputs=""{0}"" ", $Inputs)
 	}
-	if ($CodeAnalysis) {
-		$c += "/p:RunCodeAnalysis=true "
-		$c += "/p:EnablePREFast=true "
-	}
+	
+	$CodeAnalysisBool = if ($CodeAnalysis) { "true" } else { "false" }
+	$c += [string]::Format("/p:RunCodeAnalysis={0} ", $CodeAnalysisBool)
+	$c += [string]::Format("/p:EnablePREFast={0} ", $CodeAnalysisBool)
 
 	$c += Join-Path -Path $SolutionPath -ChildPath $Name
 
