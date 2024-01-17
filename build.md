@@ -7,22 +7,20 @@ This document outlines the steps to build Windows PV drivers for the XCP-ng proj
 
 - **Git**: For cloning repositories.
 - **Python**: For running build scripts.
-- **.Net**: .Net environnement
+- **.Net SDK**: .Net SDK environnement It's crucial to install the .Net SDK rather than just the runtime, as the SDK contains essential tools and libraries for building the drivers that are not available in the runtime version. Ensure you have the correct version of the SDK installed, as specified in the project requirements.
 - **wix toolset v4**: wix v4, a .Net based setup tool
 
-## Install .Net and wixtoolset
-
+## Install .Net SDK and wixtoolset
 .Net:
 Recommanded version to be installed : v7
 https://dotnet.microsoft.com/en-us/download/dotnet/7.0
-
+Make sure you download and install SDK, not the runtime.
+- For example : https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-7.0.405-windows-x64-installer
 Follow instructions provided here if needed:
 https://thistechbyte.com/a-step-by-step-guide-to-installing-net-dotnet-on-your-system/?swcfpc=1
-
 wixtoolset:
-Once .Net env is installed, proceed with wixtoolset installation:
+Once .Net SDK env is installed, proceed with wixtoolset installation:
 dotnet tool install --global wix
-
 You can also follow detailed instructions here:
 https://thistechbyte.com/how-to-install-wix-toolset-4/
 
