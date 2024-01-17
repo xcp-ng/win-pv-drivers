@@ -141,26 +141,10 @@ def setup_env() -> None:
             else:
                 logging.error("WiX not found")
                 sys.exit(1)
-    systemdir = os.path.join('C:', os.sep, 'Program Files (x86)')          
-    if not os.environ.get("KIT", None):
-        logging.debug("Environment variable KIT not found")
-        logging.debug("Searching for highest version path C:/Program Files (x86)/Windows Kits/X.Y/")
-        for major in range(100):
-            for minor in range(100):
-                version = f"{major}.{minor}"
-                path = os.path.normpath(os.path.join(systemdir, "Windows Kits", version))
-                if os.path.exists(path):
-                    os.environ["KIT"] = path
-        if "KIT" in os.environ:
-            logging.info(f"Environment variable KIT set to {os.environ['KIT']}")
-        else:
-            logging.error("Windows Kits not found")
-            sys.exit(1)
 
 def check_env() -> None:
     vars = set([
-        "BUILD_ENV",
-        "KIT"
+        "BUILD_ENV"
     ])
     missing = vars - set(os.environ.keys())
     if "WIX" not in os.environ and "WIX_DOTNET_TOOL" not in os.environ:
