@@ -83,12 +83,6 @@ The EWDK is a standalone, self-contained command-line environment for building d
 
 1. Mount the downloaded EWDK ISO to an available drive letter, e.g., `E:`.
    You can either use the Windows UI to mount the image or use the following PowerShell command:
-   
-   ```powershell
-   Mount-DiskImage -ImagePath "path\to\EWDK-image.iso"
-   ```
-   
-2. Launch the EWDK build environment after mounting the downloaded EWDK ISO to a drive letter:
 
    ```powershell
    # Replace "chemin\vers\EWDK-image.iso" with the full path to your EWDK image.
@@ -96,7 +90,11 @@ The EWDK is a standalone, self-contained command-line environment for building d
 
    # Mount the ISO image
    Mount-DiskImage -ImagePath $imagePath
+   ```
+   
+2. Launch the EWDK build environment:
 
+   ```powershell
    # Get the drive letter where the ISO is mounted
    $driveLetter = (Get-DiskImage -ImagePath $imagePath | Get-Volume).DriveLetter
 
