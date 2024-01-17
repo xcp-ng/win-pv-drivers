@@ -30,9 +30,7 @@ Before running the build script, it's necessary to ensure that your system's Pow
    ```
    This command sets the policy for the current user only and does not require administrative rights. If you need to set this for all users, remove `-Scope CurrentUser`, but be aware that this requires administrative rights and affects all users on the system.
 
-4. **Confirm the Change**: When prompted, confirm the change by typing `Y` and pressing Enter.
-
-5. **Verify the Change**: Run `Get-ExecutionPolicy` again to ensure the policy has been updated.
+4. **Verify the Change**: Run `Get-ExecutionPolicy` again to ensure the policy has been updated.
 
 ### Caution
 
