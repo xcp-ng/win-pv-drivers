@@ -7,6 +7,24 @@ This document outlines the steps to build Windows PV drivers for the XCP-ng proj
 
 - **Git**: For cloning repositories.
 - **Python**: For running build scripts.
+- **.Net**: .Net environnement
+- **wix toolset v4**: wix v4, a .Net based setup tool
+
+## Install .Net and wixtoolset
+
+.Net:
+Recommanded version to be installed : v7
+https://dotnet.microsoft.com/en-us/download/dotnet/7.0
+
+Follow instructions provided here if needed:
+https://thistechbyte.com/a-step-by-step-guide-to-installing-net-dotnet-on-your-system/?swcfpc=1
+
+wixtoolset:
+Once .Net env is installed, proceed with wixtoolset installation:
+dotnet tool install --global wix
+
+You can also follow detailed instructions here:
+https://thistechbyte.com/how-to-install-wix-toolset-4/
 
 ## Cloning the Win-PV-Drivers Repository
 
