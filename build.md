@@ -10,6 +10,35 @@ This document outlines the steps to build Windows PV drivers for the XCP-ng proj
 - **.Net SDK**: .Net SDK environnement It's crucial to install the .Net SDK rather than just the runtime, as the SDK contains essential tools and libraries for building the drivers that are not available in the runtime version. Ensure you have the correct version of the SDK installed, as specified in the project requirements.
 - **wix toolset v4**: wix v4, a .Net based setup tool
 
+
+## Configuring PowerShell Execution Policy
+
+Before running the build script, it's necessary to ensure that your system's PowerShell execution policy allows the script to run. By default, PowerShell restricts script execution for security reasons. To change this, you need to modify the execution policy.
+
+### Modifying the Execution Policy
+
+1. **Open PowerShell as an Administrator**: Right-click on the PowerShell icon and select "Run as administrator".
+
+2. **Check Current Execution Policy**: Run the following command to view the current execution policy setting:
+   ```powershell
+   Get-ExecutionPolicy
+   ```
+
+3. **Set Execution Policy to Unrestricted**: To allow the build script to run, change the execution policy to Unrestricted with this command:
+   ```powershell
+   Set-ExecutionPolicy Unrestricted -Scope CurrentUser
+   ```
+   This command sets the policy for the current user only and does not require administrative rights. If you need to set this for all users, remove `-Scope CurrentUser`, but be aware that this requires administrative rights and affects all users on the system.
+
+4. **Confirm the Change**: When prompted, confirm the change by typing `Y` and pressing Enter.
+
+5. **Verify the Change**: Run `Get-ExecutionPolicy` again to ensure the policy has been updated.
+
+### Caution
+
+- Setting the execution policy to Unrestricted allows all PowerShell scripts to run, which could pose security risks. It's recommended to revert to a more restrictive policy after running the build script. You can do this by executing `Set-ExecutionPolicy Restricted -Scope CurrentUser`.
+- Always ensure that you trust the scripts you are executing on your system.
+
 ## Install .Net SDK and wixtoolset
 .Net:
 Recommanded version to be installed : v7
@@ -53,11 +82,27 @@ The EWDK is a standalone, self-contained command-line environment for building d
 ### Configuring the EWDK
 
 1. Mount the downloaded EWDK ISO to an available drive letter, e.g., `E:`.
-2. Launch the EWDK build environment:
-
-   ```bash
-   E:\LaunchBuildEnv.cmd
+   You can either use the Windows UI to mount the image or use the following PowerShell command:
+   
+   ```powershell
+   Mount-DiskImage -ImagePath "path\to\EWDK-image.iso"
    ```
+   
+2. Launch the EWDK build environment after mounting the downloaded EWDK ISO to a drive letter:
+
+   ```powershell
+   # Replace "chemin\vers\EWDK-image.iso" with the full path to your EWDK image.
+   $imagePath = "chemin\vers\EWDK-image.iso"
+
+   # Mount the ISO image
+   Mount-DiskImage -ImagePath $imagePath
+
+   # Get the drive letter where the ISO is mounted
+   $driveLetter = (Get-DiskImage -ImagePath $imagePath | Get-Volume).DriveLetter
+
+   # Launch the EWDK build environment
+   & "$driveLetter:\LaunchBuildEnv.cmd"
+	```
 
 ## The Build Process
 
