@@ -25,4 +25,4 @@
 	
 # Current build issues with EWDK 22H2
 
-## make_brand_dll(à) fails to generate branding dll, thougt resgen.exe correctly works
+## make_brand_dll() fails to generate branding dll, thougt resgen.exe correctly works
