@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix
+  xmlns="http://wixtoolset.org/schemas/v4/wxs"
+  xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <?include Include.wxi ?>
+
+  <Package
+    Name="!(loc.ProductName)"
+    Manufacturer="XCP-ng"
+    Version="$(productVersion)"
+    UpgradeCode="$(var.upgradeCode)">
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <Upgrade Id="{48E5492C-6843-452E-97A2-A5FE2D24B141}">
+      <UpgradeVersion Maximum="255.255.65535.65535" OnlyDetect="yes" Property="XCP_NG_OLD_DRIVERS_DETECTED" />
+    </Upgrade>
+    <Upgrade Id="{AF9B2559-3E91-4206-98C2-F560009FF7F1}">
+      <UpgradeVersion Maximum="255.255.65535.65535" OnlyDetect="yes" Property="CITRIX_DRIVERS_DETECTED" />
+    </Upgrade>
+    <Upgrade Id="$(var.upgradeCode)">
+      <UpgradeVersion Maximum="$(productVersion)" IncludeMinimum="no" IncludeMaximum="no" MigrateFeatures="yes" Property="UPGRADE_DETECTED" />
+      <UpgradeVersion Minimum="$(productVersion)" IncludeMinimum="no" IncludeMaximum="no" OnlyDetect="yes" Property="DOWNGRADE_DETECTED" />
+    </Upgrade>
+    <Launch Condition="NOT XCP_NG_OLD_DRIVERS_DETECTED" Message="!(loc.XcpNgOldDriversDetectedError)" />
+    <Launch Condition="NOT CITRIX_DRIVERS_DETECTED" Message="!(loc.CitrixDriversDetectedError)" />
+    <Launch Condition="NOT DOWNGRADE_DETECTED" Message="!(loc.DowngradeError)" />
+
+    <InstallExecuteSequence>
+      <RemoveExistingProducts After="InstallValidate" />
+    </InstallExecuteSequence>
+
+    <ui:WixUI Id="WixUI_FeatureTree" />
+
+    <Feature Id="Main" AllowAdvertise="no" AllowAbsent="no" Display="expand" Title="!(loc.ProductName)">
+      <ComponentGroupRef Id="XenbusComponent" />
+      <ComponentGroupRef Id="XenifaceComponent" />
+      <Feature Id="PVConsoleFeature" Title="!(loc.PVConsoleFeatureTitle)">
+        <ComponentGroupRef Id="XenconsComponent" />
+      </Feature>
+      <Feature Id="PVHidFeature" Title="!(loc.PVHidFeatureTitle)">
+        <ComponentGroupRef Id="XenvkbdComponent" />
+        <ComponentGroupRef Id="XenhidComponent" />
+      </Feature>
+      <Feature Id="PVNetworkFeature" Title="!(loc.PVNetworkFeatureTitle)">
+        <ComponentGroupRef Id="XenvifComponent" />
+        <ComponentGroupRef Id="XennetComponent" />
+      </Feature>
+      <Feature Id="PVDiskFeature" Title="!(loc.PVDiskFeatureTitle)">
+        <ComponentGroupRef Id="XenvbdComponent" />
+      </Feature>
+    </Feature>
+  </Package>
+</Wix>

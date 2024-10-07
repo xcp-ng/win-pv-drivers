@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+This file contains the declaration of all the localizable strings.
+-->
+<WixLocalization xmlns="http://wixtoolset.org/schemas/v4/wxl" Culture="en-US">
+
+  <String Id="ProductName" Value="XCP-ng Windows PV Drivers" />
+
+  <String Id="XcpNgOldDriversDetectedError" Value="Old XCP-ng PV drivers detected. Uninstall them before continuing." />
+  <String Id="CitrixDriversDetectedError" Value="Citrix PV drivers detected. Uninstall them before continuing." />
+  <String Id="DowngradeError" Value="A newer version of [ProductName] is already installed." />
+
+  <String Id="PVConsoleFeatureTitle" Value="PV Console Driver" />
+  <String Id="PVHidFeatureTitle" Value="PV HID Driver" />
+  <String Id="PVNetworkFeatureTitle" Value="PV Network Driver" />
+  <String Id="PVDiskFeatureTitle" Value="PV Storage Driver" />
+
+</WixLocalization>

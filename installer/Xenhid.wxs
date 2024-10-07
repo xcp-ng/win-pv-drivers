@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <?include Include.wxi ?>
+  
+  <Fragment>
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Directory Id="XenhidDir" Name="Xenhid" />
+    </DirectoryRef>
+
+    <ComponentGroup Id="XenhidComponent" Directory="XenhidDir">
+      <Files Include="$(SourceFilesDir)/Xenhid/$(Platform)/**" />
+    </ComponentGroup>
+  </Fragment>
+</Wix>

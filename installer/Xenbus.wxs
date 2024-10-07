@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <?include Include.wxi ?>
+  
+  <Fragment>
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Directory Id="XenbusDir" Name="Xenbus" />
+    </DirectoryRef>
+
+    <ComponentGroup Id="XenbusComponent" Directory="XenbusDir">
+      <Files Include="$(SourceFilesDir)/Xenbus/$(Platform)/**" />
+    </ComponentGroup>
+  </Fragment>
+</Wix>

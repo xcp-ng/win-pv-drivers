@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <!-- Why hardcoded names? Since the other names are localized -->
+      <Directory Id="ManufacturerFolder" Name="XCP-ng">
+        <Directory Id="INSTALLFOLDER" Name="Windows PV Drivers" />
+      </Directory>
+    </StandardDirectory>
+  </Fragment>
+</Wix>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <?include Include.wxi ?>
+  
+  <Fragment>
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Directory Id="XenvkbdDir" Name="Xenvkbd" />
+    </DirectoryRef>
+
+    <ComponentGroup Id="XenvkbdComponent" Directory="XenvkbdDir">
+      <Files Include="$(SourceFilesDir)/Xenvkbd/$(Platform)/**" />
+    </ComponentGroup>
+  </Fragment>
+</Wix>

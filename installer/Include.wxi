@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <?define productVersion="8.99.0.1" ?>
+  <?define upgradeCode="{7C7736B6-B55F-4868-87F5-5A1FFCC73B64}"?>
+  <?define SourceFilesDir="!(bind.xcp-ng-drivers.ProjectDir)/../output"?>
+</Include>
