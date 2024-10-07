@@ -8,7 +8,8 @@
     Name="!(loc.ProductName)"
     Manufacturer="XCP-ng"
     Version="$(productVersion)"
-    UpgradeCode="$(var.upgradeCode)">
+    UpgradeCode="$(var.upgradeCode)"
+    Scope="perMachine">
 
     <MediaTemplate EmbedCab="yes" />
 
@@ -25,30 +26,33 @@
     <Launch Condition="NOT XCP_NG_OLD_DRIVERS_DETECTED" Message="!(loc.XcpNgOldDriversDetectedError)" />
     <Launch Condition="NOT CITRIX_DRIVERS_DETECTED" Message="!(loc.CitrixDriversDetectedError)" />
     <Launch Condition="NOT DOWNGRADE_DETECTED" Message="!(loc.DowngradeError)" />
+    <Launch Condition="NOT MsiSystemRebootPending" Message="!(loc.RebootPendingError)" />
+
+    <ui:WixUI Id="WixUI_FeatureTree" />
+
+    <Feature Id="PVBusFeature" AllowAdvertise="no" AllowAbsent="no" Title="!(loc.PVBusFeatureTitle)">
+      <ComponentGroupRef Id="XenbusComponent" />
+    </Feature>
+    <Feature Id="PVConsoleFeature" AllowAdvertise="no" Title="!(loc.PVConsoleFeatureTitle)">
+      <ComponentGroupRef Id="XenconsComponent" />
+    </Feature>
+    <Feature Id="PVHidFeature" AllowAdvertise="no" Title="!(loc.PVHidFeatureTitle)">
+      <ComponentGroupRef Id="XenvkbdComponent" />
+      <ComponentGroupRef Id="XenhidComponent" />
+    </Feature>
+    <Feature Id="PVIfaceFeature" AllowAdvertise="no" Title="!(loc.PVIfaceFeatureTitle)">
+      <ComponentGroupRef Id="XenifaceComponent" />
+    </Feature>
+    <Feature Id="PVNetworkFeature" AllowAdvertise="no" Title="!(loc.PVNetworkFeatureTitle)">
+      <ComponentGroupRef Id="XenvifComponent" />
+      <ComponentGroupRef Id="XennetComponent" />
+    </Feature>
+    <Feature Id="PVDiskFeature" AllowAdvertise="no" Title="!(loc.PVDiskFeatureTitle)">
+      <ComponentGroupRef Id="XenvbdComponent" />
+    </Feature>
 
     <InstallExecuteSequence>
       <RemoveExistingProducts After="InstallValidate" />
     </InstallExecuteSequence>
-
-    <ui:WixUI Id="WixUI_FeatureTree" />
-
-    <Feature Id="Main" AllowAdvertise="no" AllowAbsent="no" Display="expand" Title="!(loc.ProductName)">
-      <ComponentGroupRef Id="XenbusComponent" />
-      <ComponentGroupRef Id="XenifaceComponent" />
-      <Feature Id="PVConsoleFeature" Title="!(loc.PVConsoleFeatureTitle)">
-        <ComponentGroupRef Id="XenconsComponent" />
-      </Feature>
-      <Feature Id="PVHidFeature" Title="!(loc.PVHidFeatureTitle)">
-        <ComponentGroupRef Id="XenvkbdComponent" />
-        <ComponentGroupRef Id="XenhidComponent" />
-      </Feature>
-      <Feature Id="PVNetworkFeature" Title="!(loc.PVNetworkFeatureTitle)">
-        <ComponentGroupRef Id="XenvifComponent" />
-        <ComponentGroupRef Id="XennetComponent" />
-      </Feature>
-      <Feature Id="PVDiskFeature" Title="!(loc.PVDiskFeatureTitle)">
-        <ComponentGroupRef Id="XenvbdComponent" />
-      </Feature>
-    </Feature>
   </Package>
 </Wix>

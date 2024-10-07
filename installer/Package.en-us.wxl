@@ -9,9 +9,12 @@ This file contains the declaration of all the localizable strings.
   <String Id="XcpNgOldDriversDetectedError" Value="Old XCP-ng PV drivers detected. Uninstall them before continuing." />
   <String Id="CitrixDriversDetectedError" Value="Citrix PV drivers detected. Uninstall them before continuing." />
   <String Id="DowngradeError" Value="A newer version of [ProductName] is already installed." />
+  <String Id="RebootPendingError" Value="A reboot is pending. Reboot the system before attempting install." />
 
+  <String Id="PVBusFeatureTitle" Value="PV Bus Driver" />
   <String Id="PVConsoleFeatureTitle" Value="PV Console Driver" />
   <String Id="PVHidFeatureTitle" Value="PV HID Driver" />
+  <String Id="PVIfaceFeatureTitle" Value="PV Interface Driver" />
   <String Id="PVNetworkFeatureTitle" Value="PV Network Driver" />
   <String Id="PVDiskFeatureTitle" Value="PV Storage Driver" />
 

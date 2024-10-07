@@ -1,8 +1,12 @@
 ﻿<Project Sdk="WixToolset.Sdk/5.0.2">
   <ItemGroup>
+    <Content Include="Driver.wxi" />
     <Content Include="Include.wxi" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DriverInstallCustomAction\DriverInstallCustomAction.csproj" />
   </ItemGroup>
 </Project>

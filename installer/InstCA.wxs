@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <Binary Id="XNInstCA.dll" SourceFile="$(DriverInstallCustomAction.TargetDir)$(DriverInstallCustomAction.TargetName).CA.dll" />
+    <!--<SetProperty Id="DumpComponentStatesWantsToFail" Value="[DumpComponentStatesWantsToFail]" After="CostFinalize" Sequence="execute" />-->
+    <SetProperty Id="XNInstCA" Value="1" After="InstallInitialize" Sequence="execute" />
+  </Fragment>
+</Wix>
