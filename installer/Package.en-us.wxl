@@ -18,4 +18,7 @@ This file contains the declaration of all the localizable strings.
   <String Id="PVNetworkFeatureTitle" Value="PV Network Driver" />
   <String Id="PVDiskFeatureTitle" Value="PV Storage Driver" />
 
+  <String Id="DriverInstallText" Value="Preparing install" />
+  <String Id="DriverUninstallText" Value="Preparing uninstall" />
+
 </WixLocalization>

@@ -1,2 +1,4 @@
 DiInstallDriver
 DiUninstallDriver
+GlobalAddAtom
+GlobalFindAtom

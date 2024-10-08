@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Wix
   xmlns="http://wixtoolset.org/schemas/v4/wxs"
-  xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+  xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <?include Include.wxi ?>
 
   <Package
@@ -26,9 +27,10 @@
     <Launch Condition="NOT XCP_NG_OLD_DRIVERS_DETECTED" Message="!(loc.XcpNgOldDriversDetectedError)" />
     <Launch Condition="NOT CITRIX_DRIVERS_DETECTED" Message="!(loc.CitrixDriversDetectedError)" />
     <Launch Condition="NOT DOWNGRADE_DETECTED" Message="!(loc.DowngradeError)" />
-    <Launch Condition="NOT MsiSystemRebootPending" Message="!(loc.RebootPendingError)" />
+    <Launch Condition="REMOVE OR (NOT MsiSystemRebootPending)" Message="!(loc.RebootPendingError)" />
 
     <ui:WixUI Id="WixUI_FeatureTree" />
+    <UIRef Id="WixUI_ErrorProgressText" />
 
     <Feature Id="PVBusFeature" AllowAdvertise="no" AllowAbsent="no" Title="!(loc.PVBusFeatureTitle)">
       <ComponentGroupRef Id="XenbusComponent" />
@@ -51,8 +53,19 @@
       <ComponentGroupRef Id="XenvbdComponent" />
     </Feature>
 
+    <CustomActionRef Id="CheckRebootCA" />
     <InstallExecuteSequence>
       <RemoveExistingProducts After="InstallValidate" />
+      <Custom Action="CheckRebootCA" After="InstallFinalize" />
     </InstallExecuteSequence>
+
+    <!--
+    <CustomAction Id="FakeProgressImmediate" BinaryRef="XNInstCA.dll" DllEntry="FakeProgress" Execute="immediate" Impersonate="no" />
+    <CustomAction Id="FakeProgressDeferred" BinaryRef="XNInstCA.dll" DllEntry="FakeProgress" Execute="deferred" Impersonate="no" />
+    <InstallExecuteSequence>
+      <Custom Action="FakeProgressDeferred" Before="RegisterUser" />
+      <Custom Action="FakeProgressImmediate" After="FakeProgressDeferred" />
+    </InstallExecuteSequence>
+    -->
   </Package>
 </Wix>

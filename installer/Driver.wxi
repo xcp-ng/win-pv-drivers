@@ -20,8 +20,8 @@
   <CustomAction Id="$(XenDriver)Uninstall" BinaryRef="XNInstCA.dll" DllEntry="FakeUninstall" Execute="deferred" Impersonate="no" />
   <CustomAction Id="$(XenDriver)UninstallRollback" BinaryRef="XNInstCA.dll" DllEntry="FakeUninstallRollback" Execute="rollback" Impersonate="no" />
 
-  <SetProperty Id="$(XenDriver)Install" Value="$(XenDriver)=[#$(XenDriver).inf]" After="CostFinalize" Sequence="execute" Condition="(NOT ?$(XenDriver).inf=3) AND $$$(XenDriver).inf=3" />
-  <SetProperty Id="$(XenDriver)Uninstall" Value="$(XenDriver)=[#$(XenDriver).inf]" After="CostFinalize" Sequence="execute" Condition="?$(XenDriver).inf=3 AND (NOT $$$(XenDriver).inf=3)" />
+  <SetProperty Id="$(XenDriver)Install" Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]" After="CostFinalize" Sequence="execute" Condition="(NOT ?$(XenDriver).inf=3) AND $$$(XenDriver).inf=3" />
+  <SetProperty Id="$(XenDriver)Uninstall" Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]" After="CostFinalize" Sequence="execute" Condition="?$(XenDriver).inf=3 AND (NOT $$$(XenDriver).inf=3)" />
 
   <?ifdef $(XenDriverDependsOn) ?>
   <InstallExecuteSequence>
@@ -30,5 +30,10 @@
     <Custom Action="$(XenDriver)Uninstall" Before="$(XenDriverDependsOn)UninstallRollback" Condition="REMOVE OR REINSTALL" />
     <Custom Action="$(XenDriver)UninstallRollback" Before="$(XenDriver)Uninstall" Condition="REMOVE OR REINSTALL" />
   </InstallExecuteSequence>
+  <!-- setting the template doesn't work in either ProgressText or ActionStart[3] and I don't know why -->
+  <UI>
+    <ProgressText Action="$(XenDriver)Install" Message="!(loc.DriverInstallText)" Template="$(XenDriver) at [1];[2];[3]" />
+    <ProgressText Action="$(XenDriver)Uninstall" Message="!(loc.DriverUninstallText)" Template="$(XenDriver) at [1];[2];[3]" />
+  </UI>
   <?endif ?>
 </Include>
