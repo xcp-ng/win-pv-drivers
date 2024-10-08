@@ -4,7 +4,7 @@
     <?define XenDriver="Xenbus" ?>
     <?include ../Driver.wxi ?>
 
-    <!-- manually lay out Xenbus so that it goes after all other drivers -->
+    <!-- manually lay out Xenbus so that it goes before/after all other drivers during install/uninstall -->
     <InstallExecuteSequence>
       <Custom Action="XenbusInstallRollback" After="InstallFiles" Condition="(NOT Installed) OR REINSTALL" />
       <Custom Action="XenbusInstall" After="XenbusInstallRollback" Condition="(NOT Installed) OR REINSTALL" />
@@ -12,8 +12,8 @@
       <Custom Action="XenbusUninstall" After="XenbusUninstallRollback" Condition="REMOVE OR REINSTALL" />
     </InstallExecuteSequence>
     <UI>
-      <ProgressText Action="XenbusInstall" Message="!(loc.DriverInstallText)" Template="Xenbus at [1];[2];[3]" />
-      <ProgressText Action="XenbusUninstall" Message="!(loc.DriverUninstallText)" Template="Xenbus at [1];[2];[3]" />
+      <ProgressText Action="XenbusInstall" Message="!(loc.DriverInstallText)" />
+      <ProgressText Action="XenbusUninstall" Message="!(loc.DriverUninstallText)" />
     </UI>
   </Fragment>
 </Wix>

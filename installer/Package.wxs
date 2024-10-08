@@ -58,14 +58,5 @@
       <RemoveExistingProducts After="InstallValidate" />
       <Custom Action="CheckRebootCA" After="InstallFinalize" />
     </InstallExecuteSequence>
-
-    <!--
-    <CustomAction Id="FakeProgressImmediate" BinaryRef="XNInstCA.dll" DllEntry="FakeProgress" Execute="immediate" Impersonate="no" />
-    <CustomAction Id="FakeProgressDeferred" BinaryRef="XNInstCA.dll" DllEntry="FakeProgress" Execute="deferred" Impersonate="no" />
-    <InstallExecuteSequence>
-      <Custom Action="FakeProgressDeferred" Before="RegisterUser" />
-      <Custom Action="FakeProgressImmediate" After="FakeProgressDeferred" />
-    </InstallExecuteSequence>
-    -->
   </Package>
 </Wix>

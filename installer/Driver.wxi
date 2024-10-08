@@ -32,8 +32,8 @@
   </InstallExecuteSequence>
   <!-- setting the template doesn't work in either ProgressText or ActionStart[3] and I don't know why -->
   <UI>
-    <ProgressText Action="$(XenDriver)Install" Message="!(loc.DriverInstallText)" Template="$(XenDriver) at [1];[2];[3]" />
-    <ProgressText Action="$(XenDriver)Uninstall" Message="!(loc.DriverUninstallText)" Template="$(XenDriver) at [1];[2];[3]" />
+    <ProgressText Action="$(XenDriver)Install" Message="!(loc.DriverInstallText)" />
+    <ProgressText Action="$(XenDriver)Uninstall" Message="!(loc.DriverUninstallText)" />
   </UI>
   <?endif ?>
 </Include>
