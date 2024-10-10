@@ -172,7 +172,7 @@ namespace XNInstCA {
                 if (compatibleIds.Intersect(xenInfo.CompatibleIds, StringComparer.OrdinalIgnoreCase).Count(x => true) == 0) {
                     continue;
                 }
-                session.Log($"Found device with compatible IDs: [{string.Join(",", compatibleIds)}]");
+                session.Log($"Found device with compatible IDs: {string.Join(",", compatibleIds)}");
 
                 List<string> children = DriverUtils.GetDeviceChildren(devInfo, devInfoData);
                 foreach (var child in children) {
@@ -193,11 +193,10 @@ namespace XNInstCA {
                 }
 
                 var infName = DriverUtils.GetDeviceInfPath(devInfo, devInfoData);
-                if (infName != null) {
-                    if (!string.IsNullOrEmpty(infName)
-                            && infName.StartsWith("oem", StringComparison.OrdinalIgnoreCase)) {
-                        collectedInfPaths.Add(infName);
-                    }
+                session.Log($"inf: {infName}");
+                if (!string.IsNullOrEmpty(infName)
+                        && infName.StartsWith("oem", StringComparison.OrdinalIgnoreCase)) {
+                    collectedInfPaths.Add(infName);
                 }
 
                 unsafe {

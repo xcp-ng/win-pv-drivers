@@ -31,9 +31,9 @@ namespace XNInstCA {
                     try {
                         if (classSubkey.GetValueKind(filterValue) == RegistryValueKind.MultiString) {
                             var filters = (string[])classSubkey.GetValue(filterValue);
-                            session.Log($"Class filters for {classGuid}: [{string.Join(",", filters)}]");
+                            session.Log($"Class filters for {classGuid}: {string.Join(",", filters)}");
                             var newFilters = filters.Where(x => !"xenfilt".Equals(x, StringComparison.OrdinalIgnoreCase)).ToArray();
-                            session.Log($"New filters for {classGuid}: [{string.Join(",", newFilters)}]");
+                            session.Log($"New filters for {classGuid}: {string.Join(",", newFilters)}");
                             classSubkey.SetValue(filterValue, newFilters, RegistryValueKind.MultiString);
                         }
                     } catch {
