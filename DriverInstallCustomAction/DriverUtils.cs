@@ -133,7 +133,7 @@ namespace XNInstCA {
             var buf = DriverUtils.GetDeviceProperty<char>(
                                 devInfo,
                                 devInfoData,
-                                DriverUtils.DEVPKEY_Device_CompatibleIds,
+                                DriverUtils.DEVPKEY_Device_DriverInfPath,
                                 DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
             if (buf == null) {
                 return null;
