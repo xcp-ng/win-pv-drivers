@@ -27,7 +27,11 @@
     <Launch Condition="NOT XCP_NG_OLD_DRIVERS_DETECTED" Message="!(loc.XcpNgOldDriversDetectedError)" />
     <Launch Condition="NOT CITRIX_DRIVERS_DETECTED" Message="!(loc.CitrixDriversDetectedError)" />
     <Launch Condition="NOT DOWNGRADE_DETECTED" Message="!(loc.DowngradeError)" />
-    <Launch Condition="REMOVE OR (NOT MsiSystemRebootPending)" Message="!(loc.RebootPendingError)" />
+    <!--
+      I wanted to add this but it triggers for any pending moves, even irrelevant ones.
+      Maybe there's a better alternative somewhere else.
+    -->
+    <!--<Launch Condition="REMOVE OR (NOT MsiSystemRebootPending)" Message="!(loc.RebootPendingError)" />-->
 
     <ui:WixUI Id="WixUI_FeatureTree" />
     <UIRef Id="WixUI_ErrorProgressText" />
