@@ -4,6 +4,7 @@
     <AssemblyName>xninstca</AssemblyName>
     <RootNamespace>XNInstCA</RootNamespace>
     <LangVersion>9.0</LangVersion>
+    <Platforms>x64;x86;ARM64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
