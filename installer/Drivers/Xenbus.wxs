@@ -4,14 +4,20 @@
     <?define XenDriver="Xenbus" ?>
     <?include ../Driver.wxi ?>
 
+    <!-- see Xenbus!FiltersInstall and FiltersUninstall -->
+    <CustomAction Id="XenbusCleanup" BinaryRef="XNInstCA.dll" DllEntry="XenbusCleanup" Execute="deferred" Impersonate="no" />
+    <!-- Xenbus reinstalls its filters by itself, normally there's no need to rollback -->
+
     <!-- manually lay out Xenbus so that it goes before/after all other drivers during install/uninstall -->
     <InstallExecuteSequence>
+      <Custom Action="XenbusCleanup" Before="ProcessComponents" Condition="REMOVE OR REINSTALL" />
       <Custom Action="XenbusInstallRollback" After="InstallFiles" Condition="(NOT Installed) OR REINSTALL" />
       <Custom Action="XenbusInstall" After="XenbusInstallRollback" Condition="(NOT Installed) OR REINSTALL" />
-      <Custom Action="XenbusUninstallRollback" Before="ProcessComponents" Condition="REMOVE OR REINSTALL" />
+      <Custom Action="XenbusUninstallRollback" Before="XenbusCleanup" Condition="REMOVE OR REINSTALL" />
       <Custom Action="XenbusUninstall" After="XenbusUninstallRollback" Condition="REMOVE OR REINSTALL" />
     </InstallExecuteSequence>
     <UI>
+      <ProgressText Action="XenbusCleanup" Message="!(loc.XenbusCleanupText)" />
       <ProgressText Action="XenbusInstall" Message="!(loc.DriverInstallText)" />
       <ProgressText Action="XenbusUninstall" Message="!(loc.DriverUninstallText)" />
     </UI>

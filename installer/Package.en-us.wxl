@@ -21,4 +21,6 @@ This file contains the declaration of all the localizable strings.
   <String Id="DriverInstallText" Value="Preparing install" />
   <String Id="DriverUninstallText" Value="Preparing uninstall" />
 
+  <String Id="XenbusCleanupText" Value="Cleaning up" />
+
 </WixLocalization>
