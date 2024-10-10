@@ -1,6 +1,6 @@
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -64,12 +64,12 @@ namespace XNInstCA {
         // If we want to handle these cases then we might just need to uninstall all Xen drivers just in case.
         // The installation would also need to safely handle the case of installing over existing Xen drivers - who would win?
 
-        internal class XenDeviceInfo {
+        private class XenDeviceInfo {
             public Guid ClassGuid { get; set; }
             public List<string> CompatibleIds { get; set; }
         }
 
-        internal static Dictionary<string, XenDeviceInfo> DevicesToRemove = new(StringComparer.OrdinalIgnoreCase) {
+        private static readonly Dictionary<string, XenDeviceInfo> DevicesToRemove = new(StringComparer.OrdinalIgnoreCase) {
             {
                 "Xenbus",
                 new XenDeviceInfo() {
@@ -191,7 +191,7 @@ namespace XNInstCA {
                 if (compatibleIds.Intersect(xenInfo.CompatibleIds, StringComparer.OrdinalIgnoreCase).Count(x => true) == 0) {
                     continue;
                 }
-                session.Log($"Found device with compatible IDs: {string.Join(",", compatibleIds)}");
+                session.Log($"Found device with compatible IDs: [{string.Join(",", compatibleIds)}]");
 
                 var childrenBuf = DriverUtils.GetDeviceProperty<char>(
                     devInfo,
@@ -213,6 +213,20 @@ namespace XNInstCA {
                             session.Log($"SetupDiOpenDeviceInfo error {Marshal.GetLastWin32Error()}");
                             continue;
                         }
+
+                        /*
+                        if (!PInvoke.SetupDiCallClassInstaller(DI_FUNCTION.DIF_REMOVE, childInfo, childInfoData)) {
+                            session.Log($"SetupDiCallClassInstaller error {Marshal.GetLastWin32Error()}");
+                            continue;
+                        }
+                        var childInstallParams = new SP_DEVINSTALL_PARAMS_W() { cbSize = (uint)Marshal.SizeOf<SP_DEVINSTALL_PARAMS_W>() };
+                        if (!PInvoke.SetupDiGetDeviceInstallParams(childInfo, childInfoData, ref childInstallParams)) {
+                            session.Log($"SetupDiGetDeviceInstallParams error {Marshal.GetLastWin32Error()}");
+                            continue;
+                        }
+                        needsReboot = needsReboot || (childInstallParams.Flags & (SETUP_DI_DEVICE_INSTALL_FLAGS.DI_NEEDREBOOT | SETUP_DI_DEVICE_INSTALL_FLAGS.DI_NEEDRESTART)) != 0;
+                        */
+
                         BOOL thisNeedsReboot;
                         if (!PInvoke.DiUninstallDevice(HWND.Null, childInfo, childInfoData, 0, &thisNeedsReboot)) {
                             session.Log($"DiUninstallDevice error {Marshal.GetLastWin32Error()}");
@@ -241,6 +255,7 @@ namespace XNInstCA {
                         collectedInfPaths.Add(oemInfName);
                     }
                 }
+
                 /*
                 if (!PInvoke.SetupDiCallClassInstaller(DI_FUNCTION.DIF_REMOVE, devInfo, devInfoData)) {
                     session.Log($"SetupDiCallClassInstaller error {Marshal.GetLastWin32Error()}");
@@ -253,7 +268,8 @@ namespace XNInstCA {
                 }
                 needsReboot = needsReboot || (devInstallParams.Flags & (SETUP_DI_DEVICE_INSTALL_FLAGS.DI_NEEDREBOOT | SETUP_DI_DEVICE_INSTALL_FLAGS.DI_NEEDRESTART)) != 0;
                 */
-                ///* DiUninstallDevice method (doesn't work)
+
+                ///*
                 unsafe {
                     BOOL thisNeedsReboot;
                     if (!PInvoke.DiUninstallDevice(HWND.Null, devInfo, devInfoData, 0, &thisNeedsReboot)) {
@@ -268,7 +284,7 @@ namespace XNInstCA {
             foreach (var oemInfName in collectedInfPaths) {
                 session.Log($"Uninstalling {oemInfName}");
                 var oemInfPath = Path.Combine(windir, "INF", oemInfName);
-                /*
+
                 BOOL thisNeedsReboot;
                 unsafe {
                     if (!PInvoke.DiUninstallDriver(HWND.Null, oemInfPath, 0, &thisNeedsReboot)) {
@@ -277,15 +293,12 @@ namespace XNInstCA {
                     }
                 }
                 needsReboot |= thisNeedsReboot;
-                */
-                /*
-                if (!PInvoke.SetupUninstallOEMInf(oemInfPath, 0)) {
+
+                if (!PInvoke.SetupUninstallOEMInf(oemInfPath, PInvoke.SUOI_FORCEDELETE)) {
                     session.Log($"SetupUninstallOEMInf error, did not cleanly delete devices.");
-                    session.Log($"Forcing SetupUninstallOEMInf delete");
-                    PInvoke.SetupUninstallOEMInf(oemInfPath, PInvoke.SUOI_FORCEDELETE);
                 }
-                */
             }
+
             if (needsReboot) {
                 session.Log("Scheduling reboot");
                 CustomActionUtils.ScheduleReboot();
@@ -295,7 +308,7 @@ namespace XNInstCA {
 
         [CustomAction]
         public static ActionResult DriverUninstallRollback(Session session) {
-            // Don't roll back uninstall (i.e. reinstall)
+            DriverInstall(session);
             return ActionResult.Success;
         }
     }

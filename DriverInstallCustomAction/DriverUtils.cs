@@ -103,5 +103,19 @@ namespace XNInstCA {
             }
             return buf;
         }
+
+        public static bool DiRemoveDevice(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData, out bool needsReboot) {
+            if (!PInvoke.SetupDiCallClassInstaller(DI_FUNCTION.DIF_REMOVE, devInfo, devInfoData)) {
+                needsReboot = false;
+                return false;
+            }
+            var devInstallParams = new SP_DEVINSTALL_PARAMS_W() { cbSize = (uint)Marshal.SizeOf<SP_DEVINSTALL_PARAMS_W>() };
+            if (!PInvoke.SetupDiGetDeviceInstallParams(devInfo, devInfoData, ref devInstallParams)) {
+                needsReboot = false;
+                return false;
+            }
+            needsReboot = (devInstallParams.Flags & (SETUP_DI_DEVICE_INSTALL_FLAGS.DI_NEEDREBOOT | SETUP_DI_DEVICE_INSTALL_FLAGS.DI_NEEDRESTART)) != 0;
+            return true;
+        }
     }
 }
