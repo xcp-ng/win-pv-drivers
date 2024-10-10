@@ -164,22 +164,6 @@ namespace XNInstCA {
             }
         }
 
-        public static (SetupDiDestroyDeviceInfoListSafeHandle, SP_DEVINFO_DATA) OpenDeviceInfo(Guid? guid, string instanceId) {
-            var devInfo = PInvoke.SetupDiCreateDeviceInfoList(guid, HWND.Null);
-            if (devInfo.IsInvalid) {
-                throw new Win32Exception(Marshal.GetLastWin32Error(), "SetupDiCreateDeviceInfoList");
-            }
-            var devInfoData = new SP_DEVINFO_DATA {
-                cbSize = (uint)Marshal.SizeOf<SP_DEVINFO_DATA>()
-            };
-            unsafe {
-                if (!PInvoke.SetupDiOpenDeviceInfo(devInfo, instanceId, HWND.Null, 0, &devInfoData)) {
-                    throw new Win32Exception(Marshal.GetLastWin32Error(), "SetupDiOpenDeviceInfo");
-                }
-            }
-            return (devInfo, devInfoData);
-        }
-
         public static bool DiRemoveDevice(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData, out bool needsReboot) {
             if (!PInvoke.SetupDiCallClassInstaller(DI_FUNCTION.DIF_REMOVE, devInfo, devInfoData)) {
                 needsReboot = false;

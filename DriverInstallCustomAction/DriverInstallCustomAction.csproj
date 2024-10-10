@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <AssemblyName>xninstca</AssemblyName>
     <RootNamespace>XNInstCA</RootNamespace>
     <LangVersion>9.0</LangVersion>
