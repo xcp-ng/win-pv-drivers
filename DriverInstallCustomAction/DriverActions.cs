@@ -218,22 +218,7 @@ namespace XNInstCA {
             var windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
             foreach (var oemInfName in collectedInfPaths) {
                 session.Log($"Uninstalling {oemInfName}");
-                var oemInfPath = Path.Combine(windir, "INF", oemInfName);
-
-                BOOL thisNeedsReboot;
-                unsafe {
-                    if (!PInvoke.DiUninstallDriver(
-                            HWND.Null,
-                            oemInfPath,
-                            0,
-                            &thisNeedsReboot)) {
-                        session.Log($"DiUninstallDriver error {Marshal.GetLastWin32Error()}");
-                        continue;
-                    }
-                }
-                needsReboot |= thisNeedsReboot;
-
-                if (!PInvoke.SetupUninstallOEMInf(oemInfPath, PInvoke.SUOI_FORCEDELETE)) {
+                if (!PInvoke.SetupUninstallOEMInf(oemInfName, PInvoke.SUOI_FORCEDELETE)) {
                     session.Log($"SetupUninstallOEMInf error, did not cleanly delete devices.");
                 }
             }
