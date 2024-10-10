@@ -4,6 +4,6 @@
     <Binary Id="XNInstCA.dll" SourceFile="$(DriverInstallCustomAction.TargetDir)$(DriverInstallCustomAction.TargetName).CA.dll" />
     <!--<SetProperty Id="DumpComponentStatesWantsToFail" Value="[DumpComponentStatesWantsToFail]" After="CostFinalize" Sequence="execute" />-->
     <SetProperty Id="XNInstCA" Value="1" After="InstallInitialize" Sequence="execute" />
-    <CustomAction Id="CheckRebootCA" BinaryRef="XNInstCA.dll" DllEntry="CheckReboot" Execute="immediate" />
+    <CustomAction Id="CheckRebootCA" BinaryRef="XNInstCA.dll" DllEntry="CheckReboot" Execute="immediate" Impersonate="no" />
   </Fragment>
 </Wix>
