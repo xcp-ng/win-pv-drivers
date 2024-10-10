@@ -15,10 +15,10 @@
     </Component>
   </ComponentGroup>
 
-  <CustomAction Id="$(XenDriver)Install" BinaryRef="XNInstCA.dll" DllEntry="FakeInstall" Execute="deferred" Impersonate="no" />
-  <CustomAction Id="$(XenDriver)InstallRollback" BinaryRef="XNInstCA.dll" DllEntry="FakeInstallRollback" Execute="rollback" Impersonate="no" />
-  <CustomAction Id="$(XenDriver)Uninstall" BinaryRef="XNInstCA.dll" DllEntry="FakeUninstall" Execute="deferred" Impersonate="no" />
-  <CustomAction Id="$(XenDriver)UninstallRollback" BinaryRef="XNInstCA.dll" DllEntry="FakeUninstallRollback" Execute="rollback" Impersonate="no" />
+  <CustomAction Id="$(XenDriver)Install" BinaryRef="XNInstCA.dll" DllEntry="DriverInstall" Execute="deferred" Impersonate="no" />
+  <CustomAction Id="$(XenDriver)InstallRollback" BinaryRef="XNInstCA.dll" DllEntry="DriverInstallRollback" Execute="rollback" Impersonate="no" />
+  <CustomAction Id="$(XenDriver)Uninstall" BinaryRef="XNInstCA.dll" DllEntry="DriverUninstall" Execute="deferred" Impersonate="no" />
+  <CustomAction Id="$(XenDriver)UninstallRollback" BinaryRef="XNInstCA.dll" DllEntry="DriverUninstallRollback" Execute="rollback" Impersonate="no" />
 
   <SetProperty Id="$(XenDriver)Install" Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]" After="CostFinalize" Sequence="execute" Condition="(NOT ?$(XenDriver).inf=3) AND $$$(XenDriver).inf=3" />
   <SetProperty Id="$(XenDriver)Uninstall" Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]" After="CostFinalize" Sequence="execute" Condition="?$(XenDriver).inf=3 AND (NOT $$$(XenDriver).inf=3)" />

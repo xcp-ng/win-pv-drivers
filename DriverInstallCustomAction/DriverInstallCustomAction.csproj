@@ -5,6 +5,7 @@
     <RootNamespace>XNInstCA</RootNamespace>
     <LangVersion>9.0</LangVersion>
     <Platforms>x64;x86;ARM64</Platforms>
+    <Nullable>warnings</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
