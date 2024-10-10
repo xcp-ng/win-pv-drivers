@@ -1,13 +1,11 @@
-using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using Windows.Win32;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
-using Windows.Win32.Devices.Properties;
 using Windows.Win32.Foundation;
 using WixToolset.Dtf.WindowsInstaller;
 
@@ -159,127 +157,64 @@ namespace XNInstCA {
             if (driver == null) {
                 return ActionResult.Success;
             }
-            // TODO
+
             session.Log($"Uninstalling {driver.DriverName} inf {driver.InfPath}");
             if (!DevicesToRemove.TryGetValue(driver.DriverName, out var xenInfo)) {
                 session.Log($"Unknown driver {driver.DriverName}");
                 return ActionResult.Success;
             }
-            var devInfo = PInvoke.SetupDiGetClassDevs(xenInfo.ClassGuid, null, HWND.Null, 0);
-            var devInfoData = new SP_DEVINFO_DATA {
-                cbSize = (uint)Marshal.SizeOf<SP_DEVINFO_DATA>()
-            };
-            var collectedInfPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            for (uint devIndex = 0; ; devIndex++) {
-                if (!PInvoke.SetupDiEnumDeviceInfo(devInfo, devIndex, ref devInfoData)) {
-                    var error = Marshal.GetLastWin32Error();
-                    if ((WIN32_ERROR)error != WIN32_ERROR.ERROR_NO_MORE_ITEMS) {
-                        session.Log($"SetupDiEnumDeviceInfo error {error}");
-                    }
-                    break;
-                }
 
-                var cidBuf = DriverUtils.GetDeviceProperty<char>(
-                    devInfo,
-                    devInfoData,
-                    DriverUtils.DEVPKEY_Device_CompatibleIds,
-                    DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
-                if (cidBuf == null) {
-                    continue;
-                }
-                var compatibleIds = DriverUtils.ParseMultiString(cidBuf);
+            var devInfo = PInvoke.SetupDiGetClassDevs(xenInfo.ClassGuid, null, HWND.Null, 0);
+            var collectedInfPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)) {
+                List<string> compatibleIds = DriverUtils.GetDeviceCompatibleIds(devInfo, devInfoData);
                 if (compatibleIds.Intersect(xenInfo.CompatibleIds, StringComparer.OrdinalIgnoreCase).Count(x => true) == 0) {
                     continue;
                 }
                 session.Log($"Found device with compatible IDs: [{string.Join(",", compatibleIds)}]");
 
-                var childrenBuf = DriverUtils.GetDeviceProperty<char>(
-                    devInfo,
-                    devInfoData,
-                    DriverUtils.DEVPKEY_Device_Children,
-                    DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
-                if (childrenBuf == null) {
-                    continue;
-                }
-                var children = DriverUtils.ParseMultiString(childrenBuf);
+                List<string> children = DriverUtils.GetDeviceChildren(devInfo, devInfoData);
                 foreach (var child in children) {
                     session.Log($"Uninstalling child device {child}");
-                    var childInfo = PInvoke.SetupDiCreateDeviceInfoList((Guid?)null, HWND.Null);
-                    var childInfoData = new SP_DEVINFO_DATA {
-                        cbSize = (uint)Marshal.SizeOf<SP_DEVINFO_DATA>()
-                    };
-                    unsafe {
-                        if (!PInvoke.SetupDiOpenDeviceInfo(childInfo, child, HWND.Null, 0, &childInfoData)) {
-                            session.Log($"SetupDiOpenDeviceInfo error {Marshal.GetLastWin32Error()}");
-                            continue;
+                    try {
+                        var (childInfo, childInfoData) = DriverUtils.OpenDeviceInfo(null, child);
+                        unsafe {
+                            BOOL thisNeedsReboot;
+                            if (!PInvoke.DiUninstallDevice(HWND.Null, childInfo, childInfoData, 0, &thisNeedsReboot)) {
+                                session.Log($"DiUninstallDevice error {Marshal.GetLastWin32Error()}");
+                                continue;
+                            }
+                            needsReboot |= thisNeedsReboot;
                         }
-
-                        /*
-                        if (!PInvoke.SetupDiCallClassInstaller(DI_FUNCTION.DIF_REMOVE, childInfo, childInfoData)) {
-                            session.Log($"SetupDiCallClassInstaller error {Marshal.GetLastWin32Error()}");
-                            continue;
-                        }
-                        var childInstallParams = new SP_DEVINSTALL_PARAMS_W() { cbSize = (uint)Marshal.SizeOf<SP_DEVINSTALL_PARAMS_W>() };
-                        if (!PInvoke.SetupDiGetDeviceInstallParams(childInfo, childInfoData, ref childInstallParams)) {
-                            session.Log($"SetupDiGetDeviceInstallParams error {Marshal.GetLastWin32Error()}");
-                            continue;
-                        }
-                        needsReboot = needsReboot || (childInstallParams.Flags & (SETUP_DI_DEVICE_INSTALL_FLAGS.DI_NEEDREBOOT | SETUP_DI_DEVICE_INSTALL_FLAGS.DI_NEEDRESTART)) != 0;
-                        */
-
-                        BOOL thisNeedsReboot;
-                        if (!PInvoke.DiUninstallDevice(HWND.Null, childInfo, childInfoData, 0, &thisNeedsReboot)) {
-                            session.Log($"DiUninstallDevice error {Marshal.GetLastWin32Error()}");
-                            continue;
-                        }
-                        needsReboot |= thisNeedsReboot;
+                    } catch (Win32Exception ex) {
+                        session.Log($"OpenDeviceInfo error {ex.NativeErrorCode}");
                     }
                 }
 
-                var infPathBuf = DriverUtils.GetDeviceProperty<char>(
-                    devInfo,
-                    devInfoData,
-                    DriverUtils.DEVPKEY_Device_DriverInfPath,
-                    DEVPROPTYPE.DEVPROP_TYPE_STRING);
-                if (infPathBuf != null) {
-                    // we don't know the actual length of the string returned by GetDeviceProperty
-                    var oemInfPathBuilder = new StringBuilder();
-                    foreach (var ch in infPathBuf) {
-                        if (ch == 0) {
-                            break;
-                        }
-                        oemInfPathBuilder.Append(ch);
-                    }
-                    var oemInfName = oemInfPathBuilder.ToString();
-                    if (!string.IsNullOrEmpty(oemInfName) && oemInfName.StartsWith("oem", StringComparison.OrdinalIgnoreCase)) {
-                        collectedInfPaths.Add(oemInfName);
+                var infName = DriverUtils.GetDeviceInfPath(devInfo, devInfoData);
+                if (infName != null) {
+                    if (!string.IsNullOrEmpty(infName)
+                            && infName.StartsWith("oem", StringComparison.OrdinalIgnoreCase)) {
+                        collectedInfPaths.Add(infName);
                     }
                 }
 
-                /*
-                if (!PInvoke.SetupDiCallClassInstaller(DI_FUNCTION.DIF_REMOVE, devInfo, devInfoData)) {
-                    session.Log($"SetupDiCallClassInstaller error {Marshal.GetLastWin32Error()}");
-                    continue;
-                }
-                var devInstallParams = new SP_DEVINSTALL_PARAMS_W() { cbSize = (uint)Marshal.SizeOf<SP_DEVINSTALL_PARAMS_W>() };
-                if (!PInvoke.SetupDiGetDeviceInstallParams(devInfo, devInfoData, ref devInstallParams)) {
-                    session.Log($"SetupDiGetDeviceInstallParams error {Marshal.GetLastWin32Error()}");
-                    continue;
-                }
-                needsReboot = needsReboot || (devInstallParams.Flags & (SETUP_DI_DEVICE_INSTALL_FLAGS.DI_NEEDREBOOT | SETUP_DI_DEVICE_INSTALL_FLAGS.DI_NEEDRESTART)) != 0;
-                */
-
-                ///*
                 unsafe {
                     BOOL thisNeedsReboot;
-                    if (!PInvoke.DiUninstallDevice(HWND.Null, devInfo, devInfoData, 0, &thisNeedsReboot)) {
+                    if (!PInvoke.DiUninstallDevice(
+                            HWND.Null,
+                            devInfo,
+                            devInfoData,
+                            0,
+                            &thisNeedsReboot)) {
                         session.Log($"DiUninstallDevice error {Marshal.GetLastWin32Error()}");
                         continue;
                     }
                     needsReboot |= thisNeedsReboot;
                 }
-                //*/
             }
+
             var windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
             foreach (var oemInfName in collectedInfPaths) {
                 session.Log($"Uninstalling {oemInfName}");
@@ -287,7 +222,11 @@ namespace XNInstCA {
 
                 BOOL thisNeedsReboot;
                 unsafe {
-                    if (!PInvoke.DiUninstallDriver(HWND.Null, oemInfPath, 0, &thisNeedsReboot)) {
+                    if (!PInvoke.DiUninstallDriver(
+                            HWND.Null,
+                            oemInfPath,
+                            0,
+                            &thisNeedsReboot)) {
                         session.Log($"DiUninstallDriver error {Marshal.GetLastWin32Error()}");
                         continue;
                     }

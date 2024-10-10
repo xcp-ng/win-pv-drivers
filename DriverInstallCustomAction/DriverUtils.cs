@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using Windows.Win32;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using Windows.Win32.Devices.Properties;
@@ -102,6 +103,81 @@ namespace XNInstCA {
                 }
             }
             return buf;
+        }
+
+        public static List<string> GetDeviceChildren(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
+            var buf = DriverUtils.GetDeviceProperty<char>(
+                                devInfo,
+                                devInfoData,
+                                DriverUtils.DEVPKEY_Device_Children,
+                                DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
+            if (buf == null) {
+                return new List<string>();
+            }
+            return DriverUtils.ParseMultiString(buf);
+        }
+
+        public static List<string> GetDeviceCompatibleIds(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
+            var buf = DriverUtils.GetDeviceProperty<char>(
+                                devInfo,
+                                devInfoData,
+                                DriverUtils.DEVPKEY_Device_CompatibleIds,
+                                DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
+            if (buf == null) {
+                return new List<string>();
+            }
+            return DriverUtils.ParseMultiString(buf);
+        }
+
+        public static string GetDeviceInfPath(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
+            var buf = DriverUtils.GetDeviceProperty<char>(
+                                devInfo,
+                                devInfoData,
+                                DriverUtils.DEVPKEY_Device_CompatibleIds,
+                                DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
+            if (buf == null) {
+                return null;
+            }
+            // we don't know the actual length of the string returned by GetDeviceProperty
+            var infPath = new StringBuilder();
+            foreach (var ch in buf) {
+                if (ch == 0) {
+                    break;
+                }
+                infPath.Append(ch);
+            }
+            return infPath.ToString();
+        }
+
+        public static IEnumerable<SP_DEVINFO_DATA> EnumerateDevices(SetupDiDestroyDeviceInfoListSafeHandle devInfo) {
+            var devInfoData = new SP_DEVINFO_DATA {
+                cbSize = (uint)Marshal.SizeOf<SP_DEVINFO_DATA>()
+            };
+            for (uint devIndex = 0; ; devIndex++) {
+                if (!PInvoke.SetupDiEnumDeviceInfo(devInfo, devIndex, ref devInfoData)) {
+                    var error = Marshal.GetLastWin32Error();
+                    if ((WIN32_ERROR)error == WIN32_ERROR.ERROR_NO_MORE_ITEMS) {
+                        yield break;
+                    }
+                }
+                yield return devInfoData;
+            }
+        }
+
+        public static (SetupDiDestroyDeviceInfoListSafeHandle, SP_DEVINFO_DATA) OpenDeviceInfo(Guid? guid, string instanceId) {
+            var devInfo = PInvoke.SetupDiCreateDeviceInfoList(guid, HWND.Null);
+            if (devInfo.IsInvalid) {
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "SetupDiCreateDeviceInfoList");
+            }
+            var devInfoData = new SP_DEVINFO_DATA {
+                cbSize = (uint)Marshal.SizeOf<SP_DEVINFO_DATA>()
+            };
+            unsafe {
+                if (!PInvoke.SetupDiOpenDeviceInfo(devInfo, instanceId, HWND.Null, 0, &devInfoData)) {
+                    throw new Win32Exception(Marshal.GetLastWin32Error(), "SetupDiOpenDeviceInfo");
+                }
+            }
+            return (devInfo, devInfoData);
         }
 
         public static bool DiRemoveDevice(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData, out bool needsReboot) {
