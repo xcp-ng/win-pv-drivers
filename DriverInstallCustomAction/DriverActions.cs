@@ -174,24 +174,6 @@ namespace XNInstCA {
                 }
                 session.Log($"Found device with compatible IDs: {string.Join(",", compatibleIds)}");
 
-                List<string> children = DriverUtils.GetDeviceChildren(devInfo, devInfoData);
-                foreach (var child in children) {
-                    session.Log($"Uninstalling child device {child}");
-                    try {
-                        var (childInfo, childInfoData) = DriverUtils.OpenDeviceInfo(null, child);
-                        unsafe {
-                            BOOL thisNeedsReboot;
-                            if (!PInvoke.DiUninstallDevice(HWND.Null, childInfo, childInfoData, 0, &thisNeedsReboot)) {
-                                session.Log($"DiUninstallDevice error {Marshal.GetLastWin32Error()}");
-                                continue;
-                            }
-                            needsReboot |= thisNeedsReboot;
-                        }
-                    } catch (Win32Exception ex) {
-                        session.Log($"OpenDeviceInfo error {ex.NativeErrorCode}");
-                    }
-                }
-
                 var infName = DriverUtils.GetDeviceInfPath(devInfo, devInfoData);
                 session.Log($"inf: {infName}");
                 if (!string.IsNullOrEmpty(infName)
