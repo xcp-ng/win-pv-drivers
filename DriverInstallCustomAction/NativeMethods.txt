@@ -3,6 +3,7 @@ WIN32_ERROR
 
 DiInstallDriver
 DiUninstallDevice
+DiUninstallDriver
 UpdateDriverForPlugAndPlayDevices
 UPDATEDRIVERFORPLUGANDPLAYDEVICES_FLAGS
 
@@ -17,10 +18,16 @@ SetupGetLineText
 SetupGetStringField
 SetupCloseInfFile
 
+SetupDiCreateDeviceInfoList
 SetupDiGetClassDevs
 SetupDiEnumDeviceInfo
+SetupDiOpenDeviceInfo
 SetupDiGetDeviceProperty
+SetupDiCallClassInstaller
+SetupDiGetDeviceInstallParams
 SetupDiDestroyDeviceInfoList
+SETUP_DI_DEVICE_INSTALL_FLAGS
+
 GUID_DEVCLASS_SYSTEM
 GUID_DEVCLASS_SCSIADAPTER
 GUID_DEVCLASS_NET

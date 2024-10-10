@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using Windows.Win32;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using Windows.Win32.Devices.Properties;
@@ -167,6 +169,7 @@ namespace XNInstCA {
             var devInfoData = new SP_DEVINFO_DATA {
                 cbSize = (uint)Marshal.SizeOf<SP_DEVINFO_DATA>()
             };
+            var collectedInfPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             for (uint devIndex = 0; ; devIndex++) {
                 if (!PInvoke.SetupDiEnumDeviceInfo(devInfo, devIndex, ref devInfoData)) {
                     var error = Marshal.GetLastWin32Error();
@@ -175,33 +178,116 @@ namespace XNInstCA {
                     }
                     break;
                 }
-                var buf = DriverUtils.GetDeviceProperty<char>(
+
+                var cidBuf = DriverUtils.GetDeviceProperty<char>(
                     devInfo,
                     devInfoData,
                     DriverUtils.DEVPKEY_Device_CompatibleIds,
                     DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
-                if (buf == null) {
+                if (cidBuf == null) {
                     continue;
                 }
-                var compatibleIds = DriverUtils.ParseMultiString(buf);
+                var compatibleIds = DriverUtils.ParseMultiString(cidBuf);
                 if (compatibleIds.Intersect(xenInfo.CompatibleIds, StringComparer.OrdinalIgnoreCase).Count(x => true) == 0) {
                     continue;
                 }
-                session.Log($"Uninstalling device with compatible IDs: {string.Join(",", compatibleIds)}");
-                BOOL pinvokeNeedsReboot;
-                unsafe {
-                    if (!PInvoke.DiUninstallDevice(HWND.Null, devInfo, devInfoData, 0, &pinvokeNeedsReboot)) {
-                        session.Log($"DiUninstallDevice error {Marshal.GetLastWin32Error()}");
+                session.Log($"Found device with compatible IDs: {string.Join(",", compatibleIds)}");
+
+                var childrenBuf = DriverUtils.GetDeviceProperty<char>(
+                    devInfo,
+                    devInfoData,
+                    DriverUtils.DEVPKEY_Device_Children,
+                    DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
+                if (childrenBuf == null) {
+                    continue;
+                }
+                var children = DriverUtils.ParseMultiString(childrenBuf);
+                foreach (var child in children) {
+                    session.Log($"Uninstalling child device {child}");
+                    var childInfo = PInvoke.SetupDiCreateDeviceInfoList((Guid?)null, HWND.Null);
+                    var childInfoData = new SP_DEVINFO_DATA {
+                        cbSize = (uint)Marshal.SizeOf<SP_DEVINFO_DATA>()
+                    };
+                    unsafe {
+                        if (!PInvoke.SetupDiOpenDeviceInfo(childInfo, child, HWND.Null, 0, &childInfoData)) {
+                            session.Log($"SetupDiOpenDeviceInfo error {Marshal.GetLastWin32Error()}");
+                            continue;
+                        }
+                        BOOL thisNeedsReboot;
+                        if (!PInvoke.DiUninstallDevice(HWND.Null, childInfo, childInfoData, 0, &thisNeedsReboot)) {
+                            session.Log($"DiUninstallDevice error {Marshal.GetLastWin32Error()}");
+                            continue;
+                        }
+                        needsReboot |= thisNeedsReboot;
                     }
                 }
-                needsReboot = needsReboot || pinvokeNeedsReboot;
+
+                var infPathBuf = DriverUtils.GetDeviceProperty<char>(
+                    devInfo,
+                    devInfoData,
+                    DriverUtils.DEVPKEY_Device_DriverInfPath,
+                    DEVPROPTYPE.DEVPROP_TYPE_STRING);
+                if (infPathBuf != null) {
+                    // we don't know the actual length of the string returned by GetDeviceProperty
+                    var oemInfPathBuilder = new StringBuilder();
+                    foreach (var ch in infPathBuf) {
+                        if (ch == 0) {
+                            break;
+                        }
+                        oemInfPathBuilder.Append(ch);
+                    }
+                    var oemInfName = oemInfPathBuilder.ToString();
+                    if (!string.IsNullOrEmpty(oemInfName) && oemInfName.StartsWith("oem", StringComparison.OrdinalIgnoreCase)) {
+                        collectedInfPaths.Add(oemInfName);
+                    }
+                }
+                /*
+                if (!PInvoke.SetupDiCallClassInstaller(DI_FUNCTION.DIF_REMOVE, devInfo, devInfoData)) {
+                    session.Log($"SetupDiCallClassInstaller error {Marshal.GetLastWin32Error()}");
+                    continue;
+                }
+                var devInstallParams = new SP_DEVINSTALL_PARAMS_W() { cbSize = (uint)Marshal.SizeOf<SP_DEVINSTALL_PARAMS_W>() };
+                if (!PInvoke.SetupDiGetDeviceInstallParams(devInfo, devInfoData, ref devInstallParams)) {
+                    session.Log($"SetupDiGetDeviceInstallParams error {Marshal.GetLastWin32Error()}");
+                    continue;
+                }
+                needsReboot = needsReboot || (devInstallParams.Flags & (SETUP_DI_DEVICE_INSTALL_FLAGS.DI_NEEDREBOOT | SETUP_DI_DEVICE_INSTALL_FLAGS.DI_NEEDRESTART)) != 0;
+                */
+                ///* DiUninstallDevice method (doesn't work)
+                unsafe {
+                    BOOL thisNeedsReboot;
+                    if (!PInvoke.DiUninstallDevice(HWND.Null, devInfo, devInfoData, 0, &thisNeedsReboot)) {
+                        session.Log($"DiUninstallDevice error {Marshal.GetLastWin32Error()}");
+                        continue;
+                    }
+                    needsReboot |= thisNeedsReboot;
+                }
+                //*/
             }
-            if (!PInvoke.SetupUninstallOEMInf(driver.InfPath, 0)) {
-                session.Log($"SetupUninstallOEMInf error, did not cleanly delete devices.");
-                session.Log($"Forcing SetupUninstallOEMInf delete");
-                PInvoke.SetupUninstallOEMInf(driver.InfPath, PInvoke.SUOI_FORCEDELETE);
+            var windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            foreach (var oemInfName in collectedInfPaths) {
+                session.Log($"Uninstalling {oemInfName}");
+                var oemInfPath = Path.Combine(windir, "INF", oemInfName);
+                /*
+                BOOL thisNeedsReboot;
+                unsafe {
+                    if (!PInvoke.DiUninstallDriver(HWND.Null, oemInfPath, 0, &thisNeedsReboot)) {
+                        session.Log($"DiUninstallDriver error {Marshal.GetLastWin32Error()}");
+                        continue;
+                    }
+                }
+                needsReboot |= thisNeedsReboot;
+                */
+                /*
+                if (!PInvoke.SetupUninstallOEMInf(oemInfPath, 0)) {
+                    session.Log($"SetupUninstallOEMInf error, did not cleanly delete devices.");
+                    session.Log($"Forcing SetupUninstallOEMInf delete");
+                    PInvoke.SetupUninstallOEMInf(oemInfPath, PInvoke.SUOI_FORCEDELETE);
+                }
+                */
             }
             if (needsReboot) {
+                session.Log("Scheduling reboot");
                 CustomActionUtils.ScheduleReboot();
             }
             return ActionResult.Success;

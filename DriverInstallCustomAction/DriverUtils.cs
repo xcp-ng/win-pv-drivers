@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using Windows.Win32.Devices.Properties;
+using Windows.Win32.Foundation;
 using WixToolset.Dtf.WindowsInstaller;
 
 namespace XNInstCA {
@@ -42,6 +45,16 @@ namespace XNInstCA {
             pid = 4
         };
 
+        public static readonly DEVPROPKEY DEVPKEY_Device_DriverInfPath = new() {
+            fmtid = new Guid(0xa8b865dd, 0x2e3d, 0x4094, 0xad, 0x97, 0xe5, 0x93, 0xa7, 0xc, 0x75, 0xd6),
+            pid = 5
+        };
+
+        public static readonly DEVPROPKEY DEVPKEY_Device_Children = new() {
+            fmtid = new Guid(0x4340a6c5, 0x93fa, 0x4706, 0x97, 0x2c, 0x7b, 0x64, 0x80, 0x08, 0xa5, 0xa7),
+            pid = 9
+        };
+
         public static T[] GetDeviceProperty<T>(
                 SetupDiDestroyDeviceInfoListSafeHandle devInfo,
                 SP_DEVINFO_DATA devInfoData,
@@ -61,7 +74,15 @@ namespace XNInstCA {
                     || ptype != expectedType
                     || requiredBytes < sizeof(T)
                     || requiredBytes % sizeof(T) != 0) {
-                    return null;
+                    var err = Marshal.GetLastWin32Error();
+                    if ((WIN32_ERROR)err == WIN32_ERROR.ERROR_INSUFFICIENT_BUFFER) {
+                        ; // expected error, continue to next step
+                    } else if ((WIN32_ERROR)err == WIN32_ERROR.ERROR_NOT_FOUND) {
+                        // expected error, device doesn't have property
+                        return null;
+                    } else {
+                        return null;
+                    }
                 }
                 numElements = requiredBytes / sizeof(T);
             }
@@ -76,7 +97,7 @@ namespace XNInstCA {
                             new Span<byte>(p, (int)requiredBytes),
                             null,
                             0)) {
-                        return null;
+                        throw new Win32Exception(Marshal.GetLastWin32Error());
                     }
                 }
             }
