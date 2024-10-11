@@ -78,7 +78,7 @@ namespace XNInstCA {
                     if (!PInvoke.SetupGetStringField(pContext, fieldIndex, null, 0, &requiredSize)) {
                         throw new Win32Exception(Marshal.GetLastWin32Error(), "Inf cannot get field size");
                     }
-                    var mem = Marshal.AllocHGlobal((int)requiredSize);
+                    var mem = Marshal.AllocHGlobal((int)requiredSize * sizeof(char));
                     try {
                         if (!PInvoke.SetupGetStringField(pContext, fieldIndex, new PWSTR((char*)mem.ToPointer()), requiredSize, null)) {
                             throw new Win32Exception(Marshal.GetLastWin32Error(), "Inf cannot get field");
