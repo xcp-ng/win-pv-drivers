@@ -2,12 +2,11 @@
 <Include xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <?include Branding.wxi ?>
 
-  <?if $(sys.BUILDARCH) = x86 ?>
+  <?if $(Platform) = x86 ?>
   <?define UpgradeCode = "$(MSI_UPGRADE_CODE_X86)" ?>
-  <?elseif $(sys.BUILDARCH) = x64 ?>
+  <?elseif $(Platform) = x64 ?>
   <?define UpgradeCode = "$(MSI_UPGRADE_CODE_X64)" ?>
   <?endif?>
 
-  <?define SourceFilesDir = "!(bind.XenDrivers.ProjectDir)/../output" ?>
   <?define ProductVersion="$(MAJOR_VERSION).$(MINOR_VERSION).$(MICRO_VERSION).$(BUILD_NUMBER)" ?>
 </Include>

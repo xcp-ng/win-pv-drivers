@@ -17,6 +17,11 @@
   <ItemGroup>
     <None Include="scripts\genfiles.ps1" />
   </ItemGroup>
+  <ItemGroup>
+    <BindPath Include="$(ProjectDir)\output">
+      <BindName>output</BindName>
+    </BindPath>
+  </ItemGroup>
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)" />
   </Target>
