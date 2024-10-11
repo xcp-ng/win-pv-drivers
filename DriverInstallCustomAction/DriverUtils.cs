@@ -10,7 +10,7 @@ using Windows.Win32.Devices.Properties;
 using Windows.Win32.Foundation;
 using WixToolset.Dtf.WindowsInstaller;
 
-namespace XNInstCA {
+namespace XenInstCA {
     public class DriverData {
         public string DriverName { get; set; }
         public string InfPath { get; set; }
@@ -107,10 +107,10 @@ namespace XNInstCA {
 
         public static List<string> GetDeviceChildren(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
             var buf = DriverUtils.GetDeviceProperty<char>(
-                                devInfo,
-                                devInfoData,
-                                DriverUtils.DEVPKEY_Device_Children,
-                                DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
+                devInfo,
+                devInfoData,
+                DriverUtils.DEVPKEY_Device_Children,
+                DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
             if (buf == null) {
                 return new List<string>();
             }
@@ -119,10 +119,10 @@ namespace XNInstCA {
 
         public static List<string> GetDeviceCompatibleIds(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
             var buf = DriverUtils.GetDeviceProperty<char>(
-                                devInfo,
-                                devInfoData,
-                                DriverUtils.DEVPKEY_Device_CompatibleIds,
-                                DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
+                devInfo,
+                devInfoData,
+                DriverUtils.DEVPKEY_Device_CompatibleIds,
+                DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
             if (buf == null) {
                 return new List<string>();
             }
@@ -131,10 +131,10 @@ namespace XNInstCA {
 
         public static string GetDeviceInfPath(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
             var buf = DriverUtils.GetDeviceProperty<char>(
-                                devInfo,
-                                devInfoData,
-                                DriverUtils.DEVPKEY_Device_DriverInfPath,
-                                DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
+                devInfo,
+                devInfoData,
+                DriverUtils.DEVPKEY_Device_DriverInfPath,
+                DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
             if (buf == null) {
                 return null;
             }

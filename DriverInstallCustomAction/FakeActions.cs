@@ -1,7 +1,7 @@
 using System.Threading;
 using WixToolset.Dtf.WindowsInstaller;
 
-namespace XNInstCA {
+namespace XenInstCA {
     public class FakeActions {
         [CustomAction]
         public static ActionResult FakeInstall(Session session) {

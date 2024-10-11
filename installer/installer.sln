@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "xcp-ng-drivers", "xcp-ng-drivers.wixproj", "{5EBD6640-0CBA-435D-BEBC-93182D18213D}"
+Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "XenDrivers", "XenDrivers.wixproj", "{5EBD6640-0CBA-435D-BEBC-93182D18213D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DriverInstallCustomAction", "..\DriverInstallCustomAction\DriverInstallCustomAction.csproj", "{EF921460-97E4-4EF0-92D5-BD9ABA124022}"
 EndProject

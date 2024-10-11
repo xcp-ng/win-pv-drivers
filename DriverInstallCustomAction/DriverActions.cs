@@ -9,7 +9,7 @@ using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using Windows.Win32.Foundation;
 using WixToolset.Dtf.WindowsInstaller;
 
-namespace XNInstCA {
+namespace XenInstCA {
     public class DriverActions {
         [CustomAction]
         public static ActionResult DriverInstall(Session session) {
@@ -19,29 +19,13 @@ namespace XNInstCA {
                     return ActionResult.UserExit;
                 }
                 session.Log($"Installing {driver.DriverName} inf {driver.InfPath}");
-                if ("Xennet111".Equals(driver.DriverName, StringComparison.OrdinalIgnoreCase)) {
-                    bool needsReboot = false;
-                    // Preinstall the driver to the driver store
-                    unsafe {
-                        if (!PInvoke.SetupCopyOEMInf(driver.InfPath, driver.InfPath, OEM_SOURCE_MEDIA_TYPE.SPOST_PATH, 0, null, 0, null, null)) {
-                            session.Log($"SetupCopyOEMInf {driver.DriverName} failed {Marshal.GetLastWin32Error()}");
-                        }
-                    }
-                    // TODO: Enumerate
-                    unsafe {
 
-                    }
-                    if (needsReboot) {
-                        CustomActionUtils.ScheduleReboot();
-                    }
-                } else {
-                    BOOL needsReboot;
-                    unsafe {
-                        PInvoke.DiInstallDriver(HWND.Null, driver.InfPath, 0, &needsReboot);
-                    }
-                    if (needsReboot) {
-                        CustomActionUtils.ScheduleReboot();
-                    }
+                BOOL needsReboot;
+                unsafe {
+                    PInvoke.DiInstallDriver(HWND.Null, driver.InfPath, 0, &needsReboot);
+                }
+                if (needsReboot) {
+                    CustomActionUtils.ScheduleReboot();
                 }
             }
             return ActionResult.Success;
@@ -53,7 +37,7 @@ namespace XNInstCA {
             return ActionResult.Success;
         }
 
-        // We're running from the XCP-ng PV driver uninstaller. So we should only remove drivers that belong to our current package and leave the rest alone.
+        // We're running on behalf of the PV driver uninstaller. We should only remove drivers belonging to our current package and leave the rest alone.
         // Drivers that don't belong to our package should be uninstalled by the standalone uninstaller.
         // We can have a separate installer stage for that.
 
@@ -67,13 +51,13 @@ namespace XNInstCA {
             public List<string> CompatibleIds { get; set; }
         }
 
-        // TODO: generalize based on branding info
         private static readonly Dictionary<string, XenDeviceInfo> DevicesToRemove = new(StringComparer.OrdinalIgnoreCase) {
             {
                 "Xenbus",
                 new XenDeviceInfo() {
                     ClassGuid = PInvoke.GUID_DEVCLASS_SYSTEM,
                     CompatibleIds = new List<string>() {
+                        string.IsNullOrEmpty(Version.VendorDeviceId) ? null : $"PCI\\VEN_5853&DEV_{Version.VendorDeviceId}&SUBSYS_{Version.VendorDeviceId}5853&REV_01",
                         "PCI\\VEN_5853&DEV_0001",
                         "PCI\\VEN_5853&DEV_0002",
                     }
@@ -84,8 +68,9 @@ namespace XNInstCA {
                 new XenDeviceInfo() {
                     ClassGuid = PInvoke.GUID_DEVCLASS_SYSTEM,
                     CompatibleIds = new List<string>() {
-                        "XENBUS\\VEN_XN0001&DEV_CONS&REV_09000000",
-                        "XENBUS\\VEN_XN0002&DEV_CONS&REV_09000000",
+                        string.IsNullOrEmpty(Version.VendorDeviceId) ? null : $"XENBUS\\VEN_{Version.VendorPrefix}{Version.VendorDeviceId}&DEV_VBD&REV_09000000",
+                        $"XENBUS\\VEN_{Version.VendorPrefix}0001&DEV_CONS&REV_09000000",
+                        $"XENBUS\\VEN_{Version.VendorPrefix}0002&DEV_CONS&REV_09000000",
                     }
                 }
             },
@@ -94,8 +79,9 @@ namespace XNInstCA {
                 new XenDeviceInfo() {
                     ClassGuid = PInvoke.GUID_DEVCLASS_HIDCLASS,
                     CompatibleIds = new List<string>() {
-                        "XENVKBD\\VEN_XN0001&DEV_HID&REV_09000000",
-                        "XENVKBD\\VEN_XN0002&DEV_HID&REV_09000000",
+                        string.IsNullOrEmpty(Version.VendorDeviceId) ? null : $"XENVKBD\\VEN_{Version.VendorPrefix}{Version.VendorDeviceId}&DEV_HID&REV_09000000",
+                        $"XENVKBD\\VEN_{Version.VendorPrefix}0001&DEV_HID&REV_09000000",
+                        $"XENVKBD\\VEN_{Version.VendorPrefix}0002&DEV_HID&REV_09000000",
                     }
                 }
             },
@@ -104,8 +90,9 @@ namespace XNInstCA {
                 new XenDeviceInfo() {
                     ClassGuid = PInvoke.GUID_DEVCLASS_SYSTEM,
                     CompatibleIds = new List<string>() {
-                        "XENBUS\\VEN_XN0001&DEV_IFACE&REV_09000000",
-                        "XENBUS\\VEN_XN0002&DEV_IFACE&REV_09000000",
+                        string.IsNullOrEmpty(Version.VendorDeviceId) ? null : $"XENBUS\\VEN_{Version.VendorPrefix}{Version.VendorDeviceId}&DEV_IFACE&REV_09000000",
+                        $"XENBUS\\VEN_{Version.VendorPrefix}0001&DEV_IFACE&REV_09000000",
+                        $"XENBUS\\VEN_{Version.VendorPrefix}0002&DEV_IFACE&REV_09000000",
                     }
                 }
             },
@@ -114,8 +101,9 @@ namespace XNInstCA {
                 new XenDeviceInfo() {
                     ClassGuid = PInvoke.GUID_DEVCLASS_NET,
                     CompatibleIds = new List<string>() {
-                        "XENVIF\\VEN_XN0001&DEV_NET&REV_09000000",
-                        "XENVIF\\VEN_XN0002&DEV_NET&REV_09000000",
+                        string.IsNullOrEmpty(Version.VendorDeviceId) ? null : $"XENVIF\\VEN_{Version.VendorPrefix}{Version.VendorDeviceId}&DEV_NET&REV_09000000",
+                        $"XENVIF\\VEN_{Version.VendorPrefix}0001&DEV_NET&REV_09000000",
+                        $"XENVIF\\VEN_{Version.VendorPrefix}0002&DEV_NET&REV_09000000",
                     }
                 }
             },
@@ -124,8 +112,9 @@ namespace XNInstCA {
                 new XenDeviceInfo() {
                     ClassGuid = PInvoke.GUID_DEVCLASS_SCSIADAPTER,
                     CompatibleIds = new List<string>() {
-                        "XENBUS\\VEN_XN0001&DEV_VBD&REV_09000000",
-                        "XENBUS\\VEN_XN0002&DEV_VBD&REV_09000000",
+                        string.IsNullOrEmpty(Version.VendorDeviceId) ? null : $"XENBUS\\VEN_{Version.VendorPrefix}{Version.VendorDeviceId}&DEV_VBD&REV_09000000",
+                        $"XENBUS\\VEN_{Version.VendorPrefix}0001&DEV_VBD&REV_09000000",
+                        $"XENBUS\\VEN_{ Version.VendorPrefix}0002&DEV_VBD&REV_09000000",
                     }
                 }
             },
@@ -134,8 +123,9 @@ namespace XNInstCA {
                 new XenDeviceInfo() {
                     ClassGuid = PInvoke.GUID_DEVCLASS_SYSTEM,
                     CompatibleIds = new List<string>() {
-                        "XENBUS\\VEN_XN0001&DEV_VIF&REV_09000000",
-                        "XENBUS\\VEN_XN0002&DEV_VIF&REV_09000000",
+                        string.IsNullOrEmpty(Version.VendorDeviceId) ? null : $"XENBUS\\VEN_{Version.VendorPrefix}{Version.VendorDeviceId}&DEV_VIF&REV_09000000",
+                        $"XENBUS\\VEN_{Version.VendorPrefix}0001&DEV_VIF&REV_09000000",
+                        $"XENBUS\\VEN_{Version.VendorPrefix}0002&DEV_VIF&REV_09000000",
                     }
                 }
             },
@@ -144,8 +134,9 @@ namespace XNInstCA {
                 new XenDeviceInfo() {
                     ClassGuid = PInvoke.GUID_DEVCLASS_SYSTEM,
                     CompatibleIds = new List<string>() {
-                        "XENBUS\\VEN_XN0001&DEV_VKBD&REV_09000000",
-                        "XENBUS\\VEN_XN0002&DEV_VKBD&REV_09000000",
+                        string.IsNullOrEmpty(Version.VendorDeviceId) ? null : $"XENBUS\\VEN_{Version.VendorPrefix}{Version.VendorDeviceId}&DEV_VKBD&REV_09000000",
+                        $"XENBUS\\VEN_{Version.VendorPrefix}0001&DEV_VKBD&REV_09000000",
+                        $"XENBUS\\VEN_{Version.VendorPrefix}0002&DEV_VKBD&REV_09000000",
                     }
                 }
             },
@@ -170,7 +161,9 @@ namespace XNInstCA {
 
             foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)) {
                 List<string> compatibleIds = DriverUtils.GetDeviceCompatibleIds(devInfo, devInfoData);
-                if (compatibleIds.Intersect(xenInfo.CompatibleIds, StringComparer.OrdinalIgnoreCase).Count(x => true) == 0) {
+                if (compatibleIds
+                        .Intersect(xenInfo.CompatibleIds, StringComparer.OrdinalIgnoreCase)
+                        .Count(x => !string.IsNullOrEmpty(x)) == 0) {
                     continue;
                 }
                 session.Log($"Found device with compatible IDs: {string.Join(",", compatibleIds)}");
@@ -215,9 +208,8 @@ namespace XNInstCA {
                         using var infFile = InfFile.Open(infPath, null, INF_STYLE.INF_STYLE_WIN4, out _);
                         var infCatalog = infFile.GetStringField("Version", "CatalogFile", 1);
                         var infProvider = infFile.GetStringField("Version", "Provider", 1);
-                        // TODO: generalize based on branding info
                         if (!wantedCatalogName.Equals(infCatalog, StringComparison.OrdinalIgnoreCase)
-                            || !"XCP-ng".Equals(infProvider, StringComparison.OrdinalIgnoreCase)) {
+                            || !XenInstCA.Version.VendorName.Equals(infProvider, StringComparison.OrdinalIgnoreCase)) {
                             continue;
                         }
                     } catch (Exception ex) {

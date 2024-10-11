@@ -5,7 +5,7 @@
     <?include ../Driver.wxi ?>
 
     <!-- see Xenbus!FiltersInstall and FiltersUninstall -->
-    <CustomAction Id="XenbusCleanup" BinaryRef="XNInstCA.dll" DllEntry="XenbusCleanup" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="XenbusCleanup" BinaryRef="xeninst.dll" DllEntry="XenbusCleanup" Execute="deferred" Impersonate="no" />
     <!-- Xenbus reinstalls its filters by itself, normally there's no need to rollback -->
 
     <!-- manually lay out Xenbus so that it goes before/after all other drivers during install/uninstall -->

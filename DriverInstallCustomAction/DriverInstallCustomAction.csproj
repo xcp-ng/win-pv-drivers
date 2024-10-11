@@ -1,11 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
-    <AssemblyName>xninstca</AssemblyName>
-    <RootNamespace>XNInstCA</RootNamespace>
+    <AssemblyName>xeninst</AssemblyName>
+    <RootNamespace>XenInstCA</RootNamespace>
     <LangVersion>9.0</LangVersion>
     <Platforms>x64;x86;ARM64</Platforms>
     <Nullable>warnings</Nullable>
+    <Authors>$(VENDOR_NAME)</Authors>
+    <Company>$(VENDOR_NAME)</Company>
+    <Product>$(PRODUCT_NAME)</Product>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,4 +25,8 @@
     <PackageReference Include="WixToolset.Dtf.CustomAction" Version="5.0.2" />
     <PackageReference Include="WixToolset.Dtf.WindowsInstaller" Version="5.0.2" />
   </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)" />
+  </Target>
 </Project>

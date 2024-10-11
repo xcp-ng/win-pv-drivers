@@ -5,7 +5,7 @@ using System.Linq;
 using Windows.Win32;
 using WixToolset.Dtf.WindowsInstaller;
 
-namespace XNInstCA {
+namespace XenInstCA {
     public class CleanupActions {
         private static readonly List<Guid> ClassKeyList = new() {
             PInvoke.GUID_DEVCLASS_HDC,

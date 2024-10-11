@@ -1,6 +1,6 @@
 using WixToolset.Dtf.WindowsInstaller;
 
-namespace XNInstCA {
+namespace XenInstCA {
     public static class RebootActions {
         [CustomAction]
         public static ActionResult CheckReboot(Session session) {

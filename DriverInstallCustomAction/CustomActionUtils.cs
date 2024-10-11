@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using WixToolset.Dtf.WindowsInstaller;
 using Windows.Win32;
 
-namespace XNInstCA {
+namespace XenInstCA {
     internal static class CustomActionUtils {
         private static readonly string RebootScheduledAtomName = "WcaDeferredActionRequiresReboot";
 

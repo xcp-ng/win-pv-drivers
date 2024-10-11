@@ -1,0 +1,23 @@
+<Project Sdk="WixToolset.Sdk/5.0.2">
+  <PropertyGroup>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <OutputName>$(MSBuildProjectName)-$(Platform)</OutputName>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="Branding.wxi" />
+    <Content Include="Driver.wxi" />
+    <Content Include="Include.wxi" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DriverInstallCustomAction\DriverInstallCustomAction.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="scripts\genfiles.ps1" />
+  </ItemGroup>
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)" />
+  </Target>
+</Project>

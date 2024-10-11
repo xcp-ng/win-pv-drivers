@@ -3,10 +3,12 @@
 This file contains the declaration of all the localizable strings.
 -->
 <WixLocalization xmlns="http://wixtoolset.org/schemas/v4/wxl" Culture="en-US">
+  <?include Include.wxi ?>
 
-  <String Id="ProductName" Value="XCP-ng Windows PV Drivers" />
+  <String Id="GenericProductName" Value="Windows PV Drivers" />
+  <String Id="ProductName" Value="$(VENDOR_NAME) Windows PV Drivers" />
 
-  <String Id="XcpNgOldDriversDetectedError" Value="Old XCP-ng PV drivers detected. Uninstall them before continuing." />
+  <String Id="OldDriversDetectedError" Value="Old $(VENDOR_NAME) drivers detected. Uninstall them before continuing." />
   <String Id="CitrixDriversDetectedError" Value="Citrix PV drivers detected. Uninstall them before continuing." />
   <String Id="DowngradeError" Value="A newer version of [ProductName] is already installed." />
   <String Id="RebootPendingError" Value="A reboot is pending. Reboot the system before attempting install." />
@@ -22,5 +24,4 @@ This file contains the declaration of all the localizable strings.
   <String Id="DriverUninstallText" Value="Preparing uninstall" />
 
   <String Id="XenbusCleanupText" Value="Cleaning up" />
-
 </WixLocalization>
