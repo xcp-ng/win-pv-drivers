@@ -213,7 +213,9 @@ namespace XNInstCA {
                     try {
                         using var infFile = InfFile.Open(infPath, null, INF_STYLE.INF_STYLE_WIN4, out _);
                         var infCatalog = infFile.GetStringField("Version", "CatalogFile", 1);
-                        if (!wantedCatalogName.Equals(infCatalog, StringComparison.OrdinalIgnoreCase)) {
+                        var infProvider = infFile.GetStringField("Version", "Provider", 1);
+                        if (!wantedCatalogName.Equals(infCatalog, StringComparison.OrdinalIgnoreCase)
+                            || !"XCP-ng".Equals(infProvider, StringComparison.OrdinalIgnoreCase)) {
                             continue;
                         }
                     } catch (Exception ex) {
