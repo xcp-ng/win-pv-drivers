@@ -67,6 +67,7 @@ namespace XNInstCA {
             public List<string> CompatibleIds { get; set; }
         }
 
+        // TODO: generalize based on branding info
         private static readonly Dictionary<string, XenDeviceInfo> DevicesToRemove = new(StringComparer.OrdinalIgnoreCase) {
             {
                 "Xenbus",
@@ -214,6 +215,7 @@ namespace XNInstCA {
                         using var infFile = InfFile.Open(infPath, null, INF_STYLE.INF_STYLE_WIN4, out _);
                         var infCatalog = infFile.GetStringField("Version", "CatalogFile", 1);
                         var infProvider = infFile.GetStringField("Version", "Provider", 1);
+                        // TODO: generalize based on branding info
                         if (!wantedCatalogName.Equals(infCatalog, StringComparison.OrdinalIgnoreCase)
                             || !"XCP-ng".Equals(infProvider, StringComparison.OrdinalIgnoreCase)) {
                             continue;

@@ -6,15 +6,8 @@ using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using Windows.Win32.Foundation;
-using static System.Collections.Specialized.BitVector32;
 
 namespace XNInstCA {
-    internal class InfManufacturer {
-        public string Key { get; set; }
-        public string SectionName { get; set; }
-        public List<string> TargetOSVersions { get; } = new();
-    }
-
     internal class InfFile : SafeHandleMinusOneIsInvalid {
         public InfFile(IntPtr existingHandle, bool ownsHandle) : base(ownsHandle) {
             handle = existingHandle;
