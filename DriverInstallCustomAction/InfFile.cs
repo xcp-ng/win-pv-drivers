@@ -27,6 +27,9 @@ namespace XNInstCA {
                     infHandle = (IntPtr)PInvoke.SetupOpenInfFile(FileName, InfClass, InfStyle, pErrorLine);
                 }
             }
+            if (infHandle == HANDLE.INVALID_HANDLE_VALUE) {
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "SetupOpenInfFile");
+            }
             return new InfFile(infHandle, true);
         }
 
