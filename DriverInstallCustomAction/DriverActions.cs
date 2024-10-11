@@ -196,11 +196,31 @@ namespace XNInstCA {
                 }
             }
 
-            var windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
-            foreach (var oemInfName in collectedInfPaths) {
-                session.Log($"Uninstalling {oemInfName}");
-                if (!PInvoke.SetupUninstallOEMInf(oemInfName, PInvoke.SUOI_FORCEDELETE)) {
-                    session.Log($"SetupUninstallOEMInf error, did not cleanly delete devices.");
+            if (collectedInfPaths.Count > 0) {
+                foreach (var oemInfName in collectedInfPaths) {
+                    UninstallOemInf(session, oemInfName);
+                }
+            } else {
+                var wantedCatalogName = $"{Path.GetFileNameWithoutExtension(driver.InfPath)}.cat";
+                session.Log($"Didn't find {driver.DriverName} devices; uninstalling by catalog name {wantedCatalogName}");
+                var windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+                var infdir = Path.Combine(windir, "inf");
+                foreach (var infPath in Directory.EnumerateFiles(infdir, "oem*.inf", SearchOption.TopDirectoryOnly)) {
+                    if (!".inf".Equals(Path.GetExtension(infPath), StringComparison.OrdinalIgnoreCase)) {
+                        // netfx bug when using asterisks
+                        continue;
+                    }
+                    try {
+                        using var infFile = InfFile.Open(infPath, null, INF_STYLE.INF_STYLE_WIN4, out _);
+                        var infCatalog = infFile.GetStringField("Version", "CatalogFile", 1);
+                        if (!wantedCatalogName.Equals(infCatalog, StringComparison.OrdinalIgnoreCase)) {
+                            continue;
+                        }
+                    } catch (Exception ex) {
+                        session.Log($"Cannot parse {infPath}: {ex.Message}");
+                    }
+                    var oemInfName = Path.GetFileName(infPath);
+                    UninstallOemInf(session, oemInfName);
                 }
             }
 
@@ -209,6 +229,13 @@ namespace XNInstCA {
                 CustomActionUtils.ScheduleReboot();
             }
             return ActionResult.Success;
+        }
+
+        private static void UninstallOemInf(Session session, string oemInfName) {
+            session.Log($"Uninstalling {oemInfName}");
+            if (!PInvoke.SetupUninstallOEMInf(oemInfName, PInvoke.SUOI_FORCEDELETE)) {
+                session.Log($"SetupUninstallOEMInf error, did not cleanly delete driver.");
+            }
         }
 
         [CustomAction]
