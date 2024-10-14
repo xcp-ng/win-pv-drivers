@@ -3,14 +3,12 @@ WIN32_ERROR
 
 DiInstallDriver
 DiUninstallDevice
-DiUninstallDriver
 UpdateDriverForPlugAndPlayDevices
 UPDATEDRIVERFORPLUGANDPLAYDEVICES_FLAGS
 
 SetupUninstallOEMInf
 SUOI_FORCEDELETE
 
-SetupCopyOEMInf
 SetupOpenInfFile
 SetupFindFirstLine
 SetupFindNextLine
@@ -18,15 +16,10 @@ SetupGetLineText
 SetupGetStringField
 SetupCloseInfFile
 
-SetupDiCreateDeviceInfoList
 SetupDiGetClassDevs
 SetupDiEnumDeviceInfo
-SetupDiOpenDeviceInfo
 SetupDiGetDeviceProperty
-SetupDiCallClassInstaller
-SetupDiGetDeviceInstallParams
 SetupDiDestroyDeviceInfoList
-SETUP_DI_DEVICE_INSTALL_FLAGS
 
 GUID_DEVCLASS_SYSTEM
 GUID_DEVCLASS_SCSIADAPTER
@@ -34,14 +27,6 @@ GUID_DEVCLASS_NET
 GUID_DEVCLASS_HIDCLASS
 GUID_DEVCLASS_HDC
 DEVPROPTYPE
-
-CM_Get_Device_ID_List_Size
-CM_Get_Device_ID_List
-CM_Locate_DevNode
-CM_Get_DevNode_Property
-CM_Get_Child
-CM_Get_Sibling
-CM_Get_Device_ID
 
 GlobalAddAtom
 GlobalFindAtom
