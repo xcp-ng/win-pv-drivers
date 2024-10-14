@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <!-- empty ComponentGroup just for reference -->
+    <ComponentGroup Id="BrandingComponent" />
+    <!-- make sure to use backslashes -->
+    <WixVariable Id="WixUILicenseRtf" Value="!(bindpath.branding)\EULA_DRIVERS.rtf" />
+    <Icon Id="icon.ico" SourceFile="!(bindpath.branding)\xen.ico"/>
+    <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+    <WixVariable Id="WixUIBannerBmp" Value="!(bindpath.branding)\BannrBmp.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="!(bindpath.branding)\DlgBmp.bmp" />
+    <WixVariable Id="WixUIExclamationIco" Value="!(bindpath.branding)\exclamic.ico" />
+    <WixVariable Id="WixUIInfoIco" Value="!(bindpath.branding)\info.ico" />
+    <WixVariable Id="WixUINewIco" Value="!(bindpath.branding)\New.ico" />
+    <WixVariable Id="WixUIUpIco" Value="!(bindpath.branding)\Up.ico" />
+  </Fragment>
+</Wix>

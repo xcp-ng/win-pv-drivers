@@ -18,6 +18,9 @@
     <None Include="scripts\genfiles.ps1" />
   </ItemGroup>
   <ItemGroup>
+    <BindPath Include="$(ProjectDir)\branding">
+      <BindName>branding</BindName>
+    </BindPath>
     <BindPath Include="$(ProjectDir)\output">
       <BindName>output</BindName>
     </BindPath>

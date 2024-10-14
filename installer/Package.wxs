@@ -35,6 +35,8 @@
     <ui:WixUI Id="WixUI_FeatureTree" />
     <UIRef Id="WixUI_ErrorProgressText" />
 
+    <ComponentGroupRef Id="BrandingComponent" />
+
     <Feature Id="PVBusFeature" AllowAdvertise="no" AllowAbsent="no" Title="!(loc.PVBusFeatureTitle)">
       <ComponentGroupRef Id="XenbusComponent" />
     </Feature>
