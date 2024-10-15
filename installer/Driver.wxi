@@ -20,15 +20,17 @@
   <CustomAction Id="$(XenDriver)Uninstall" BinaryRef="xeninst.dll" DllEntry="DriverUninstall" Execute="deferred" Impersonate="no" />
   <CustomAction Id="$(XenDriver)UninstallRollback" BinaryRef="xeninst.dll" DllEntry="DriverUninstallRollback" Execute="rollback" Impersonate="no" />
 
-  <SetProperty Id="$(XenDriver)Install" Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]" After="CostFinalize" Sequence="execute" Condition="(NOT ?$(XenDriver).inf=3) AND $$$(XenDriver).inf=3" />
-  <SetProperty Id="$(XenDriver)Uninstall" Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]" After="CostFinalize" Sequence="execute" Condition="?$(XenDriver).inf=3 AND (NOT $$$(XenDriver).inf=3)" />
+  <SetProperty Id="$(XenDriver)Install" Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]" After="CostFinalize" Sequence="execute" />
+  <SetProperty Id="$(XenDriver)InstallRollback" Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]" After="CostFinalize" Sequence="execute" />
+  <SetProperty Id="$(XenDriver)Uninstall" Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]" After="CostFinalize" Sequence="execute" />
+  <SetProperty Id="$(XenDriver)UninstallRollback" Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]" After="CostFinalize" Sequence="execute" />
 
   <?ifdef $(XenDriverDependsOn) ?>
   <InstallExecuteSequence>
-    <Custom Action="$(XenDriver)InstallRollback" After="$(XenDriverDependsOn)Install" Condition="(NOT Installed) OR REINSTALL" />
-    <Custom Action="$(XenDriver)Install" After="$(XenDriver)InstallRollback" Condition="(NOT Installed) OR REINSTALL" />
-    <Custom Action="$(XenDriver)Uninstall" Before="$(XenDriverDependsOn)UninstallRollback" Condition="REMOVE OR REINSTALL" />
-    <Custom Action="$(XenDriver)UninstallRollback" Before="$(XenDriver)Uninstall" Condition="REMOVE OR REINSTALL" />
+    <Custom Action="$(XenDriver)InstallRollback" After="$(XenDriverDependsOn)Install" />
+    <Custom Action="$(XenDriver)Install" After="$(XenDriver)InstallRollback" Condition="$$$(XenDriver).inf=3" />
+    <Custom Action="$(XenDriver)Uninstall" Before="$(XenDriverDependsOn)UninstallRollback" Condition="$$$(XenDriver).inf=2" />
+    <Custom Action="$(XenDriver)UninstallRollback" Before="$(XenDriver)Uninstall" />
   </InstallExecuteSequence>
   <!-- setting the template doesn't work in either ProgressText or ActionStart[3] and I don't know why -->
   <UI>

@@ -10,11 +10,11 @@
 
     <!-- manually lay out Xenbus so that it goes before/after all other drivers during install/uninstall -->
     <InstallExecuteSequence>
-      <Custom Action="XenbusCleanup" Before="ProcessComponents" Condition="REMOVE OR REINSTALL" />
-      <Custom Action="XenbusInstallRollback" After="InstallFiles" Condition="(NOT Installed) OR REINSTALL" />
-      <Custom Action="XenbusInstall" After="XenbusInstallRollback" Condition="(NOT Installed) OR REINSTALL" />
-      <Custom Action="XenbusUninstallRollback" Before="XenbusCleanup" Condition="REMOVE OR REINSTALL" />
-      <Custom Action="XenbusUninstall" After="XenbusUninstallRollback" Condition="REMOVE OR REINSTALL" />
+      <Custom Action="XenbusCleanup" Before="ProcessComponents" Condition="$Xenbus.inf=2" />
+      <Custom Action="XenbusInstallRollback" After="InstallFiles" />
+      <Custom Action="XenbusInstall" After="XenbusInstallRollback" Condition="$Xenbus.inf=3" />
+      <Custom Action="XenbusUninstallRollback" Before="XenbusCleanup" />
+      <Custom Action="XenbusUninstall" After="XenbusUninstallRollback" Condition="$Xenbus.inf=2" />
     </InstallExecuteSequence>
     <UI>
       <ProgressText Action="XenbusCleanup" Message="!(loc.XenbusCleanupText)" />
