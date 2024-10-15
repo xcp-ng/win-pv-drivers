@@ -10,6 +10,7 @@ namespace XenInstCA {
         public static void ScheduleReboot() {
             // Use the same method as Util.wixext's CheckRebootRequired.
             // Ignore errors.
+            Logger.Log("Scheduling reboot");
             _ = PInvoke.GlobalAddAtom(RebootScheduledAtomName);
         }
 

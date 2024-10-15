@@ -8,7 +8,6 @@ using Windows.Win32;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using Windows.Win32.Devices.Properties;
 using Windows.Win32.Foundation;
-using WixToolset.Dtf.WindowsInstaller;
 
 namespace XenInstCA {
     public class DriverData {
@@ -17,15 +16,6 @@ namespace XenInstCA {
     }
 
     internal static class DriverUtils {
-        public static DriverData GetDriverData(Session session) {
-            if (!session.CustomActionData.TryGetValue("Driver", out var driverName)) return null;
-            if (!session.CustomActionData.TryGetValue("Inf", out var infPath)) return null;
-            return new DriverData() {
-                DriverName = driverName,
-                InfPath = infPath,
-            };
-        }
-
         public static List<string> ParseMultiString(char[] buf) {
             var strings = new List<string>();
             int first = 0;
@@ -158,24 +148,122 @@ namespace XenInstCA {
                     var error = Marshal.GetLastWin32Error();
                     if ((WIN32_ERROR)error == WIN32_ERROR.ERROR_NO_MORE_ITEMS) {
                         yield break;
+                    } else {
+                        throw new Win32Exception(error, "SetupDiEnumDeviceInfo");
                     }
                 }
                 yield return devInfoData;
             }
         }
 
-        public static bool DiRemoveDevice(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData, out bool needsReboot) {
-            if (!PInvoke.SetupDiCallClassInstaller(DI_FUNCTION.DIF_REMOVE, devInfo, devInfoData)) {
-                needsReboot = false;
-                return false;
+        public static void InstallDriver(DriverData driver, out bool needsReboot) {
+            BOOL thisNeedsReboot = false;
+            unsafe {
+                if (PInvoke.DiInstallDriver(HWND.Null, driver.InfPath, 0, &thisNeedsReboot)) {
+                    Logger.Log($"Installed {driver.DriverName}");
+                } else {
+                    var err = Marshal.GetLastWin32Error();
+                    switch ((WIN32_ERROR)err) {
+                        case WIN32_ERROR.ERROR_NO_MORE_ITEMS:
+                            break;
+                        default:
+                            throw new Win32Exception(err, "DiInstallDriver");
+                    }
+                }
             }
-            var devInstallParams = new SP_DEVINSTALL_PARAMS_W() { cbSize = (uint)Marshal.SizeOf<SP_DEVINSTALL_PARAMS_W>() };
-            if (!PInvoke.SetupDiGetDeviceInstallParams(devInfo, devInfoData, ref devInstallParams)) {
-                needsReboot = false;
-                return false;
+            needsReboot = thisNeedsReboot;
+        }
+
+        private static string CopyOEMInf(string infPath) {
+            var buf = new char[PInvoke.MAX_PATH];
+            unsafe {
+                fixed (char* ptr = buf) {
+                    if (!PInvoke.SetupCopyOEMInf(infPath, infPath, OEM_SOURCE_MEDIA_TYPE.SPOST_PATH, 0, ptr, PInvoke.MAX_PATH, null, null)) {
+                        var err = Marshal.GetLastWin32Error();
+                        switch ((WIN32_ERROR)err) {
+                            case WIN32_ERROR.ERROR_NO_MORE_ITEMS:
+                                break;
+                            default:
+                                throw new Win32Exception(err, "SetupCopyOEMInf");
+                        }
+                    }
+                    return new string(ptr);
+                }
             }
-            needsReboot = (devInstallParams.Flags & (SETUP_DI_DEVICE_INSTALL_FLAGS.DI_NEEDREBOOT | SETUP_DI_DEVICE_INSTALL_FLAGS.DI_NEEDRESTART)) != 0;
-            return true;
+        }
+
+        // UpdateDriverForPlugAndPlayDevices requires manual certificate installation in test mode, but still doesn't fix the reboot issue.
+        /*
+        public static void InstallDriverSafe(DriverData driver, XenDeviceInfo xenInfo, out bool needsReboot) {
+            needsReboot = false;
+            //var oemInfPath = CopyOEMInf(infPath);
+            foreach (var cid in xenInfo.CompatibleIds) {
+                if (string.IsNullOrEmpty(cid)) {
+                    continue;
+                }
+                BOOL thisNeedsReboot = false;
+                unsafe {
+                    if (PInvoke.UpdateDriverForPlugAndPlayDevices(
+                            HWND.Null,
+                            cid,
+                            driver.InfPath,
+                            UPDATEDRIVERFORPLUGANDPLAYDEVICES_FLAGS.INSTALLFLAG_NONINTERACTIVE,
+                            &thisNeedsReboot)) {
+                        Logger.Log($"installed {driver.DriverName} for {cid}");
+                        needsReboot |= (bool)thisNeedsReboot;
+                    } else {
+                        var err = Marshal.GetLastWin32Error();
+                        Logger.Log($"install {driver.DriverName} for {cid} failed: error {err}");
+                        switch ((WIN32_ERROR)err) {
+                            case WIN32_ERROR.ERROR_NO_SUCH_DEVINST:
+                            case WIN32_ERROR.ERROR_NO_MORE_ITEMS:
+                                continue;
+                            default:
+                                throw new Win32Exception(err, "UpdateDriverForPlugAndPlayDevices");
+                        }
+                    }
+                }
+            }
+        }
+        */
+
+        public static void InstallDriverSafe(DriverData driver, XenDeviceInfo xenInfo, out bool needsReboot) {
+            needsReboot = false;
+
+            var oemInfPath = CopyOEMInf(driver.InfPath);
+
+            var devInfo = PInvoke.SetupDiGetClassDevs(
+                (Guid?)null,
+                null,
+                HWND.Null,
+                SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES | SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_PRESENT);
+
+            foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)) {
+                List<string> compatibleIds = DriverUtils.GetDeviceCompatibleIds(devInfo, devInfoData);
+                // Enumerable.All is true also for empty enumerables
+                if (compatibleIds
+                        .Intersect(xenInfo.CompatibleIds, StringComparer.OrdinalIgnoreCase)
+                        .All(x => string.IsNullOrEmpty(x))) {
+                    continue;
+                }
+                Logger.Log($"Found device with compatible IDs: {string.Join(",", compatibleIds)}");
+
+                unsafe {
+                    BOOL thisNeedsReboot;
+                    if (PInvoke.DiInstallDevice(
+                            HWND.Null,
+                            devInfo,
+                            devInfoData,
+                            null,
+                            DIINSTALLDEVICE_FLAGS.DIIDFLAG_NOFINISHINSTALLUI,
+                            &thisNeedsReboot)) {
+                        needsReboot |= thisNeedsReboot;
+                    } else {
+                        Logger.Log($"DiInstallDevice error {Marshal.GetLastWin32Error()}");
+                        continue;
+                    }
+                }
+            }
         }
     }
 }

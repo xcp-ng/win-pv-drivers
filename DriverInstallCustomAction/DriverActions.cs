@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -11,22 +10,43 @@ using WixToolset.Dtf.WindowsInstaller;
 
 namespace XenInstCA {
     public class DriverActions {
+        private static DriverData GetDriverData(Session session) {
+            if (!session.CustomActionData.TryGetValue("Driver", out var driverName)) return null;
+            if (!session.CustomActionData.TryGetValue("Inf", out var infPath)) return null;
+            Logger.Log($"driverName {driverName} infPath {infPath}");
+            return new DriverData() {
+                DriverName = driverName,
+                InfPath = infPath,
+            };
+        }
+
         [CustomAction]
         public static ActionResult DriverInstall(Session session) {
-            var driver = DriverUtils.GetDriverData(session);
-            if (driver != null) {
-                if (CustomActionUtils.ReportAction(session, $"{driver.DriverName}Install", driver.DriverName) == MessageResult.Cancel) {
-                    return ActionResult.UserExit;
-                }
-                session.Log($"Installing {driver.DriverName} inf {driver.InfPath}");
+            using var logScope = new LoggerScope(new MsiSessionLogger(session));
 
-                BOOL needsReboot;
-                unsafe {
-                    PInvoke.DiInstallDriver(HWND.Null, driver.InfPath, 0, &needsReboot);
-                }
-                if (needsReboot) {
-                    CustomActionUtils.ScheduleReboot();
-                }
+            var driver = GetDriverData(session);
+            if (driver == null) {
+                return ActionResult.Success;
+            }
+
+            if (CustomActionUtils.ReportAction(session, $"{driver.DriverName}Install", driver.DriverName) == MessageResult.Cancel) {
+                return ActionResult.UserExit;
+            }
+            Logger.Log($"Installing {driver.DriverName} inf {driver.InfPath}");
+
+            if (!XenDeviceInfo.KnownDevices.TryGetValue(driver.DriverName, out var xenInfo)) {
+                throw new NotSupportedException($"Unknown driver {driver.DriverName}");
+            }
+
+            bool needsReboot;
+            if (xenInfo.SafeInstall) {
+                DriverUtils.InstallDriverSafe(driver, xenInfo, out needsReboot);
+            } else {
+                DriverUtils.InstallDriver(driver, out needsReboot);
+            }
+
+            if (needsReboot) {
+                CustomActionUtils.ScheduleReboot();
             }
             return ActionResult.Success;
         }
@@ -46,113 +66,23 @@ namespace XenInstCA {
         // If we want to handle these cases then we might just need to uninstall all Xen drivers just in case.
         // The installation would also need to safely handle the case of installing over existing Xen drivers - who would win?
 
-        private class XenDeviceInfo {
-            public Guid ClassGuid { get; set; }
-            public List<string> CompatibleIds { get; set; }
-        }
-
-        private static readonly Dictionary<string, XenDeviceInfo> DevicesToRemove = new(StringComparer.OrdinalIgnoreCase) {
-            {
-                "Xenbus",
-                new XenDeviceInfo() {
-                    ClassGuid = PInvoke.GUID_DEVCLASS_SYSTEM,
-                    CompatibleIds = new List<string>() {
-                        string.IsNullOrEmpty(Version.VendorDeviceId) ? null : $"PCI\\VEN_5853&DEV_{Version.VendorDeviceId}&SUBSYS_{Version.VendorDeviceId}5853&REV_01",
-                        "PCI\\VEN_5853&DEV_0001",
-                        "PCI\\VEN_5853&DEV_0002",
-                    }
-                }
-            },
-            {
-                "Xencons",
-                new XenDeviceInfo() {
-                    ClassGuid = PInvoke.GUID_DEVCLASS_SYSTEM,
-                    CompatibleIds = new List<string>() {
-                        string.IsNullOrEmpty(Version.VendorDeviceId) ? null : $"XENBUS\\VEN_{Version.VendorPrefix}{Version.VendorDeviceId}&DEV_VBD&REV_09000000",
-                        $"XENBUS\\VEN_{Version.VendorPrefix}0001&DEV_CONS&REV_09000000",
-                        $"XENBUS\\VEN_{Version.VendorPrefix}0002&DEV_CONS&REV_09000000",
-                    }
-                }
-            },
-            {
-                "Xenhid",
-                new XenDeviceInfo() {
-                    ClassGuid = PInvoke.GUID_DEVCLASS_HIDCLASS,
-                    CompatibleIds = new List<string>() {
-                        string.IsNullOrEmpty(Version.VendorDeviceId) ? null : $"XENVKBD\\VEN_{Version.VendorPrefix}{Version.VendorDeviceId}&DEV_HID&REV_09000000",
-                        $"XENVKBD\\VEN_{Version.VendorPrefix}0001&DEV_HID&REV_09000000",
-                        $"XENVKBD\\VEN_{Version.VendorPrefix}0002&DEV_HID&REV_09000000",
-                    }
-                }
-            },
-            {
-                "Xeniface",
-                new XenDeviceInfo() {
-                    ClassGuid = PInvoke.GUID_DEVCLASS_SYSTEM,
-                    CompatibleIds = new List<string>() {
-                        string.IsNullOrEmpty(Version.VendorDeviceId) ? null : $"XENBUS\\VEN_{Version.VendorPrefix}{Version.VendorDeviceId}&DEV_IFACE&REV_09000000",
-                        $"XENBUS\\VEN_{Version.VendorPrefix}0001&DEV_IFACE&REV_09000000",
-                        $"XENBUS\\VEN_{Version.VendorPrefix}0002&DEV_IFACE&REV_09000000",
-                    }
-                }
-            },
-            {
-                "Xennet",
-                new XenDeviceInfo() {
-                    ClassGuid = PInvoke.GUID_DEVCLASS_NET,
-                    CompatibleIds = new List<string>() {
-                        string.IsNullOrEmpty(Version.VendorDeviceId) ? null : $"XENVIF\\VEN_{Version.VendorPrefix}{Version.VendorDeviceId}&DEV_NET&REV_09000000",
-                        $"XENVIF\\VEN_{Version.VendorPrefix}0001&DEV_NET&REV_09000000",
-                        $"XENVIF\\VEN_{Version.VendorPrefix}0002&DEV_NET&REV_09000000",
-                    }
-                }
-            },
-            {
-                "Xenvbd",
-                new XenDeviceInfo() {
-                    ClassGuid = PInvoke.GUID_DEVCLASS_SCSIADAPTER,
-                    CompatibleIds = new List<string>() {
-                        string.IsNullOrEmpty(Version.VendorDeviceId) ? null : $"XENBUS\\VEN_{Version.VendorPrefix}{Version.VendorDeviceId}&DEV_VBD&REV_09000000",
-                        $"XENBUS\\VEN_{Version.VendorPrefix}0001&DEV_VBD&REV_09000000",
-                        $"XENBUS\\VEN_{ Version.VendorPrefix}0002&DEV_VBD&REV_09000000",
-                    }
-                }
-            },
-            {
-                "Xenvif",
-                new XenDeviceInfo() {
-                    ClassGuid = PInvoke.GUID_DEVCLASS_SYSTEM,
-                    CompatibleIds = new List<string>() {
-                        string.IsNullOrEmpty(Version.VendorDeviceId) ? null : $"XENBUS\\VEN_{Version.VendorPrefix}{Version.VendorDeviceId}&DEV_VIF&REV_09000000",
-                        $"XENBUS\\VEN_{Version.VendorPrefix}0001&DEV_VIF&REV_09000000",
-                        $"XENBUS\\VEN_{Version.VendorPrefix}0002&DEV_VIF&REV_09000000",
-                    }
-                }
-            },
-            {
-                "Xenvkbd",
-                new XenDeviceInfo() {
-                    ClassGuid = PInvoke.GUID_DEVCLASS_SYSTEM,
-                    CompatibleIds = new List<string>() {
-                        string.IsNullOrEmpty(Version.VendorDeviceId) ? null : $"XENBUS\\VEN_{Version.VendorPrefix}{Version.VendorDeviceId}&DEV_VKBD&REV_09000000",
-                        $"XENBUS\\VEN_{Version.VendorPrefix}0001&DEV_VKBD&REV_09000000",
-                        $"XENBUS\\VEN_{Version.VendorPrefix}0002&DEV_VKBD&REV_09000000",
-                    }
-                }
-            },
-        };
-
         [CustomAction]
         public static ActionResult DriverUninstall(Session session) {
+            using var logScope = new LoggerScope(new MsiSessionLogger(session));
+
             bool needsReboot = false;
-            var driver = DriverUtils.GetDriverData(session);
+            var driver = GetDriverData(session);
             if (driver == null) {
                 return ActionResult.Success;
             }
 
-            session.Log($"Uninstalling {driver.DriverName} inf {driver.InfPath}");
-            if (!DevicesToRemove.TryGetValue(driver.DriverName, out var xenInfo)) {
-                session.Log($"Unknown driver {driver.DriverName}");
+            if (CustomActionUtils.ReportAction(session, $"{driver.DriverName}Uninstall", driver.DriverName) == MessageResult.Cancel) {
+                return ActionResult.UserExit;
+            }
+
+            Logger.Log($"Uninstalling {driver.DriverName} inf {driver.InfPath}");
+            if (!XenDeviceInfo.KnownDevices.TryGetValue(driver.DriverName, out var xenInfo)) {
+                Logger.Log($"Unknown driver {driver.DriverName}");
                 return ActionResult.Success;
             }
 
@@ -161,15 +91,16 @@ namespace XenInstCA {
 
             foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)) {
                 List<string> compatibleIds = DriverUtils.GetDeviceCompatibleIds(devInfo, devInfoData);
+                // Enumerable.All is true also for empty enumerables
                 if (compatibleIds
                         .Intersect(xenInfo.CompatibleIds, StringComparer.OrdinalIgnoreCase)
-                        .Count(x => !string.IsNullOrEmpty(x)) == 0) {
+                        .All(x => string.IsNullOrEmpty(x))) {
                     continue;
                 }
-                session.Log($"Found device with compatible IDs: {string.Join(",", compatibleIds)}");
+                Logger.Log($"Found device with compatible IDs: {string.Join(",", compatibleIds)}");
 
                 var infName = DriverUtils.GetDeviceInfPath(devInfo, devInfoData);
-                session.Log($"inf: {infName}");
+                Logger.Log($"Current inf path: {infName}");
                 if (!string.IsNullOrEmpty(infName)
                         && infName.StartsWith("oem", StringComparison.OrdinalIgnoreCase)) {
                     collectedInfPaths.Add(infName);
@@ -177,16 +108,17 @@ namespace XenInstCA {
 
                 unsafe {
                     BOOL thisNeedsReboot;
-                    if (!PInvoke.DiUninstallDevice(
+                    if (PInvoke.DiUninstallDevice(
                             HWND.Null,
                             devInfo,
                             devInfoData,
                             0,
                             &thisNeedsReboot)) {
-                        session.Log($"DiUninstallDevice error {Marshal.GetLastWin32Error()}");
+                        needsReboot |= thisNeedsReboot;
+                    } else {
+                        Logger.Log($"DiUninstallDevice error {Marshal.GetLastWin32Error()}");
                         continue;
                     }
-                    needsReboot |= thisNeedsReboot;
                 }
             }
 
@@ -195,8 +127,12 @@ namespace XenInstCA {
                     UninstallOemInf(session, oemInfName);
                 }
             } else {
-                var wantedCatalogName = $"{Path.GetFileNameWithoutExtension(driver.InfPath)}.cat";
-                session.Log($"Didn't find {driver.DriverName} devices; uninstalling by catalog name {wantedCatalogName}");
+                var baseName = Path.GetFileNameWithoutExtension(driver.InfPath);
+                if (string.IsNullOrEmpty(baseName)) {
+                    return ActionResult.Success;
+                }
+                var wantedCatalogName = $"{baseName}.cat";
+                Logger.Log($"Didn't find {driver.DriverName} devices; uninstalling by catalog name {wantedCatalogName}");
                 var windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
                 var infdir = Path.Combine(windir, "inf");
                 foreach (var infPath in Directory.EnumerateFiles(infdir, "oem*.inf", SearchOption.TopDirectoryOnly)) {
@@ -213,7 +149,7 @@ namespace XenInstCA {
                             continue;
                         }
                     } catch (Exception ex) {
-                        session.Log($"Cannot parse {infPath}: {ex.Message}");
+                        Logger.Log($"Cannot parse {infPath}: {ex.Message}");
                     }
                     var oemInfName = Path.GetFileName(infPath);
                     UninstallOemInf(session, oemInfName);
@@ -221,16 +157,15 @@ namespace XenInstCA {
             }
 
             if (needsReboot) {
-                session.Log("Scheduling reboot");
                 CustomActionUtils.ScheduleReboot();
             }
             return ActionResult.Success;
         }
 
         private static void UninstallOemInf(Session session, string oemInfName) {
-            session.Log($"Uninstalling {oemInfName}");
+            Logger.Log($"Uninstalling {oemInfName}");
             if (!PInvoke.SetupUninstallOEMInf(oemInfName, PInvoke.SUOI_FORCEDELETE)) {
-                session.Log($"SetupUninstallOEMInf error, did not cleanly delete driver.");
+                Logger.Log($"SetupUninstallOEMInf error, did not cleanly delete driver.");
             }
         }
 
