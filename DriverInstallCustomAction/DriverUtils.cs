@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -10,27 +11,7 @@ using Windows.Win32.Devices.Properties;
 using Windows.Win32.Foundation;
 
 namespace XenInstCA {
-    public class DriverData {
-        public string DriverName { get; set; }
-        public string InfPath { get; set; }
-    }
-
     internal static class DriverUtils {
-        public static List<string> ParseMultiString(char[] buf) {
-            var strings = new List<string>();
-            int first = 0;
-            for (int i = 0; i < buf.Length; i++) {
-                if (buf[i] == '\0') {
-                    strings.Add(new string(buf, first, i - first));
-                    first = i + 1;
-                }
-            }
-            if (strings.Last() == "") {
-                strings.RemoveAt(strings.Count - 1);
-            }
-            return strings;
-        }
-
         public static readonly DEVPROPKEY DEVPKEY_Device_CompatibleIds = new() {
             fmtid = new Guid(0xa45c254e, 0xdf1c, 0x4efd, 0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0),
             pid = 4
@@ -45,6 +26,21 @@ namespace XenInstCA {
             fmtid = new Guid(0x4340a6c5, 0x93fa, 0x4706, 0x97, 0x2c, 0x7b, 0x64, 0x80, 0x08, 0xa5, 0xa7),
             pid = 9
         };
+
+        public static List<string> ParseMultiString(char[] buf) {
+            var strings = new List<string>();
+            int first = 0;
+            for (int i = 0; i < buf.Length; i++) {
+                if (buf[i] == '\0') {
+                    strings.Add(new string(buf, first, i - first));
+                    first = i + 1;
+                }
+            }
+            if (strings.Last() == "") {
+                strings.RemoveAt(strings.Count - 1);
+            }
+            return strings;
+        }
 
         public static T[] GetDeviceProperty<T>(
                 SetupDiDestroyDeviceInfoListSafeHandle devInfo,
@@ -139,28 +135,46 @@ namespace XenInstCA {
             return infPath.ToString();
         }
 
+        public static void UninstallDevice(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData, out bool needsReboot) {
+            needsReboot = false;
+            unsafe {
+                BOOL thisNeedsReboot;
+                if (PInvoke.DiUninstallDevice(
+                        HWND.Null,
+                        devInfo,
+                        devInfoData,
+                        0,
+                        &thisNeedsReboot)) {
+                    needsReboot = thisNeedsReboot;
+                } else {
+                    throw new Win32Exception(Marshal.GetLastWin32Error(), "DiUninstallDevice");
+                }
+            }
+        }
+
         public static IEnumerable<SP_DEVINFO_DATA> EnumerateDevices(SetupDiDestroyDeviceInfoListSafeHandle devInfo) {
             var devInfoData = new SP_DEVINFO_DATA {
                 cbSize = (uint)Marshal.SizeOf<SP_DEVINFO_DATA>()
             };
             for (uint devIndex = 0; ; devIndex++) {
                 if (!PInvoke.SetupDiEnumDeviceInfo(devInfo, devIndex, ref devInfoData)) {
-                    var error = Marshal.GetLastWin32Error();
-                    if ((WIN32_ERROR)error == WIN32_ERROR.ERROR_NO_MORE_ITEMS) {
+                    var err = Marshal.GetLastWin32Error();
+                    if ((WIN32_ERROR)err == WIN32_ERROR.ERROR_NO_MORE_ITEMS) {
                         yield break;
                     } else {
-                        throw new Win32Exception(error, "SetupDiEnumDeviceInfo");
+                        throw new Win32Exception(err, "SetupDiEnumDeviceInfo");
                     }
                 }
                 yield return devInfoData;
             }
         }
 
-        public static void InstallDriver(DriverData driver, out bool needsReboot) {
-            BOOL thisNeedsReboot = false;
+        public static void InstallDriver(string infPath, out bool needsReboot) {
+            needsReboot = false;
             unsafe {
-                if (PInvoke.DiInstallDriver(HWND.Null, driver.InfPath, 0, &thisNeedsReboot)) {
-                    Logger.Log($"Installed {driver.DriverName}");
+                BOOL thisNeedsReboot = false;
+                if (PInvoke.DiInstallDriver(HWND.Null, infPath, 0, &thisNeedsReboot)) {
+                    needsReboot = thisNeedsReboot;
                 } else {
                     var err = Marshal.GetLastWin32Error();
                     switch ((WIN32_ERROR)err) {
@@ -171,97 +185,44 @@ namespace XenInstCA {
                     }
                 }
             }
-            needsReboot = thisNeedsReboot;
         }
 
-        private static string CopyOEMInf(string infPath) {
-            var buf = new char[PInvoke.MAX_PATH];
-            unsafe {
-                fixed (char* ptr = buf) {
-                    if (!PInvoke.SetupCopyOEMInf(infPath, infPath, OEM_SOURCE_MEDIA_TYPE.SPOST_PATH, 0, ptr, PInvoke.MAX_PATH, null, null)) {
-                        var err = Marshal.GetLastWin32Error();
-                        switch ((WIN32_ERROR)err) {
-                            case WIN32_ERROR.ERROR_NO_MORE_ITEMS:
-                                break;
-                            default:
-                                throw new Win32Exception(err, "SetupCopyOEMInf");
-                        }
-                    }
-                    return new string(ptr);
-                }
+        public static void UninstallDriver(string oemInfName) {
+            Logger.Log($"Uninstalling {oemInfName}");
+            if (!PInvoke.SetupUninstallOEMInf(oemInfName, PInvoke.SUOI_FORCEDELETE)) {
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "DiInstallDriver");
             }
         }
 
-        // UpdateDriverForPlugAndPlayDevices requires manual certificate installation in test mode, but still doesn't fix the reboot issue.
-        /*
-        public static void InstallDriverSafe(DriverData driver, XenDeviceInfo xenInfo, out bool needsReboot) {
-            needsReboot = false;
-            //var oemInfPath = CopyOEMInf(infPath);
-            foreach (var cid in xenInfo.CompatibleIds) {
-                if (string.IsNullOrEmpty(cid)) {
-                    continue;
-                }
-                BOOL thisNeedsReboot = false;
-                unsafe {
-                    if (PInvoke.UpdateDriverForPlugAndPlayDevices(
-                            HWND.Null,
-                            cid,
-                            driver.InfPath,
-                            UPDATEDRIVERFORPLUGANDPLAYDEVICES_FLAGS.INSTALLFLAG_NONINTERACTIVE,
-                            &thisNeedsReboot)) {
-                        Logger.Log($"installed {driver.DriverName} for {cid}");
-                        needsReboot |= (bool)thisNeedsReboot;
-                    } else {
-                        var err = Marshal.GetLastWin32Error();
-                        Logger.Log($"install {driver.DriverName} for {cid} failed: error {err}");
-                        switch ((WIN32_ERROR)err) {
-                            case WIN32_ERROR.ERROR_NO_SUCH_DEVINST:
-                            case WIN32_ERROR.ERROR_NO_MORE_ITEMS:
-                                continue;
-                            default:
-                                throw new Win32Exception(err, "UpdateDriverForPlugAndPlayDevices");
-                        }
-                    }
-                }
+        public static void UninstallDriverByInfPath(string infPath) {
+            var baseName = Path.GetFileNameWithoutExtension(infPath);
+            if (string.IsNullOrEmpty(baseName)) {
+                return;
             }
-        }
-        */
-
-        public static void InstallDriverSafe(DriverData driver, XenDeviceInfo xenInfo, out bool needsReboot) {
-            needsReboot = false;
-
-            var oemInfPath = CopyOEMInf(driver.InfPath);
-
-            var devInfo = PInvoke.SetupDiGetClassDevs(
-                (Guid?)null,
-                null,
-                HWND.Null,
-                SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES | SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_PRESENT);
-
-            foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)) {
-                List<string> compatibleIds = DriverUtils.GetDeviceCompatibleIds(devInfo, devInfoData);
-                // Enumerable.All is true also for empty enumerables
-                if (compatibleIds
-                        .Intersect(xenInfo.CompatibleIds, StringComparer.OrdinalIgnoreCase)
-                        .All(x => string.IsNullOrEmpty(x))) {
+            var wantedCatalogName = $"{baseName}.cat";
+            var windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            var infdir = Path.Combine(windir, "inf");
+            foreach (var oemInfPath in Directory.EnumerateFiles(infdir, "oem*.inf", SearchOption.TopDirectoryOnly)) {
+                if (!".inf".Equals(Path.GetExtension(oemInfPath), StringComparison.OrdinalIgnoreCase)) {
+                    // netfx bug when using asterisks
                     continue;
                 }
-                Logger.Log($"Found device with compatible IDs: {string.Join(",", compatibleIds)}");
-
-                unsafe {
-                    BOOL thisNeedsReboot;
-                    if (PInvoke.DiInstallDevice(
-                            HWND.Null,
-                            devInfo,
-                            devInfoData,
-                            null,
-                            DIINSTALLDEVICE_FLAGS.DIIDFLAG_NOFINISHINSTALLUI,
-                            &thisNeedsReboot)) {
-                        needsReboot |= thisNeedsReboot;
-                    } else {
-                        Logger.Log($"DiInstallDevice error {Marshal.GetLastWin32Error()}");
+                try {
+                    using var infFile = InfFile.Open(oemInfPath, null, INF_STYLE.INF_STYLE_WIN4, out _);
+                    var infCatalog = infFile.GetStringField("Version", "CatalogFile", 1);
+                    var infProvider = infFile.GetStringField("Version", "Provider", 1);
+                    if (!wantedCatalogName.Equals(infCatalog, StringComparison.OrdinalIgnoreCase)
+                        || !XenInstCA.Version.VendorName.Equals(infProvider, StringComparison.OrdinalIgnoreCase)) {
                         continue;
                     }
+                } catch (Exception ex) {
+                    Logger.Log($"Cannot parse {oemInfPath}: {ex.Message}");
+                }
+                var oemInfName = Path.GetFileName(oemInfPath);
+                try {
+                    UninstallDriver(oemInfName);
+                } catch (Exception ex) {
+                    Logger.Log($"Cannot uninstall driver {oemInfName}: {ex.Message}");
                 }
             }
         }

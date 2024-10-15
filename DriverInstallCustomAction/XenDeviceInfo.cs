@@ -9,7 +9,6 @@ namespace XenInstCA {
     internal class XenDeviceInfo {
         public Guid ClassGuid { get; set; }
         public List<string> CompatibleIds { get; set; }
-        public bool SafeInstall { get; set; }
 
         internal static readonly Dictionary<string, XenDeviceInfo> KnownDevices = new(StringComparer.OrdinalIgnoreCase) {
             {
@@ -21,7 +20,6 @@ namespace XenInstCA {
                         "PCI\\VEN_5853&DEV_0001",
                         "PCI\\VEN_5853&DEV_0002",
                     },
-                    SafeInstall = false,
                 }
             },
             {
@@ -33,7 +31,6 @@ namespace XenInstCA {
                         $"XENBUS\\VEN_{Version.VendorPrefix}0001&DEV_CONS&REV_09000000",
                         $"XENBUS\\VEN_{Version.VendorPrefix}0002&DEV_CONS&REV_09000000",
                     },
-                    SafeInstall = false,
                 }
             },
             {
@@ -45,7 +42,6 @@ namespace XenInstCA {
                         $"XENVKBD\\VEN_{Version.VendorPrefix}0001&DEV_HID&REV_09000000",
                         $"XENVKBD\\VEN_{Version.VendorPrefix}0002&DEV_HID&REV_09000000",
                     },
-                    SafeInstall = false,
                 }
             },
             {
@@ -57,7 +53,6 @@ namespace XenInstCA {
                         $"XENBUS\\VEN_{Version.VendorPrefix}0001&DEV_IFACE&REV_09000000",
                         $"XENBUS\\VEN_{Version.VendorPrefix}0002&DEV_IFACE&REV_09000000",
                     },
-                    SafeInstall = false,
                 }
             },
             {
@@ -69,7 +64,6 @@ namespace XenInstCA {
                         $"XENVIF\\VEN_{Version.VendorPrefix}0001&DEV_NET&REV_09000000",
                         $"XENVIF\\VEN_{Version.VendorPrefix}0002&DEV_NET&REV_09000000",
                     },
-                    SafeInstall = true,
                 }
             },
             {
@@ -81,7 +75,6 @@ namespace XenInstCA {
                         $"XENBUS\\VEN_{Version.VendorPrefix}0001&DEV_VBD&REV_09000000",
                         $"XENBUS\\VEN_{ Version.VendorPrefix}0002&DEV_VBD&REV_09000000",
                     },
-                    SafeInstall = true,
                 }
             },
             {
@@ -93,7 +86,6 @@ namespace XenInstCA {
                         $"XENBUS\\VEN_{Version.VendorPrefix}0001&DEV_VIF&REV_09000000",
                         $"XENBUS\\VEN_{Version.VendorPrefix}0002&DEV_VIF&REV_09000000",
                     },
-                    SafeInstall = false,
                 }
             },
             {
@@ -105,7 +97,6 @@ namespace XenInstCA {
                         $"XENBUS\\VEN_{Version.VendorPrefix}0001&DEV_VKBD&REV_09000000",
                         $"XENBUS\\VEN_{Version.VendorPrefix}0002&DEV_VKBD&REV_09000000",
                     },
-                    SafeInstall = false,
                 }
             },
         };

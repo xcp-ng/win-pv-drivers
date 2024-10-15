@@ -9,6 +9,11 @@ using Windows.Win32.Foundation;
 using WixToolset.Dtf.WindowsInstaller;
 
 namespace XenInstCA {
+    internal class DriverData {
+        public string DriverName { get; set; }
+        public string InfPath { get; set; }
+    }
+
     public class DriverActions {
         private static DriverData GetDriverData(Session session) {
             if (!session.CustomActionData.TryGetValue("Driver", out var driverName)) return null;
@@ -38,13 +43,7 @@ namespace XenInstCA {
                 throw new NotSupportedException($"Unknown driver {driver.DriverName}");
             }
 
-            bool needsReboot;
-            if (xenInfo.SafeInstall) {
-                DriverUtils.InstallDriverSafe(driver, xenInfo, out needsReboot);
-            } else {
-                DriverUtils.InstallDriver(driver, out needsReboot);
-            }
-
+            DriverUtils.InstallDriver(driver.InfPath, out var needsReboot);
             if (needsReboot) {
                 CustomActionUtils.ScheduleReboot();
             }
@@ -106,67 +105,31 @@ namespace XenInstCA {
                     collectedInfPaths.Add(infName);
                 }
 
-                unsafe {
-                    BOOL thisNeedsReboot;
-                    if (PInvoke.DiUninstallDevice(
-                            HWND.Null,
-                            devInfo,
-                            devInfoData,
-                            0,
-                            &thisNeedsReboot)) {
-                        needsReboot |= thisNeedsReboot;
-                    } else {
-                        Logger.Log($"DiUninstallDevice error {Marshal.GetLastWin32Error()}");
-                        continue;
-                    }
+                try {
+                    DriverUtils.UninstallDevice(devInfo, devInfoData, out var thisNeedsReboot);
+                    needsReboot |= thisNeedsReboot;
+                } catch (Exception ex) {
+                    Logger.Log($"Cannot uninstall device: {ex.Message}");
                 }
             }
 
             if (collectedInfPaths.Count > 0) {
                 foreach (var oemInfName in collectedInfPaths) {
-                    UninstallOemInf(session, oemInfName);
+                    try {
+                        DriverUtils.UninstallDriver(oemInfName);
+                    } catch (Exception ex) {
+                        Logger.Log($"Cannot uninstall driver {oemInfName}: {ex.Message}");
+                    }
                 }
             } else {
-                var baseName = Path.GetFileNameWithoutExtension(driver.InfPath);
-                if (string.IsNullOrEmpty(baseName)) {
-                    return ActionResult.Success;
-                }
-                var wantedCatalogName = $"{baseName}.cat";
-                Logger.Log($"Didn't find {driver.DriverName} devices; uninstalling by catalog name {wantedCatalogName}");
-                var windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
-                var infdir = Path.Combine(windir, "inf");
-                foreach (var infPath in Directory.EnumerateFiles(infdir, "oem*.inf", SearchOption.TopDirectoryOnly)) {
-                    if (!".inf".Equals(Path.GetExtension(infPath), StringComparison.OrdinalIgnoreCase)) {
-                        // netfx bug when using asterisks
-                        continue;
-                    }
-                    try {
-                        using var infFile = InfFile.Open(infPath, null, INF_STYLE.INF_STYLE_WIN4, out _);
-                        var infCatalog = infFile.GetStringField("Version", "CatalogFile", 1);
-                        var infProvider = infFile.GetStringField("Version", "Provider", 1);
-                        if (!wantedCatalogName.Equals(infCatalog, StringComparison.OrdinalIgnoreCase)
-                            || !XenInstCA.Version.VendorName.Equals(infProvider, StringComparison.OrdinalIgnoreCase)) {
-                            continue;
-                        }
-                    } catch (Exception ex) {
-                        Logger.Log($"Cannot parse {infPath}: {ex.Message}");
-                    }
-                    var oemInfName = Path.GetFileName(infPath);
-                    UninstallOemInf(session, oemInfName);
-                }
+                Logger.Log($"Didn't find {driver.DriverName} devices; uninstalling by INF path");
+                DriverUtils.UninstallDriverByInfPath(driver.InfPath);
             }
 
             if (needsReboot) {
                 CustomActionUtils.ScheduleReboot();
             }
             return ActionResult.Success;
-        }
-
-        private static void UninstallOemInf(Session session, string oemInfName) {
-            Logger.Log($"Uninstalling {oemInfName}");
-            if (!PInvoke.SetupUninstallOEMInf(oemInfName, PInvoke.SUOI_FORCEDELETE)) {
-                Logger.Log($"SetupUninstallOEMInf error, did not cleanly delete driver.");
-            }
         }
 
         [CustomAction]
