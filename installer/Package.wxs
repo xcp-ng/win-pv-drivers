@@ -61,6 +61,11 @@
     <CustomActionRef Id="CheckRebootCA" />
     <InstallExecuteSequence>
       <RemoveExistingProducts After="InstallValidate" />
+      <!--
+        after installation, bus drivers issue reboot requests asynchronously through xenbus_monitor
+        since we suppress xenbus_monitor reboot requests during installation, manually schedule reboot for concerned drivers anyway
+      -->
+      <ScheduleReboot After="InstallFinalize" Condition="($Xennet.inf&lt;&gt;-1) OR ($Xenvbd.inf&lt;&gt;-1)" />
       <Custom Action="CheckRebootCA" After="InstallFinalize" />
     </InstallExecuteSequence>
   </Package>
