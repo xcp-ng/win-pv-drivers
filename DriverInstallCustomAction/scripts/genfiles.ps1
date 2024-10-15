@@ -46,6 +46,7 @@ if ([string]::IsNullOrEmpty($Env:MICRO_VERSION)) {
 }
 
 $BrandingFile = "$ProjectDir\Branding.cs"
+$OldBranding = Get-Content -Raw $BrandingFile -ErrorAction Ignore
 $NewBranding = `
 @"
 namespace XenInstCA {
@@ -64,5 +65,7 @@ namespace XenInstCA {
 }
 "@
 
-Write-Output "Updating Branding.cs"
-[System.IO.File]::WriteAllText($BrandingFile, $NewBranding)
+if ($NewBranding -ne $OldBranding) {
+    Write-Output "Updating Branding.cs"
+    [System.IO.File]::WriteAllText($BrandingFile, $NewBranding)
+}

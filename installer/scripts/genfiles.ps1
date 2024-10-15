@@ -54,6 +54,7 @@ if ([string]::IsNullOrEmpty($Env:MSI_UPGRADE_CODE_X64)) {
 }
 
 $BrandingFile = "$ProjectDir\Branding.wxi"
+$OldBranding = Get-Content -Raw $BrandingFile -ErrorAction Ignore
 $NewBranding = `
 @"
 <?xml version="1.0" encoding="utf-8"?>
@@ -74,5 +75,7 @@ $NewBranding = `
 </Include>
 "@
 
-Write-Output "Updating Branding.wxi"
-[System.IO.File]::WriteAllText($BrandingFile, $NewBranding)
+if ($NewBranding -ne $OldBranding) {
+    Write-Output "Updating Branding.wxi"
+    [System.IO.File]::WriteAllText($BrandingFile, $NewBranding)
+}
