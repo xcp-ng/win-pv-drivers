@@ -7,15 +7,21 @@
     <!-- see Xenbus!FiltersInstall and FiltersUninstall -->
     <CustomAction Id="XenbusCleanup" BinaryRef="xeninst.dll" DllEntry="XenbusCleanup" Execute="deferred" Impersonate="no" />
     <!-- Xenbus reinstalls its filters by itself, normally there's no need to rollback -->
+    
+    <!-- remove remnant Xenfilt config from Citrix/WU drivers -->
+    <CustomAction Id="XenfiltReset" BinaryRef="xeninst.dll" DllEntry="XenfiltReset" Execute="deferred" Impersonate="no" />
 
     <!-- manually lay out Xenbus so that it goes before/after all other drivers during install/uninstall -->
     <InstallExecuteSequence>
       <Custom Action="XenbusCleanup" Before="ProcessComponents" Condition="$Xenbus.inf=2" />
+      <!-- only do XenfiltReset on new installs -->
+      <Custom Action="XenfiltReset" Before="XenbusInstallRollback" Condition="?Xenbus.inf=2 AND $Xenbus.inf=3" />
       <Custom Action="XenbusInstallRollback" After="InstallFiles" />
       <Custom Action="XenbusInstall" After="XenbusInstallRollback" Condition="$Xenbus.inf=3" />
       <Custom Action="XenbusUninstallRollback" Before="XenbusCleanup" />
       <Custom Action="XenbusUninstall" After="XenbusUninstallRollback" Condition="$Xenbus.inf=2" />
     </InstallExecuteSequence>
+    
     <UI>
       <ProgressText Action="XenbusCleanup" Message="!(loc.XenbusCleanupText)" />
       <ProgressText Action="XenbusInstall" Message="!(loc.DriverInstallText)" />

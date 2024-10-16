@@ -42,5 +42,27 @@ namespace XenInstCA {
             }
             return ActionResult.Success;
         }
+
+        private static readonly List<string> XenfiltParametersToDelete = new() {
+            "ActiveDeviceID",
+            "ActiveInstanceID",
+            "ActiveLocationInformation",
+        };
+
+        [CustomAction]
+        public static ActionResult XenfiltReset(Session session) {
+            using var paramKey = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Services\\xenfilt\\Parameters", true);
+            if (paramKey == null) {
+                return ActionResult.Success;
+            }
+            foreach (var paramName in XenfiltParametersToDelete) {
+                try {
+                    paramKey.DeleteValue(paramName);
+                    session.Log($"Deleted xenfilt parameter {paramName}");
+                } catch {
+                }
+            }
+            return ActionResult.Success;
+        }
     }
 }
