@@ -120,19 +120,19 @@ namespace XenInstCA {
                 devInfo,
                 devInfoData,
                 DriverUtils.DEVPKEY_Device_DriverInfPath,
-                DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
+                DEVPROPTYPE.DEVPROP_TYPE_STRING);
             if (buf == null) {
                 return null;
             }
             // we don't know the actual length of the string returned by GetDeviceProperty
-            var infPath = new StringBuilder();
+            var outstr = new StringBuilder();
             foreach (var ch in buf) {
                 if (ch == 0) {
                     break;
                 }
-                infPath.Append(ch);
+                outstr.Append(ch);
             }
-            return infPath.ToString();
+            return outstr.ToString();
         }
 
         public static void UninstallDevice(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData, out bool needsReboot) {
