@@ -2,6 +2,16 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
     <Binary Id="xeninst.dll" SourceFile="xeninst.CA.dll" />
+
+    <CustomAction Id="XenCheckIncompatibleDevices" BinaryRef="xeninst.dll" DllEntry="CheckIncompatibleDevices" Execute="immediate" Impersonate="no" />
+    <InstallUISequence>
+      <Custom Action="XenCheckIncompatibleDevices" Before="LaunchConditions" />
+    </InstallUISequence>
+    <Launch Condition="NOT IncompatibleDevices" Message="!(loc.IncompatibleDevicesError)" />
+    
     <CustomAction Id="CheckRebootCA" BinaryRef="xeninst.dll" DllEntry="CheckReboot" Execute="immediate" Impersonate="no" />
+    <InstallExecuteSequence>
+      <Custom Action="CheckRebootCA" After="InstallFinalize" />
+    </InstallExecuteSequence>
   </Fragment>
 </Wix>

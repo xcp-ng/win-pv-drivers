@@ -27,6 +27,11 @@ namespace XenInstCA {
             pid = 9
         };
 
+        public static readonly DEVPROPKEY DEVPKEY_Device_InstanceId = new() {
+            fmtid = new Guid(0x78c34fc8, 0x104a, 0x4aca, 0x9e, 0xa4, 0x52, 0x4d, 0x52, 0x99, 0x6e, 0x57),
+            pid = 256
+        };
+
         public static List<string> ParseMultiString(char[] buf) {
             var strings = new List<string>();
             int first = 0;
@@ -89,6 +94,26 @@ namespace XenInstCA {
                 }
             }
             return buf;
+        }
+
+        public static string GetDeviceInstanceId(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
+            var buf = DriverUtils.GetDeviceProperty<char>(
+                devInfo,
+                devInfoData,
+                DriverUtils.DEVPKEY_Device_InstanceId,
+                DEVPROPTYPE.DEVPROP_TYPE_STRING);
+            if (buf == null) {
+                return null;
+            }
+            // we don't know the actual length of the string returned by GetDeviceProperty
+            var outstr = new StringBuilder();
+            foreach (var ch in buf) {
+                if (ch == 0) {
+                    break;
+                }
+                outstr.Append(ch);
+            }
+            return outstr.ToString();
         }
 
         public static List<string> GetDeviceChildren(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
@@ -173,7 +198,7 @@ namespace XenInstCA {
             needsReboot = false;
             unsafe {
                 BOOL thisNeedsReboot = false;
-                if (PInvoke.DiInstallDriver(HWND.Null, infPath, 0, &thisNeedsReboot)) {
+                if (PInvoke.DiInstallDriver(HWND.Null, infPath, DIINSTALLDRIVER_FLAGS.DIIRFLAG_FORCE_INF, &thisNeedsReboot)) {
                     needsReboot = thisNeedsReboot;
                 } else {
                     var err = Marshal.GetLastWin32Error();

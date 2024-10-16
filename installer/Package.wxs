@@ -58,7 +58,6 @@
       <ComponentGroupRef Id="XenvbdComponent" />
     </Feature>
 
-    <CustomActionRef Id="CheckRebootCA" />
     <InstallExecuteSequence>
       <!-- We cannot afford to uninstall existing drivers during an upgrade. Thus the choice of InstallExecute. -->
       <RemoveExistingProducts After="InstallExecute" />
@@ -67,7 +66,9 @@
         since we suppress xenbus_monitor reboot requests during installation, manually schedule reboot for concerned drivers anyway
       -->
       <ScheduleReboot After="InstallFinalize" Condition="($Xennet.inf&lt;&gt;-1) OR ($Xenvbd.inf&lt;&gt;-1)" />
-      <Custom Action="CheckRebootCA" After="InstallFinalize" />
     </InstallExecuteSequence>
+
+    <CustomActionRef Id="CheckRebootCA" />
+    <CustomActionRef Id="XenCheckIncompatibleDevices" />
   </Package>
 </Wix>

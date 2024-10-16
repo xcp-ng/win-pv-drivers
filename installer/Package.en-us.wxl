@@ -12,6 +12,7 @@ This file contains the declaration of all the localizable strings.
   <String Id="CitrixDriversDetectedError" Value="Citrix PV drivers detected. Uninstall them before continuing." />
   <String Id="DowngradeError" Value="A newer version of [ProductName] is already installed." />
   <String Id="RebootPendingError" Value="A reboot is pending. Reboot the system before attempting install." />
+  <String Id="IncompatibleDevicesError" Value="Found incompatible devices: [IncompatibleDevices]. Disable the &quot;Manage Citrix PV drivers via Windows Update&quot; feature before continuing." />
 
   <String Id="PVBusFeatureTitle" Value="PV Bus Driver" />
   <String Id="PVConsoleFeatureTitle" Value="PV Console Driver" />
