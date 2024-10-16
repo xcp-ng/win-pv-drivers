@@ -60,7 +60,8 @@
 
     <CustomActionRef Id="CheckRebootCA" />
     <InstallExecuteSequence>
-      <RemoveExistingProducts After="InstallValidate" />
+      <!-- We cannot afford to uninstall existing drivers during an upgrade. Thus the choice of InstallExecute. -->
+      <RemoveExistingProducts After="InstallExecute" />
       <!--
         after installation, bus drivers issue reboot requests asynchronously through xenbus_monitor
         since we suppress xenbus_monitor reboot requests during installation, manually schedule reboot for concerned drivers anyway
