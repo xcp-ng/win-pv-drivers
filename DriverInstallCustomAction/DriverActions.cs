@@ -40,10 +40,6 @@ namespace XenInstCA {
             }
             Logger.Log($"Installing {driver.DriverName} inf {driver.InfPath}");
 
-            if (!XenDeviceInfo.KnownDevices.TryGetValue(driver.DriverName, out var xenInfo)) {
-                throw new NotSupportedException($"Unknown driver {driver.DriverName}");
-            }
-
             DriverUtils.InstallDriver(driver.InfPath, out var needsReboot);
             if (needsReboot) {
                 CustomActionUtils.ScheduleReboot();
