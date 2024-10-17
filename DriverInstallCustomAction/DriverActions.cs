@@ -53,15 +53,6 @@ namespace XenInstCA {
             return ActionResult.Success;
         }
 
-        // We're running on behalf of the PV driver uninstaller. We should only remove drivers belonging to our current package and leave the rest alone.
-        // Drivers that don't belong to our package should be uninstalled by the standalone uninstaller.
-        // We can have a separate installer stage for that.
-
-        // NOTE: we can look up the desired device IDs with InfFile. Do we want to do that?
-        // In some cases the drivers in Program Files will desync with that of the driver store for whatever reason (manual update, Windows Update, etc.)
-        // If we want to handle these cases then we might just need to uninstall all Xen drivers just in case.
-        // The installation would also need to safely handle the case of installing over existing Xen drivers - who would win?
-
         [CustomAction]
         public static ActionResult DriverUninstall(Session session) {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
@@ -128,10 +119,12 @@ namespace XenInstCA {
                         Logger.Log($"Cannot uninstall driver {oemInfName}: {ex.Message}");
                     }
                 }
-            } else {
-                Logger.Log($"Didn't find {driver.DriverName} devices; uninstalling by INF path");
-                DriverUtils.UninstallDriverByInfPath(driver.InfPath);
             }
+            // Why uninstall everything during DriverInstall?
+            // Some older drivers (e.g. old XCP-ng drivers) don't like it when downgraded from a newer version.
+            // Remove them all just to be sure.
+            // We should arguably require running XenClean first but this covers cases where older drivers are installed after ours.
+            DriverUtils.UninstallDriverByNames(driver.DriverName);
 
             if (needsReboot) {
                 CustomActionUtils.ScheduleReboot();
