@@ -7,16 +7,19 @@ param (
 $ErrorActionPreference = "Stop"
 
 $Timestamp = Get-Date -Format FileDateTime
-& "$PSScriptRoot\XenClean.exe" > "xenclean-$Timestamp.log"
-pnputil.exe /enum-drivers > "drivers-$Timestamp.log"
+$LogPath = "xenclean-$Timestamp"
+New-Item -ItemType Directory -Force
+
+& "$PSScriptRoot\XenClean.exe" > "$LogPath/xenclean.log"
+pnputil.exe /enum-drivers > "$LogPath/drivers.log"
 if ([System.Environment]::OSVersion.Version -ge [version]::Parse("10.0.18362")) {
-    pnputil.exe /enum-devices /relations > "devices-$Timestamp.log"
+    pnputil.exe /enum-devices /relations > "$LogPath/devices.log"
 }
-reg.exe export "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e96a-e325-11ce-bfc1-08002be10318}" "hdc-$timestamp.reg" /y
-reg.exe export "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e97d-e325-11ce-bfc1-08002be10318}" "system-$timestamp.reg" /y
-reg.exe export "HKLM\SYSTEM\CurrentControlSet\Services\xenbus" "service-xenbus-$timestamp.reg" /y
-reg.exe export "HKLM\SYSTEM\CurrentControlSet\Services\xenbus_monitor" "service-xenbus_monitor-$timestamp.reg" /y
-reg.exe export "HKLM\SYSTEM\CurrentControlSet\Services\xenfilt" "service-xenfilt-$timestamp.reg" /y
+reg.exe export "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e96a-e325-11ce-bfc1-08002be10318}" "$LogPath/hdc.reg" /y
+reg.exe export "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e97d-e325-11ce-bfc1-08002be10318}" "$LogPath/system.reg" /y
+reg.exe export "HKLM\SYSTEM\CurrentControlSet\Services\xenbus" "$LogPath/service-xenbus.reg" /y
+reg.exe export "HKLM\SYSTEM\CurrentControlSet\Services\xenbus_monitor" "$LogPath/service-xenbus_monitor.reg" /y
+reg.exe export "HKLM\SYSTEM\CurrentControlSet\Services\xenfilt" "$LogPath/service-xenfilt.reg" /y
 
 if ($Reboot) {
     Restart-Computer -Force

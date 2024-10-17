@@ -23,6 +23,12 @@
     <ProjectReference Include="..\XenDriverUtils\XenDriverUtils.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Invoke-XenClean.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)" />
   </Target>
