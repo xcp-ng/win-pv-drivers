@@ -33,7 +33,7 @@ namespace XenInstCA {
                 HWND.Null,
                 SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES | SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_PRESENT);
             foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)) {
-                List<string> compatibleIds = DriverUtils.GetDeviceCompatibleIds(devInfo, devInfoData);
+                List<string> compatibleIds = DriverUtils.GetDeviceHardwareAndCompatibleIds(devInfo, devInfoData);
                 // Enumerable.All is true also for empty enumerables
                 if (compatibleIds
                         .Intersect(IncompatibleIds, StringComparer.OrdinalIgnoreCase)

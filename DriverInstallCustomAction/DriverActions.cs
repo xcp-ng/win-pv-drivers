@@ -86,14 +86,20 @@ namespace XenInstCA {
             var collectedInfPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)) {
-                List<string> compatibleIds = DriverUtils.GetDeviceCompatibleIds(devInfo, devInfoData);
+                List<string> hardwareIds = DriverUtils.GetDeviceHardwareAndCompatibleIds(devInfo, devInfoData);
                 // Enumerable.All is true also for empty enumerables
-                if (compatibleIds
-                        .Intersect(xenInfo.CompatibleIds, StringComparer.OrdinalIgnoreCase)
+                if (hardwareIds
+                        .Intersect(xenInfo.HardwareIds, StringComparer.OrdinalIgnoreCase)
                         .All(x => string.IsNullOrEmpty(x))) {
                     continue;
                 }
-                Logger.Log($"Found device with compatible IDs: {string.Join(",", compatibleIds)}");
+
+                var instanceId = DriverUtils.GetDeviceInstanceId(devInfo, devInfoData);
+                if (instanceId != null) {
+                    Logger.Log($"Found {driver.DriverName} device: {instanceId}");
+                } else {
+                    Logger.Log($"Found {driver.DriverName} device");
+                }
 
                 var infName = DriverUtils.GetDeviceInfPath(devInfo, devInfoData);
                 Logger.Log($"Current inf path: {infName}");

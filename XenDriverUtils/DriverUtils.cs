@@ -12,6 +12,11 @@ using Windows.Win32.Foundation;
 
 namespace XenDriverUtils {
     public static class DriverUtils {
+        public static readonly DEVPROPKEY DEVPKEY_Device_HardwareIds = new() {
+            fmtid = new Guid(0xa45c254e, 0xdf1c, 0x4efd, 0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0),
+            pid = 3
+        };
+
         public static readonly DEVPROPKEY DEVPKEY_Device_CompatibleIds = new() {
             fmtid = new Guid(0xa45c254e, 0xdf1c, 0x4efd, 0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0),
             pid = 4
@@ -128,6 +133,18 @@ namespace XenDriverUtils {
             return ParseMultiString(buf);
         }
 
+        public static List<string> GetDeviceHardwareIds(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
+            var buf = DriverUtils.GetDeviceProperty<char>(
+                devInfo,
+                devInfoData,
+                DEVPKEY_Device_HardwareIds,
+                DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
+            if (buf == null) {
+                return new List<string>();
+            }
+            return ParseMultiString(buf);
+        }
+
         public static List<string> GetDeviceCompatibleIds(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
             var buf = DriverUtils.GetDeviceProperty<char>(
                 devInfo,
@@ -138,6 +155,12 @@ namespace XenDriverUtils {
                 return new List<string>();
             }
             return ParseMultiString(buf);
+        }
+
+        public static List<string> GetDeviceHardwareAndCompatibleIds(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
+            var hwids = GetDeviceHardwareIds(devInfo, devInfoData);
+            var cids = GetDeviceCompatibleIds(devInfo, devInfoData);
+            return hwids.Union(cids, StringComparer.OrdinalIgnoreCase).ToList();
         }
 
         public static string GetDeviceInfPath(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
