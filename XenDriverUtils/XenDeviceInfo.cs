@@ -17,10 +17,9 @@ namespace XenDriverUtils {
                     ClassGuid = PInvoke.GUID_DEVCLASS_SYSTEM,
                     HardwareIds = new List<string>() {
                         string.IsNullOrEmpty(VersionInfo.VendorDeviceId) ? null : $"PCI\\VEN_5853&DEV_{VersionInfo.VendorDeviceId}&SUBSYS_{VersionInfo.VendorDeviceId}5853&REV_01",
+                        // these two entries cover all Xenbus devices
                         "PCI\\VEN_5853&DEV_0001",
                         "PCI\\VEN_5853&DEV_0002",
-                        // Citrix
-                        "PCI\\VEN_5853&DEV_C000&SUBSYS_C0005853&REV_01",
                     },
                 }
             },
@@ -54,10 +53,14 @@ namespace XenDriverUtils {
                         string.IsNullOrEmpty(VersionInfo.VendorDeviceId) ? null : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_IFACE&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_IFACE&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_IFACE&REV_09000000",
-                        // Citrix
+                        // Citrix v9
                         "XENBUS\\VEN_XSC000&DEV_IFACE&REV_09000000",
                         "XENBUS\\VEN_XS0001&DEV_IFACE&REV_09000000",
                         "XENBUS\\VEN_XS0002&DEV_IFACE&REV_09000000",
+                        // XCP-ng v8
+                        "XENBUS\\VEN_XNC000&DEV_IFACE&REV_08000009",
+                        "XENBUS\\VEN_XN0001&DEV_IFACE&REV_08000009",
+                        "XENBUS\\VEN_XN0002&DEV_IFACE&REV_08000009",
                     },
                 }
             },
@@ -69,10 +72,14 @@ namespace XenDriverUtils {
                         string.IsNullOrEmpty(VersionInfo.VendorDeviceId) ? null : $"XENVIF\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_NET&REV_09000000",
                         $"XENVIF\\VEN_{VersionInfo.VendorPrefix}0001&DEV_NET&REV_09000000",
                         $"XENVIF\\VEN_{VersionInfo.VendorPrefix}0002&DEV_NET&REV_09000000",
-                        // Citrix
+                        // Citrix v9
                         "XENVIF\\VEN_XSC000&DEV_NET&REV_09000000",
                         "XENVIF\\VEN_XS0001&DEV_NET&REV_09000000",
                         "XENVIF\\VEN_XS0002&DEV_NET&REV_09000000",
+                        // XCP-ng v8
+                        "XENVIF\\VEN_XNC000&DEV_NET&REV_08000002",
+                        "XENVIF\\VEN_XN0001&DEV_NET&REV_08000002",
+                        "XENVIF\\VEN_XN0002&DEV_NET&REV_08000002",
                     },
                 }
             },
@@ -84,10 +91,14 @@ namespace XenDriverUtils {
                         string.IsNullOrEmpty(VersionInfo.VendorDeviceId) ? null : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VBD&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_VBD&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_VBD&REV_09000000",
-                        // Citrix
+                        // Citrix v9
                         "XENBUS\\VEN_XSC000&DEV_VBD&REV_09000000",
                         "XENBUS\\VEN_XS0001&DEV_VBD&REV_09000000",
                         "XENBUS\\VEN_XS0002&DEV_VBD&REV_09000000",
+                        // XCP-ng v8
+                        "XENBUS\\VEN_XNC000&DEV_VBD&REV_08000009",
+                        "XENBUS\\VEN_XN0001&DEV_VBD&REV_08000009",
+                        "XENBUS\\VEN_XN0002&DEV_VBD&REV_08000009",
                     },
                 }
             },
@@ -99,10 +110,14 @@ namespace XenDriverUtils {
                         string.IsNullOrEmpty(VersionInfo.VendorDeviceId) ? null : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VIF&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_VIF&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_VIF&REV_09000000",
-                        // Citrix
+                        // Citrix v9
                         "XENBUS\\VEN_XSC000&DEV_VIF&REV_09000000",
                         "XENBUS\\VEN_XS0001&DEV_VIF&REV_09000000",
                         "XENBUS\\VEN_XS0002&DEV_VIF&REV_09000000",
+                        // XCP-ng v8
+                        "XENBUS\\VEN_XNC000&DEV_VIF&REV_08000009",
+                        "XENBUS\\VEN_XN0001&DEV_VIF&REV_08000009",
+                        "XENBUS\\VEN_XN0002&DEV_VIF&REV_08000009",
                     },
                 }
             },
