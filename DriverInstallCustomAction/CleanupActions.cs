@@ -4,64 +4,19 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Win32;
 using WixToolset.Dtf.WindowsInstaller;
+using XenDriverUtils;
 
 namespace XenInstCA {
     public class CleanupActions {
-        private static readonly List<Guid> ClassKeyList = new() {
-            PInvoke.GUID_DEVCLASS_HDC,
-            PInvoke.GUID_DEVCLASS_SYSTEM,
-        };
-
-        private static readonly List<string> FilterValueList = new() {
-            "UpperFilters",
-        };
-
         [CustomAction]
         public static ActionResult XenbusCleanup(Session session) {
-            using var classKey = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Control\\Class", true);
-            if (classKey == null) {
-                return ActionResult.Success;
-            }
-            foreach (var classGuid in ClassKeyList) {
-                using var classSubkey = classKey.OpenSubKey(classGuid.ToString("B"), true);
-                if (classSubkey == null) {
-                    continue;
-                }
-                foreach (var filterValue in FilterValueList) {
-                    try {
-                        if (classSubkey.GetValueKind(filterValue) == RegistryValueKind.MultiString) {
-                            var filters = (string[])classSubkey.GetValue(filterValue);
-                            session.Log($"Class filters for {classGuid}: {string.Join(",", filters)}");
-                            var newFilters = filters.Where(x => !"xenfilt".Equals(x, StringComparison.OrdinalIgnoreCase)).ToArray();
-                            session.Log($"New filters for {classGuid}: {string.Join(",", newFilters)}");
-                            classSubkey.SetValue(filterValue, newFilters, RegistryValueKind.MultiString);
-                        }
-                    } catch {
-                    }
-                }
-            }
+            XenCleanup.XenbusCleanup();
             return ActionResult.Success;
         }
 
-        private static readonly List<string> XenfiltParametersToDelete = new() {
-            "ActiveDeviceID",
-            "ActiveInstanceID",
-            "ActiveLocationInformation",
-        };
-
         [CustomAction]
         public static ActionResult XenfiltReset(Session session) {
-            using var paramKey = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Services\\xenfilt\\Parameters", true);
-            if (paramKey == null) {
-                return ActionResult.Success;
-            }
-            foreach (var paramName in XenfiltParametersToDelete) {
-                try {
-                    paramKey.DeleteValue(paramName);
-                    session.Log($"Deleted xenfilt parameter {paramName}");
-                } catch {
-                }
-            }
+            XenCleanup.XenfiltReset();
             return ActionResult.Success;
         }
     }
