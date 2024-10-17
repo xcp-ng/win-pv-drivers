@@ -6,9 +6,7 @@
     <LangVersion>9.0</LangVersion>
     <Platforms>x64;x86;ARM64</Platforms>
     <Nullable>warnings</Nullable>
-    <Authors>$(VENDOR_NAME)</Authors>
-    <Company>$(VENDOR_NAME)</Company>
-    <Product>$(PRODUCT_NAME)</Product>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,4 +21,8 @@
   <ItemGroup>
     <ProjectReference Include="..\XenDriverUtils\XenDriverUtils.csproj" />
   </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)" />
+  </Target>
 </Project>

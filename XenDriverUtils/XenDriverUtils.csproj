@@ -5,10 +5,8 @@
     <LangVersion>9.0</LangVersion>
     <Platforms>x64;x86;ARM64</Platforms>
     <Nullable>warnings</Nullable>
-    <Authors>$(VENDOR_NAME)</Authors>
-    <Company>$(VENDOR_NAME)</Company>
-    <Product>$(PRODUCT_NAME)</Product>
     <AssemblyName>xdutils</AssemblyName>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <ItemGroup>
