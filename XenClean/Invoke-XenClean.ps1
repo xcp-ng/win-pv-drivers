@@ -1,4 +1,4 @@
-[CmdletBinding()]
+[CmdletBinding(SupportsShouldProcess, ConfirmImpact="High")]
 param (
     [Parameter()]
     [switch]$Reboot
@@ -6,9 +6,13 @@ param (
 
 $ErrorActionPreference = "Stop"
 
+if (!$PSCmdlet.ShouldProcess("Local computer", "Remove Xen drivers and tools")) {
+    exit;
+}
+
 $Timestamp = Get-Date -Format FileDateTime
 $LogPath = "xenclean-$Timestamp"
-New-Item -ItemType Directory -Force
+New-Item -ItemType Directory -Path $LogPath -Force
 
 & "$PSScriptRoot\XenClean.exe" > "$LogPath/xenclean.log"
 pnputil.exe /enum-drivers > "$LogPath/drivers.log"

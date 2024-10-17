@@ -8,7 +8,7 @@ using XenDriverUtils;
 
 namespace XenClean {
     internal static class UninstallDevices {
-        static List<string> UninstallOrder = new() {
+        static readonly List<string> UninstallOrder = new() {
             "Xenvbd",
             "Xennet",
             "Xenvif",
