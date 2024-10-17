@@ -82,7 +82,11 @@ namespace XenInstCA {
                 return ActionResult.Success;
             }
 
-            var devInfo = PInvoke.SetupDiGetClassDevs(xenInfo.ClassGuid, null, HWND.Null, 0);
+            var devInfo = PInvoke.SetupDiGetClassDevs(
+                xenInfo.ClassGuid,
+                null,
+                HWND.Null,
+                xenInfo.ClassGuid.HasValue ? 0 : SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES);
             var collectedInfPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)) {

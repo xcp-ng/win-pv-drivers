@@ -7,7 +7,7 @@ using Windows.Win32;
 
 namespace XenDriverUtils {
     public class XenDeviceInfo {
-        public Guid ClassGuid { get; set; }
+        public Guid? ClassGuid { get; set; }
         public List<string> HardwareIds { get; set; }
 
         public static readonly Dictionary<string, XenDeviceInfo> KnownDevices = new(StringComparer.OrdinalIgnoreCase) {
@@ -130,6 +130,25 @@ namespace XenDriverUtils {
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_VKBD&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_VKBD&REV_09000000",
                     },
+                }
+            },
+            // pseudo-devices
+            {
+                "Xendevice",
+                new XenDeviceInfo() {
+                    ClassGuid = null,
+                    HardwareIds = new List<string>() {
+                        "XENDEVICE",
+                    }
+                }
+            },
+            {
+                "Xenclass",
+                new XenDeviceInfo() {
+                    ClassGuid = null,
+                    HardwareIds = new List<string>() {
+                        "XENCLASS",
+                    }
                 }
             },
         };
