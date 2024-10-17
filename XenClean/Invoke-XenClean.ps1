@@ -1,7 +1,9 @@
-[CmdletBinding(SupportsShouldProcess, ConfirmImpact="High")]
+#Requires -RunAsAdministrator
+
+[CmdletBinding(SupportsShouldProcess, ConfirmImpact = "High")]
 param (
     [Parameter()]
-    [switch]$Reboot
+    [switch]$NoReboot
 )
 
 $ErrorActionPreference = "Stop"
@@ -25,6 +27,6 @@ reg.exe export "HKLM\SYSTEM\CurrentControlSet\Services\xenbus" "$LogPath/service
 reg.exe export "HKLM\SYSTEM\CurrentControlSet\Services\xenbus_monitor" "$LogPath/service-xenbus_monitor.reg" /y
 reg.exe export "HKLM\SYSTEM\CurrentControlSet\Services\xenfilt" "$LogPath/service-xenfilt.reg" /y
 
-if ($Reboot) {
+if (!$NoReboot) {
     Restart-Computer -Force
 }
