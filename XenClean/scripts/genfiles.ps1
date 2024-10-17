@@ -20,6 +20,7 @@ using System.Reflection;
 
 namespace XenClean {
     internal static class VersionInfo {
+        public const string MsiUpgradeCodeX86 = "${Env:MSI_UPGRADE_CODE_X86}";
         public const string MsiUpgradeCodeX64 = "${Env:MSI_UPGRADE_CODE_X64}";
     }
 }
