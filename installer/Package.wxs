@@ -13,6 +13,10 @@
 
     <MediaTemplate EmbedCab="yes" />
 
+    <?if $(Platform) = x86 ?>
+    <Launch Condition="NOT VersionNT64" Message="!(loc.MachineIsX64Error)" />
+    <?endif ?>
+    
     <Launch Condition="WIX_IS_NETFRAMEWORK_462_OR_LATER_INSTALLED" Message="!(loc.NetFx462RequiredError)" />
 
     <Upgrade Id="{48E5492C-6843-452E-97A2-A5FE2D24B141}">
