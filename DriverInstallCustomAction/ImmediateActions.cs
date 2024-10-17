@@ -20,12 +20,6 @@ namespace XenInstCA {
         private static readonly List<string> IncompatibleIds = new() {
             // Citrix
             "PCI\\VEN_5853&DEV_C000",
-            // XCP-ng v8
-            "PCI\\VEN_5853&DEV_0002&SUBSYS_00015853&REV_01",
-            "XENBUS\\VEN_XN0002&DEV_IFACE&REV_08000009",
-            "XENBUS\\VEN_XN0002&DEV_VBD&REV_08000009",
-            "XENBUS\\VEN_XN0002&DEV_VIF&REV_08000009",
-            "XENVIF\\VEN_XN0002&DEV_NET&REV_08000002",
         };
 
         [CustomAction]
