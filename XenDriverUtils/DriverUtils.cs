@@ -274,5 +274,34 @@ namespace XenDriverUtils {
                 }
             }
         }
+
+        public static void UninstallDriverByNames(params string[] driverNames) {
+            var wantedCatalogName = driverNames.Select(x => x + ".cat").ToList();
+            var windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            var infdir = Path.Combine(windir, "inf");
+            foreach (var oemInfPath in Directory.EnumerateFiles(infdir, "oem*.inf", SearchOption.TopDirectoryOnly)) {
+                if (!string.Equals(".inf", Path.GetExtension(oemInfPath), StringComparison.OrdinalIgnoreCase)) {
+                    // netfx bug when using asterisks
+                    continue;
+                }
+                try {
+                    using var infFile = InfFile.Open(oemInfPath, null, INF_STYLE.INF_STYLE_WIN4, out _);
+                    var infCatalog = infFile.GetStringField("Version", "CatalogFile", 1);
+                    if (wantedCatalogName.Contains(infCatalog, StringComparer.OrdinalIgnoreCase)) {
+                        Logger.Log($"Found driver: {oemInfPath}");
+                    } else {
+                        continue;
+                    }
+                } catch (Exception ex) {
+                    Logger.Log($"Cannot parse {oemInfPath}: {ex.Message}");
+                }
+                var oemInfName = Path.GetFileName(oemInfPath);
+                try {
+                    DriverUtils.UninstallDriver(oemInfName);
+                } catch (Exception ex) {
+                    Logger.Log($"Cannot uninstall driver {oemInfName}: {ex.Message}");
+                }
+            }
+        }
     }
 }
