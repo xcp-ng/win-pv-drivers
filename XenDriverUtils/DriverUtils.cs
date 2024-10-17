@@ -251,7 +251,7 @@ namespace XenDriverUtils {
             var windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
             var infdir = Path.Combine(windir, "inf");
             foreach (var oemInfPath in Directory.EnumerateFiles(infdir, "oem*.inf", SearchOption.TopDirectoryOnly)) {
-                if (!".inf".Equals(Path.GetExtension(oemInfPath), StringComparison.OrdinalIgnoreCase)) {
+                if (!string.Equals(".inf", Path.GetExtension(oemInfPath), StringComparison.OrdinalIgnoreCase)) {
                     // netfx bug when using asterisks
                     continue;
                 }
@@ -259,8 +259,8 @@ namespace XenDriverUtils {
                     using var infFile = InfFile.Open(oemInfPath, null, INF_STYLE.INF_STYLE_WIN4, out _);
                     var infCatalog = infFile.GetStringField("Version", "CatalogFile", 1);
                     var infProvider = infFile.GetStringField("Version", "Provider", 1);
-                    if (!wantedCatalogName.Equals(infCatalog, StringComparison.OrdinalIgnoreCase)
-                        || !VersionInfo.VendorName.Equals(infProvider, StringComparison.OrdinalIgnoreCase)) {
+                    if (!string.Equals(wantedCatalogName, infCatalog, StringComparison.OrdinalIgnoreCase)
+                        || !string.Equals(VersionInfo.VendorName, infProvider, StringComparison.OrdinalIgnoreCase)) {
                         continue;
                     }
                 } catch (Exception ex) {

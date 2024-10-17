@@ -5,7 +5,6 @@ using WixToolset.Dtf.WindowsInstaller;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using XenDriverUtils;
 
 namespace XenInstCA {
