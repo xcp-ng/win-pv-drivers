@@ -8,6 +8,8 @@ This file contains the declaration of all the localizable strings.
   <String Id="GenericProductName" Value="Windows PV Drivers" />
   <String Id="ProductName" Value="$(VENDOR_NAME) Windows PV Drivers" />
 
+  <String Id="NetFx462RequiredError" Value="[ProductName] requires .NET 4.6.2 or later." />
+
   <String Id="OldDriversDetectedError" Value="Old $(VENDOR_NAME) drivers detected. Uninstall them before continuing." />
   <String Id="CitrixDriversDetectedError" Value="Citrix PV drivers detected. Uninstall them before continuing." />
   <String Id="DowngradeError" Value="A newer version of [ProductName] is already installed." />

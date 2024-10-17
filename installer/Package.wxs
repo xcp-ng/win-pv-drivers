@@ -13,6 +13,8 @@
 
     <MediaTemplate EmbedCab="yes" />
 
+    <Launch Condition="WIX_IS_NETFRAMEWORK_462_OR_LATER_INSTALLED" Message="!(loc.NetFx462RequiredError)" />
+
     <Upgrade Id="{48E5492C-6843-452E-97A2-A5FE2D24B141}">
       <UpgradeVersion Maximum="255.255.65535.65535" OnlyDetect="yes" Property="OLD_DRIVERS_DETECTED" />
     </Upgrade>
