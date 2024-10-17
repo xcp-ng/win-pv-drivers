@@ -364,5 +364,5 @@ FodyWeavers.xsd
 
 .build_number
 /branding.ps1
-/installer/Branding.wxi
-/DriverInstallCustomAction/Branding.cs
+Branding.wxi
+Branding.cs

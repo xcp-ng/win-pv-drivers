@@ -10,8 +10,8 @@ using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using Windows.Win32.Devices.Properties;
 using Windows.Win32.Foundation;
 
-namespace XenInstCA {
-    internal static class DriverUtils {
+namespace XenDriverUtils {
+    public static class DriverUtils {
         public static readonly DEVPROPKEY DEVPKEY_Device_CompatibleIds = new() {
             fmtid = new Guid(0xa45c254e, 0xdf1c, 0x4efd, 0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0),
             pid = 4
@@ -100,7 +100,7 @@ namespace XenInstCA {
             var buf = DriverUtils.GetDeviceProperty<char>(
                 devInfo,
                 devInfoData,
-                DriverUtils.DEVPKEY_Device_InstanceId,
+                DEVPKEY_Device_InstanceId,
                 DEVPROPTYPE.DEVPROP_TYPE_STRING);
             if (buf == null) {
                 return null;
@@ -120,31 +120,31 @@ namespace XenInstCA {
             var buf = DriverUtils.GetDeviceProperty<char>(
                 devInfo,
                 devInfoData,
-                DriverUtils.DEVPKEY_Device_Children,
+                DEVPKEY_Device_Children,
                 DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
             if (buf == null) {
                 return new List<string>();
             }
-            return DriverUtils.ParseMultiString(buf);
+            return ParseMultiString(buf);
         }
 
         public static List<string> GetDeviceCompatibleIds(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
             var buf = DriverUtils.GetDeviceProperty<char>(
                 devInfo,
                 devInfoData,
-                DriverUtils.DEVPKEY_Device_CompatibleIds,
+                DEVPKEY_Device_CompatibleIds,
                 DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
             if (buf == null) {
                 return new List<string>();
             }
-            return DriverUtils.ParseMultiString(buf);
+            return ParseMultiString(buf);
         }
 
         public static string GetDeviceInfPath(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
             var buf = DriverUtils.GetDeviceProperty<char>(
                 devInfo,
                 devInfoData,
-                DriverUtils.DEVPKEY_Device_DriverInfPath,
+                DEVPKEY_Device_DriverInfPath,
                 DEVPROPTYPE.DEVPROP_TYPE_STRING);
             if (buf == null) {
                 return null;
@@ -237,7 +237,7 @@ namespace XenInstCA {
                     var infCatalog = infFile.GetStringField("Version", "CatalogFile", 1);
                     var infProvider = infFile.GetStringField("Version", "Provider", 1);
                     if (!wantedCatalogName.Equals(infCatalog, StringComparison.OrdinalIgnoreCase)
-                        || !XenInstCA.Version.VendorName.Equals(infProvider, StringComparison.OrdinalIgnoreCase)) {
+                        || !XenDriverUtils.Version.VendorName.Equals(infProvider, StringComparison.OrdinalIgnoreCase)) {
                         continue;
                     }
                 } catch (Exception ex) {

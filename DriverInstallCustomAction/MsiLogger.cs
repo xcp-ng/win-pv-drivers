@@ -4,24 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WixToolset.Dtf.WindowsInstaller;
+using XenDriverUtils;
 
 namespace XenInstCA {
-    internal abstract class Logger {
-        public abstract void Write(string message);
-
-        private static Logger Instance = null;
-
-        public static Logger SetLogger(Logger logger) {
-            var old = Instance;
-            Instance = logger;
-            return old;
-        }
-
-        public static void Log(string message) {
-            Instance?.Write(message);
-        }
-    }
-
     internal class MsiSessionLogger : Logger {
         private readonly Session _session;
 

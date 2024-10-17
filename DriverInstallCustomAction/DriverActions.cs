@@ -7,6 +7,7 @@ using Windows.Win32;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using Windows.Win32.Foundation;
 using WixToolset.Dtf.WindowsInstaller;
+using XenDriverUtils;
 
 namespace XenInstCA {
     internal class DriverData {

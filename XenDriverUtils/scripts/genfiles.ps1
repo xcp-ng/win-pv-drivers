@@ -49,7 +49,7 @@ $BrandingFile = "$ProjectDir\Branding.cs"
 $OldBranding = Get-Content -Raw $BrandingFile -ErrorAction Ignore
 $NewBranding = `
 @"
-namespace XenInstCA {
+namespace XenDriverUtils {
     internal static class Version {
         public const string VendorName = "$Env:VENDOR_NAME";
         public const string ProductName = "$Env:PRODUCT_NAME";

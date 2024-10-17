@@ -5,12 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Win32;
 
-namespace XenInstCA {
-    internal class XenDeviceInfo {
+namespace XenDriverUtils {
+    public class XenDeviceInfo {
         public Guid ClassGuid { get; set; }
         public List<string> CompatibleIds { get; set; }
 
-        internal static readonly Dictionary<string, XenDeviceInfo> KnownDevices = new(StringComparer.OrdinalIgnoreCase) {
+        public static readonly Dictionary<string, XenDeviceInfo> KnownDevices = new(StringComparer.OrdinalIgnoreCase) {
             {
                 "Xenbus",
                 new XenDeviceInfo() {

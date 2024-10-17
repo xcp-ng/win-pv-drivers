@@ -1,7 +1,6 @@
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using WixToolset.Dtf.WindowsInstaller;
 using Windows.Win32;
+using XenDriverUtils;
 
 namespace XenInstCA {
     internal static class CustomActionUtils {

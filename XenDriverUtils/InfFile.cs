@@ -7,7 +7,7 @@ using Windows.Win32;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using Windows.Win32.Foundation;
 
-namespace XenInstCA {
+namespace XenDriverUtils {
     internal class InfFile : SafeHandleMinusOneIsInvalid {
         public InfFile(IntPtr existingHandle, bool ownsHandle) : base(ownsHandle) {
             handle = existingHandle;
