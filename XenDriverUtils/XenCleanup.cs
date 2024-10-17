@@ -47,9 +47,12 @@ namespace XenDriverUtils {
         }
 
         public static void ResetNvmeOverride() {
-            using var key = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\StartOverride", true);
-            Logger.Log("Resetting stornvme StartOverride");
             try {
+                using var key = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\StartOverride", true);
+                if (key == null) {
+                    return;
+                }
+                Logger.Log("Resetting stornvme StartOverride");
                 key.SetValue("0", 0, RegistryValueKind.DWord);
             } catch {
             }
