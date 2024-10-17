@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Win32;
 using Windows.Win32.Foundation;
+using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using XenDriverUtils;
 
 namespace XenClean {
@@ -15,11 +16,17 @@ namespace XenClean {
             "Xenvkbd",
             "Xencons",
             "Xeniface",
+            "Xendevice",
+            "Xenclass",
             "Xenbus",
         };
 
         static void RemoveDevices(XenDeviceInfo xenInfo) {
-            var devInfo = PInvoke.SetupDiGetClassDevs(xenInfo.ClassGuid, null, HWND.Null, 0);
+            var devInfo = PInvoke.SetupDiGetClassDevs(
+                xenInfo.ClassGuid,
+                null,
+                HWND.Null,
+                xenInfo.ClassGuid.HasValue ? 0 : SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES);
             bool needsReboot = false;
 
             foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)) {
