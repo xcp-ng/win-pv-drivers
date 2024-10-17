@@ -237,7 +237,7 @@ namespace XenDriverUtils {
                     var infCatalog = infFile.GetStringField("Version", "CatalogFile", 1);
                     var infProvider = infFile.GetStringField("Version", "Provider", 1);
                     if (!wantedCatalogName.Equals(infCatalog, StringComparison.OrdinalIgnoreCase)
-                        || !XenDriverUtils.Version.VendorName.Equals(infProvider, StringComparison.OrdinalIgnoreCase)) {
+                        || !VersionInfo.VendorName.Equals(infProvider, StringComparison.OrdinalIgnoreCase)) {
                         continue;
                     }
                 } catch (Exception ex) {
