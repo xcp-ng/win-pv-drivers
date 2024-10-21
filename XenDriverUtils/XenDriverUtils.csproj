@@ -21,4 +21,8 @@
     <Exec Command="powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)" />
   </Target>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\sign.ps1 -ProjectDir $(ProjectDir) -Configuration $(Configuration) -Platform $(Platform)" />
+  </Target>
+
 </Project>
