@@ -20,24 +20,31 @@
     <PropertyRef Id="WIX_IS_NETFRAMEWORK_462_OR_LATER_INSTALLED" />
     <Launch Condition="WIX_IS_NETFRAMEWORK_462_OR_LATER_INSTALLED" Message="!(loc.NetFx462RequiredError)" />
 
+    <?if $(Platform) = x86 ?>
     <!-- XCP-ng v8 x86 -->
     <Upgrade Id="{EE3B949D-C431-462b-B6DC-5BEDA078D772}">
-      <UpgradeVersion Maximum="255.255.65535.65535" OnlyDetect="yes" Property="OLD_DRIVERS_DETECTED" />
+      <UpgradeVersion Maximum="255.255.65535.65535" OnlyDetect="yes" Property="OLD_DRIVERS_X86_DETECTED" />
     </Upgrade>
+    <Launch Condition="NOT OLD_DRIVERS_X86_DETECTED" Message="!(loc.OldDriversDetectedError)" />
+    
+    <?elseif  $(Platform) = x64 ?>
     <!-- XCP-ng v8 x64 -->
     <Upgrade Id="{48E5492C-6843-452E-97A2-A5FE2D24B141}">
-      <UpgradeVersion Maximum="255.255.65535.65535" OnlyDetect="yes" Property="OLD_DRIVERS_DETECTED" />
+      <UpgradeVersion Maximum="255.255.65535.65535" OnlyDetect="yes" Property="OLD_DRIVERS_X64_DETECTED" />
     </Upgrade>
-    <!-- Citrix -->
+    <Launch Condition="NOT OLD_DRIVERS_X64_DETECTED" Message="!(loc.OldDriversDetectedError)" />
+    
+    <!-- Citrix x64 -->
     <Upgrade Id="{AF9B2559-3E91-4206-98C2-F560009FF7F1}">
-      <UpgradeVersion Maximum="255.255.65535.65535" OnlyDetect="yes" Property="CITRIX_DRIVERS_DETECTED" />
+      <UpgradeVersion Maximum="255.255.65535.65535" OnlyDetect="yes" Property="CITRIX_DRIVERS_X64_DETECTED" />
     </Upgrade>
+    <?endif ?>
+    <Launch Condition="NOT CITRIX_DRIVERS_X64_DETECTED" Message="!(loc.CitrixDriversDetectedError)" />
+    
     <Upgrade Id="$(var.UpgradeCode)">
       <UpgradeVersion Maximum="$(ProductVersion)" IncludeMinimum="no" IncludeMaximum="no" MigrateFeatures="yes" Property="UPGRADE_DETECTED" />
       <UpgradeVersion Minimum="$(ProductVersion)" IncludeMinimum="no" IncludeMaximum="no" OnlyDetect="yes" Property="DOWNGRADE_DETECTED" />
     </Upgrade>
-    <Launch Condition="NOT OLD_DRIVERS_DETECTED" Message="!(loc.OldDriversDetectedError)" />
-    <Launch Condition="NOT CITRIX_DRIVERS_DETECTED" Message="!(loc.CitrixDriversDetectedError)" />
     <Launch Condition="NOT DOWNGRADE_DETECTED" Message="!(loc.DowngradeError)" />
     <!--
       I wanted to add this but it triggers for any pending moves, even irrelevant ones.
