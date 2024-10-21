@@ -20,9 +20,15 @@
     <PropertyRef Id="WIX_IS_NETFRAMEWORK_462_OR_LATER_INSTALLED" />
     <Launch Condition="WIX_IS_NETFRAMEWORK_462_OR_LATER_INSTALLED" Message="!(loc.NetFx462RequiredError)" />
 
+    <!-- XCP-ng v8 x86 -->
+    <Upgrade Id="{EE3B949D-C431-462b-B6DC-5BEDA078D772}">
+      <UpgradeVersion Maximum="255.255.65535.65535" OnlyDetect="yes" Property="OLD_DRIVERS_DETECTED" />
+    </Upgrade>
+    <!-- XCP-ng v8 x64 -->
     <Upgrade Id="{48E5492C-6843-452E-97A2-A5FE2D24B141}">
       <UpgradeVersion Maximum="255.255.65535.65535" OnlyDetect="yes" Property="OLD_DRIVERS_DETECTED" />
     </Upgrade>
+    <!-- Citrix -->
     <Upgrade Id="{AF9B2559-3E91-4206-98C2-F560009FF7F1}">
       <UpgradeVersion Maximum="255.255.65535.65535" OnlyDetect="yes" Property="CITRIX_DRIVERS_DETECTED" />
     </Upgrade>
