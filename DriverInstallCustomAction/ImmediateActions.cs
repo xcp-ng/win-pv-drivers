@@ -17,11 +17,6 @@ namespace XenInstCA {
             return ActionResult.Success;
         }
 
-        private static readonly List<string> IncompatibleIds = new() {
-            // Citrix
-            "PCI\\VEN_5853&DEV_C000",
-        };
-
         [CustomAction]
         public static ActionResult CheckIncompatibleDevices(Session session) {
             var incompatibilities = new List<string>();
@@ -30,16 +25,19 @@ namespace XenInstCA {
                 (Guid?)null,
                 null,
                 HWND.Null,
-                SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES | SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_PRESENT);
+                SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES);
             foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)) {
-                List<string> compatibleIds = DriverUtils.GetDeviceHardwareAndCompatibleIds(devInfo, devInfoData);
-                // Enumerable.All is true also for empty enumerables
-                if (compatibleIds
-                        .Intersect(IncompatibleIds, StringComparer.OrdinalIgnoreCase)
-                        .All(x => string.IsNullOrEmpty(x))) {
-                    continue;
+                List<string> deviceIds = DriverUtils.GetDeviceHardwareAndCompatibleIds(devInfo, devInfoData);
+                bool found = false;
+                foreach (var xenClass in XenDeviceInfo.KnownDevices.Values) {
+                    if (deviceIds.Any(x => xenClass.MatchesId(x, checkKnown: false, checkIncompatible: true))) {
+                        found = true;
+                        break;
+                    }
                 }
-                Logger.Log($"Found device with incompatible IDs: {string.Join(",", compatibleIds)}");
+                if (found) {
+                    Logger.Log($"Found device with incompatible IDs: {string.Join(",", deviceIds)}");
+                }
 
                 var instanceId = DriverUtils.GetDeviceInstanceId(devInfo, devInfoData);
                 if (instanceId != null) {
@@ -49,7 +47,7 @@ namespace XenInstCA {
                 }
             }
 
-            session["IncompatibleDevices"] = string.Join(", ", incompatibilities);
+            session["IncompatibleDevices"] = string.Join(",", incompatibilities);
             return ActionResult.Success;
         }
     }

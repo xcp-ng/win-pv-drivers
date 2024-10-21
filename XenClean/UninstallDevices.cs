@@ -31,10 +31,7 @@ namespace XenClean {
 
             foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)) {
                 List<string> compatibleIds = DriverUtils.GetDeviceHardwareAndCompatibleIds(devInfo, devInfoData);
-                // Enumerable.All is true also for empty enumerables
-                if (compatibleIds
-                        .Intersect(xenInfo.HardwareIds, StringComparer.OrdinalIgnoreCase)
-                        .All(x => string.IsNullOrEmpty(x))) {
+                if (compatibleIds.All(x => !xenInfo.MatchesId(x, checkKnown: true, checkIncompatible: true))) {
                     continue;
                 }
 

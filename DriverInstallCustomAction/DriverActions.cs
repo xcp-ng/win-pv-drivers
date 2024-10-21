@@ -80,10 +80,7 @@ namespace XenInstCA {
 
             foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)) {
                 List<string> hardwareIds = DriverUtils.GetDeviceHardwareAndCompatibleIds(devInfo, devInfoData);
-                // Enumerable.All is true also for empty enumerables
-                if (hardwareIds
-                        .Intersect(xenInfo.HardwareIds, StringComparer.OrdinalIgnoreCase)
-                        .All(x => string.IsNullOrEmpty(x))) {
+                if (hardwareIds.All(x => !xenInfo.MatchesId(x, checkKnown: true, checkIncompatible: false))) {
                     continue;
                 }
 

@@ -9,6 +9,17 @@ namespace XenDriverUtils {
     public class XenDeviceInfo {
         public Guid? ClassGuid { get; set; }
         public List<string> HardwareIds { get; set; }
+        public List<string> IncompatibleIds { get; set; } = new List<string>();
+
+        public bool MatchesId(string deviceId, bool checkKnown, bool checkIncompatible) {
+            if (string.IsNullOrEmpty(deviceId))
+                return false;
+            if (checkKnown && HardwareIds.Contains(deviceId, StringComparer.OrdinalIgnoreCase))
+                return true;
+            if (checkIncompatible && IncompatibleIds.Contains(deviceId, StringComparer.OrdinalIgnoreCase))
+                return true;
+            return false;
+        }
 
         public static readonly Dictionary<string, XenDeviceInfo> KnownDevices = new(StringComparer.OrdinalIgnoreCase) {
             {
@@ -21,6 +32,9 @@ namespace XenDriverUtils {
                         "PCI\\VEN_5853&DEV_0001",
                         "PCI\\VEN_5853&DEV_0002",
                     },
+                    IncompatibleIds = new List<string>() {
+                        "PCI\\VEN_5853&DEV_C000",
+                    }
                 }
             },
             {
@@ -53,6 +67,8 @@ namespace XenDriverUtils {
                         string.IsNullOrEmpty(VersionInfo.VendorDeviceId) ? null : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_IFACE&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_IFACE&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_IFACE&REV_09000000",
+                    },
+                    IncompatibleIds = new List<string>() {
                         // Citrix v9
                         "XENBUS\\VEN_XSC000&DEV_IFACE&REV_09000000",
                         "XENBUS\\VEN_XS0001&DEV_IFACE&REV_09000000",
@@ -61,7 +77,7 @@ namespace XenDriverUtils {
                         "XENBUS\\VEN_XNC000&DEV_IFACE&REV_08000009",
                         "XENBUS\\VEN_XN0001&DEV_IFACE&REV_08000009",
                         "XENBUS\\VEN_XN0002&DEV_IFACE&REV_08000009",
-                    },
+                    }
                 }
             },
             {
@@ -72,6 +88,8 @@ namespace XenDriverUtils {
                         string.IsNullOrEmpty(VersionInfo.VendorDeviceId) ? null : $"XENVIF\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_NET&REV_09000000",
                         $"XENVIF\\VEN_{VersionInfo.VendorPrefix}0001&DEV_NET&REV_09000000",
                         $"XENVIF\\VEN_{VersionInfo.VendorPrefix}0002&DEV_NET&REV_09000000",
+                    },
+                    IncompatibleIds = new List<string>() {
                         // Citrix v9
                         "XENVIF\\VEN_XSC000&DEV_NET&REV_09000000",
                         "XENVIF\\VEN_XS0001&DEV_NET&REV_09000000",
@@ -80,7 +98,7 @@ namespace XenDriverUtils {
                         "XENVIF\\VEN_XNC000&DEV_NET&REV_08000002",
                         "XENVIF\\VEN_XN0001&DEV_NET&REV_08000002",
                         "XENVIF\\VEN_XN0002&DEV_NET&REV_08000002",
-                    },
+                    }
                 }
             },
             {
@@ -91,6 +109,8 @@ namespace XenDriverUtils {
                         string.IsNullOrEmpty(VersionInfo.VendorDeviceId) ? null : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VBD&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_VBD&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_VBD&REV_09000000",
+                    },
+                    IncompatibleIds = new List<string>() {
                         // Citrix v9
                         "XENBUS\\VEN_XSC000&DEV_VBD&REV_09000000",
                         "XENBUS\\VEN_XS0001&DEV_VBD&REV_09000000",
@@ -99,7 +119,7 @@ namespace XenDriverUtils {
                         "XENBUS\\VEN_XNC000&DEV_VBD&REV_08000009",
                         "XENBUS\\VEN_XN0001&DEV_VBD&REV_08000009",
                         "XENBUS\\VEN_XN0002&DEV_VBD&REV_08000009",
-                    },
+                    }
                 }
             },
             {
@@ -110,6 +130,8 @@ namespace XenDriverUtils {
                         string.IsNullOrEmpty(VersionInfo.VendorDeviceId) ? null : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VIF&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_VIF&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_VIF&REV_09000000",
+                    },
+                    IncompatibleIds = new List<string>() {
                         // Citrix v9
                         "XENBUS\\VEN_XSC000&DEV_VIF&REV_09000000",
                         "XENBUS\\VEN_XS0001&DEV_VIF&REV_09000000",
@@ -118,7 +140,7 @@ namespace XenDriverUtils {
                         "XENBUS\\VEN_XNC000&DEV_VIF&REV_08000009",
                         "XENBUS\\VEN_XN0001&DEV_VIF&REV_08000009",
                         "XENBUS\\VEN_XN0002&DEV_VIF&REV_08000009",
-                    },
+                    }
                 }
             },
             {
