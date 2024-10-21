@@ -13,13 +13,13 @@ This file contains the declaration of all the localizable strings.
   <String Id="NetFx462RequiredError" Value="[ProductName] requires .NET 4.6.2 or later." />
 
   <String Id="OldDriversDetectedError" Value="Old XCP-ng drivers detected. Uninstall them before continuing.
-          You may need to run the XenClean tool." />
+You may need to run the XenClean tool." />
   <String Id="CitrixDriversDetectedError" Value="Citrix PV drivers detected. Uninstall them before continuing." />
   <String Id="DowngradeError" Value="A newer version of [ProductName] is already installed." />
   <String Id="RebootPendingError" Value="A reboot is pending. Reboot the system before attempting install." />
   <String Id="IncompatibleDevicesError" Value="Found incompatible devices: [IncompatibleDevices].
-          Disable the &quot;Manage Citrix PV drivers via Windows Update&quot; feature and uninstall all existing drivers before continuing.
-          You may need to run the XenClean tool." />
+Disable the &quot;Manage Citrix PV drivers via Windows Update&quot; feature and uninstall all existing drivers before continuing.
+You may need to run the XenClean tool." />
 
   <String Id="PVBusFeatureTitle" Value="PV Bus Driver" />
   <String Id="PVConsoleFeatureTitle" Value="PV Console Driver" />
