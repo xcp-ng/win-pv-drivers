@@ -77,5 +77,17 @@ namespace XenDriverUtils {
                 }
             }
         }
+
+        public static void ResetUnplug() {
+            try {
+                using var key = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Services\\XEN", true);
+                if (key == null) {
+                    return;
+                }
+                Logger.Log("Resetting Unplug key");
+                key.DeleteSubKey("Unplug");
+            } catch {
+            }
+        }
     }
 }

@@ -5,7 +5,5 @@ Logger.SetLogger(new ConsoleLogger());
 UninstallProducts.Execute();
 UninstallDevices.Execute();
 UninstallDrivers.Execute();
-XenCleanup.XenbusCleanup();
-XenCleanup.ResetNvmeOverride();
-XenCleanup.XenfiltReset();
+UninstallRegistry.Execute();
 Logger.Log("Finished, you must restart!");
