@@ -11,6 +11,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XenDriverUtils", "..\XenDri
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XenClean", "..\XenClean\XenClean.csproj", "{0A953795-5150-4B83-85F9-FB906C8A6297}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{84018E1C-644B-466C-9788-939A31987B36}"
+	ProjectSection(SolutionItems) = preProject
+		..\branding-generic.ps1 = ..\branding-generic.ps1
+		..\branding.ps1 = ..\branding.ps1
+		..\buildall.ps1 = ..\buildall.ps1
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
