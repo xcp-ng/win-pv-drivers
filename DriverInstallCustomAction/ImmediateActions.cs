@@ -19,6 +19,8 @@ namespace XenInstCA {
 
         [CustomAction]
         public static ActionResult CheckIncompatibleDevices(Session session) {
+            using var logScope = new LoggerScope(new MsiSessionLogger(session));
+
             var incompatibilities = new List<string>();
 
             var devInfo = PInvoke.SetupDiGetClassDevs(
@@ -35,12 +37,14 @@ namespace XenInstCA {
                         break;
                     }
                 }
-                if (found) {
-                    Logger.Log($"Found device with incompatible IDs: {string.Join(",", deviceIds)}");
+                if (!found) {
+                    continue;
                 }
 
+                Logger.Log($"Found device with incompatible IDs: {string.Join(",", deviceIds)}");
                 var instanceId = DriverUtils.GetDeviceInstanceId(devInfo, devInfoData);
                 if (instanceId != null) {
+                    Logger.Log($"Adding incompatible instance ID {instanceId}");
                     incompatibilities.Add(instanceId);
                 } else {
                     incompatibilities.Add("(unknown)");
