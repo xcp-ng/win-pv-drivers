@@ -16,7 +16,7 @@ $Timestamp = Get-Date -Format FileDateTime
 $LogPath = "xenclean-$Timestamp"
 New-Item -ItemType Directory -Path $LogPath -Force
 
-& "$PSScriptRoot\XenClean.exe" > "$LogPath/xenclean.log"
+& "$PSScriptRoot\bin\XenClean.exe" > "$LogPath/xenclean.log"
 pnputil.exe /enum-drivers > "$LogPath/drivers.log"
 if ([System.Environment]::OSVersion.Version -ge [version]::Parse("10.0.18362")) {
     pnputil.exe /enum-devices /relations > "$LogPath/devices.log"
