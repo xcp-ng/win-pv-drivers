@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <None Update="Invoke-XenClean.ps1">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

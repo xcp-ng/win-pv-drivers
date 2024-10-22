@@ -4,7 +4,7 @@ param (
     [string]$ProjectDir,
     [Parameter(Mandatory)]
     [string]$Configuration,
-    [Parameter()]
+    [Parameter(Mandatory)]
     [string]$Platform
 )
 
@@ -12,6 +12,8 @@ param (
 . "$ProjectDir\..\branding-generic.ps1"
 . "$ProjectDir\..\scripts\sign.ps1"
 
-if ($null -ne $Script:SigningCertificate) {
-    SignFile -FilePath "$ProjectDir\bin\$Platform\$Configuration\*\XenDrivers-$Arch.msi"
+if (![string]::IsNullOrEmpty($Env:SigningCertificateThumbprint)) {
+    SignFile `
+        -SigningCertificateThumbprint $Env:SigningCertificateThumbprint `
+        -FilePath "$ProjectDir\bin\$Platform\$Configuration\*\XenDrivers-$Platform.msi"
 }

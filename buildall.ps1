@@ -22,7 +22,13 @@ $ErrorActionPreference = "Stop"
 foreach ($repo in @("xenbus", "xencons", "xenhid", "xeniface", "xennet", "xenvbd", "xenvif", "xenvkbd")) {
     Push-Location $PSScriptRoot/$repo
     try {
-        ./build.ps1 -Type $Type -Arch $Arch -SignMode $SignMode -CodeQL:$CodeQL -Sdv:$Sdv
+        ./build.ps1 `
+            -Type $Type `
+            -Arch $Arch `
+            -SignMode $SignMode `
+            -TestCertificate $Env:SigningCertificateThumbprint `
+            -CodeQL:$CodeQL `
+            -Sdv:$Sdv
         New-Item -ItemType Directory -Path $OutputPath/$repo -Force
         Copy-Item -Path ./$repo/* -Destination $OutputPath/$repo -Recurse -Force
     }
