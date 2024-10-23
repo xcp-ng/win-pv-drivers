@@ -1,24 +1,24 @@
 [submodule "xenbus"]
 	path = xenbus
-	url = https://xenbits.xen.org/git-http/pvdrivers/win/xenbus.git
+	url = https://github.com/xcp-ng/win-xenbus.git
 [submodule "xencons"]
 	path = xencons
-	url = https://xenbits.xen.org/git-http/pvdrivers/win/xencons.git
+	url = https://github.com/xcp-ng/win-xencons.git
 [submodule "xenhid"]
 	path = xenhid
-	url = https://xenbits.xen.org/git-http/pvdrivers/win/xenhid.git
+	url = https://github.com/xcp-ng/win-xenhid.git
 [submodule "xeniface"]
 	path = xeniface
-	url = https://xenbits.xen.org/git-http/pvdrivers/win/xeniface.git
+	url = https://github.com/xcp-ng/win-xeniface.git
 [submodule "xennet"]
 	path = xennet
-	url = https://xenbits.xen.org/git-http/pvdrivers/win/xennet.git
+	url = https://github.com/xcp-ng/win-xennet.git
 [submodule "xenvbd"]
 	path = xenvbd
-	url = https://xenbits.xen.org/git-http/pvdrivers/win/xenvbd.git
+	url = https://github.com/xcp-ng/win-xenvbd.git
 [submodule "xenvif"]
 	path = xenvif
-	url = https://xenbits.xen.org/git-http/pvdrivers/win/xenvif.git
+	url = https://github.com/xcp-ng/win-xenvif.git
 [submodule "xenvkbd"]
 	path = xenvkbd
-	url = https://xenbits.xen.org/git-http/pvdrivers/win/xenvkbd.git
+	url = https://github.com/xcp-ng/win-xenvkbd.git
