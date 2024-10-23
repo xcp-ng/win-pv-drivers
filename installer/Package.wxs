@@ -10,6 +10,7 @@
     Version="$(ProductVersion)"
     UpgradeCode="$(var.UpgradeCode)"
     Scope="perMachine">
+    <SummaryInformation Description="!(loc.GenericProductName) $(Configuration) $(ProductVersion) $(Platform)" />
 
     <MediaTemplate EmbedCab="yes" />
 
