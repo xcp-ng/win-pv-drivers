@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param (
     [Parameter()]
-    [string]$Target = "Build",
+    [string]$Target = "Rebuild",
     [Parameter(Mandatory)]
     [string]$Configuration,
     [Parameter(Mandatory)]

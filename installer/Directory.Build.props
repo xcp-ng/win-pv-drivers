@@ -1,0 +1,75 @@
+<Project>
+  <PropertyGroup>
+    <HarvestDirectorySuppressCom>true</HarvestDirectorySuppressCom>
+    <HarvestDirectorySuppressRegistry>true</HarvestDirectorySuppressRegistry>
+    <HarvestDirectorySuppressRootDirectory>true</HarvestDirectorySuppressRootDirectory>
+    <HarvestDirectoryTransforms>Driver.xslt</HarvestDirectoryTransforms>
+    <DefineConstants>
+      XenbusSource=$(ProjectDir)output\Xenbus\$(Platform);
+      XenconsSource=$(ProjectDir)output\Xencons\$(Platform);
+      XenhidSource=$(ProjectDir)output\Xenhid\$(Platform);
+      XenifaceSource=$(ProjectDir)output\Xeniface\$(Platform);
+      XennetSource=$(ProjectDir)output\Xennet\$(Platform);
+      XenvbdSource=$(ProjectDir)output\Xenvbd\$(Platform);
+      XenvifSource=$(ProjectDir)output\Xenvif\$(Platform);
+      XenvkbdSource=$(ProjectDir)output\Xenvkbd\$(Platform);
+    </DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <HarvestDirectory Include="$(ProjectDir)output\Xenbus\$(Platform)">
+      <ComponentGroupName>XenbusFiles</ComponentGroupName>
+      <DirectoryRefId>XenbusDir</DirectoryRefId>
+      <PreprocessorVariable>XenbusSource</PreprocessorVariable>
+    </HarvestDirectory>
+  </ItemGroup>
+  <ItemGroup>
+    <HarvestDirectory Include="$(ProjectDir)output\Xencons\$(Platform)">
+      <ComponentGroupName>XenconsFiles</ComponentGroupName>
+      <DirectoryRefId>XenconsDir</DirectoryRefId>
+      <PreprocessorVariable>XenconsSource</PreprocessorVariable>
+    </HarvestDirectory>
+  </ItemGroup>
+  <ItemGroup>
+    <HarvestDirectory Include="$(ProjectDir)output\Xenhid\$(Platform)">
+      <ComponentGroupName>XenhidFiles</ComponentGroupName>
+      <DirectoryRefId>XenhidDir</DirectoryRefId>
+      <PreprocessorVariable>XenhidSource</PreprocessorVariable>
+    </HarvestDirectory>
+  </ItemGroup>
+  <ItemGroup>
+    <HarvestDirectory Include="$(ProjectDir)output\Xeniface\$(Platform)">
+      <ComponentGroupName>XenifaceFiles</ComponentGroupName>
+      <DirectoryRefId>XenifaceDir</DirectoryRefId>
+      <PreprocessorVariable>XenifaceSource</PreprocessorVariable>
+    </HarvestDirectory>
+  </ItemGroup>
+  <ItemGroup>
+    <HarvestDirectory Include="$(ProjectDir)output\Xennet\$(Platform)">
+      <ComponentGroupName>XennetFiles</ComponentGroupName>
+      <DirectoryRefId>XennetDir</DirectoryRefId>
+      <PreprocessorVariable>XennetSource</PreprocessorVariable>
+    </HarvestDirectory>
+  </ItemGroup>
+  <ItemGroup>
+    <HarvestDirectory Include="$(ProjectDir)output\Xenvbd\$(Platform)">
+      <ComponentGroupName>XenvbdFiles</ComponentGroupName>
+      <DirectoryRefId>XenvbdDir</DirectoryRefId>
+      <PreprocessorVariable>XenvbdSource</PreprocessorVariable>
+    </HarvestDirectory>
+  </ItemGroup>
+  <ItemGroup>
+    <HarvestDirectory Include="$(ProjectDir)output\Xenvif\$(Platform)">
+      <ComponentGroupName>XenvifFiles</ComponentGroupName>
+      <DirectoryRefId>XenvifDir</DirectoryRefId>
+      <PreprocessorVariable>XenvifSource</PreprocessorVariable>
+    </HarvestDirectory>
+  </ItemGroup>
+  <ItemGroup>
+    <HarvestDirectory Include="$(ProjectDir)output\Xenvkbd\$(Platform)">
+      <ComponentGroupName>XenvkbdFiles</ComponentGroupName>
+      <DirectoryRefId>XenvkbdDir</DirectoryRefId>
+      <PreprocessorVariable>XenvkbdSource</PreprocessorVariable>
+    </HarvestDirectory>
+  </ItemGroup>
+</Project>

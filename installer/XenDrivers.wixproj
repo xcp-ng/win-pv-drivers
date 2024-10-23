@@ -2,6 +2,7 @@
   <PropertyGroup>
     <Platforms>x86;x64;ARM64</Platforms>
     <OutputName>$(MSBuildProjectName)-$(Platform)</OutputName>
+    <SuppressSpecificWarnings>1103</SuppressSpecificWarnings>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Branding.wxi" />
@@ -9,6 +10,7 @@
     <Content Include="Include.wxi" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="WixToolset.Heat" Version="5.0.2" />
     <PackageReference Include="WixToolset.Netfx.wixext" Version="5.0.2" />
     <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
   </ItemGroup>
@@ -16,6 +18,8 @@
     <ProjectReference Include="..\DriverInstallCustomAction\DriverInstallCustomAction.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Directory.Build.props" />
+    <None Include="Driver.xslt" />
     <None Include="scripts\genfiles.ps1" />
   </ItemGroup>
   <ItemGroup>

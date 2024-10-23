@@ -7,11 +7,9 @@
   </DirectoryRef>
 
   <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir">
-    <Files Include="!(bindpath.output)$(XenDriver)/$(Platform)/**">
-      <Exclude Files="!(bindpath.output)$(XenDriver)/$(Platform)/$(XenDriver).inf" />
-    </Files>
+    <ComponentGroupRef Id="$(XenDriver)Files" />
     <Component>
-      <File Source="!(bindpath.output)$(XenDriver)/$(Platform)/$(XenDriver).inf" Id="$(XenDriver).inf" />
+      <File Source="!(bindpath.output)$(XenDriver)/$(Platform)/$(XenDriver).inf" Id="$(XenDriver).inf" DefaultVersion="$(ProductVersion)" DefaultLanguage="1033" />
     </Component>
   </ComponentGroup>
 
