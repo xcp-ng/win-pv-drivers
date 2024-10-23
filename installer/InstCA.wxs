@@ -9,6 +9,9 @@
     <InstallUISequence>
       <Custom Action="XenCheckIncompatibleDevices" Before="LaunchConditions" />
     </InstallUISequence>
+    <InstallExecuteSequence>
+      <Custom Action="XenCheckIncompatibleDevices" Before="LaunchConditions" />
+    </InstallExecuteSequence>
     <Launch Condition="NOT IncompatibleDevices" Message="!(loc.IncompatibleDevicesError)" />
   </Fragment>
 
