@@ -30,7 +30,7 @@
           replace the entire thing with a dummy component
           so that Wix doesn't complain when the component's KeyPath File element is removed
         -->
-        <RegistryValue Root="HKLM" Key="$(VENDOR_NAME)\!(loc.GenericProductName)">
+        <RegistryValue Root="HKLM" Key="Software\$(VENDOR_NAME)\!(loc.GenericProductName)">
           <xsl:attribute name="Name">
             <xsl:value-of select="@Id" />
           </xsl:attribute>
