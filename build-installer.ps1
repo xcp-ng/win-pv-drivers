@@ -17,6 +17,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "MSBuild failed with error $LASTEXITCODE"
 }
 
+Remove-Item -Path $OutDir -Force -Recurse -ErrorAction SilentlyContinue
 if ($Target -ine "Clean") {
     New-Item -Path $OutDir -ItemType Directory -Force
     Copy-Item -Path "$PSScriptRoot\installer\bin\$Platform\$Configuration\en-US\*" -Destination $OutDir\
