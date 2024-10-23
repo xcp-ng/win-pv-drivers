@@ -8,6 +8,8 @@ This file contains the declaration of all the localizable strings.
   <String Id="GenericProductName" Value="Windows PV Drivers" />
   <String Id="ProductName" Value="$(VENDOR_NAME) Windows PV Drivers" />
 
+  <String Id="XenWindowsNotSupportedError" Value="This version of Windows is not supported. Minimum supported version: [XenMinSupportedVersion]. Current version: [XenWindowsNotSupported]." />
+
   <String Id="MachineIsX64Error" Value="Please install the 64-bit version of this package on 64-bit systems." />
 
   <String Id="NetFx462RequiredError" Value="[ProductName] requires .NET 4.6.2 or later." />

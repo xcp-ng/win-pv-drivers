@@ -21,4 +21,15 @@
       <Custom Action="CheckRebootCA" After="InstallFinalize" />
     </InstallExecuteSequence>
   </Fragment>
+
+  <Fragment>
+    <CustomAction Id="XenCheckWindowsVersion" BinaryRef="xeninst.dll" DllEntry="CheckWindowsVersion" Execute="immediate" Impersonate="no" />
+    <InstallUISequence>
+      <Custom Action="XenCheckWindowsVersion" Before="LaunchConditions" />
+    </InstallUISequence>
+    <InstallExecuteSequence>
+      <Custom Action="XenCheckWindowsVersion" Before="LaunchConditions" />
+    </InstallExecuteSequence>
+    <Launch Condition="NOT XenWindowsNotSupported" Message="!(loc.XenWindowsNotSupportedError)" />
+  </Fragment>
 </Wix>
