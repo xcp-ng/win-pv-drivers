@@ -7,6 +7,7 @@
     <Platforms>x64;x86;ARM64</Platforms>
     <Nullable>warnings</Nullable>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AccelerateBuildsInVisualStudio>false</AccelerateBuildsInVisualStudio>
   </PropertyGroup>
 
   <ItemGroup>
