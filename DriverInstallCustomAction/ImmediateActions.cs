@@ -10,6 +10,23 @@ using XenDriverUtils;
 namespace XenInstCA {
     public static class ImmediateActions {
         [CustomAction]
+        public static ActionResult CheckWindowsVersion(Session session) {
+            var minSupportedProperty = session["XenMinSupportedVersion"];
+            session.Log($"minSupportedProperty {minSupportedProperty}");
+            if (!Version.TryParse(minSupportedProperty, out var minSupported)) {
+                return ActionResult.Success;
+            }
+            session.Log($"minSupported {minSupported}");
+
+            var currentVersion = VersionUtils.GetWindowsVersion();
+            session.Log($"currentVersion {currentVersion}");
+            if (currentVersion < minSupported) {
+                session["XenWindowsNotSupported"] = currentVersion.ToString();
+            }
+            return ActionResult.Success;
+        }
+
+        [CustomAction]
         public static ActionResult CheckReboot(Session session) {
             if (CustomActionUtils.IsRebootScheduled()) {
                 session.SetMode(InstallRunMode.RebootAtEnd, true);
