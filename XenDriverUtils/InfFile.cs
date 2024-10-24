@@ -21,7 +21,8 @@ namespace XenDriverUtils {
                 }
             }
             if (infHandle == HANDLE.INVALID_HANDLE_VALUE) {
-                throw new Win32Exception(Marshal.GetLastWin32Error(), "SetupOpenInfFile");
+                var err = Marshal.GetLastWin32Error();
+                throw new Win32Exception(err, $"SetupOpenInfFile {err}");
             }
             return new InfFile(infHandle, true);
         }
@@ -32,7 +33,8 @@ namespace XenDriverUtils {
             }
             unsafe {
                 if (!PInvoke.SetupFindFirstLine(handle.ToPointer(), section, key, out var context)) {
-                    throw new Win32Exception(Marshal.GetLastWin32Error(), $"Inf cannot find line {section}/{key}");
+                    var err = Marshal.GetLastWin32Error();
+                    throw new Win32Exception(err, $"Inf cannot find line {section}/{key} {err}");
                 }
                 return context;
             }
@@ -41,7 +43,8 @@ namespace XenDriverUtils {
         private INFCONTEXT FindNextLine(INFCONTEXT contextIn) {
             unsafe {
                 if (!PInvoke.SetupFindNextLine(contextIn, out var contextOut)) {
-                    throw new Win32Exception(Marshal.GetLastWin32Error(), $"Inf cannot find next line");
+                    var err = Marshal.GetLastWin32Error();
+                    throw new Win32Exception(err, $"Inf cannot find next line {err}");
                 }
                 return contextOut;
             }
@@ -52,12 +55,14 @@ namespace XenDriverUtils {
                 fixed (INFCONTEXT* pContext = &context) {
                     uint requiredChars;
                     if (!PInvoke.SetupGetLineText(pContext, null, null, null, null, 0, &requiredChars)) {
-                        throw new Win32Exception(Marshal.GetLastWin32Error(), "Inf cannot get line size");
+                        var err = Marshal.GetLastWin32Error();
+                        throw new Win32Exception(err, $"Inf cannot get line size {err}");
                     }
                     var mem = Marshal.AllocHGlobal((int)requiredChars * sizeof(char));
                     try {
                         if (!PInvoke.SetupGetLineText(pContext, null, null, null, new PWSTR((char*)mem.ToPointer()), requiredChars, null)) {
-                            throw new Win32Exception(Marshal.GetLastWin32Error(), "Inf cannot get line");
+                            var err = Marshal.GetLastWin32Error();
+                            throw new Win32Exception(err, $"Inf cannot get line {err}");
                         }
                         return Marshal.PtrToStringUni(mem);
                     } finally {
@@ -72,12 +77,14 @@ namespace XenDriverUtils {
                 fixed (INFCONTEXT* pContext = &context) {
                     uint requiredSize;
                     if (!PInvoke.SetupGetStringField(pContext, fieldIndex, null, 0, &requiredSize)) {
-                        throw new Win32Exception(Marshal.GetLastWin32Error(), "Inf cannot get field size");
+                        var err = Marshal.GetLastWin32Error();
+                        throw new Win32Exception(err, $"Inf cannot get field size {err}");
                     }
                     var mem = Marshal.AllocHGlobal((int)requiredSize * sizeof(char));
                     try {
                         if (!PInvoke.SetupGetStringField(pContext, fieldIndex, new PWSTR((char*)mem.ToPointer()), requiredSize, null)) {
-                            throw new Win32Exception(Marshal.GetLastWin32Error(), "Inf cannot get field");
+                            var err = Marshal.GetLastWin32Error();
+                            throw new Win32Exception(err, $"Inf cannot get field {err}");
                         }
                         return Marshal.PtrToStringUni(mem);
                     } finally {

@@ -94,7 +94,8 @@ namespace XenDriverUtils {
                             new Span<byte>(p, (int)requiredBytes),
                             null,
                             0)) {
-                        throw new Win32Exception(Marshal.GetLastWin32Error());
+                        var err = Marshal.GetLastWin32Error();
+                        throw new Win32Exception(err, $"SetupDiGetDeviceProperty {err}");
                     }
                 }
             }
@@ -195,7 +196,8 @@ namespace XenDriverUtils {
                         &thisNeedsReboot)) {
                     needsReboot = thisNeedsReboot;
                 } else {
-                    throw new Win32Exception(Marshal.GetLastWin32Error(), "DiUninstallDevice");
+                    var err = Marshal.GetLastWin32Error();
+                    throw new Win32Exception(err, $"DiUninstallDevice {err}");
                 }
             }
         }
@@ -210,7 +212,7 @@ namespace XenDriverUtils {
                     if ((WIN32_ERROR)err == WIN32_ERROR.ERROR_NO_MORE_ITEMS) {
                         yield break;
                     } else {
-                        throw new Win32Exception(err, "SetupDiEnumDeviceInfo");
+                        throw new Win32Exception(err, $"SetupDiEnumDeviceInfo {err}");
                     }
                 }
                 yield return devInfoData;
@@ -229,7 +231,7 @@ namespace XenDriverUtils {
                         case WIN32_ERROR.ERROR_NO_MORE_ITEMS:
                             break;
                         default:
-                            throw new Win32Exception(err, "DiInstallDriver");
+                            throw new Win32Exception(err, $"DiInstallDriver {err}");
                     }
                 }
             }
@@ -238,7 +240,8 @@ namespace XenDriverUtils {
         public static void UninstallDriver(string oemInfName) {
             Logger.Log($"Uninstalling {oemInfName}");
             if (!PInvoke.SetupUninstallOEMInf(oemInfName, PInvoke.SUOI_FORCEDELETE)) {
-                throw new Win32Exception(Marshal.GetLastWin32Error(), "DiInstallDriver");
+                var err = Marshal.GetLastWin32Error();
+                throw new Win32Exception(err, $"SetupUninstallOEMInf {err}");
             }
         }
 
