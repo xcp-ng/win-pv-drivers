@@ -17,8 +17,8 @@ if ($LASTEXITCODE -ne 0) {
     throw "Cannot enable testsigning; is Secure Boot turned off?"
 }
 
-Import-Certificate -FilePath $PSScriptRoot\XCP-ng_Test_Signer.crt -CertStoreLocation Cert:\LocalMachine\Root
-Import-Certificate -FilePath $PSScriptRoot\XCP-ng_Test_Signer.crt -CertStoreLocation Cert:\LocalMachine\TrustedPublisher
+certutil -addstore -f Root $PSScriptRoot\XCP-ng_Test_Signer.crt
+certutil -addstore -f TrustedPublisher $PSScriptRoot\XCP-ng_Test_Signer.crt
 
 if (!$NoReboot) {
     Restart-Computer -Force
