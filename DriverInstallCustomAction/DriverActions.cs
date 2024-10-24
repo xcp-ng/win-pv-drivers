@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Windows.Win32;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using Windows.Win32.Foundation;
@@ -130,6 +131,21 @@ namespace XenInstCA {
         [CustomAction]
         public static ActionResult DriverUninstallRollback(Session session) {
             DriverInstall(session);
+            return ActionResult.Success;
+        }
+
+        [CustomAction]
+        public static ActionResult DriverWaitInstallFinish(Session session) {
+            CustomActionUtils.ReportAction(session, $"XenWaitDriverInstall", "");
+            // wait for up to 1 minute until all pending installations are done
+            for (int i = 0; i < 5; i++) {
+                // wait twice just to be sure that Windows doesn't decide to install something a second time
+                DriverUtils.WaitNoPendingInstallEvents(5000);
+                Thread.Sleep(2000);
+                if (DriverUtils.WaitNoPendingInstallEvents(5000)) {
+                    break;
+                }
+            }
             return ActionResult.Success;
         }
     }

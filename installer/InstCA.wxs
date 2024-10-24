@@ -32,4 +32,14 @@
     </InstallExecuteSequence>
     <Launch Condition="NOT XenWindowsNotSupported" Message="!(loc.XenWindowsNotSupportedError)" />
   </Fragment>
+
+  <Fragment>
+    <CustomAction Id="XenWaitDriverInstall" BinaryRef="xeninst.dll" DllEntry="DriverWaitInstallFinish" Execute="deferred" Impersonate="no" />
+    <InstallExecuteSequence>
+      <Custom Action="XenWaitDriverInstall" After="WriteRegistryValues" />
+    </InstallExecuteSequence>
+    <UI>
+      <ProgressText Action="XenWaitDriverInstall" Message="!(loc.XenWaitDriverInstallText)" />
+    </UI>
+  </Fragment>
 </Wix>

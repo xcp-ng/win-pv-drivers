@@ -306,5 +306,21 @@ namespace XenDriverUtils {
                 }
             }
         }
+
+        public static bool WaitNoPendingInstallEvents(uint timeout) {
+            var result = PInvoke.CMP_WaitNoPendingInstallEvents(timeout);
+            switch (result) {
+                case (uint)WAIT_EVENT.WAIT_OBJECT_0:
+                    return true;
+                case (uint)WAIT_EVENT.WAIT_TIMEOUT:
+                    return false;
+                case (uint)WAIT_EVENT.WAIT_FAILED:
+                    Logger.Log($"WaitNoPendingInstallEvents {Marshal.GetLastWin32Error()}");
+                    return false;
+                default:
+                    Logger.Log($"Unexpected WaitNoPendingInstallEvents result {result}");
+                    return false;
+            }
+        }
     }
 }

@@ -32,6 +32,7 @@ You may need to run the XenClean tool." />
 
   <String Id="DriverInstallText" Value="Preparing install" />
   <String Id="DriverUninstallText" Value="Preparing uninstall" />
+  <String Id="XenWaitDriverInstallText" Value="Finalizing" />
 
   <String Id="XenbusCleanupText" Value="Cleaning up" />
 </WixLocalization>

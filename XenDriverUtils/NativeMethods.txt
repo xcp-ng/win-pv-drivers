@@ -30,3 +30,6 @@ GlobalAddAtom
 GlobalFindAtom
 
 RtlGetVersion
+
+CMP_WaitNoPendingInstallEvents
+WAIT_EVENT
