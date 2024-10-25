@@ -5,7 +5,7 @@
   </Fragment>
 
   <Fragment>
-    <CustomAction Id="XenCheckIncompatibleDevices" BinaryRef="xeninst.dll" DllEntry="CheckIncompatibleDevices" Execute="immediate" Impersonate="no" />
+    <CustomAction Id="XenCheckIncompatibleDevices" BinaryRef="xeninst.dll" DllEntry="CheckIncompatibleDevices" Execute="firstSequence" Impersonate="no" />
     <InstallUISequence>
       <Custom Action="XenCheckIncompatibleDevices" Before="LaunchConditions" />
     </InstallUISequence>
@@ -23,7 +23,7 @@
   </Fragment>
 
   <Fragment>
-    <CustomAction Id="XenCheckWindowsVersion" BinaryRef="xeninst.dll" DllEntry="CheckWindowsVersion" Execute="immediate" Impersonate="no" />
+    <CustomAction Id="XenCheckWindowsVersion" BinaryRef="xeninst.dll" DllEntry="CheckWindowsVersion" Execute="firstSequence" Impersonate="no" />
     <InstallUISequence>
       <Custom Action="XenCheckWindowsVersion" Before="LaunchConditions" />
     </InstallUISequence>
