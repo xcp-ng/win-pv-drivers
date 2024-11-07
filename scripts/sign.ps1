@@ -6,7 +6,7 @@ function SignFile() {
         [string[]]$FilePath
     )
 
-    $SigningCertificate = Get-ChildItem Cert:\CurrentUser\My\$Env:SigningCertificateThumbprint
+    $SigningCertificate = Get-ChildItem Cert:\CurrentUser\My\$Env:SIGNER_THUMBPRINT
     $signArgs = @{
         HashAlgorithm = "SHA256"
         Certificate   = $SigningCertificate

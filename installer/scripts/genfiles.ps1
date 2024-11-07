@@ -17,11 +17,16 @@ $NewBranding = @"
     <?define VENDOR_PREFIX="${Env:VENDOR_PREFIX}"?>
     <?define VENDOR_DEVICE_ID="${Env:VENDOR_DEVICE_ID}"?>
     <?define COPYRIGHT="${Env:COPYRIGHT}"?>
+"@
 
-    <?define MAJOR_VERSION="${Env:MAJOR_VERSION}"?>
-    <?define MINOR_VERSION="${Env:MINOR_VERSION}"?>
-    <?define MICRO_VERSION="${Env:MICRO_VERSION}"?>
-    <?define BUILD_NUMBER="${Env:BUILD_NUMBER}"?>
+foreach ($package in @("Product", "Xenbus", "Xencons", "Xenhid", "Xeniface", "Xennet", "Xenvbd", "Xenvif", "Xenvkbd")) {
+    $NewBranding += @"
+
+    <?define ${package}Version="$(Get-PackageVersion $package)"?>
+"@
+}
+
+$NewBranding += @"
 
     <?define MSI_UPGRADE_CODE_X86="${Env:MSI_UPGRADE_CODE_X86}"?>
     <?define MSI_UPGRADE_CODE_X64="${Env:MSI_UPGRADE_CODE_X64}"?>

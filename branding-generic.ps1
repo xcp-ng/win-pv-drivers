@@ -1,46 +1,68 @@
+function Get-PackageVersion {
+    [CmdletBinding()]
+    param (
+        [Parameter(Position = 1)]
+        [string]$PackageName = 'Product'
+    )
+    $Version = $PackageVersions[$PackageName]
+    if ([string]::IsNullOrEmpty($Version)) {
+        throw "Cannot get $PackageName version"
+    }
+    return [version]::Parse($Version)
+}
+
 if ([string]::IsNullOrEmpty($Env:VENDOR_NAME)) {
-    Set-Item -Path Env:VENDOR_NAME -Value 'Xen Project'
+    $Env:VENDOR_NAME = 'Xen Project'
 }
 
 if ([string]::IsNullOrEmpty($Env:VENDOR_PREFIX)) {
-    Set-Item -Path Env:VENDOR_PREFIX -Value 'XP'
+    $Env:VENDOR_PREFIX = 'XP'
 }
 
 if ([string]::IsNullOrEmpty($Env:PRODUCT_NAME)) {
-    Set-Item -Path Env:PRODUCT_NAME -Value 'Xen'
+    $Env:PRODUCT_NAME = 'Xen'
 }
 
 if ([string]::IsNullOrEmpty($Env:COPYRIGHT)) {
-    Set-Item -Path Env:COPYRIGHT -Value 'Copyright (c) Xen Project.'
+    $Env:COPYRIGHT = 'Copyright (c) Xen Project.'
 }
 
-if ([string]::IsNullOrEmpty($Env:BUILD_NUMBER)) {
-    if (Test-Path ".build_number") {
-        $BuildNum = Get-Content -Path ".build_number"
-        Set-Content -Path ".build_number" -Value ([int]$BuildNum + 1)
-    } else {
-        $BuildNum = '0'
-        Set-Content -Path ".build_number" -Value '1'
+if ($null -eq $PackageVersions) {
+    $PackageVersions = @{
     }
-    Set-Item -Path Env:BUILD_NUMBER -Value $BuildNum
 }
-
-if ([string]::IsNullOrEmpty($Env:MAJOR_VERSION)) {
-    Set-Item -Path Env:MAJOR_VERSION -Value '9'
+if ($null -eq $PackageVersions['Product']) {
+    $PackageVersions['Product'] = '9.1.0'
 }
-
-if ([string]::IsNullOrEmpty($Env:MINOR_VERSION)) {
-    Set-Item -Path Env:MINOR_VERSION -Value '1'
+if ($null -eq $PackageVersions['xenbus']) {
+    $PackageVersions['xenbus'] = $PackageVersions['Product']
 }
-
-if ([string]::IsNullOrEmpty($Env:MICRO_VERSION)) {
-    Set-Item -Path Env:MICRO_VERSION -Value '0'
+if ($null -eq $PackageVersions['xencons']) {
+    $PackageVersions['xencons'] = $PackageVersions['Product']
+}
+if ($null -eq $PackageVersions['xenhid']) {
+    $PackageVersions['xenhid'] = $PackageVersions['Product']
+}
+if ($null -eq $PackageVersions['xeniface']) {
+    $PackageVersions['xeniface'] = $PackageVersions['Product']
+}
+if ($null -eq $PackageVersions['xennet']) {
+    $PackageVersions['xennet'] = $PackageVersions['Product']
+}
+if ($null -eq $PackageVersions['xenvbd']) {
+    $PackageVersions['xenvbd'] = $PackageVersions['Product']
+}
+if ($null -eq $PackageVersions['xenvif']) {
+    $PackageVersions['xenvif'] = $PackageVersions['Product']
+}
+if ($null -eq $PackageVersions['xenvkbd']) {
+    $PackageVersions['xenvkbd'] = $PackageVersions['Product']
 }
 
 if ([string]::IsNullOrEmpty($Env:MSI_UPGRADE_CODE_X86)) {
-    Set-Item -Path Env:MSI_UPGRADE_CODE_X86 -Value '{10828840-D8A9-4953-B44A-1F1D3CD7ECB0}'
+    $Env:MSI_UPGRADE_CODE_X86 = '{10828840-D8A9-4953-B44A-1F1D3CD7ECB0}'
 }
 
 if ([string]::IsNullOrEmpty($Env:MSI_UPGRADE_CODE_X64)) {
-    Set-Item -Path Env:MSI_UPGRADE_CODE_X64 -Value '{D60FED1E-316C-41B0-B7A5-E44951A82618}'
+    $Env:MSI_UPGRADE_CODE_X64 = '{D60FED1E-316C-41B0-B7A5-E44951A82618}'
 }

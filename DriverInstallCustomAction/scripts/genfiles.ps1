@@ -10,9 +10,9 @@ param (
 $BrandingFile = "$ProjectDir\Branding.cs"
 $OldBranding = Get-Content -Raw $BrandingFile -ErrorAction Ignore
 $NewBranding = `
-@"
+    @"
 using System.Reflection;
-[assembly:AssemblyVersion("${Env:MAJOR_VERSION}.${Env:MINOR_VERSION}.${Env:MICRO_VERSION}.${Env:BUILD_NUMBER}")]
+[assembly:AssemblyVersion("$(Get-PackageVersion Product)")]
 [assembly:AssemblyCompany("${Env:VENDOR_NAME}")]
 [assembly:AssemblyProduct("${Env:PRODUCT_NAME}")]
 [assembly:AssemblyCopyright("${Env:COPYRIGHT}")]

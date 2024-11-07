@@ -7,6 +7,4 @@
   <?elseif $(Platform) = x64 ?>
   <?define UpgradeCode = "$(MSI_UPGRADE_CODE_X64)" ?>
   <?endif?>
-
-  <?define ProductVersion="$(MAJOR_VERSION).$(MINOR_VERSION).$(MICRO_VERSION).$(BUILD_NUMBER)" ?>
 </Include>

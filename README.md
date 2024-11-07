@@ -41,7 +41,7 @@ powershell .\build-drivers.ps1 -Type free -Arch x64
 ```
 
 Output drivers will be collected in `installer\output`.
-Specify `$Env:SigningCertificateThumbprint` in `branding.ps1` to choose a specific signing certificate if necessary.
+Specify `$Env:SIGNER_THUMBPRINT` in `branding.ps1` to choose a specific signing certificate if necessary.
 (A test certificate will be used for the drivers otherwise)
 
 Next, build the installer and XenClean packages:

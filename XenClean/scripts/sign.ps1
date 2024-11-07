@@ -12,9 +12,9 @@ param (
 . "$ProjectDir\..\branding-generic.ps1"
 . "$ProjectDir\..\scripts\sign.ps1"
 
-if (![string]::IsNullOrEmpty($Env:SigningCertificateThumbprint)) {
+if (![string]::IsNullOrEmpty($Env:SIGNER_THUMBPRINT)) {
     SignFile `
-        -SigningCertificateThumbprint $Env:SigningCertificateThumbprint `
+        -SigningCertificateThumbprint $Env:SIGNER_THUMBPRINT `
         -FilePath "$ProjectDir\bin\$Platform\$Configuration\*\XenClean.exe", `
         "$ProjectDir\bin\$Platform\$Configuration\*\Invoke-XenClean.ps1"
 }
