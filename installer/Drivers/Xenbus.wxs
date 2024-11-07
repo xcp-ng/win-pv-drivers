@@ -4,10 +4,20 @@
     <?define XenDriver="Xenbus" ?>
     <?include ../Driver.wxi ?>
 
+    <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.output)$(XenDriver)/$(Platform)">
+      <File Name="xen.sys" />
+      <File Name="xenbus.cat" DefaultVersion="$(XenbusVersion)" DefaultLanguage="1033" />
+      <File Name="xenbus.inf" Id="Xenbus.inf" DefaultVersion="$(XenbusVersion)" DefaultLanguage="1033" />
+      <File Name="xenbus.sys" />
+      <File Name="xenbus_monitor.dll" />
+      <File Name="xenbus_monitor.exe" />
+      <File Name="xenfilt.sys" />
+    </ComponentGroup>
+
     <!-- see Xenbus!FiltersInstall and FiltersUninstall -->
     <CustomAction Id="XenbusCleanup" BinaryRef="xeninst.dll" DllEntry="XenbusCleanup" Execute="deferred" Impersonate="no" />
     <!-- Xenbus reinstalls its filters by itself, normally there's no need to rollback -->
-    
+
     <!-- remove remnant Xenfilt config from Citrix/WU drivers -->
     <CustomAction Id="XenfiltReset" BinaryRef="xeninst.dll" DllEntry="XenfiltReset" Execute="deferred" Impersonate="no" />
 
@@ -21,7 +31,7 @@
       <Custom Action="XenbusUninstallRollback" Before="XenbusCleanup" />
       <Custom Action="XenbusUninstall" After="XenbusUninstallRollback" Condition="$Xenbus.inf=2" />
     </InstallExecuteSequence>
-    
+
     <UI>
       <ProgressText Action="XenbusCleanup" Message="!(loc.XenbusCleanupText)" />
       <ProgressText Action="XenbusInstall" Message="!(loc.DriverInstallText)" />

@@ -18,8 +18,6 @@
     <ProjectReference Include="..\DriverInstallCustomAction\DriverInstallCustomAction.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Directory.Build.props" />
-    <None Include="Driver.xslt" />
     <None Include="scripts\genfiles.ps1" />
   </ItemGroup>
   <ItemGroup>

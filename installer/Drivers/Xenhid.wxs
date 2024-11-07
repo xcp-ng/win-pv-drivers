@@ -4,5 +4,11 @@
     <?define XenDriver="Xenhid" ?>
     <?define XenDriverDependsOn="Xenvkbd" ?>
     <?include ../Driver.wxi ?>
+
+    <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.output)$(XenDriver)/$(Platform)">
+      <File Name="xenhid.cat" DefaultVersion="$(XenhidVersion)" DefaultLanguage="1033" />
+      <File Name="xenhid.inf" Id="Xenhid.inf" DefaultVersion="$(XenhidVersion)" DefaultLanguage="1033" />
+      <File Name="xenhid.sys" />
+    </ComponentGroup>
   </Fragment>
 </Wix>

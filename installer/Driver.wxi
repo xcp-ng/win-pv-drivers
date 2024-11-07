@@ -6,13 +6,6 @@
     <Directory Id="$(XenDriver)Dir" Name="$(XenDriver)" />
   </DirectoryRef>
 
-  <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir">
-    <ComponentGroupRef Id="$(XenDriver)Files" />
-    <Component>
-      <File Source="!(bindpath.output)$(XenDriver)/$(Platform)/$(XenDriver).inf" Id="$(XenDriver).inf" DefaultVersion="$(ProductVersion)" DefaultLanguage="1033" />
-    </Component>
-  </ComponentGroup>
-
   <CustomAction Id="$(XenDriver)Install" BinaryRef="xeninst.dll" DllEntry="DriverInstall" Execute="deferred" Impersonate="no" />
   <CustomAction Id="$(XenDriver)InstallRollback" BinaryRef="xeninst.dll" DllEntry="DriverInstallRollback" Execute="rollback" Impersonate="no" />
   <CustomAction Id="$(XenDriver)Uninstall" BinaryRef="xeninst.dll" DllEntry="DriverUninstall" Execute="deferred" Impersonate="no" />

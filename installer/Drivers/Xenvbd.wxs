@@ -4,5 +4,13 @@
     <?define XenDriver="Xenvbd" ?>
     <?define XenDriverDependsOn="Xenbus" ?>
     <?include ../Driver.wxi ?>
+
+    <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.output)$(XenDriver)/$(Platform)">
+      <File Name="xencrsh.sys" />
+      <File Name="xendisk.sys" />
+      <File Name="xenvbd.cat" DefaultVersion="$(XenvbdVersion)" DefaultLanguage="1033" />
+      <File Name="xenvbd.inf" Id="Xenvbd.inf" DefaultVersion="$(XenvbdVersion)" DefaultLanguage="1033" />
+      <File Name="xenvbd.sys" />
+    </ComponentGroup>
   </Fragment>
 </Wix>

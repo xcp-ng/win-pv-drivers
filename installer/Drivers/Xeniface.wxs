@@ -4,5 +4,16 @@
     <?define XenDriver="Xeniface" ?>
     <?define XenDriverDependsOn="Xenbus" ?>
     <?include ../Driver.wxi ?>
+
+    <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.output)$(XenDriver)/$(Platform)">
+      <File Name="xenagent.dll" />
+      <File Name="xenagent.exe" />
+      <File Name="xencontrol.dll" />
+      <File Name="xencontrol.lib" DefaultVersion="$(XenifaceVersion)" DefaultLanguage="1033" />
+      <File Name="xeniface.cat" DefaultVersion="$(XenifaceVersion)" DefaultLanguage="1033" />
+      <File Name="xeniface.inf" Id="Xeniface.inf" DefaultVersion="$(XenifaceVersion)"
+          DefaultLanguage="1033" />
+      <File Name="xeniface.sys" />
+    </ComponentGroup>
   </Fragment>
 </Wix>
