@@ -1,3 +1,42 @@
+
+<#PSScriptInfo
+
+.VERSION 1.0
+
+.GUID 5948fb9f-c421-4e12-82db-383de1663dca
+
+.AUTHOR Xen Project
+
+.COMPANYNAME
+
+.COPYRIGHT
+
+.TAGS
+
+.LICENSEURI
+
+.PROJECTURI
+
+.ICONURI
+
+.EXTERNALMODULEDEPENDENCIES
+
+.REQUIREDSCRIPTS
+
+.EXTERNALSCRIPTDEPENDENCIES
+
+.RELEASENOTES
+
+
+#>
+
+<#
+
+.DESCRIPTION
+ XenClean invocation script
+
+#>
+
 #Requires -RunAsAdministrator
 
 [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "High")]
