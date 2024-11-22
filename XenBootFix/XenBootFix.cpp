@@ -158,8 +158,10 @@ static void RemoveFilters(const CRegKey& controlSetKey) {
 
         CRegKey key;
         auto result = key.Open(controlSetKey, keyName.c_str(), KEY_ALL_ACCESS);
-        if (result != ERROR_SUCCESS)
+        if (result != ERROR_SUCCESS) {
             wprintf(L"Couldn't open key \"%s\": 0x%lx\n", keyName.c_str(), result);
+            continue;
+        }
 
         for (auto valueName : FilterValues) {
             RemoveFilter(key, valueName);
