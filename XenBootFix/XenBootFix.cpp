@@ -184,6 +184,42 @@ static void RemoveFilters(const CRegKey& controlSetKey) {
     }
 }
 
+static const std::array<const wchar_t*, 15> ServicesToDisable = {
+    L"xenagent",
+    L"xenbus",
+    L"xenbus_monitor",
+    L"xencons",
+    L"xencons_monitor",
+    L"xendisk",
+    L"xenfilt",
+    L"xenhid",
+    L"xeniface",
+    L"XenInstall",
+    L"xennet",
+    L"XenSvc",
+    L"xenvbd",
+    L"xenvif",
+    L"xenvkbd",
+};
+
+static void DisableServices(const CRegKey& controlSetKey) {
+    for (auto serviceName : ServicesToDisable) {
+        auto keyName = std::wstring(L"Services\\") + serviceName;
+        CRegKey key;
+        auto result = key.Open(controlSetKey, keyName.c_str(), KEY_ALL_ACCESS);
+        if (result != ERROR_SUCCESS)
+            continue;
+
+        wprintf(L"Disabling service %s\n", serviceName);
+
+        result = key.SetDWORDValue(L"Start", SERVICE_DISABLED);
+        if (result != ERROR_SUCCESS) {
+            wprintf(L"Couldn't disable %s: 0x%lx\n", serviceName, result);
+            continue;
+        }
+    }
+}
+
 int wmain(int argc, wchar_t** argv) {
     if (argc != 2) {
         PrintUsage(argv[0]);
@@ -206,8 +242,10 @@ int wmain(int argc, wchar_t** argv) {
 
         DeleteOverrides(controlSetKey);
         RemoveFilters(controlSetKey);
+        DisableServices(controlSetKey);
 
         wprintf(L"Success!\n");
+        wprintf(L"You must run XenClean from the VM to remove all remaining driver traces.\n");
     }
     catch (const std::exception& ex) {
         wprintf(L"Error: %S\n", ex.what());
