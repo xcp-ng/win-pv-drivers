@@ -20,12 +20,18 @@ if ($LASTEXITCODE -ne 0) {
 Remove-Item -Path $OutDir -Force -Recurse -ErrorAction SilentlyContinue
 if ($Target -ine "Clean") {
     New-Item -Path $OutDir -ItemType Directory -Force
-    Copy-Item -Path "$PSScriptRoot\installer\bin\$Platform\$Configuration\en-US\*" -Destination $OutDir\
+    Copy-Item -Path "$PSScriptRoot\installer\bin\$Platform\$Configuration\en-US\*" -Destination $OutDir\ -Force
 
+    # XenClean
     $XenCleanOutDir = "$OutDir\XenClean\$Platform"
     New-Item -Path $XenCleanOutDir -ItemType Directory -Force
-    Copy-Item -Path "$PSScriptRoot\XenClean\bin\$Platform\$Configuration\net462\Invoke-XenClean.ps1" -Destination $XenCleanOutDir\
+    Copy-Item -Path "$PSScriptRoot\XenClean\bin\$Platform\$Configuration\net462\Invoke-XenClean.ps1" -Destination $XenCleanOutDir\ -Force
 
     New-Item -Path $XenCleanOutDir\bin -ItemType Directory -Force
-    Copy-Item -Path "$PSScriptRoot\XenClean\bin\$Platform\$Configuration\net462\*" -Exclude Invoke-XenClean.ps1 -Destination $XenCleanOutDir\bin\
+    Copy-Item -Path "$PSScriptRoot\XenClean\bin\$Platform\$Configuration\net462\*" -Exclude Invoke-XenClean.ps1 -Destination $XenCleanOutDir\bin\ -Force
+
+    # XenBootFix
+    $XenBootFixOutDir = "$OutDir\XenBootFix\$Platform"
+    New-Item -Path $XenBootFixOutDir -ItemType Directory -Force
+    Copy-Item -Path "$PSScriptRoot\XenBootFix\$Platform\$Configuration\XenBootFix.exe" -Destination $XenBootFixOutDir\ -Force
 }

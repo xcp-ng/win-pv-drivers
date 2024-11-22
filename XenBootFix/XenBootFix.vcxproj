@@ -96,6 +96,12 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PreBuildEvent>
+      <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\sign.ps1 -ProjectDir $(ProjectDir) -Configuration $(Configuration) -Platform $(Platform)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -116,6 +122,12 @@
       <IgnoreSpecificDefaultLibraries>libucrt.lib</IgnoreSpecificDefaultLibraries>
       <AdditionalOptions>/defaultlib:ucrt.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PreBuildEvent>
+      <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\sign.ps1 -ProjectDir $(ProjectDir) -Configuration $(Configuration) -Platform $(Platform)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -129,6 +141,12 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PreBuildEvent>
+      <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\sign.ps1 -ProjectDir $(ProjectDir) -Configuration $(Configuration) -Platform $(Platform)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -149,12 +167,22 @@
       <IgnoreSpecificDefaultLibraries>libucrt.lib</IgnoreSpecificDefaultLibraries>
       <AdditionalOptions>/defaultlib:ucrt.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PreBuildEvent>
+      <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\sign.ps1 -ProjectDir $(ProjectDir) -Configuration $(Configuration) -Platform $(Platform)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="XenBootFix.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RegHive.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="XenBootFix.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
