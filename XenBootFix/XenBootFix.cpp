@@ -70,11 +70,19 @@ static void OpenControlSet(const RegHive& hive, CRegKey& key, DWORD controlSet) 
         throw std::system_error(hr, std::system_category(), "Couldn't open control set key");
 }
 
+static const std::array<const wchar_t*, 1> OverridesToDelete = {
+    L"stornvme",
+};
+
 static void DeleteOverrides(CRegKey& controlSetKey) {
-    wprintf(L"Deleting StartOverride\n");
-    auto result = controlSetKey.RecurseDeleteKey(L"Services\\stornvme\\StartOverride");
-    if (result != ERROR_SUCCESS)
-        wprintf(L"Couldn't delete StartOverride: 0x%lx\n", result);
+    for (auto overrideName : OverridesToDelete) {
+        auto keyName = std::wstring(L"Services\\") + overrideName + L"\\StartOverride";
+        wprintf(L"Deleting key \"%s\"\n", keyName.c_str());
+
+        auto result = controlSetKey.RecurseDeleteKey(keyName.c_str());
+        if (result != ERROR_SUCCESS)
+            wprintf(L"Couldn't delete key \"%s\": 0x%lx\n", keyName.c_str(), result);
+    }
 }
 
 static const std::array<const wchar_t*, 2> FiltersToRemove = {
@@ -83,15 +91,13 @@ static const std::array<const wchar_t*, 2> FiltersToRemove = {
 };
 
 static void RemoveFilter(CRegKey& key, const wchar_t* valueName) {
-    wprintf(L"Cleaning value \"%s\"\n", valueName);
-
     ULONG bufsize = 0;
 
     auto result = key.QueryMultiStringValue(valueName, nullptr, &bufsize);
-    if (result != ERROR_SUCCESS) {
-        wprintf(L"Couldn't get size of value \"%s\": 0x%lx\n", valueName, result);
+    if (result != ERROR_SUCCESS)
         return;
-    }
+
+    wprintf(L"Cleaning value \"%s\"\n", valueName);
 
     std::vector<wchar_t> buf(bufsize);
     result = key.QueryMultiStringValue(valueName, buf.data(), &bufsize);
@@ -102,9 +108,8 @@ static void RemoveFilter(CRegKey& key, const wchar_t* valueName) {
 
     auto filters = ParseMultiStrings(buf.data(), bufsize);
     wprintf(L"Old value \"%s\": ", valueName);
-    for (const auto& filter : filters) {
+    for (const auto& filter : filters)
         wprintf(L"\"%s\", ", filter.c_str());
-    }
     wprintf(L"\n");
 
     std::vector<std::wstring> newFilters;
@@ -115,29 +120,39 @@ static void RemoveFilter(CRegKey& key, const wchar_t* valueName) {
             [&](auto& f) { return !_wcsicmp(filter.c_str(), f); }))
             newFilters.emplace_back(filter);
 
-    bufsize = 1;
-    for (const auto& filter : newFilters)
-        bufsize += (ULONG)filter.size() + 1;
-    buf.clear();
-    buf.resize(bufsize, 0);
+    if (newFilters.empty()) {
+        wprintf(L"New value \"%s\": <empty>\n", valueName);
 
-    wprintf(L"New value \"%s\": ", valueName);
-    for (const auto& filter : newFilters) {
-        wprintf(L"\"%s\", ", filter.c_str());
+        result = key.DeleteValue(valueName);
+        if (result != ERROR_SUCCESS) {
+            wprintf(L"Couldn't delete value \"%s\": 0x%lx\n", valueName, result);
+            return;
+        }
     }
-    wprintf(L"\n");
+    else {
+        wprintf(L"New value \"%s\": ", valueName);
+        for (const auto& filter : newFilters)
+            wprintf(L"\"%s\", ", filter.c_str());
+        wprintf(L"\n");
 
-    wchar_t* ptr = buf.data();
-    for (const auto& filter : newFilters) {
-        ptr = std::copy(filter.begin(), filter.end(), ptr);
+        bufsize = 1;
+        for (const auto& filter : newFilters)
+            bufsize += (ULONG)filter.size() + 1;
+        buf.clear();
+        buf.resize(bufsize, 0);
+
+        wchar_t* ptr = buf.data();
+        for (const auto& filter : newFilters) {
+            ptr = std::copy(filter.begin(), filter.end(), ptr);
+            *ptr++ = 0;
+        }
         *ptr++ = 0;
-    }
-    *ptr++ = 0;
 
-    result = key.SetMultiStringValue(valueName, buf.data());
-    if (result != ERROR_SUCCESS) {
-        wprintf(L"Couldn't set value \"%s\": 0x%lx\n", valueName, result);
-        return;
+        result = key.SetMultiStringValue(valueName, buf.data());
+        if (result != ERROR_SUCCESS) {
+            wprintf(L"Couldn't set value \"%s\": 0x%lx\n", valueName, result);
+            return;
+        }
     }
 }
 
