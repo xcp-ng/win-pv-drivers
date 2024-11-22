@@ -3,6 +3,7 @@
 #include <array>
 #include <vector>
 #include <string>
+#include <algorithm>
 #include <filesystem>
 #include <atlsecurity.h>
 #include <strsafe.h>
@@ -76,6 +77,11 @@ static void DeleteOverrides(CRegKey& controlSetKey) {
         wprintf(L"Couldn't delete StartOverride: 0x%lx\n", result);
 }
 
+static const std::array<const wchar_t*, 2> FiltersToRemove = {
+    L"xenfilt",
+    L"scsifilt",
+};
+
 static void RemoveFilter(CRegKey& key, const wchar_t* valueName) {
     wprintf(L"Cleaning value \"%s\"\n", valueName);
 
@@ -103,7 +109,10 @@ static void RemoveFilter(CRegKey& key, const wchar_t* valueName) {
 
     std::vector<std::wstring> newFilters;
     for (const auto& filter : filters)
-        if (!_wcsicmp(filter.c_str(), L"xenfilt") && !_wcsicmp(filter.c_str(), L"scsifilt"))
+        if (std::none_of(
+            FiltersToRemove.begin(),
+            FiltersToRemove.end(),
+            [&](auto& f) { return !_wcsicmp(filter.c_str(), f); }))
             newFilters.emplace_back(filter);
 
     bufsize = 1;
