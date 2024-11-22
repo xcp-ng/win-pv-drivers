@@ -18,6 +18,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\buildall.ps1 = ..\buildall.ps1
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XenBootFix", "..\XenBootFix\XenBootFix.vcxproj", "{018433AB-F981-4625-8E23-6B3F22B7E5CF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -76,6 +78,18 @@ Global
 		{0A953795-5150-4B83-85F9-FB906C8A6297}.Release|x64.Build.0 = Release|x64
 		{0A953795-5150-4B83-85F9-FB906C8A6297}.Release|x86.ActiveCfg = Release|x86
 		{0A953795-5150-4B83-85F9-FB906C8A6297}.Release|x86.Build.0 = Release|x86
+		{018433AB-F981-4625-8E23-6B3F22B7E5CF}.Debug|ARM64.ActiveCfg = Debug|x64
+		{018433AB-F981-4625-8E23-6B3F22B7E5CF}.Debug|ARM64.Build.0 = Debug|x64
+		{018433AB-F981-4625-8E23-6B3F22B7E5CF}.Debug|x64.ActiveCfg = Debug|x64
+		{018433AB-F981-4625-8E23-6B3F22B7E5CF}.Debug|x64.Build.0 = Debug|x64
+		{018433AB-F981-4625-8E23-6B3F22B7E5CF}.Debug|x86.ActiveCfg = Debug|Win32
+		{018433AB-F981-4625-8E23-6B3F22B7E5CF}.Debug|x86.Build.0 = Debug|Win32
+		{018433AB-F981-4625-8E23-6B3F22B7E5CF}.Release|ARM64.ActiveCfg = Release|x64
+		{018433AB-F981-4625-8E23-6B3F22B7E5CF}.Release|ARM64.Build.0 = Release|x64
+		{018433AB-F981-4625-8E23-6B3F22B7E5CF}.Release|x64.ActiveCfg = Release|x64
+		{018433AB-F981-4625-8E23-6B3F22B7E5CF}.Release|x64.Build.0 = Release|x64
+		{018433AB-F981-4625-8E23-6B3F22B7E5CF}.Release|x86.ActiveCfg = Release|Win32
+		{018433AB-F981-4625-8E23-6B3F22B7E5CF}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
