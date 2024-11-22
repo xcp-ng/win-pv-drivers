@@ -10,13 +10,28 @@
 
 #include "RegHive.h"
 
-constexpr auto HiveMountName = L"XenBootFix";
+static constexpr auto HiveMountName = L"XenBootFix";
 
 static void PrintUsage(wchar_t* name) {
     wprintf(L"Usage: %s <windir>", name);
 }
 
-static void GetPrivileges() {
+static std::vector<std::wstring> ParseMultiStrings(_In_reads_(count) const wchar_t* buf, size_t count) {
+    std::vector<std::wstring> strings;
+    size_t first = 0;
+    for (size_t i = 0; i < count; i++) {
+        if (buf[i] == 0) {
+            strings.emplace_back(buf + first, i - first);
+            first = i + 1;
+        }
+    }
+    if (strings.back().empty()) {
+        strings.pop_back();
+    }
+    return strings;
+}
+
+static void EnablePrivileges() {
     CAccessToken token;
     if (!token.GetProcessToken(TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES))
         throw std::system_error(GetLastError(), std::system_category(), "GetProcessToken");
@@ -59,31 +74,6 @@ static void DeleteOverrides(CRegKey& controlSetKey) {
     auto result = controlSetKey.RecurseDeleteKey(L"Services\\stornvme\\StartOverride");
     if (result != ERROR_SUCCESS)
         wprintf(L"Couldn't delete StartOverride: 0x%lx\n", result);
-}
-
-static const std::array<const wchar_t*, 2> FilteredClasses = {
-    L"{4d36e96a-e325-11ce-bfc1-08002be10318}", // HDC
-    L"{4d36e97d-e325-11ce-bfc1-08002be10318}", // System
-};
-
-static const std::array<const wchar_t*, 2> FilterValues = {
-    L"LowerFilters",
-    L"UpperFilters",
-};
-
-static std::vector<std::wstring> ParseMultiStrings(_In_reads_(count) const wchar_t* buf, size_t count) {
-    std::vector<std::wstring> strings;
-    size_t first = 0;
-    for (size_t i = 0; i < count; i++) {
-        if (buf[i] == 0) {
-            strings.emplace_back(buf + first, i - first);
-            first = i + 1;
-        }
-    }
-    if (strings.back().empty()) {
-        strings.pop_back();
-    }
-    return strings;
 }
 
 static void RemoveFilter(CRegKey& key, const wchar_t* valueName) {
@@ -142,6 +132,16 @@ static void RemoveFilter(CRegKey& key, const wchar_t* valueName) {
     }
 }
 
+static const std::array<const wchar_t*, 2> FilteredClasses = {
+    L"{4d36e96a-e325-11ce-bfc1-08002be10318}", // HDC
+    L"{4d36e97d-e325-11ce-bfc1-08002be10318}", // System
+};
+
+static const std::array<const wchar_t*, 2> FilterValues = {
+    L"LowerFilters",
+    L"UpperFilters",
+};
+
 static void RemoveFilters(const CRegKey& controlSetKey) {
     for (auto clsid : FilteredClasses) {
         auto keyName = std::wstring(L"Control\\Class\\") + clsid;
@@ -159,15 +159,16 @@ static void RemoveFilters(const CRegKey& controlSetKey) {
 }
 
 int wmain(int argc, wchar_t** argv) {
+    if (argc != 2) {
+        PrintUsage(argv[0]);
+        return 1;
+    }
+    auto windir = argv[1];
+
     try {
-        if (argc != 2) {
-            PrintUsage(argv[0]);
-            return 1;
-        }
+        EnablePrivileges();
 
-        GetPrivileges();
-
-        auto configPath = std::filesystem::path(argv[1], std::filesystem::path::native_format);
+        auto configPath = std::filesystem::path(windir, std::filesystem::path::native_format);
         configPath /= L"System32\\config\\SYSTEM";
         wprintf(L"Opening hive \"%s\"\n", configPath.c_str());
         RegHive hive(HKEY_LOCAL_MACHINE, HiveMountName, configPath.c_str());
