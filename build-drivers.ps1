@@ -1,5 +1,7 @@
 [CmdletBinding()]
 param (
+    [Parameter()]
+    [string[]]$Drivers = @("xenbus", "xencons", "xenhid", "xeniface", "xennet", "xenvbd", "xenvif", "xenvkbd"),
     [Parameter(Mandatory)]
     [ValidateSet("free", "checked")]
     [string]$Type,
@@ -20,7 +22,7 @@ param (
 $OutputPath = "$PSScriptRoot/installer/output"
 Remove-Item -Path $OutputPath -Force -Recurse -ErrorAction SilentlyContinue
 $ErrorActionPreference = "Stop"
-foreach ($repo in @("xenbus", "xencons", "xenhid", "xeniface", "xennet", "xenvbd", "xenvif", "xenvkbd")) {
+foreach ($repo in $Drivers) {
     Push-Location $PSScriptRoot/$repo
     try {
         $Env:MAJOR_VERSION = (Get-PackageVersion $repo).Major
