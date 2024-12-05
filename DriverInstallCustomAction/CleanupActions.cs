@@ -7,7 +7,7 @@ namespace XenInstCA {
         [CustomAction]
         public static ActionResult XenbusCleanup(Session session) {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
-            XenCleanup.XenbusCleanup();
+            XenCleanup.XenfiltClassCleanup();
             XenCleanup.ResetUnplug();
             return ActionResult.Success;
         }

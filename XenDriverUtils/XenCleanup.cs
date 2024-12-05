@@ -23,7 +23,7 @@ namespace XenDriverUtils {
             "scsifilt",
         };
 
-        public static void XenbusCleanup() {
+        public static void XenfiltClassCleanup() {
             using var classKey = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Control\\Class", true);
             if (classKey == null) {
                 return;

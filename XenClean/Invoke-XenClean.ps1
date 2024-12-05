@@ -62,9 +62,7 @@ if ([System.Environment]::OSVersion.Version -ge [version]::Parse("10.0.18362")) 
 }
 reg.exe export "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e96a-e325-11ce-bfc1-08002be10318}" "$LogPath/hdc.reg" /y
 reg.exe export "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e97d-e325-11ce-bfc1-08002be10318}" "$LogPath/system.reg" /y
-reg.exe export "HKLM\SYSTEM\CurrentControlSet\Services\xenbus" "$LogPath/service-xenbus.reg" /y
-reg.exe export "HKLM\SYSTEM\CurrentControlSet\Services\xenbus_monitor" "$LogPath/service-xenbus_monitor.reg" /y
-reg.exe export "HKLM\SYSTEM\CurrentControlSet\Services\xenfilt" "$LogPath/service-xenfilt.reg" /y
+reg.exe export "HKLM\SYSTEM\CurrentControlSet\Services\XEN" "$LogPath/service-xen.reg" /y
 
 if (!$NoReboot) {
     Restart-Computer -Force
