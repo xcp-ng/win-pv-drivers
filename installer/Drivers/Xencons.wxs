@@ -13,5 +13,7 @@
       <File Name="xencons_monitor.exe" />
       <File Name="xencons_tty.exe" />
     </ComponentGroup>
+
+    <SetProperty Id="$(XenDriver)ServiceDelete" Value="Services=xencons_monitor,xencons" After="CostFinalize" Sequence="execute" />
   </Fragment>
 </Wix>

@@ -15,5 +15,7 @@
           DefaultLanguage="1033" />
       <File Name="xeniface.sys" />
     </ComponentGroup>
+
+    <SetProperty Id="$(XenDriver)ServiceDelete" Value="Services=xenagent,xeniface" After="CostFinalize" Sequence="execute" />
   </Fragment>
 </Wix>

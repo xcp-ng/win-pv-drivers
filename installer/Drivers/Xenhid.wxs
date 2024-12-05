@@ -10,5 +10,7 @@
       <File Name="xenhid.inf" Id="Xenhid.inf" DefaultVersion="$(XenhidVersion)" DefaultLanguage="1033" />
       <File Name="xenhid.sys" />
     </ComponentGroup>
+
+    <SetProperty Id="$(XenDriver)ServiceDelete" Value="Services=xenhid" After="CostFinalize" Sequence="execute" />
   </Fragment>
 </Wix>

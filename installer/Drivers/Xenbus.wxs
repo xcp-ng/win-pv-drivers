@@ -23,13 +23,15 @@
 
     <!-- manually lay out Xenbus so that it goes before/after all other drivers during install/uninstall -->
     <InstallExecuteSequence>
-      <Custom Action="XenbusCleanup" Before="ProcessComponents" Condition="$Xenbus.inf=2" />
       <!-- only do XenfiltReset on new installs -->
       <Custom Action="XenfiltReset" Before="XenbusInstallRollback" Condition="?Xenbus.inf=2 AND $Xenbus.inf=3" />
       <Custom Action="XenbusInstallRollback" After="InstallFiles" />
       <Custom Action="XenbusInstall" After="XenbusInstallRollback" Condition="$Xenbus.inf=3" />
-      <Custom Action="XenbusUninstallRollback" Before="XenbusCleanup" />
+      <Custom Action="XenbusUninstallRollback" After="InstallInitialize" />
       <Custom Action="XenbusUninstall" After="XenbusUninstallRollback" Condition="$Xenbus.inf=2" />
+
+      <Custom Action="XenbusServiceDelete" Before="XenbusCleanup" Condition="$Xenbus.inf=2 AND XenbusServiceDelete" />
+      <Custom Action="XenbusCleanup" Before="ProcessComponents" Condition="$Xenbus.inf=2" />
     </InstallExecuteSequence>
 
     <UI>
@@ -37,5 +39,7 @@
       <ProgressText Action="XenbusInstall" Message="!(loc.DriverInstallText)" />
       <ProgressText Action="XenbusUninstall" Message="!(loc.DriverUninstallText)" />
     </UI>
+
+    <SetProperty Id="XenbusServiceDelete" Value="Services=xenbus_monitor,xenbus,xenfilt" After="CostFinalize" Sequence="execute" />
   </Fragment>
 </Wix>

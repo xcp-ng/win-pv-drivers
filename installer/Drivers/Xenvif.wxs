@@ -10,5 +10,7 @@
       <File Name="xenvif.inf" Id="Xenvif.inf" DefaultVersion="$(XenvifVersion)" DefaultLanguage="1033" />
       <File Name="xenvif.sys" />
     </ComponentGroup>
+
+    <SetProperty Id="$(XenDriver)ServiceDelete" Value="Services=xenvif" After="CostFinalize" Sequence="execute" />
   </Fragment>
 </Wix>

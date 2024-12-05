@@ -16,12 +16,16 @@
   <SetProperty Id="$(XenDriver)Uninstall" Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]" After="CostFinalize" Sequence="execute" />
   <SetProperty Id="$(XenDriver)UninstallRollback" Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]" After="CostFinalize" Sequence="execute" />
 
+  <!-- we can use the standard DeleteServices action, but we use our CA instead since we want to reuse the action in XenClean -->
+  <CustomAction Id="$(XenDriver)ServiceDelete" BinaryRef="xeninst.dll" DllEntry="XenServiceDelete" Execute="deferred" Impersonate="no" />
+
   <?ifdef $(XenDriverDependsOn) ?>
   <InstallExecuteSequence>
     <Custom Action="$(XenDriver)InstallRollback" After="$(XenDriverDependsOn)Install" />
     <Custom Action="$(XenDriver)Install" After="$(XenDriver)InstallRollback" Condition="$$$(XenDriver).inf=3" />
     <Custom Action="$(XenDriver)Uninstall" Before="$(XenDriverDependsOn)UninstallRollback" Condition="$$$(XenDriver).inf=2" />
     <Custom Action="$(XenDriver)UninstallRollback" Before="$(XenDriver)Uninstall" />
+    <Custom Action="$(XenDriver)ServiceDelete" Before="$(XenDriverDependsOn)ServiceDelete" Condition="$$$(XenDriver).inf=2 AND $(XenDriver)ServiceDelete" />
   </InstallExecuteSequence>
   <!-- setting the template doesn't work in either ProgressText or ActionStart[3] and I don't know why -->
   <UI>

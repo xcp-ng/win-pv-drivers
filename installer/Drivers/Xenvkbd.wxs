@@ -10,5 +10,7 @@
       <File Name="xenvkbd.inf" Id="Xenvkbd.inf" DefaultVersion="$(XenvkbdVersion)" DefaultLanguage="1033" />
       <File Name="xenvkbd.sys" />
     </ComponentGroup>
+
+    <SetProperty Id="$(XenDriver)ServiceDelete" Value="Services=xenvkbd" After="CostFinalize" Sequence="execute" />
   </Fragment>
 </Wix>

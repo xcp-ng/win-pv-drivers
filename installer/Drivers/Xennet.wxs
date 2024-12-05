@@ -10,5 +10,7 @@
       <File Name="xennet.inf" Id="Xennet.inf" DefaultVersion="$(XennetVersion)" DefaultLanguage="1033" />
       <File Name="xennet.sys" />
     </ComponentGroup>
+
+    <SetProperty Id="$(XenDriver)ServiceDelete" Value="Services=xennet" After="CostFinalize" Sequence="execute" />
   </Fragment>
 </Wix>

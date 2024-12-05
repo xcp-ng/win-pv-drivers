@@ -16,7 +16,9 @@
     <CustomAction Id="XenvbdCleanup" BinaryRef="xeninst.dll" DllEntry="XenvbdCleanup" Execute="deferred" Impersonate="no" />
 
     <InstallExecuteSequence>
-      <Custom Action="XenvbdCleanup" After="XenvbdServiceDelete" Condition="$Xenvbd.inf=2" />
+      <Custom Action="XenvbdCleanup" Before="XenbusCleanup" Condition="$Xenvbd.inf=2" />
     </InstallExecuteSequence>
+
+    <SetProperty Id="$(XenDriver)ServiceDelete" Value="Services=xendisk,xenvbd" After="CostFinalize" Sequence="execute" />
   </Fragment>
 </Wix>
