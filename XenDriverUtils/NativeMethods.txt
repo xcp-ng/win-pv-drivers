@@ -33,3 +33,11 @@ RtlGetVersion
 
 CMP_WaitNoPendingInstallEvents
 WAIT_EVENT
+
+OpenSCManager
+OpenService
+ControlService
+DeleteService
+SC_MANAGER_ALL_ACCESS
+SERVICE_ALL_ACCESS
+SERVICE_CONTROL_STOP

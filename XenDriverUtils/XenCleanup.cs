@@ -1,7 +1,9 @@
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Windows.Win32;
 
 namespace XenDriverUtils {
@@ -87,6 +89,51 @@ namespace XenDriverUtils {
                 Logger.Log("Resetting Unplug key");
                 key.DeleteSubKey("Unplug");
             } catch {
+            }
+        }
+
+        // other code may want to use this list too, so make it public
+        public static readonly List<string> DeleteableServices = new() {
+            "xenagent",
+            "xenbus",
+            "xenbus_monitor",
+            "xencons",
+            "xencons_monitor",
+            "xendisk",
+            "xenfilt",
+            "xenhid",
+            "xeniface",
+            "XenInstall",
+            "xennet",
+            "XenSvc",
+            "xenvbd",
+            "xenvif",
+            "xenvkbd",
+        };
+
+        public static void DeleteService(CloseServiceHandleSafeHandle scm, string serviceName) {
+            if (!DeleteableServices.Contains(serviceName, StringComparer.OrdinalIgnoreCase)) {
+                Logger.Log($"Refusing to delete service {serviceName}");
+                return;
+            }
+            Logger.Log($"Deleting service {serviceName}");
+
+            using var service = PInvoke.OpenService(scm, serviceName, PInvoke.SERVICE_ALL_ACCESS);
+            if (service.IsInvalid) {
+                Logger.Log($"OpenService {serviceName} error {Marshal.GetLastWin32Error()}");
+                return;
+            }
+
+            if (PInvoke.ControlService(service, PInvoke.SERVICE_CONTROL_STOP, out var status)) {
+                Logger.Log($"Service {serviceName} stopped");
+            } else {
+                Logger.Log($"ControlService({serviceName}, SERVICE_CONTROL_STOP) error {Marshal.GetLastWin32Error()}");
+            }
+
+            if (PInvoke.DeleteService(service)) {
+                Logger.Log($"Service {serviceName} deleted");
+            } else {
+                Logger.Log($"DeleteService({serviceName}) error {Marshal.GetLastWin32Error()}");
             }
         }
     }
