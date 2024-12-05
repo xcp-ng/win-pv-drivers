@@ -48,6 +48,7 @@ namespace XenInstCA {
 
         [CustomAction]
         public static ActionResult DriverInstallRollback(Session session) {
+            using var logScope = new LoggerScope(new MsiSessionLogger(session));
             DriverUninstall(session);
             return ActionResult.Success;
         }
@@ -130,12 +131,14 @@ namespace XenInstCA {
 
         [CustomAction]
         public static ActionResult DriverUninstallRollback(Session session) {
+            using var logScope = new LoggerScope(new MsiSessionLogger(session));
             DriverInstall(session);
             return ActionResult.Success;
         }
 
         [CustomAction]
         public static ActionResult DriverWaitInstallFinish(Session session) {
+            using var logScope = new LoggerScope(new MsiSessionLogger(session));
             CustomActionUtils.ReportAction(session, $"XenWaitDriverInstall", "");
             // wait for up to 1 minute until all pending installations are done
             for (int i = 0; i < 5; i++) {
