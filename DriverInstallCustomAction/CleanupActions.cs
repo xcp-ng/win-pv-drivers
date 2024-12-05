@@ -6,6 +6,7 @@ namespace XenInstCA {
         [CustomAction]
         public static ActionResult XenbusCleanup(Session session) {
             XenCleanup.XenbusCleanup();
+            XenCleanup.ResetUnplug();
             return ActionResult.Success;
         }
 
