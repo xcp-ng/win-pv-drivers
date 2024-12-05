@@ -12,5 +12,11 @@
       <File Name="xenvbd.inf" Id="Xenvbd.inf" DefaultVersion="$(XenvbdVersion)" DefaultLanguage="1033" />
       <File Name="xenvbd.sys" />
     </ComponentGroup>
+
+    <CustomAction Id="XenvbdCleanup" BinaryRef="xeninst.dll" DllEntry="XenvbdCleanup" Execute="deferred" Impersonate="no" />
+
+    <InstallExecuteSequence>
+      <Custom Action="XenvbdCleanup" After="XenvbdServiceDelete" Condition="$Xenvbd.inf=2" />
+    </InstallExecuteSequence>
   </Fragment>
 </Wix>

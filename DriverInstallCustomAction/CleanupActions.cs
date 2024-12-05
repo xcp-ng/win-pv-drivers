@@ -6,6 +6,11 @@ namespace XenInstCA {
         [CustomAction]
         public static ActionResult XenbusCleanup(Session session) {
             XenCleanup.XenbusCleanup();
+            return ActionResult.Success;
+        }
+
+        [CustomAction]
+        public static ActionResult XenvbdCleanup(Session session) {
             XenCleanup.ResetNvmeOverride();
             return ActionResult.Success;
         }
