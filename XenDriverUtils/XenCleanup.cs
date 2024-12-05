@@ -111,7 +111,7 @@ namespace XenDriverUtils {
             "xenvkbd",
         };
 
-        public static void DeleteService(CloseServiceHandleSafeHandle scm, string serviceName) {
+        public static void DeleteService(CloseServiceHandleSafeHandle scm, string serviceName, bool stop = true) {
             if (!DeleteableServices.Contains(serviceName, StringComparer.OrdinalIgnoreCase)) {
                 Logger.Log($"Refusing to delete service {serviceName}");
                 return;
@@ -124,10 +124,12 @@ namespace XenDriverUtils {
                 return;
             }
 
-            if (PInvoke.ControlService(service, PInvoke.SERVICE_CONTROL_STOP, out var status)) {
-                Logger.Log($"Service {serviceName} stopped");
-            } else {
-                Logger.Log($"ControlService({serviceName}, SERVICE_CONTROL_STOP) error {Marshal.GetLastWin32Error()}");
+            if (stop) {
+                if (PInvoke.ControlService(service, PInvoke.SERVICE_CONTROL_STOP, out var status)) {
+                    Logger.Log($"Service {serviceName} stopped");
+                } else {
+                    Logger.Log($"ControlService({serviceName}, SERVICE_CONTROL_STOP) error {Marshal.GetLastWin32Error()}");
+                }
             }
 
             if (PInvoke.DeleteService(service)) {
