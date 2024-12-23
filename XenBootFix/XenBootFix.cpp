@@ -225,6 +225,15 @@ int wmain(int argc, wchar_t** argv) {
         PrintUsage(argv[0]);
         return 1;
     }
+
+    {
+        CRegKey winPeKey;
+        if (winPeKey.Open(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\WinPE", KEY_READ) != ERROR_SUCCESS) {
+            wprintf(L"XenBootFix must run from within Windows PE!");
+            return 1;
+        }
+    }
+
     auto windir = argv[1];
 
     try {
