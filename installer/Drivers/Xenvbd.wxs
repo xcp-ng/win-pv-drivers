@@ -3,6 +3,7 @@
   <Fragment>
     <?define XenDriver="Xenvbd" ?>
     <?define XenDriverDependsOn="Xenbus" ?>
+    <?define XenDriverUpgradeNeedsReboot ?>
     <?include ../Driver.wxi ?>
 
     <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.output)$(XenDriver)/$(Platform)">

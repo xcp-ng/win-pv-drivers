@@ -2,6 +2,7 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
     <?define XenDriver="Xenbus" ?>
+    <?define XenDriverUpgradeNeedsReboot ?>
     <?include ../Driver.wxi ?>
 
     <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.output)$(XenDriver)/$(Platform)">

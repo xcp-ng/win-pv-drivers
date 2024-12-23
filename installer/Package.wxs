@@ -84,9 +84,10 @@
       <RemoveExistingProducts After="InstallExecute" />
       <!--
         after installation, bus drivers issue reboot requests asynchronously through xenbus_monitor
-        since we suppress xenbus_monitor reboot requests during installation, manually schedule reboot for concerned drivers anyway
+        since we suppress xenbus_monitor reboot requests during installation, manually schedule reboot for concerned drivers anyway;
+        see Driver.wxi for the reboot hook
       -->
-      <ScheduleReboot After="InstallFinalize" Condition="($Xennet.inf&lt;&gt;-1) OR ($Xenvbd.inf&lt;&gt;-1)" />
+      <ScheduleReboot After="InstallFinalize" Condition="XenNeedsReboot" />
     </InstallExecuteSequence>
 
     <CustomActionRef Id="CheckRebootCA" />
