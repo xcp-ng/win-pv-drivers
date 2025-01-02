@@ -52,7 +52,7 @@ if (!$PSCmdlet.ShouldProcess("Local computer", "Remove Xen drivers and tools")) 
 }
 
 $Timestamp = Get-Date -Format FileDateTime
-$LogPath = "xenclean-$Timestamp"
+$LogPath = "$env:TEMP\xenclean-$Timestamp"
 New-Item -ItemType Directory -Path $LogPath -Force
 
 & "$PSScriptRoot\bin\XenClean.exe" > "$LogPath/xenclean.log"
