@@ -64,6 +64,8 @@ reg.exe export "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e96a-e325-11ce-
 reg.exe export "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e97d-e325-11ce-bfc1-08002be10318}" "$LogPath/system.reg" /y
 reg.exe export "HKLM\SYSTEM\CurrentControlSet\Services\XEN" "$LogPath/service-xen.reg" /y
 
+Copy-Item -Recurse -ErrorAction Continue $LogPath .
+
 if (!$NoReboot) {
     Restart-Computer -Force
 }
