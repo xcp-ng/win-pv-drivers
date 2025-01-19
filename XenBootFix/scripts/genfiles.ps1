@@ -11,8 +11,8 @@ $BrandingFile = "$ProjectDir\Branding.inc"
 $OldBranding = Get-Content -Raw $BrandingFile -ErrorAction Ignore
 $NewBranding = @"
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION $(Get-PackageVersion XenBootFix)
- PRODUCTVERSION $(Get-PackageVersion Product)
+ FILEVERSION $((Get-PackageVersion XenBootFix).ToString().Replace(".", ","))
+ PRODUCTVERSION $((Get-PackageVersion Product).ToString().Replace(".", ","))
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L

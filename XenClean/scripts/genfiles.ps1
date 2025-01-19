@@ -12,7 +12,8 @@ $OldBranding = Get-Content -Raw $BrandingFile -ErrorAction Ignore
 $NewBranding = `
     @"
 using System.Reflection;
-[assembly:AssemblyVersion("$(Get-PackageVersion Product)")]
+[assembly:AssemblyVersion("$(Get-PackageVersion XenClean)")]
+[assembly:AssemblyInformationalVersion("$(Get-PackageVersion Product)")]
 [assembly:AssemblyCompany("${Env:VENDOR_NAME}")]
 [assembly:AssemblyProduct("${Env:PRODUCT_NAME}")]
 [assembly:AssemblyCopyright("${Env:COPYRIGHT}")]
