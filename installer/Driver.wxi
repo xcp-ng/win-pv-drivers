@@ -35,6 +35,6 @@
   <?endif ?>
 
   <?ifdef $(XenDriverUpgradeNeedsReboot) ?>
-  <SetProperty Id="XenNeedsReboot" Action="$(XenDriver)NeedsReboot" Value="1" Before="InstallFinalize" Sequence="execute" Condition="(?$(XenDriver).inf=3) AND ($$$(XenDriver).inf=3)" />
+  <SetProperty Id="XenNeedsReboot" Action="$(XenDriver)NeedsReboot" Value="1" Before="InstallFinalize" Sequence="execute" Condition="($$$(XenDriver).inf=2) OR ($$$(XenDriver).inf=3)" />
   <?endif ?>
 </Include>
