@@ -27,21 +27,21 @@
       <UpgradeVersion Maximum="255.255.65535.65535" OnlyDetect="yes" Property="OLD_DRIVERS_X86_DETECTED" />
     </Upgrade>
     <Launch Condition="NOT OLD_DRIVERS_X86_DETECTED" Message="!(loc.OldDriversDetectedError)" />
-    
+
     <?elseif  $(Platform) = x64 ?>
     <!-- XCP-ng v8 x64 -->
     <Upgrade Id="{48E5492C-6843-452E-97A2-A5FE2D24B141}">
       <UpgradeVersion Maximum="255.255.65535.65535" OnlyDetect="yes" Property="OLD_DRIVERS_X64_DETECTED" />
     </Upgrade>
     <Launch Condition="NOT OLD_DRIVERS_X64_DETECTED" Message="!(loc.OldDriversDetectedError)" />
-    
+
     <!-- Citrix x64 -->
     <Upgrade Id="{AF9B2559-3E91-4206-98C2-F560009FF7F1}">
       <UpgradeVersion Maximum="255.255.65535.65535" OnlyDetect="yes" Property="CITRIX_DRIVERS_X64_DETECTED" />
     </Upgrade>
     <?endif ?>
     <Launch Condition="NOT CITRIX_DRIVERS_X64_DETECTED" Message="!(loc.CitrixDriversDetectedError)" />
-    
+
     <Upgrade Id="$(var.UpgradeCode)">
       <UpgradeVersion Maximum="$(ProductVersion)" IncludeMinimum="no" IncludeMaximum="no" MigrateFeatures="yes" Property="UPGRADE_DETECTED" />
       <UpgradeVersion Minimum="$(ProductVersion)" IncludeMinimum="no" IncludeMaximum="no" OnlyDetect="yes" Property="DOWNGRADE_DETECTED" />
@@ -77,6 +77,14 @@
     </Feature>
     <Feature Id="PVDiskFeature" AllowAdvertise="no" Title="!(loc.PVDiskFeatureTitle)">
       <ComponentGroupRef Id="XenvbdComponent" />
+    </Feature>
+    <Feature Id="ToolsFeature" Display="collapse" Title="!(loc.ToolsFeatureTitle)">
+      <Feature Id="XenCleanFeature" AllowAdvertise="no" Title="!(loc.XenCleanFeatureTitle)">
+        <ComponentGroupRef Id="XenCleanComponent" />
+      </Feature>
+      <Feature Id="XenBootFixFeature" AllowAdvertise="no" Title="!(loc.XenBootFixFeatureTitle)">
+        <ComponentGroupRef Id="XenBootFixComponent" />
+      </Feature>
     </Feature>
 
     <InstallExecuteSequence>

@@ -16,15 +16,17 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DriverInstallCustomAction\DriverInstallCustomAction.csproj" />
+    <ProjectReference Include="..\XenBootFix\XenBootFix.vcxproj" />
+    <ProjectReference Include="..\XenClean\XenClean.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="scripts\genfiles.ps1" />
   </ItemGroup>
   <ItemGroup>
-    <BindPath Include="$(ProjectDir)\branding">
+    <BindPath Include="$(ProjectDir)branding">
       <BindName>branding</BindName>
     </BindPath>
-    <BindPath Include="$(ProjectDir)\output">
+    <BindPath Include="$(ProjectDir)output">
       <BindName>output</BindName>
     </BindPath>
   </ItemGroup>

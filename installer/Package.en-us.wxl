@@ -29,6 +29,9 @@ You may need to run the XenClean tool." />
   <String Id="PVIfaceFeatureTitle" Value="PV Interface Driver" />
   <String Id="PVNetworkFeatureTitle" Value="PV Network Driver" />
   <String Id="PVDiskFeatureTitle" Value="PV Storage Driver" />
+  <String Id="ToolsFeatureTitle" Value="Tools" />
+  <String Id="XenCleanFeatureTitle" Value="XenClean" />
+  <String Id="XenBootFixFeatureTitle" Value="XenBootFix" />
 
   <String Id="DriverInstallText" Value="Preparing install" />
   <String Id="DriverUninstallText" Value="Preparing uninstall" />

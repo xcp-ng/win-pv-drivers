@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <?include Include.wxi ?>
+  <Fragment>
+    <ComponentGroup Id="XenBootFixComponent" Directory="XenBootFixFolder">
+      <File Source="XenBootFix.exe" />
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="XenCleanComponent" Directory="XenCleanFolder" Source="!(bindpath.XenClean)">
+      <File Source="Invoke-XenClean.ps1" DefaultVersion="$(XenCleanVersion)" DefaultLanguage="1033" />
+      <Files Include="!(bindpath.XenClean)**" Subdirectory="bin">
+        <Exclude Files="!(bindpath.XenClean)Invoke-XenClean.ps1" />
+        <Exclude Files="!(bindpath.XenClean)*.pdb" />
+      </Files>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

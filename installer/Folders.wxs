@@ -4,7 +4,10 @@
   <Fragment>
     <StandardDirectory Id="ProgramFiles6432Folder">
       <Directory Id="ManufacturerFolder" Name="$(VENDOR_NAME)">
-        <Directory Id="INSTALLFOLDER" Name="!(loc.GenericProductName)" />
+        <Directory Id="XenBootFixFolder" Name="XenBootFix" />
+        <Directory Id="INSTALLFOLDER" Name="!(loc.GenericProductName)">
+          <Directory Id="XenCleanFolder" Name="XenClean" />
+        </Directory>
       </Directory>
     </StandardDirectory>
   </Fragment>
