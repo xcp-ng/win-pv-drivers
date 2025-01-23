@@ -15,7 +15,7 @@ namespace XenInstCA {
         [CustomAction]
         public static ActionResult XenvbdCleanup(Session session) {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
-            XenCleanup.ResetNvmeOverride();
+            XenCleanup.ResetStartOverride();
             return ActionResult.Success;
         }
 

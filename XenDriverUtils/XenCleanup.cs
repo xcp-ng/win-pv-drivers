@@ -48,15 +48,19 @@ namespace XenDriverUtils {
             }
         }
 
-        public static void ResetNvmeOverride() {
+        private static readonly List<string> OverridesToDelete = new() {
+            "stornvme",
+            "iaStorAC", // https://xcp-ng.org/forum/topic/10284/vm-failing-to-reboot
+        };
+
+        public static void ResetStartOverride() {
             try {
-                using var key = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Services\\stornvme", true);
-                if (key == null) {
-                    return;
+                foreach (var overrideName in OverridesToDelete) {
+                    Logger.Log($"Resetting ${overrideName} StartOverride");
+                    Registry.LocalMachine.DeleteSubKey($"SYSTEM\\CurrentControlSet\\Services\\${overrideName}\\StartOverride", false);
                 }
-                Logger.Log("Resetting stornvme StartOverride");
-                key.DeleteSubKey("StartOverride");
-            } catch {
+            } catch (Exception ex) {
+                Logger.Log($"Cannot delete StartOverride subkey: {ex.Message}");
             }
         }
 

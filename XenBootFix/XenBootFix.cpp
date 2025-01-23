@@ -70,8 +70,15 @@ static void OpenControlSet(const RegHive& hive, CRegKey& key, DWORD controlSet) 
         throw std::system_error(hr, std::system_category(), "Couldn't open control set key");
 }
 
-static const std::array<const wchar_t*, 1> OverridesToDelete = {
+// We want to be more thorough with the possible StartOverride targets here.
+// 
+static const std::array<const wchar_t*, 6> OverridesToDelete = {
     L"stornvme",
+    L"iaStorAC", // https://xcp-ng.org/forum/topic/10284/vm-failing-to-reboot
+    L"iaStorAVC", // same as above
+    L"intelide", // same as above
+    L"storahci",
+    L"pciide",
 };
 
 static void DeleteOverrides(CRegKey& controlSetKey) {
