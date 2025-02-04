@@ -72,10 +72,9 @@ static void OpenControlSet(const RegHive& hive, CRegKey& key, DWORD controlSet) 
 
 // We want to be more thorough with the possible StartOverride targets here.
 // 
-static const std::array<const wchar_t*, 6> OverridesToDelete = {
+static const std::array<const wchar_t*, 5> OverridesToDelete = {
     L"stornvme",
     L"iaStorAC", // https://xcp-ng.org/forum/topic/10284/vm-failing-to-reboot
-    L"iaStorAVC", // same as above
     L"intelide", // same as above
     L"storahci",
     L"pciide",
