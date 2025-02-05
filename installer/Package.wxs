@@ -75,7 +75,7 @@
       <ComponentGroupRef Id="XenvifComponent" />
       <ComponentGroupRef Id="XennetComponent" />
     </Feature>
-    <Feature Id="PVDiskFeature" AllowAdvertise="no" Title="!(loc.PVDiskFeatureTitle)">
+    <Feature Id="PVDiskFeature" AllowAdvertise="no" Title="!(loc.PVDiskFeatureTitle)" Level="2">
       <ComponentGroupRef Id="XenvbdComponent" />
     </Feature>
     <Feature Id="ToolsFeature" Display="collapse" Title="!(loc.ToolsFeatureTitle)">
