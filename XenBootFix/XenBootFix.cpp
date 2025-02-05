@@ -485,6 +485,13 @@ int wmain(int argc, wchar_t** argv) {
         CRegKey controlSetKey;
         OpenControlSet(hive, controlSetKey, controlSet, dryrun ? KEY_READ : KEY_ALL_ACCESS);
 
+        bool xenvbdPresent;
+        {
+            CRegKey xenvbdKey;
+            auto result = xenvbdKey.Open(controlSetKey, L"Services\\xenvbd", KEY_READ);
+            xenvbdPresent = result == ERROR_SUCCESS;
+        }
+
         wprintf(L"Scanning for storage drivers\n");
         std::vector<ThirdPartyStorageDriver> found3PStorageDrivers;
         Scan3PStorageDrivers(controlSetKey, found3PStorageDrivers);
@@ -492,14 +499,17 @@ int wmain(int argc, wchar_t** argv) {
             wprintf(L"Found third-party storage drivers!\n");
             for (const auto& driver : found3PStorageDrivers)
                 wprintf(L"Driver: \"%s\", service: \"%s\"\n", driver.DriverName.c_str(), driver.ServiceName.c_str());
-            wprintf(L"In some cases, continuing with XenBootFix may cause boot failures.\n");
-            wprintf(L"You may be able to recover the VM by removing these drivers with DISM.\n");
-            if (force) {
-                wprintf(L"Continuing anyway. (--force)\n");
-            }
-            else {
-                wprintf(L"If you're sure these drivers are not needed for booting, specify --force.\n");
-                throw std::runtime_error("Found third-party storage drivers");
+            // StartOverride issue only exists if xenvbd is installed
+            if (xenvbdPresent) {
+                wprintf(L"Xenvbd is currently enabled on your Windows installation.\n");
+                wprintf(L"In some cases, continuing with XenBootFix may cause boot failures.\n");
+                if (force) {
+                    wprintf(L"Continuing anyway. (--force)\n");
+                }
+                else {
+                    wprintf(L"If you want to continue anyway, specify --force.\n");
+                    throw std::runtime_error("Found third-party storage drivers");
+                }
             }
         }
 
@@ -508,7 +518,9 @@ int wmain(int argc, wchar_t** argv) {
             Backup(controlSetKey, backup);
         }
 
-        DeleteOverrides(controlSetKey, found3PStorageDrivers);
+        if (xenvbdPresent) {
+            DeleteOverrides(controlSetKey, found3PStorageDrivers);
+        }
         RemoveFilters(controlSetKey);
         DisableServices(controlSetKey);
 
