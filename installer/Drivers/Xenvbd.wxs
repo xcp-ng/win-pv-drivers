@@ -16,7 +16,11 @@
 
     <CustomAction Id="XenvbdCleanup" BinaryRef="xeninst.dll" DllEntry="XenvbdCleanup" Execute="deferred" Impersonate="no" />
 
+    <!-- this is needed for 3rd-party storage drivers to reappear after uninstallation, so that cleanup happens correctly -->
+    <CustomAction Id="XenvbdWaitDriverUninstall" BinaryRef="xeninst.dll" DllEntry="DriverWaitInstallFinish" Execute="deferred" Impersonate="no" />
+
     <InstallExecuteSequence>
+      <Custom Action="XenvbdWaitDriverUninstall" Before="XenvbdCleanup" Condition="$Xenvbd.inf=2" />
       <Custom Action="XenvbdCleanup" Before="XenbusCleanup" Condition="$Xenvbd.inf=2" />
     </InstallExecuteSequence>
 
