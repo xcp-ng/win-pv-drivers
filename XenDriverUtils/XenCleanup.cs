@@ -1,14 +1,38 @@
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Windows.Win32;
+using Windows.Win32.Foundation;
 
 namespace XenDriverUtils {
+    public class ThirdPartyStorageDriver {
+        public string DriverInfPath { get; set; }
+        public string Service { get; set; }
+    }
+
     public class XenCleanup {
-        private static readonly List<Guid> ClassKeyList = new() {
+        static readonly IReadOnlyList<Guid> StorageClasses = new List<Guid>() {
+            PInvoke.GUID_DEVCLASS_HDC,
+            PInvoke.GUID_DEVCLASS_SCSIADAPTER,
+        };
+
+        public static List<ThirdPartyStorageDriver> Find3PStorageDrivers() {
+            var found3PDrivers = new List<ThirdPartyStorageDriver>();
+            foreach (var classGuid in StorageClasses) {
+                var devInfo = PInvoke.SetupDiGetClassDevs(classGuid, null, HWND.Null, 0);
+                foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo).Where(x => DriverUtils.GetDeviceEnumeratorName(devInfo, x) == "PCI")) {
+                    var driverPath = DriverUtils.GetDeviceDriverInfPath(devInfo, devInfoData);
+                    if (driverPath.StartsWith("oem", StringComparison.OrdinalIgnoreCase)) {
+                        found3PDrivers.Add(new ThirdPartyStorageDriver() { DriverInfPath = driverPath, Service = DriverUtils.GetDeviceService(devInfo, devInfoData) });
+                    }
+                }
+            }
+            return found3PDrivers;
+        }
+
+        private static readonly List<Guid> XenfiltClasses = new() {
             PInvoke.GUID_DEVCLASS_HDC,
             PInvoke.GUID_DEVCLASS_SYSTEM,
         };
@@ -28,7 +52,7 @@ namespace XenDriverUtils {
             if (classKey == null) {
                 return;
             }
-            foreach (var classGuid in ClassKeyList) {
+            foreach (var classGuid in XenfiltClasses) {
                 using var classSubkey = classKey.OpenSubKey(classGuid.ToString("B"), true);
                 if (classSubkey == null) {
                     continue;
@@ -50,14 +74,13 @@ namespace XenDriverUtils {
 
         private static readonly List<string> OverridesToDelete = new() {
             "stornvme",
-            "iaStorAC", // https://xcp-ng.org/forum/topic/10284/vm-failing-to-reboot
         };
 
         public static void ResetStartOverride() {
             try {
-                foreach (var overrideName in OverridesToDelete) {
-                    Logger.Log($"Resetting ${overrideName} StartOverride");
-                    Registry.LocalMachine.DeleteSubKey($"SYSTEM\\CurrentControlSet\\Services\\${overrideName}\\StartOverride", false);
+                foreach (var overrideName in OverridesToDelete.Concat(Find3PStorageDrivers().Select(x => x.Service))) {
+                    Logger.Log($"Resetting {overrideName} StartOverride");
+                    Registry.LocalMachine.DeleteSubKey($"SYSTEM\\CurrentControlSet\\Services\\{overrideName}\\StartOverride", false);
                 }
             } catch (Exception ex) {
                 Logger.Log($"Cannot delete StartOverride subkey: {ex.Message}");

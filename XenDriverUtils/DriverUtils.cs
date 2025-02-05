@@ -22,19 +22,29 @@ namespace XenDriverUtils {
             pid = 4
         };
 
+        public static readonly DEVPROPKEY DEVPKEY_Device_Service = new() {
+            fmtid = new Guid(0xa45c254e, 0xdf1c, 0x4efd, 0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0),
+            pid = 6
+        };
+
+        public static readonly DEVPROPKEY DEVPKEY_Device_EnumeratorName = new() {
+            fmtid = new Guid(0xa45c254e, 0xdf1c, 0x4efd, 0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0),
+            pid = 24
+        };
+
         public static readonly DEVPROPKEY DEVPKEY_Device_DriverInfPath = new() {
             fmtid = new Guid(0xa8b865dd, 0x2e3d, 0x4094, 0xad, 0x97, 0xe5, 0x93, 0xa7, 0xc, 0x75, 0xd6),
             pid = 5
         };
 
-        public static readonly DEVPROPKEY DEVPKEY_Device_Children = new() {
-            fmtid = new Guid(0x4340a6c5, 0x93fa, 0x4706, 0x97, 0x2c, 0x7b, 0x64, 0x80, 0x08, 0xa5, 0xa7),
-            pid = 9
-        };
-
         public static readonly DEVPROPKEY DEVPKEY_Device_InstanceId = new() {
             fmtid = new Guid(0x78c34fc8, 0x104a, 0x4aca, 0x9e, 0xa4, 0x52, 0x4d, 0x52, 0x99, 0x6e, 0x57),
             pid = 256
+        };
+
+        public static readonly DEVPROPKEY DEVPKEY_Device_Children = new() {
+            fmtid = new Guid(0x4340a6c5, 0x93fa, 0x4706, 0x97, 0x2c, 0x7b, 0x64, 0x80, 0x08, 0xa5, 0xa7),
+            pid = 9
         };
 
         public static List<string> ParseMultiString(char[] buf) {
@@ -102,11 +112,11 @@ namespace XenDriverUtils {
             return buf;
         }
 
-        public static string GetDeviceInstanceId(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
+        public static string GetDevicePropertyString(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData, DEVPROPKEY devPropKey) {
             var buf = DriverUtils.GetDeviceProperty<char>(
                 devInfo,
                 devInfoData,
-                DEVPKEY_Device_InstanceId,
+                devPropKey,
                 DEVPROPTYPE.DEVPROP_TYPE_STRING);
             if (buf == null) {
                 return null;
@@ -122,11 +132,11 @@ namespace XenDriverUtils {
             return outstr.ToString();
         }
 
-        public static List<string> GetDeviceChildren(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
+        public static List<string> GetDevicePropertyStringList(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData, DEVPROPKEY devPropKey) {
             var buf = DriverUtils.GetDeviceProperty<char>(
                 devInfo,
                 devInfoData,
-                DEVPKEY_Device_Children,
+                devPropKey,
                 DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
             if (buf == null) {
                 return new List<string>();
@@ -135,27 +145,11 @@ namespace XenDriverUtils {
         }
 
         public static List<string> GetDeviceHardwareIds(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
-            var buf = DriverUtils.GetDeviceProperty<char>(
-                devInfo,
-                devInfoData,
-                DEVPKEY_Device_HardwareIds,
-                DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
-            if (buf == null) {
-                return new List<string>();
-            }
-            return ParseMultiString(buf);
+            return GetDevicePropertyStringList(devInfo, devInfoData, DEVPKEY_Device_HardwareIds);
         }
 
         public static List<string> GetDeviceCompatibleIds(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
-            var buf = DriverUtils.GetDeviceProperty<char>(
-                devInfo,
-                devInfoData,
-                DEVPKEY_Device_CompatibleIds,
-                DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
-            if (buf == null) {
-                return new List<string>();
-            }
-            return ParseMultiString(buf);
+            return GetDevicePropertyStringList(devInfo, devInfoData, DEVPKEY_Device_CompatibleIds);
         }
 
         public static List<string> GetDeviceHardwareAndCompatibleIds(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
@@ -164,24 +158,24 @@ namespace XenDriverUtils {
             return hwids.Union(cids, StringComparer.OrdinalIgnoreCase).ToList();
         }
 
-        public static string GetDeviceInfPath(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
-            var buf = DriverUtils.GetDeviceProperty<char>(
-                devInfo,
-                devInfoData,
-                DEVPKEY_Device_DriverInfPath,
-                DEVPROPTYPE.DEVPROP_TYPE_STRING);
-            if (buf == null) {
-                return null;
-            }
-            // we don't know the actual length of the string returned by GetDeviceProperty
-            var outstr = new StringBuilder();
-            foreach (var ch in buf) {
-                if (ch == 0) {
-                    break;
-                }
-                outstr.Append(ch);
-            }
-            return outstr.ToString();
+        public static string GetDeviceService(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
+            return GetDevicePropertyString(devInfo, devInfoData, DEVPKEY_Device_Service);
+        }
+
+        public static string GetDeviceEnumeratorName(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
+            return GetDevicePropertyString(devInfo, devInfoData, DEVPKEY_Device_EnumeratorName);
+        }
+
+        public static string GetDeviceDriverInfPath(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
+            return GetDevicePropertyString(devInfo, devInfoData, DEVPKEY_Device_DriverInfPath);
+        }
+
+        public static string GetDeviceInstanceId(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
+            return GetDevicePropertyString(devInfo, devInfoData, DEVPKEY_Device_InstanceId);
+        }
+
+        public static List<string> GetDeviceChildren(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData) {
+            return GetDevicePropertyStringList(devInfo, devInfoData, DEVPKEY_Device_Children);
         }
 
         public static void UninstallDevice(SetupDiDestroyDeviceInfoListSafeHandle devInfo, SP_DEVINFO_DATA devInfoData, out bool needsReboot) {
