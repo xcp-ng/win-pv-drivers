@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the Wix project for full license information. -->
+
+<!--
+First-time install dialog sequence:
+ - WixUI_WelcomeDlg
+ - WixUI_LicenseAgreementDlg
+ - WixUI_CustomizeDlg
+ - WixUI_VerifyReadyDlg
+ - WixUI_DiskCostDlg
+
+Maintenance dialog sequence:
+ - WixUI_MaintenanceWelcomeDlg
+ - WixUI_MaintenanceTypeDlg
+ - WixUI_CustomizeDlg
+ - WixUI_VerifyReadyDlg
+
+Patch dialog sequence:
+ - WixUI_WelcomeDlg
+ - WixUI_VerifyReadyDlg
+-->
+
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <?foreach WIXUIARCH in X86;X64;A64 ?>
+  <Fragment>
+    <UI Id="XenDriversUI_$(WIXUIARCH)">
+      <Publish Dialog="LicenseAgreementDlg" Control="Print" Event="DoAction" Value="WixUIPrintEula_$(WIXUIARCH)" />
+    </UI>
+
+    <UIRef Id="XenDriversUI" />
+  </Fragment>
+  <?endforeach?>
+
+  <Fragment>
+    <UI>
+      <Dialog Id="XenCustomizeDlg" Width="370" Height="270" Title="!(loc.CustomizeDlg_Title)" TrackDiskSpace="yes">
+        <Control Id="Tree" Type="SelectionTree" X="25" Y="85" Width="175" Height="115" Property="_BrowseProperty" Sunken="yes" TabSkip="no" Text="!(loc.CustomizeDlgTree)">
+          <Publish Event="[PVDiskFeatureSelection]" Value="3" Condition="MsiSelectionTreeSelectedFeature=&quot;PVDiskFeature&quot; AND MsiSelectionTreeSelectedAction=3" />
+          <Publish Event="[PVDiskFeatureSelection]" Value="{}" Condition="MsiSelectionTreeSelectedFeature=&quot;PVDiskFeature&quot; AND MsiSelectionTreeSelectedAction&lt;&gt;3" />
+        </Control>
+        <Control Id="Browse" Type="PushButton" X="294" Y="210" Width="66" Height="17" Text="!(loc.CustomizeDlgBrowse)" HideCondition="Installed" DisableCondition="Installed">
+          <Publish Event="SelectionBrowse" Value="BrowseDlg" />
+        </Control>
+        <Control Id="Reset" Type="PushButton" X="10" Y="243" Width="81" Height="17" Text="!(loc.CustomizeDlgReset)">
+          <Publish Event="Reset" Value="0" />
+          <Subscribe Event="SelectionNoItems" Attribute="Enabled" />
+        </Control>
+        <Control Id="DiskCost" Type="PushButton" X="91" Y="243" Width="100" Height="17" Text="!(loc.CustomizeDlgDiskCost)">
+          <Publish Event="SpawnDialog" Value="DiskCostDlg" />
+          <Subscribe Event="SelectionNoItems" Attribute="Enabled" />
+        </Control>
+        <Control Id="Back" Type="PushButton" X="192" Y="243" Width="56" Height="17" Text="!(loc.WixUIBack)" />
+        <Control Id="Next" Type="PushButton" X="248" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUINext)">
+          <Subscribe Event="SelectionNoItems" Attribute="Enabled" />
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)">
+          <Publish Event="SpawnDialog" Value="CancelDlg" />
+        </Control>
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.CustomizeDlgBannerBitmap)" />
+        <Control Id="Text" Type="Text" X="25" Y="55" Width="320" Height="20" Text="!(loc.CustomizeDlgText)" />
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="!(loc.CustomizeDlgDescription)" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="210" Height="15" Transparent="yes" NoPrefix="yes" Text="!(loc.CustomizeDlgTitle)" />
+        <Control Id="Box" Type="GroupBox" X="210" Y="81" Width="150" Height="118" />
+        <Control Id="ItemDescription" Type="Text" X="215" Y="90" Width="131" Height="50" Text="!(loc.CustomizeDlgItemDescription)">
+          <Subscribe Event="SelectionDescription" Attribute="Text" />
+        </Control>
+        <Control Id="ItemSize" Type="Text" X="215" Y="140" Width="131" Height="50" Text="!(loc.CustomizeDlgItemSize)">
+          <Subscribe Event="SelectionSize" Attribute="Text" />
+        </Control>
+        <Control Id="Location" Type="Text" X="90" Y="210" Width="200" Height="20" Text="!(loc.CustomizeDlgLocation)" HideCondition="Installed">
+          <Subscribe Event="SelectionPath" Attribute="Text" />
+          <Subscribe Event="SelectionPathOn" Attribute="Visible" />
+        </Control>
+        <Control Id="LocationLabel" Type="Text" X="25" Y="210" Width="65" Height="10" Text="!(loc.CustomizeDlgLocationLabel)" HideCondition="Installed">
+          <Subscribe Event="SelectionPathOn" Attribute="Visible" />
+        </Control>
+      </Dialog>
+    </UI>
+  </Fragment>
+
+  <Fragment>
+    <UI>
+      <Dialog Id="Detected3PStorageDriversDlg" Width="300" Height="105" Title="!(loc.Detected3PStorageDriversDlg_Title)">
+        <Control Id="Continue" Type="PushButton" X="92" Y="80" Width="56" Height="17" Text="!(loc.XenDriversUIContinue)">
+          <Publish Event="EndDialog" Value="Return" />
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="152" Y="80" Width="56" Height="17" Default="yes" Cancel="yes" Text="!(loc.WixUICancel)">
+          <Publish Event="EndDialog" Value="Exit" />
+        </Control>
+        <Control Id="DriverListText" Type="Text" X="30" Y="15" Width="250" Height="20" NoPrefix="yes" Text="!(loc.Detected3PStorageDriversDlg_DriverListText)" />
+        <Control Id="WarningText" Type="Text" X="30" Y="35" Width="250" Height="30" NoPrefix="yes" Text="!(loc.Detected3PStorageDriversDlg_WarningText)" />
+      </Dialog>
+    </UI>
+  </Fragment>
+
+  <Fragment>
+    <UI Id="XenDriversUI">
+      <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
+      <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12" />
+      <TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes" />
+
+      <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+
+      <DialogRef Id="ErrorDlg" />
+      <DialogRef Id="FatalError" />
+      <DialogRef Id="FilesInUse" />
+      <DialogRef Id="MsiRMFilesInUse" />
+      <DialogRef Id="PrepareDlg" />
+      <DialogRef Id="ProgressDlg" />
+      <DialogRef Id="ResumeDlg" />
+      <DialogRef Id="UserExit" />
+
+      <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999" />
+
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg" Condition="NOT Installed" />
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Condition="Installed AND PATCH" />
+
+      <Publish Dialog="LicenseAgreementDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" />
+      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="XenCustomizeDlg" Condition="LicenseAccepted = &quot;1&quot;" />
+
+      <Publish Dialog="XenCustomizeDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="1" Condition="Installed" />
+      <Publish Dialog="XenCustomizeDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg" Order="2" Condition="NOT Installed" />
+      <Publish Dialog="XenCustomizeDlg" Control="Next" Event="NewDialog" Value="Detected3PStorageDriversDlg" Order="1" Condition="NOT(REINSTALL OR REMOVE) AND ThirdPartyStorageDrivers AND PVDiskFeatureSelection" />
+      <Publish Dialog="XenCustomizeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="2" Condition="REINSTALL OR REMOVE OR (NOT ThirdPartyStorageDrivers) OR (NOT PVDiskFeatureSelection)" />
+
+      <Publish Dialog="Detected3PStorageDriversDlg" Control="Continue" Event="NewDialog" Value="VerifyReadyDlg" />
+
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="XenCustomizeDlg" Order="1" Condition="NOT Installed OR WixUI_InstallMode = &quot;Change&quot;" />
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="2" Condition="Installed AND NOT PATCH" />
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="3" Condition="Installed AND PATCH" />
+
+      <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg" />
+
+      <Publish Dialog="MaintenanceTypeDlg" Control="ChangeButton" Event="NewDialog" Value="XenCustomizeDlg" />
+      <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg" />
+      <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg" />
+      <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg" />
+    </UI>
+
+    <UIRef Id="WixUI_Common" />
+  </Fragment>
+</Wix>

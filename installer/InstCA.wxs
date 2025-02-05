@@ -42,4 +42,11 @@
       <ProgressText Action="XenWaitDriverInstall" Message="!(loc.XenWaitDriverInstallText)" />
     </UI>
   </Fragment>
+
+  <Fragment>
+    <CustomAction Id="XenCheck3PStorageDrivers" BinaryRef="xeninst.dll" DllEntry="Check3PStorageDrivers" Execute="immediate" Impersonate="no" />
+    <InstallUISequence>
+      <Custom Action="XenCheck3PStorageDrivers" Before="LaunchConditions" Condition="NOT(REINSTALL OR REMOVE)" />
+    </InstallUISequence>
+  </Fragment>
 </Wix>

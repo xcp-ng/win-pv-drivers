@@ -93,7 +93,7 @@ namespace XenInstCA {
                     Logger.Log($"Found {driver.DriverName} device");
                 }
 
-                var infName = DriverUtils.GetDeviceInfPath(devInfo, devInfoData);
+                var infName = DriverUtils.GetDeviceDriverInfPath(devInfo, devInfoData);
                 Logger.Log($"Current inf path: {infName}");
                 if (!string.IsNullOrEmpty(infName)
                         && infName.StartsWith("oem", StringComparison.OrdinalIgnoreCase)) {

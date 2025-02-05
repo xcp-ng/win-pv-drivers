@@ -71,5 +71,14 @@ namespace XenInstCA {
             session["IncompatibleDevices"] = string.Join(",", incompatibilities);
             return ActionResult.Success;
         }
+
+        [CustomAction]
+        public static ActionResult Check3PStorageDrivers(Session session) {
+            using var logScope = new LoggerScope(new MsiSessionLogger(session));
+
+            var found3PDrivers = XenCleanup.Find3PStorageDrivers();
+            session["ThirdPartyStorageDrivers"] = string.Join(",", found3PDrivers.Select(x => x.DriverInfPath));
+            return ActionResult.Success;
+        }
     }
 }

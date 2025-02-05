@@ -53,7 +53,7 @@
     -->
     <!--<Launch Condition="REMOVE OR (NOT MsiSystemRebootPending)" Message="!(loc.RebootPendingError)" />-->
 
-    <ui:WixUI Id="WixUI_FeatureTree" />
+    <ui:WixUI Id="XenDriversUI" />
     <UIRef Id="WixUI_ErrorProgressText" />
 
     <ComponentGroupRef Id="BrandingComponent" />
@@ -78,7 +78,7 @@
     <Feature Id="PVDiskFeature" AllowAdvertise="no" Title="!(loc.PVDiskFeatureTitle)" Level="2">
       <ComponentGroupRef Id="XenvbdComponent" />
     </Feature>
-    <Feature Id="ToolsFeature" Display="collapse" Title="!(loc.ToolsFeatureTitle)">
+    <Feature Id="ToolsFeature" AllowAdvertise="no" Display="collapse" Title="!(loc.ToolsFeatureTitle)">
       <Feature Id="XenCleanFeature" AllowAdvertise="no" Title="!(loc.XenCleanFeatureTitle)">
         <ComponentGroupRef Id="XenCleanComponent" />
       </Feature>
@@ -104,5 +104,7 @@
 
     <Property Id="XenMinSupportedVersion" Value="10.0.14393" />
     <CustomActionRef Id="XenCheckWindowsVersion" />
+
+    <CustomActionRef Id="XenCheck3PStorageDrivers" />
   </Package>
 </Wix>
