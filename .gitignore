@@ -372,4 +372,5 @@ Branding.wxi
 Branding.cs
 /package/
 /XenBootFix/Branding.inc
-package-*
+/package-*
+output/
