@@ -33,7 +33,7 @@ foreach ($repo in $Drivers) {
             -Type $Type `
             -Arch $Arch `
             -SignMode $SignMode `
-            -TestCertificate $Env:SIGNER_THUMBPRINT `
+            -TestCertificate $Env:SIGNER `
             -CodeQL:$CodeQL `
             -Sdv:$Sdv
         New-Item -ItemType Directory -Path $OutputPath/$repo -Force

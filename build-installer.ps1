@@ -16,6 +16,7 @@ $ErrorActionPreference = "Stop"
 
 . $PSScriptRoot/branding.ps1
 . $PSScriptRoot/branding-generic.ps1
+. $PSScriptRoot/scripts/sign.ps1
 
 msbuild.exe "$PSScriptRoot\installer\installer.sln" /t:$Target /p:Configuration=$Configuration /p:Platform=$Platform
 if ($LASTEXITCODE -ne 0) {
@@ -48,6 +49,6 @@ if ($Target -ine "Clean") {
 
         New-Item -Path $TestsignDir -ItemType Directory -Force
         Copy-Item -Path "$PSScriptRoot\testsign\install.ps1" -Destination $TestsignDir\ -Force
-        Export-Certificate -Cert Cert:\CurrentUser\My\${Env:SIGNER_THUMBPRINT} -FilePath $TestsignDir\${Env:SIGNER_THUMBPRINT}.crt -Type CERT -Force
+        ExportSignerCertificate -SigningCertificate $Env:SIGNER -OutDir $TestsignDir
     }
 }
