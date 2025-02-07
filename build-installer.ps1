@@ -9,7 +9,13 @@ param (
     [Parameter()]
     [string]$OutDir = "$PSScriptRoot\output",
     [Parameter()]
-    [switch]$ExportCertificate
+    [switch]$ExportCertificate,
+    [Parameter()]
+    [switch]$ExportSymbols,
+    [Parameter()]
+    [string]$ReleaseTag,
+    [Parameter()]
+    [switch]$NoBuild
 )
 
 $ErrorActionPreference = "Stop"
@@ -18,31 +24,37 @@ $ErrorActionPreference = "Stop"
 . $PSScriptRoot/branding-generic.ps1
 . $PSScriptRoot/scripts/sign.ps1
 
-msbuild.exe "$PSScriptRoot\installer\installer.sln" /t:$Target /restore /p:Configuration=$Configuration /p:Platform=$Platform
-if ($LASTEXITCODE -ne 0) {
-    throw "MSBuild failed with error $LASTEXITCODE"
+if (!$NoBuild) {
+    msbuild.exe "$PSScriptRoot\installer\installer.sln" /t:$Target /restore /p:Configuration=$Configuration /p:Platform=$Platform
+    if ($LASTEXITCODE -ne 0) {
+        throw "MSBuild failed with error $LASTEXITCODE"
+    }
 }
 
-$VersionDir = "$OutDir\$(Get-PackageVersion Product)"
+if ([string]::IsNullOrEmpty($ReleaseTag)) {
+    $ReleaseTag = "$(Get-PackageVersion Product)-$Configuration-$Platform"
+}
+
+$VersionDir = "$OutDir\$ReleaseTag"
 Remove-Item -Path $VersionDir -Force -Recurse -ErrorAction SilentlyContinue
 if ($Target -ine "Clean") {
     $PackageDir = "$VersionDir\package"
 
     New-Item -Path $PackageDir -ItemType Directory -Force
-    Copy-Item -Path "$PSScriptRoot\installer\bin\$Platform\$Configuration\en-US\*" -Destination $PackageDir\ -Force
+    Copy-Item -Path "$PSScriptRoot\installer\bin\$Platform\$Configuration\en-US\*" -Exclude *.wixpdb -Destination $PackageDir\ -Force
 
     # XenClean
-    $XenCleanDir = "$PackageDir\XenClean\$Platform"
+    $XenCleanDir = "$PackageDir\XenClean"
     New-Item -Path $XenCleanDir -ItemType Directory -Force
     Copy-Item -Path "$PSScriptRoot\XenClean\bin\$Platform\$Configuration\net462\Invoke-XenClean.ps1" -Destination $XenCleanDir\ -Force
 
     New-Item -Path $XenCleanDir\bin -ItemType Directory -Force
-    Copy-Item -Path "$PSScriptRoot\XenClean\bin\$Platform\$Configuration\net462\*" -Exclude Invoke-XenClean.ps1 -Destination $XenCleanDir\bin\ -Force
+    Copy-Item -Path "$PSScriptRoot\XenClean\bin\$Platform\$Configuration\net462\*" -Exclude Invoke-XenClean.ps1, *.pdb -Destination $XenCleanDir\bin\ -Force
 
     # XenBootFix
-    $XenBootFixDir = "$PackageDir\XenBootFix\$Platform"
+    $XenBootFixDir = "$PackageDir\XenBootFix"
     New-Item -Path $XenBootFixDir -ItemType Directory -Force
-    Copy-Item -Path "$PSScriptRoot\XenBootFix\$Platform\$Configuration\XenBootFix.exe" -Destination $XenBootFixDir\ -Force
+    Copy-Item -Path "$PSScriptRoot\XenBootFix\$Platform\$Configuration\*" -Include *.exe -Destination $XenBootFixDir\ -Force
 
     if ($ExportCertificate) {
         $TestsignDir = "$VersionDir\testsign"
@@ -50,5 +62,24 @@ if ($Target -ine "Clean") {
         New-Item -Path $TestsignDir -ItemType Directory -Force
         Copy-Item -Path "$PSScriptRoot\testsign\install.ps1" -Destination $TestsignDir\ -Force
         ExportSignerCertificate -SigningCertificate $Env:SIGNER -OutDir $TestsignDir
+    }
+
+    if ($ExportSymbols) {
+        $SymbolDir = "$VersionDir\symbols"
+        New-Item -Path $SymbolDir -ItemType Directory -Force
+
+        Copy-Item -Path "$PSScriptRoot\installer\bin\$Platform\$Configuration\en-US\*" -Filter *.wixpdb -Destination $SymbolDir\ -Force
+
+        $DriversSymbolDir = "$VersionDir\symbols\drivers"
+        New-Item -Path $DriversSymbolDir -ItemType Directory -Force
+        Copy-Item -Path "$PSScriptRoot\installer\output\*\$Platform\*" -Filter *.pdb -Destination $DriversSymbolDir\ -Force
+
+        $XenCleanSymbolDir = "$SymbolDir\XenClean"
+        New-Item -Path $XenCleanSymbolDir -ItemType Directory -Force
+        Copy-Item -Path "$PSScriptRoot\XenClean\bin\$Platform\$Configuration\net462\*" -Filter *.pdb -Destination $XenCleanSymbolDir\ -Force
+
+        $XenBootFixSymbolDir = "$SymbolDir\XenBootFix"
+        New-Item -Path $XenBootFixSymbolDir -ItemType Directory -Force
+        Copy-Item -Path "$PSScriptRoot\XenBootFix\$Platform\$Configuration\*" -Include *.pdb -Destination $XenBootFixSymbolDir\ -Force
     }
 }
