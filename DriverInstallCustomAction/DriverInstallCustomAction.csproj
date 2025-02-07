@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
     <AssemblyName>xeninst</AssemblyName>
@@ -23,8 +24,11 @@
     <ProjectReference Include="..\XenDriverUtils\XenDriverUtils.csproj" />
   </ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+  <Target Name="XenGeneratedFiles" BeforeTargets="BeforeBuild">
     <Exec Command="powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)" />
+    <ItemGroup>
+      <Compile Include="Branding.cs" />
+    </ItemGroup>
   </Target>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

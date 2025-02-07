@@ -2,11 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
+    <AssemblyName>xdutils</AssemblyName>
     <LangVersion>9.0</LangVersion>
     <Platforms>x64;x86;ARM64</Platforms>
     <Nullable>warnings</Nullable>
-    <AssemblyName>xdutils</AssemblyName>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AccelerateBuildsInVisualStudio>false</AccelerateBuildsInVisualStudio>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,8 +19,11 @@
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
   </ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+  <Target Name="XenGeneratedFiles" BeforeTargets="BeforeBuild">
     <Exec Command="powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)" />
+    <ItemGroup>
+      <Compile Include="Branding.cs" />
+    </ItemGroup>
   </Target>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
