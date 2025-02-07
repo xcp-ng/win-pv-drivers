@@ -20,9 +20,9 @@ param (
 
 $ErrorActionPreference = "Stop"
 
-. $PSScriptRoot/branding.ps1
-. $PSScriptRoot/branding-generic.ps1
-. $PSScriptRoot/scripts/sign.ps1
+. $PSScriptRoot\branding.ps1
+. $PSScriptRoot\branding-generic.ps1
+. $PSScriptRoot\scripts\sign.ps1
 
 if (!$NoBuild) {
     msbuild.exe "$PSScriptRoot\installer\installer.sln" /t:$Target /restore /p:Configuration=$Configuration /p:Platform=$Platform
@@ -72,7 +72,7 @@ if ($Target -ine "Clean") {
 
         $DriversSymbolDir = "$VersionDir\symbols\drivers"
         New-Item -Path $DriversSymbolDir -ItemType Directory -Force
-        Copy-Item -Path "$PSScriptRoot\installer\output\*\$Platform\*" -Filter *.pdb -Destination $DriversSymbolDir\ -Force
+        Copy-Item -Path "$PSScriptRoot\installer\output\*\$Platform\$Configuration\*" -Filter *.pdb -Destination $DriversSymbolDir\ -Force
 
         $XenCleanSymbolDir = "$SymbolDir\XenClean"
         New-Item -Path $XenCleanSymbolDir -ItemType Directory -Force

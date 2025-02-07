@@ -5,7 +5,7 @@
     <?define XenDriverDependsOn="Xenbus" ?>
     <?include ../Driver.wxi ?>
 
-    <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.output)$(XenDriver)/$(Platform)">
+    <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.output)$(XenDriver)/$(Platform)/$(Configuration)">
       <File Name="xenvif.cat" DefaultVersion="$(XenvifVersion)" DefaultLanguage="1033" />
       <File Name="xenvif.inf" Id="Xenvif.inf" DefaultVersion="$(XenvifVersion)" DefaultLanguage="1033" />
       <File Name="xenvif.sys" />

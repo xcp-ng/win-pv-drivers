@@ -6,7 +6,7 @@
     <?define XenDriverUpgradeNeedsReboot ?>
     <?include ../Driver.wxi ?>
 
-    <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.output)$(XenDriver)/$(Platform)">
+    <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.output)$(XenDriver)/$(Platform)/$(Configuration)">
       <File Name="xennet.cat" DefaultVersion="$(XennetVersion)" DefaultLanguage="1033" />
       <File Name="xennet.inf" Id="Xennet.inf" DefaultVersion="$(XennetVersion)" DefaultLanguage="1033" />
       <File Name="xennet.sys" />

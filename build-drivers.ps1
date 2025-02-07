@@ -2,42 +2,58 @@
 param (
     [Parameter()]
     [string[]]$Drivers = @("xenbus", "xencons", "xenhid", "xeniface", "xennet", "xenvbd", "xenvif", "xenvkbd"),
+    [Parameter()]
+    [string]$Target = "Build",
     [Parameter(Mandatory)]
-    [ValidateSet("free", "checked")]
-    [string]$Type,
+    [string]$Configuration,
+    [Parameter(Mandatory)]
+    [string]$Platform,
     [Parameter()]
-    [string]$Arch,
+    [string]$SolutionDir = "vs2022",
     [Parameter()]
-    [ValidateSet("TestSign", "ProductionSign", "Off")]
-    [string]$SignMode = "TestSign",
-    [Parameter()]
-    [switch]$CodeQL,
-    [Parameter()]
-    [switch]$Sdv
+    [string]$ConfigurationBase = "Windows 10"
 )
 
-. $PSScriptRoot/branding.ps1
-. $PSScriptRoot/branding-generic.ps1
+. $PSScriptRoot\branding.ps1
+. $PSScriptRoot\branding-generic.ps1
+. $PSScriptRoot\scripts\sign.ps1
 
-$OutputPath = "$PSScriptRoot/installer/output"
+$OutputPath = "$PSScriptRoot\installer\output"
 Remove-Item -Path $OutputPath -Force -Recurse -ErrorAction SilentlyContinue
 $ErrorActionPreference = "Stop"
 foreach ($repo in $Drivers) {
-    Push-Location $PSScriptRoot/$repo
+    Push-Location $PSScriptRoot\$repo
     try {
         $Env:MAJOR_VERSION = (Get-PackageVersion $repo).Major
         $Env:MINOR_VERSION = (Get-PackageVersion $repo).Minor
         $Env:MICRO_VERSION = (Get-PackageVersion $repo).Build
         $Env:BUILD_NUMBER = (Get-PackageVersion $repo).Revision
-        ./build.ps1 `
-            -Type $Type `
-            -Arch $Arch `
-            -SignMode $SignMode `
-            -TestCertificate $Env:SIGNER `
-            -CodeQL:$CodeQL `
-            -Sdv:$Sdv
-        New-Item -ItemType Directory -Path $OutputPath/$repo -Force
-        Copy-Item -Path ./$repo/* -Destination $OutputPath/$repo -Recurse -Force
+
+        git clean -fxd
+
+        $DriverConfiguration = "$ConfigurationBase $Configuration"
+        $DriverConfigShort = $DriverConfiguration.Replace(" ", "")
+
+        $BuildArgs = @(
+            (Resolve-Path "$SolutionDir\$repo.sln"),
+            "/m:4",
+            "/p:Configuration=$DriverConfiguration",
+            "/p:Platform=$Platform",
+            "/p:SignMode=Off",
+            "/t:$Target"
+        )
+
+        msbuild.exe @BuildArgs
+        if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild failed with error $LASTEXITCODE"
+        }
+
+        $DriverOutput = "$OutputPath\$repo\$Platform\$Configuration"
+        New-Item -ItemType Directory -Path $DriverOutput -Force
+        Copy-Item -Path .\$SolutionDir\$DriverConfigShort\$Platform\package\* -Destination $DriverOutput\ -Force -Recurse
+
+        Set-SignerFileSignature $DriverOutput\*.sys
+        Set-SignerFileSignature $DriverOutput\*.cat
     }
     finally {
         $Env:MAJOR_VERSION = ''
