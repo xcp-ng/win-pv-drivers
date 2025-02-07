@@ -18,7 +18,7 @@ $ErrorActionPreference = "Stop"
 . $PSScriptRoot/branding-generic.ps1
 . $PSScriptRoot/scripts/sign.ps1
 
-msbuild.exe "$PSScriptRoot\installer\installer.sln" /t:$Target /p:Configuration=$Configuration /p:Platform=$Platform
+msbuild.exe "$PSScriptRoot\installer\installer.sln" /t:$Target /restore /p:Configuration=$Configuration /p:Platform=$Platform
 if ($LASTEXITCODE -ne 0) {
     throw "MSBuild failed with error $LASTEXITCODE"
 }
