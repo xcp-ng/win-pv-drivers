@@ -1,41 +1,48 @@
-function SignFile() {
+function Get-SignerObject() {
+    if (!$Env:SIGNER) {
+        return $null
+    }
+
+    if (${Env:SIGNER}.EndsWith(".pfx", [System.StringComparison]::OrdinalIgnoreCase)) {
+        return Get-PfxCertificate -FilePath $Env:SIGNER
+    }
+    else {
+        return Get-ChildItem Cert:\CurrentUser\My\$Env:SIGNER
+    }
+}
+
+function Set-SignerFileSignature() {
     param (
-        [Parameter(Mandatory)]
-        [string]$SigningCertificate,
         [Parameter()]
         [string[]]$FilePath
     )
 
-    if ($SigningCertificate.EndsWith(".pfx", [System.StringComparison]::OrdinalIgnoreCase)) {
-        $SignerObject = Get-PfxCertificate -FilePath $SigningCertificate
+    $SignerObject = Get-SignerObject
+    if (!$SignerObject) {
+        return
     }
-    else {
-        $SignerObject = Get-ChildItem Cert:\CurrentUser\My\$SigningCertificate
-    }
+
     $signArgs = @{
+        FilePath      = $FilePath
         HashAlgorithm = "SHA256"
         Certificate   = $SignerObject
     }
-    if (![string]::IsNullOrEmpty($Env:TimestampServer)) {
-        $signArgs["TimestampServer"] = $Env:TimestampServer
+    if ($Env:TIMESTAMP_SERVER) {
+        $signArgs["TimestampServer"] = $Env:TIMESTAMP_SERVER
     }
 
-    Set-AuthenticodeSignature -FilePath $FilePath @signArgs
+    Set-AuthenticodeSignature @signArgs
 }
 
-function ExportSignerCertificate {
+function Export-SignerCertificate {
     param (
-        [Parameter(Mandatory)]
-        [string]$SigningCertificate,
         [Parameter()]
         [string[]]$OutDir
     )
 
-    if ($SigningCertificate.EndsWith(".pfx", [System.StringComparison]::OrdinalIgnoreCase)) {
-        $SignerObject = Get-PfxCertificate -FilePath $SigningCertificate
-    }
-    else {
-        $SignerObject = Get-ChildItem Cert:\CurrentUser\My\$SigningCertificate
+    $SignerObject = Get-SignerObject
+    if (!$SignerObject) {
+        return
     }
 
     Export-Certificate -Cert $SignerObject -FilePath $OutDir\$($SignerObject.Thumbprint).crt -Type CERT -Force

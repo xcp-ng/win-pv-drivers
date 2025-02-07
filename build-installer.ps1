@@ -61,7 +61,7 @@ if ($Target -ine "Clean") {
 
         New-Item -Path $TestsignDir -ItemType Directory -Force
         Copy-Item -Path "$PSScriptRoot\testsign\install.ps1" -Destination $TestsignDir\ -Force
-        ExportSignerCertificate -SigningCertificate $Env:SIGNER -OutDir $TestsignDir
+        Export-SignerCertificate -OutDir $TestsignDir
     }
 
     if ($ExportSymbols) {

@@ -21,9 +21,6 @@ Update-ScriptFileInfo `
     -Copyright $Env:COPYRIGHT `
     -Force
 
-if (![string]::IsNullOrEmpty($Env:SIGNER)) {
-    SignFile `
-        -SigningCertificate $Env:SIGNER `
-        -FilePath "$ProjectDir\bin\$Platform\$Configuration\*\XenClean.exe", `
-        "$ProjectDir\bin\$Platform\$Configuration\*\Invoke-XenClean.ps1"
-}
+Set-SignerFileSignature -FilePath `
+    "$ProjectDir\bin\$Platform\$Configuration\*\XenClean.exe", `
+    "$ProjectDir\bin\$Platform\$Configuration\*\Invoke-XenClean.ps1"

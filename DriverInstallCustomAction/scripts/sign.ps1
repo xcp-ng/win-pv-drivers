@@ -12,8 +12,4 @@ param (
 . "$ProjectDir\..\branding-generic.ps1"
 . "$ProjectDir\..\scripts\sign.ps1"
 
-if (![string]::IsNullOrEmpty($Env:SIGNER)) {
-    SignFile `
-        -SigningCertificate $Env:SIGNER `
-        -FilePath "$ProjectDir\bin\$Platform\$Configuration\*\xeninst.CA.dll"
-}
+Set-SignerFileSignature -FilePath "$ProjectDir\bin\$Platform\$Configuration\*\xeninst.CA.dll"
