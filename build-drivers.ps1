@@ -52,8 +52,7 @@ foreach ($repo in $Drivers) {
         New-Item -ItemType Directory -Path $DriverOutput -Force
         Copy-Item -Path .\$SolutionDir\$DriverConfigShort\$Platform\package\* -Destination $DriverOutput\ -Force -Recurse
 
-        Set-SignerFileSignature $DriverOutput\*.sys
-        Set-SignerFileSignature $DriverOutput\*.cat
+        Set-SignerFileSignature $DriverOutput\*.sys, $DriverOutput\*.dll, $DriverOutput\*.exe, $DriverOutput\*.cat
     }
     finally {
         $Env:MAJOR_VERSION = ''
