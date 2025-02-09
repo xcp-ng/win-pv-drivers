@@ -4,8 +4,8 @@
   <Fragment>
     <StandardDirectory Id="ProgramFiles6432Folder">
       <Directory Id="ManufacturerFolder" Name="$(VENDOR_NAME)">
-        <Directory Id="XenBootFixFolder" Name="XenBootFix" />
-        <Directory Id="INSTALLFOLDER" Name="!(loc.GenericProductName)">
+        <Directory Id="INSTALLFOLDER" Name="Windows PV Drivers">
+          <Directory Id="XenBootFixFolder" Name="XenBootFix" />
           <Directory Id="XenCleanFolder" Name="XenClean" />
         </Directory>
       </Directory>
