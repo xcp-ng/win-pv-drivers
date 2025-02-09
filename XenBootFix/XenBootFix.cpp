@@ -430,18 +430,18 @@ int wmain(int argc, wchar_t** argv) {
     wchar_t* backup = nullptr;
 
     for (int i = 1; i < argc; i++) {
-        if (!_wcsicmp(L"--force", argv[i])) {
+        if (CompareStringOrdinal(L"--force", -1, argv[i], -1, TRUE) == CSTR_EQUAL) {
             force = true;
         }
-        else if (!_wcsicmp(L"--backup", argv[i])) {
+        else if (CompareStringOrdinal(L"--backup", -1, argv[i], -1, TRUE) == CSTR_EQUAL) {
             if (i >= argc - 1)
                 goto help;
             backup = argv[++i];
         }
-        else if (!_wcsicmp(L"--dry-run", argv[i])) {
+        else if (CompareStringOrdinal(L"--dry-run", -1, argv[i], -1, TRUE) == CSTR_EQUAL) {
             dryrun = true;
         }
-        else if (!_wcsicmp(L"--system-hive", argv[i])) {
+        else if (CompareStringOrdinal(L"--system-hive", -1, argv[i], -1, TRUE) == CSTR_EQUAL) {
             if (i >= argc - 1)
                 goto help;
             hivePath = std::wstring(argv[++i]);
