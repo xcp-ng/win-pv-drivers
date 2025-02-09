@@ -62,7 +62,9 @@ static DWORD GetCurrentControlSet(const RegHive& hive) {
         throw std::system_error(result, std::system_category(), "Couldn't open Select key");
 
     DWORD value;
-    selectKey.QueryDWORDValue(L"Current", value);
+    result = selectKey.QueryDWORDValue(L"Current", value);
+    if (result != ERROR_SUCCESS)
+        throw std::system_error(result, std::system_category(), "Couldn't query current hive");
     if (value == 0 || value > 999)
         throw std::runtime_error("Unexpected current control set value");
 
