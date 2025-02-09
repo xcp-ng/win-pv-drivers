@@ -95,6 +95,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
     <PreBuildEvent>
       <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)</Command>
@@ -121,6 +122,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>libucrt.lib</IgnoreSpecificDefaultLibraries>
       <AdditionalOptions>/defaultlib:ucrt.lib %(AdditionalOptions)</AdditionalOptions>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
     <PreBuildEvent>
       <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)</Command>
@@ -140,6 +142,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
     <PreBuildEvent>
       <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)</Command>
@@ -166,6 +169,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>libucrt.lib</IgnoreSpecificDefaultLibraries>
       <AdditionalOptions>/defaultlib:ucrt.lib %(AdditionalOptions)</AdditionalOptions>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
     <PreBuildEvent>
       <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)</Command>
