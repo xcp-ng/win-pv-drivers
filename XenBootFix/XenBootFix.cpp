@@ -504,7 +504,7 @@ int wmain(int argc, wchar_t** argv) {
             // StartOverride issue only exists if xenvbd is installed
             if (xenvbdPresent) {
                 wprintf(L"Xenvbd is currently enabled on your Windows installation.\n");
-                wprintf(L"In some cases, continuing with XenBootFix may cause boot failures.\n");
+                wprintf(L"In some cases, continuing with XenBootFix while third-party storage drivers are present may cause boot failures.\n");
                 if (force) {
                     wprintf(L"Continuing anyway. (--force)\n");
                 }
@@ -520,9 +520,7 @@ int wmain(int argc, wchar_t** argv) {
             Backup(controlSetKey, backup);
         }
 
-        if (xenvbdPresent) {
-            DeleteOverrides(controlSetKey, found3PStorageDrivers);
-        }
+        DeleteOverrides(controlSetKey, found3PStorageDrivers);
         RemoveFilters(controlSetKey);
         DisableServices(controlSetKey);
 
@@ -531,7 +529,7 @@ int wmain(int argc, wchar_t** argv) {
         }
         else {
             wprintf(L"Success!\n");
-            wprintf(L"You must run XenClean from the VM to remove all remaining driverInstance traces.\n");
+            wprintf(L"You must run XenClean from the VM to remove all remaining driver traces.\n");
         }
 
         return 0;
