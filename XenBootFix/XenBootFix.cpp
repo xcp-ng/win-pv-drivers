@@ -25,7 +25,8 @@ static constexpr auto HiveMountName = L"XenBootFix";
 static bool dryrun = false;
 
 static void PrintUsage(wchar_t* name) {
-    wprintf(L"Usage: %s [--force] [--backup <path>] [--dry-run] <windir>|--system-hive <hive>", name);
+    wprintf(L"XenBootFix recovers an unbootable system caused by installation/uninstallation of older Xen PV drivers or OS upgrades.\n");
+    wprintf(L"Usage: %s [--force] [--backup <path>] [--dry-run] <windir>|--system-hive <hive>\n", name);
 }
 
 static std::vector<std::wstring> ParseMultiStrings(_In_reads_(count) const wchar_t* buf, size_t count) {
@@ -466,13 +467,13 @@ int wmain(int argc, wchar_t** argv) {
         {
             CRegKey winPeKey;
             if (winPeKey.Open(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\WinPE", KEY_READ) != ERROR_SUCCESS) {
-                wprintf(L"XenBootFix must run from within Windows PE!\n");
+                wprintf(L"XenBootFix must run from within Windows PE/Windows RE!\n");
                 if (force) {
                     wprintf(L"Continuing anyway. (--force)\n");
                 }
                 else {
                     wprintf(L"Specify --force to continue.\n");
-                    throw std::runtime_error("XenBootFix must run from within Windows PE");
+                    throw std::runtime_error("XenBootFix must run from within Windows PE/Windows RE");
                 }
             }
         }
