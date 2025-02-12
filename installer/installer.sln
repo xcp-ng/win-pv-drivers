@@ -20,6 +20,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XenBootFix", "..\XenBootFix\XenBootFix.vcxproj", "{018433AB-F981-4625-8E23-6B3F22B7E5CF}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SBUpdate", "..\SBUpdate\SBUpdate.vcxproj", "{0972C789-7FA6-4ECC-A40B-71192B1BBF29}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -90,6 +92,18 @@ Global
 		{018433AB-F981-4625-8E23-6B3F22B7E5CF}.Release|x64.Build.0 = Release|x64
 		{018433AB-F981-4625-8E23-6B3F22B7E5CF}.Release|x86.ActiveCfg = Release|Win32
 		{018433AB-F981-4625-8E23-6B3F22B7E5CF}.Release|x86.Build.0 = Release|Win32
+		{0972C789-7FA6-4ECC-A40B-71192B1BBF29}.Debug|ARM64.ActiveCfg = Debug|x64
+		{0972C789-7FA6-4ECC-A40B-71192B1BBF29}.Debug|ARM64.Build.0 = Debug|x64
+		{0972C789-7FA6-4ECC-A40B-71192B1BBF29}.Debug|x64.ActiveCfg = Debug|x64
+		{0972C789-7FA6-4ECC-A40B-71192B1BBF29}.Debug|x64.Build.0 = Debug|x64
+		{0972C789-7FA6-4ECC-A40B-71192B1BBF29}.Debug|x86.ActiveCfg = Debug|Win32
+		{0972C789-7FA6-4ECC-A40B-71192B1BBF29}.Debug|x86.Build.0 = Debug|Win32
+		{0972C789-7FA6-4ECC-A40B-71192B1BBF29}.Release|ARM64.ActiveCfg = Release|x64
+		{0972C789-7FA6-4ECC-A40B-71192B1BBF29}.Release|ARM64.Build.0 = Release|x64
+		{0972C789-7FA6-4ECC-A40B-71192B1BBF29}.Release|x64.ActiveCfg = Release|x64
+		{0972C789-7FA6-4ECC-A40B-71192B1BBF29}.Release|x64.Build.0 = Release|x64
+		{0972C789-7FA6-4ECC-A40B-71192B1BBF29}.Release|x86.ActiveCfg = Release|Win32
+		{0972C789-7FA6-4ECC-A40B-71192B1BBF29}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
