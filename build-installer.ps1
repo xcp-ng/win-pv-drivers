@@ -81,5 +81,9 @@ if ($Target -ine "Clean") {
         $XenBootFixSymbolDir = "$SymbolDir\XenBootFix"
         New-Item -Path $XenBootFixSymbolDir -ItemType Directory -Force
         Copy-Item -Path "$PSScriptRoot\XenBootFix\$Platform\$Configuration\*" -Include *.pdb -Destination $XenBootFixSymbolDir\ -Force
+
+        $XenGuestAgentSymbolDir = "$SymbolDir\xen-guest-agent"
+        New-Item -Path $XenGuestAgentSymbolDir -ItemType Directory -Force
+        Copy-Item -Path "$PSScriptRoot\xen-guest-agent\target\$Configuration\*" -Include *.pdb -Destination $XenGuestAgentSymbolDir\ -Force
     }
 }
