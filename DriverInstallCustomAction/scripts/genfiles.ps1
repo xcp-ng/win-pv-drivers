@@ -21,5 +21,5 @@ using System.Reflection;
 
 if ($NewBranding -ne $OldBranding) {
     Write-Output "Updating Branding.cs"
-    [System.IO.File]::WriteAllText($BrandingFile, $NewBranding)
+    Set-Content -Path $BrandingFile -Value $NewBranding -NoNewline
 }
