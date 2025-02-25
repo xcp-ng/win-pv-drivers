@@ -2,12 +2,20 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <?include Include.wxi ?>
   <Fragment>
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Directory Id="XenBootFixFolder" Name="XenBootFix" />
+    </DirectoryRef>
+    
     <ComponentGroup Id="XenBootFixComponent" Directory="XenBootFixFolder">
       <File Source="XenBootFix.exe" />
     </ComponentGroup>
   </Fragment>
 
   <Fragment>
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Directory Id="XenCleanFolder" Name="XenClean" />
+    </DirectoryRef>
+    
     <ComponentGroup Id="XenCleanComponent" Directory="XenCleanFolder" Source="!(bindpath.XenClean)">
       <File Source="Invoke-XenClean.ps1" DefaultVersion="$(XenCleanVersion)" DefaultLanguage="1033" />
       <Files Include="!(bindpath.XenClean)**" Subdirectory="bin">
