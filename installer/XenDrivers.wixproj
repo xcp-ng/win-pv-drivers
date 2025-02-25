@@ -1,4 +1,4 @@
-<Project Sdk="WixToolset.Sdk/5.0.2">
+﻿<Project Sdk="WixToolset.Sdk/5.0.2">
   <PropertyGroup>
     <Platforms>x86;x64;ARM64</Platforms>
     <OutputName>$(MSBuildProjectName)-$(Platform)</OutputName>
@@ -28,6 +28,9 @@
     </BindPath>
     <BindPath Include="$(ProjectDir)output">
       <BindName>output</BindName>
+    </BindPath>
+    <BindPath Include="$(SolutionDir)..\xen-guest-agent\target\$(Configuration)">
+      <BindName>xenguestagent</BindName>
     </BindPath>
   </ItemGroup>
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">

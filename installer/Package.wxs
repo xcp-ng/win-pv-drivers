@@ -58,25 +58,28 @@
 
     <ComponentGroupRef Id="BrandingComponent" />
 
-    <Feature Id="PVBusFeature" AllowAdvertise="no" AllowAbsent="no" Title="!(loc.PVBusFeatureTitle)" Description="!(loc.PVBusFeatureDescription)">
+    <Feature Id="PVBusFeature" AllowAdvertise="no" AllowAbsent="no" Display="expand" Title="!(loc.PVBusFeatureTitle)" Description="!(loc.PVBusFeatureDescription)">
       <ComponentGroupRef Id="XenbusComponent" />
-    </Feature>
-    <Feature Id="PVConsoleFeature" AllowAdvertise="no" Title="!(loc.PVConsoleFeatureTitle)" Description="!(loc.PVConsoleFeatureDescription)">
-      <ComponentGroupRef Id="XenconsComponent" />
-    </Feature>
-    <Feature Id="PVHidFeature" AllowAdvertise="no" Title="!(loc.PVHidFeatureTitle)" Description="!(loc.PVHidFeatureDescription)">
-      <ComponentGroupRef Id="XenvkbdComponent" />
-      <ComponentGroupRef Id="XenhidComponent" />
-    </Feature>
-    <Feature Id="PVIfaceFeature" AllowAdvertise="no" Title="!(loc.PVIfaceFeatureTitle)" Description="!(loc.PVIfaceFeatureDescription)">
-      <ComponentGroupRef Id="XenifaceComponent" />
-    </Feature>
-    <Feature Id="PVNetworkFeature" AllowAdvertise="no" Title="!(loc.PVNetworkFeatureTitle)" Description="!(loc.PVNetworkFeatureDescription)">
-      <ComponentGroupRef Id="XenvifComponent" />
-      <ComponentGroupRef Id="XennetComponent" />
-    </Feature>
-    <Feature Id="PVDiskFeature" AllowAdvertise="no" Level="2" Title="!(loc.PVDiskFeatureTitle)" Description="!(loc.PVDiskFeatureDescription)">
-      <ComponentGroupRef Id="XenvbdComponent" />
+      <Feature Id="PVConsoleFeature" AllowAdvertise="no" Title="!(loc.PVConsoleFeatureTitle)" Description="!(loc.PVConsoleFeatureDescription)">
+        <ComponentGroupRef Id="XenconsComponent" />
+      </Feature>
+      <Feature Id="PVHidFeature" AllowAdvertise="no" Title="!(loc.PVHidFeatureTitle)" Description="!(loc.PVHidFeatureDescription)">
+        <ComponentGroupRef Id="XenvkbdComponent" />
+        <ComponentGroupRef Id="XenhidComponent" />
+      </Feature>
+      <Feature Id="PVIfaceFeature" AllowAdvertise="no" Display="expand" Title="!(loc.PVIfaceFeatureTitle)" Description="!(loc.PVIfaceFeatureDescription)">
+        <ComponentGroupRef Id="XenifaceComponent" />
+        <Feature Id="GuestAgentFeature" AllowAdvertise="no" Title="!(loc.GuestAgentFeatureTitle)" Description="!(loc.GuestAgentFeatureDescription)">
+          <ComponentGroupRef Id="GuestAgentComponent" />
+        </Feature>
+      </Feature>
+      <Feature Id="PVNetworkFeature" AllowAdvertise="no" Title="!(loc.PVNetworkFeatureTitle)" Description="!(loc.PVNetworkFeatureDescription)">
+        <ComponentGroupRef Id="XenvifComponent" />
+        <ComponentGroupRef Id="XennetComponent" />
+      </Feature>
+      <Feature Id="PVDiskFeature" AllowAdvertise="no" Level="2" Title="!(loc.PVDiskFeatureTitle)" Description="!(loc.PVDiskFeatureDescription)">
+        <ComponentGroupRef Id="XenvbdComponent" />
+      </Feature>
     </Feature>
     <Feature Id="ToolsFeature" AllowAdvertise="no" Display="collapse" Title="!(loc.ToolsFeatureTitle)" Description="!(loc.ToolsFeatureDescription)">
       <Feature Id="XenCleanFeature" AllowAdvertise="no" Title="!(loc.XenCleanFeatureTitle)" Description="!(loc.XenCleanFeatureDescription)">

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Directory Id="XenGuestAgentFolder" Name="XenGuestAgent" />
+    </DirectoryRef>
+
+    <ComponentGroup Id="GuestAgentComponent" Directory="XenGuestAgentFolder">
+      <Component>
+        <File Source="!(bindpath.xenguestagent)\xen-guest-agent.exe" Id="xen_guest_agent.exe" />
+        <ServiceInstall
+          Name="xenguestagent-rs"
+          DisplayName="!(loc.GuestAgentServiceDisplayName)"
+          EraseDescription="yes"
+          Arguments="--service"
+          Type="ownProcess"
+          Start="auto"
+          Account="NT AUTHORITY\SYSTEM"
+          ErrorControl="ignore" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>
