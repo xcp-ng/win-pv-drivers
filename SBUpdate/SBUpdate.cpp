@@ -26,16 +26,6 @@ static void PrintUsage(_In_ const wchar_t* name) {
     wprintf(L"Usage: %s [--append] <variable name> <update file path>\n", name);
 }
 
-static std::unique_ptr<FILE, decltype(&fclose)> OpenFile(_In_ const wchar_t* path, _In_ const wchar_t* mode) {
-    FILE* file;
-    auto err = _wfopen_s(&file, path, mode);
-    if (err) {
-        throw std::system_error(err, std::generic_category(), "open(blobpath)");
-    }
-
-    return std::unique_ptr<FILE, decltype(&fclose)>(file, fclose);
-}
-
 static void EnablePrivileges() {
     CAccessToken token;
     if (!token.GetProcessToken(TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES))
@@ -45,38 +35,36 @@ static void EnablePrivileges() {
 }
 
 static void ReadVariableBlob(_In_ const wchar_t* blobpath, _Out_ std::vector<uint8_t>& blob) {
-    auto blobfile = OpenFile(blobpath, L"rb");
-
-    if (fseek(blobfile.get(), 0, SEEK_END)) {
-        throw std::system_error(errno, std::generic_category(), "fseek(blobfile)");
+    CAtlFile blobfile;
+    HRESULT hr = blobfile.Create(blobpath, GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING);
+    if (FAILED(hr)) {
+        throw std::system_error(hr, std::system_category(), "blobfile.Open");
     }
 
-    auto fsize = ftell(blobfile.get());
-    if (fsize < 0) {
-        throw std::system_error(errno, std::generic_category(), "ftell(blobfile)");
+    ULONGLONG blobsize;
+    hr = blobfile.GetSize(blobsize);
+    if (FAILED(hr)) {
+        throw std::system_error(hr, std::system_category(), "blobfile.GetSize");
     }
-    else if (fsize > 0x100000) {
+    if (blobsize > 0x100000) {
         // arbitrary 1MB size limit
         throw std::runtime_error("Input file too big");
     }
-    wprintf(L"Input file is %d bytes\n", fsize);
+    wprintf(L"Input file is %llu bytes\n", blobsize);
 
-    if (fseek(blobfile.get(), 0, SEEK_SET) < 0) {
-        throw std::system_error(errno, std::generic_category(), "fseek(blobfile)");
-    }
-
-    blob.resize(fsize);
-    int pos = 0;
-    while (pos < fsize) {
-        auto readcount = fread_s(&blob[pos], blob.size() - pos, 1, static_cast<size_t>(fsize) - pos, blobfile.get());
-        wprintf(L"Read %zu\n", readcount);
-        if (ferror(blobfile.get())) {
-            throw std::system_error(errno, std::generic_category(), "fread(blobfile)");
+    blob.resize(blobsize);
+    ULONGLONG pos = 0;
+    while (pos < blobsize) {
+        DWORD readcount;
+        hr = blobfile.Read(&blob[pos], blob.size() - pos, readcount);
+        if (FAILED(hr)) {
+            throw std::system_error(hr, std::system_category(), "blobfile.Read");
         }
-        else if (!readcount) {
+        wprintf(L"Read %lu\n", readcount);
+        if (!readcount) {
             throw std::runtime_error("Input file truncated");
         }
-        pos += static_cast<int>(readcount);
+        pos += readcount;
     }
 }
 

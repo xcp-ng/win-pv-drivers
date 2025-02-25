@@ -3,9 +3,10 @@
 #include <cstdio>
 #include <system_error>
 #include <algorithm>
-#include <memory>
 #include <array>
 #include <vector>
+#include <atlbase.h>
+#include <atlfile.h>
 #include <atlsecurity.h>
 #include <comdef.h>
 #include <WbemIdl.h>
