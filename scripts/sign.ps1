@@ -1,3 +1,9 @@
+$env:PSModulePath = [Environment]::GetEnvironmentVariable('PSModulePath', 'Machine')
+Import-Module PowerShellGet
+if (!(Get-PSDrive Cert)) {
+    New-PSDrive -PSProvider Certificate -Name Cert -Root \
+}
+
 function Get-SignerObject() {
     if (!$Env:SIGNER) {
         return $null
