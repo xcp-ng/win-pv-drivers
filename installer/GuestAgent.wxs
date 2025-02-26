@@ -17,6 +17,7 @@
           Start="auto"
           Account="NT AUTHORITY\SYSTEM"
           ErrorControl="ignore" />
+        <ServiceControl Name="xenguestagent-rs" Start="install" Stop="uninstall" Remove="uninstall" />
       </Component>
     </ComponentGroup>
   </Fragment>
