@@ -56,9 +56,8 @@ try {
     $cargoArgs = @(
         "--no-default-features",
         "--locked",
-        "--workspace",
-        "--exclude",
-        "provider-netlink"
+        "-p",
+        "xen-guest-agent"
     )
 
     if ($Configuration -ieq "release") {

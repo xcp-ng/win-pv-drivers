@@ -25,6 +25,8 @@ The relevant source code may be found in these locations:
 * Windows SDK for Windows 10/11 (tested with 10.0.22621 and 10.0.26100)
 * Windows Driver Kit matching your Windows SDK
 * Git for Windows
+* PowerShell 7.3+
+* Rustup and latest Rust stable
 
 Windows SDK and WDK dependencies can be found [here](https://docs.microsoft.com/en-us/windows-hardware/drivers/other-wdk-downloads).
 
@@ -86,6 +88,16 @@ Output drivers will be collected in `installer\output`.
 
 If you need to sign the drivers externally (e.g. WHQL signatures), you must replace the drivers found here with your own signed binaries.
 These binaries should be located at `installer\output\<driver name>\<platform>\<configuration>` for each driver included in the package.
+
+## Building the Rust-based Windows guest agent
+
+Simply run the command:
+
+```
+powershell .\build-guestagent.ps1 -Configuration release
+```
+
+The binaries are located at `xen-guest-agent\target\<configuration>`.
 
 ## Building the installer and release package
 
