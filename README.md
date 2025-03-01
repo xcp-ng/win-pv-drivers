@@ -2,7 +2,7 @@
 
 This repo contains the Windows PV guest driver installer for XCP-ng guests.
 
-The relevant source code may be found in these locations:
+The relevant source code may be found at these locations:
 
 * Drivers:
     * [Bus Device Driver](https://github.com/xcp-ng/win-xenbus)
@@ -13,6 +13,9 @@ The relevant source code may be found in these locations:
     * [Console Driver](https://github.com/xcp-ng/win-xencons)
     * [Keyboard/Mouse Driver](https://github.com/xcp-ng/win-xenvkbd)
     * [HID Minidriver](https://github.com/xcp-ng/win-xenhid)
+* [XenClean](XenClean/)
+* [XenBootFix](XenBootFix/)
+* [Xen Guest Agent](https://github.com/xcp-ng/xen-guest-agent)
 
 # Requirements
 
@@ -25,14 +28,13 @@ The relevant source code may be found in these locations:
 * Windows SDK for Windows 10/11 (tested with 10.0.22621 and 10.0.26100)
 * Windows Driver Kit matching your Windows SDK
 * Git for Windows
-* PowerShell 7.3+
 * Rustup and latest Rust stable
 
 Windows SDK and WDK dependencies can be found [here](https://docs.microsoft.com/en-us/windows-hardware/drivers/other-wdk-downloads).
 
 # Usage
 
-Driver projects are provided as submodules of this repository:
+Driver and tool projects are included as submodules of this repository:
 
 ```
 git clone --recursive https://github.com/xcp-ng/win-pv-drivers.git
@@ -51,24 +53,25 @@ $Env:VENDOR_PREFIX = 'XP'
 $Env:COPYRIGHT = 'Copyright (c) Xen Project.'
 
 $PackageVersions = @{
-    Product    = '9.0.9000.0'
-    xenbus     = '9.0.9001.0'  # defaults to product version
-    xencons    = '9.0.9002.0'  # defaults to product version
-    xenhid     = '9.0.9003.0'  # defaults to product version
-    xeniface   = '9.0.9004.0'  # defaults to product version
-    xennet     = '9.0.9005.0'  # defaults to product version
-    xenvbd     = '9.0.9006.0'  # defaults to product version
-    xenvif     = '9.0.9007.0'  # defaults to product version
-    xenvkbd    = '9.0.9008.0'  # defaults to product version
-    XenClean   = '9.0.9009.0'  # defaults to product version
-    XenBootFix = '9.0.9010.0'  # defaults to product version
+    Product       = '9.0.9000.0'
+    xenbus        = '9.0.9001.0'  # defaults to product version
+    xencons       = '9.0.9002.0'  # defaults to product version
+    xenhid        = '9.0.9003.0'  # defaults to product version
+    xeniface      = '9.0.9004.0'  # defaults to product version
+    xennet        = '9.0.9005.0'  # defaults to product version
+    xenvbd        = '9.0.9006.0'  # defaults to product version
+    xenvif        = '9.0.9007.0'  # defaults to product version
+    xenvkbd       = '9.0.9008.0'  # defaults to product version
+    XenClean      = '9.0.9009.0'  # defaults to product version
+    XenBootFix    = '9.0.9010.0'  # defaults to product version
+    XenGuestAgent = '9.0.9011.0'  # defaults to product version
 }
 
 # These variables influence the UpgradeCode property of generated MSI packages.
 # To avoid conflict between installers of different vendors, you must change
 # these values to a random GUID if building your own installer.
-$Env:MSI_UPGRADE_CODE_X86 = '{10828840-D8A9-4953-B44A-1F1D3CD7ECB0}'
-$Env:MSI_UPGRADE_CODE_X64 = '{D60FED1E-316C-41B0-B7A5-E44951A82618}'
+$Env:MSI_UPGRADE_CODE_X86 = '{GUIDHERE-GUID-HERE-GUID-HEREGUIDHERE}'
+$Env:MSI_UPGRADE_CODE_X64 = '{GUIDHERE-GUID-HERE-GUID-HEREGUIDHERE}'
 
 $Env:SIGNER = "<signer certificate thumbprint or PFX path>"
 ```
