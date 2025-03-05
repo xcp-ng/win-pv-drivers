@@ -17,26 +17,26 @@ $PSNativeCommandArgumentPassing = "Legacy"
 Push-Location $PSScriptRoot\xen-guest-agent
 try {
     Write-Host "Reconfiguring xenstore-win"
-    cargo remove --package publisher-xenstore --target --% "cfg(target_os = ""windows"")" xenstore-win
+    cargo.exe remove --package publisher-xenstore --target --% "cfg(target_os = ""windows"")" xenstore-win
     if ($LASTEXITCODE -ne 0) {
         throw "cargo failed with error $LASTEXITCODE"
     }
-    cargo remove --package vif-detect --target --% "cfg(target_os = ""windows"")" xenstore-win
+    cargo.exe remove --package vif-detect --target --% "cfg(target_os = ""windows"")" xenstore-win
     if ($LASTEXITCODE -ne 0) {
         throw "cargo failed with error $LASTEXITCODE"
     }
 
-    cargo add --package publisher-xenstore --target --% "cfg(target_os = ""windows"")" --path ..\xenstore-win
+    cargo.exe add --package publisher-xenstore --target --% "cfg(target_os = ""windows"")" --path ..\xenstore-win
     if ($LASTEXITCODE -ne 0) {
         throw "cargo failed with error $LASTEXITCODE"
     }
-    cargo add --package vif-detect --target --% "cfg(target_os = ""windows"")" --path ..\xenstore-win
+    cargo.exe add --package vif-detect --target --% "cfg(target_os = ""windows"")" --path ..\xenstore-win
     if ($LASTEXITCODE -ne 0) {
         throw "cargo failed with error $LASTEXITCODE"
     }
 
     Write-Host "Installing winres"
-    cargo add --build --package xen-guest-agent --target "cfg(windows)" "winres@0.1"
+    cargo.exe add --build --package xen-guest-agent --target "cfg(windows)" "winres@0.1"
     if ($LASTEXITCODE -ne 0) {
         throw "cargo failed with error $LASTEXITCODE"
     }
@@ -48,7 +48,7 @@ try {
     ..\scripts\xen-guest-agent\genfiles.ps1 -ProjectDir .
 
     Write-Host "Cleaning"
-    cargo clean
+    cargo.exe clean
     if ($LASTEXITCODE -ne 0) {
         throw "cargo failed with error $LASTEXITCODE"
     }
@@ -65,7 +65,7 @@ try {
     }
 
     Write-Host "Building"
-    cargo build @cargoArgs
+    cargo.exe build @cargoArgs
     if ($LASTEXITCODE -ne 0) {
         throw "cargo failed with error $LASTEXITCODE"
     }

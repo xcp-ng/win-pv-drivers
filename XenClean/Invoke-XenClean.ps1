@@ -51,18 +51,19 @@ if (!$PSCmdlet.ShouldProcess("Local computer", "Remove Xen drivers and tools")) 
     exit;
 }
 
+$System32 = [System.Environment]::SystemDirectory
 $Timestamp = Get-Date -Format FileDateTime
 $LogPath = "$env:TEMP\xenclean-$Timestamp"
 New-Item -ItemType Directory -Path $LogPath -Force
 
 & "$PSScriptRoot\bin\XenClean.exe" > "$LogPath/xenclean.log"
-pnputil.exe /enum-drivers > "$LogPath/drivers.log"
+& "$System32\pnputil.exe" /enum-drivers > "$LogPath/drivers.log"
 if ([System.Environment]::OSVersion.Version -ge [version]::Parse("10.0.18362")) {
-    pnputil.exe /enum-devices /relations > "$LogPath/devices.log"
+    & "$System32\pnputil.exe" /enum-devices /relations > "$LogPath/devices.log"
 }
-reg.exe export "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e96a-e325-11ce-bfc1-08002be10318}" "$LogPath/hdc.reg" /y
-reg.exe export "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e97d-e325-11ce-bfc1-08002be10318}" "$LogPath/system.reg" /y
-reg.exe export "HKLM\SYSTEM\CurrentControlSet\Services\XEN" "$LogPath/service-xen.reg" /y
+& "$System32\reg.exe" export "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e96a-e325-11ce-bfc1-08002be10318}" "$LogPath/hdc.reg" /y
+& "$System32\reg.exe" export "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e97d-e325-11ce-bfc1-08002be10318}" "$LogPath/system.reg" /y
+& "$System32\reg.exe" export "HKLM\SYSTEM\CurrentControlSet\Services\XEN" "$LogPath/service-xen.reg" /y
 
 Copy-Item -Recurse -ErrorAction Continue $LogPath .
 

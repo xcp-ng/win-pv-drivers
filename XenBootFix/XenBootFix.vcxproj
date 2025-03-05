@@ -98,10 +98,10 @@
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
     <PreBuildEvent>
-      <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)</Command>
+      <Command>$(SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\sign.ps1 -ProjectDir $(ProjectDir) -Configuration $(Configuration) -Platform $(Platform)</Command>
+      <Command>$(SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\sign.ps1 -ProjectDir $(ProjectDir) -Configuration $(Configuration) -Platform $(Platform)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -125,10 +125,10 @@
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
     <PreBuildEvent>
-      <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)</Command>
+      <Command>$(SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\sign.ps1 -ProjectDir $(ProjectDir) -Configuration $(Configuration) -Platform $(Platform)</Command>
+      <Command>$(SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\sign.ps1 -ProjectDir $(ProjectDir) -Configuration $(Configuration) -Platform $(Platform)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -145,10 +145,10 @@
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
     <PreBuildEvent>
-      <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)</Command>
+      <Command>$(SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\sign.ps1 -ProjectDir $(ProjectDir) -Configuration $(Configuration) -Platform $(Platform)</Command>
+      <Command>$(SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\sign.ps1 -ProjectDir $(ProjectDir) -Configuration $(Configuration) -Platform $(Platform)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -172,10 +172,10 @@
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
     <PreBuildEvent>
-      <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)</Command>
+      <Command>$(SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\sign.ps1 -ProjectDir $(ProjectDir) -Configuration $(Configuration) -Platform $(Platform)</Command>
+      <Command>$(SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\sign.ps1 -ProjectDir $(ProjectDir) -Configuration $(Configuration) -Platform $(Platform)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
