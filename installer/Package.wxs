@@ -63,10 +63,6 @@
       <Feature Id="PVConsoleFeature" AllowAdvertise="no" Title="!(loc.PVConsoleFeatureTitle)" Description="!(loc.PVConsoleFeatureDescription)">
         <ComponentGroupRef Id="XenconsComponent" />
       </Feature>
-      <Feature Id="PVHidFeature" AllowAdvertise="no" Title="!(loc.PVHidFeatureTitle)" Description="!(loc.PVHidFeatureDescription)">
-        <ComponentGroupRef Id="XenvkbdComponent" />
-        <ComponentGroupRef Id="XenhidComponent" />
-      </Feature>
       <Feature Id="PVIfaceFeature" AllowAdvertise="no" Display="expand" Title="!(loc.PVIfaceFeatureTitle)" Description="!(loc.PVIfaceFeatureDescription)">
         <ComponentGroupRef Id="XenifaceComponent" />
         <Feature Id="GuestAgentFeature" AllowAdvertise="no" Title="!(loc.GuestAgentFeatureTitle)" Description="!(loc.GuestAgentFeatureDescription)">
@@ -77,8 +73,14 @@
         <ComponentGroupRef Id="XenvifComponent" />
         <ComponentGroupRef Id="XennetComponent" />
       </Feature>
-      <Feature Id="PVDiskFeature" AllowAdvertise="no" Level="2" Title="!(loc.PVDiskFeatureTitle)" Description="!(loc.PVDiskFeatureDescription)">
-        <ComponentGroupRef Id="XenvbdComponent" />
+      <Feature Id="PVOptionalFeature" AllowAdvertise="no" Level="2" Title="!(loc.PVOptionalFeatureTitle)" Description="!(loc.PVOptionalFeatureDescription)">
+        <Feature Id="PVDiskFeature" AllowAdvertise="no" Title="!(loc.PVDiskFeatureTitle)" Description="!(loc.PVDiskFeatureDescription)">
+          <ComponentGroupRef Id="XenvbdComponent" />
+        </Feature>
+        <Feature Id="PVHidFeature" AllowAdvertise="no" Title="!(loc.PVHidFeatureTitle)" Description="!(loc.PVHidFeatureDescription)">
+          <ComponentGroupRef Id="XenvkbdComponent" />
+          <ComponentGroupRef Id="XenhidComponent" />
+        </Feature>
       </Feature>
     </Feature>
     <Feature Id="ToolsFeature" AllowAdvertise="no" Display="collapse" Title="!(loc.ToolsFeatureTitle)" Description="!(loc.ToolsFeatureDescription)">
