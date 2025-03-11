@@ -202,11 +202,15 @@ int wmain(int argc, wchar_t** argv) {
     wchar_t* varname = nullptr;
     wchar_t* blobpath = nullptr;
     bool append = false;
+    bool noFveSuspend = false;
     HRESULT hr;
 
     for (int i = 1; i < argc; i++) {
         if (CompareStringOrdinal(L"--append", -1, argv[i], -1, TRUE) == CSTR_EQUAL) {
             append = true;
+        }
+        else if (CompareStringOrdinal(L"--no-fve-suspend", -1, argv[i], -1, TRUE) == CSTR_EQUAL) {
+            noFveSuspend = true;
         }
         else if (!varname) {
             varname = argv[i];
@@ -229,37 +233,56 @@ int wmain(int argc, wchar_t** argv) {
             throw std::runtime_error("Not running on UEFI system");
         }
 
+        DoInitializeCom();
+
+        bool hasBitlocker = true, isBound = false;
+
+        if (noFveSuspend) {
+            wprintf(L"--no-fve-suspend specified, not checking BitLocker\n");
+            hasBitlocker = false;
+        }
+
+        if (hasBitlocker) {
+            CRegKey winPeKey;
+            if (winPeKey.Open(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\MiniNT", KEY_READ) == ERROR_SUCCESS) {
+                wprintf(L"Running in Windows PE, not checking BitLocker\n");
+                hasBitlocker = false;
+            }
+        }
+
         CComPtr<IWbemServices> services;
         CComPtr<IWbemClassObject> win32_EncryptableVolumeClass;
         CComBSTR fveInstancePath;
-        bool isBound = false;
-        {
-            CRegKey winPeKey;
-            if (winPeKey.Open(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\MiniNT", KEY_READ) != ERROR_SUCCESS) {
-                DoInitializeCom();
+        if (hasBitlocker) {
+            try {
                 OpenWbemServices(FveNamespace, &services);
+            }
+            catch (...) {
+                wprintf(L"Cannot connect to BitLocker services. Do you have the BitLocker feature installed?\n");
+                wprintf(L"If you're sure you don't have BitLocker enabled, pass --no-fve-suspend to skip BitLocker deactivation.\n");
+                throw;
+            }
 
-                // get a reference to the Win32_EncryptableVolume class object so that we could get method references
-                hr = services->GetObjectW(_bstr_t(L"Win32_EncryptableVolume"), 0, NULL, &win32_EncryptableVolumeClass, NULL);
+            // get a reference to the Win32_EncryptableVolume class object so that we could get method references
+            hr = services->GetObjectW(_bstr_t(L"Win32_EncryptableVolume"), 0, NULL, &win32_EncryptableVolumeClass, NULL);
 
-                CComPtr<IWbemClassObject> fveOsDrive;
-                FindFveOsDrive(services, &fveOsDrive);
-                if (fveOsDrive) {
-                    wprintf(L"Found active BitLocker OS volume\n");
+            CComPtr<IWbemClassObject> fveOsDrive;
+            FindFveOsDrive(services, &fveOsDrive);
+            if (fveOsDrive) {
+                wprintf(L"Found active BitLocker OS volume\n");
 
-                    // describe the obtained Win32_EncryptableVolume instance object
-                    CComBSTR fveOsDriveText;
-                    auto hr = fveOsDrive->GetObjectText(0, &fveOsDriveText);
-                    if (FAILED(hr)) {
-                        throw std::system_error(hr, std::system_category(), "fveOsDrive->GetObjectText");
-                    }
-                    wprintf(L"%s\n", static_cast<wchar_t*>(fveOsDriveText));
+                // describe the obtained Win32_EncryptableVolume instance object
+                CComBSTR fveOsDriveText;
+                auto hr = fveOsDrive->GetObjectText(0, &fveOsDriveText);
+                if (FAILED(hr)) {
+                    throw std::system_error(hr, std::system_category(), "fveOsDrive->GetObjectText");
+                }
+                wprintf(L"%s\n", static_cast<wchar_t*>(fveOsDriveText));
 
-                    GetWbemInstancePath(fveOsDrive, &fveInstancePath);
-                    isBound = FveIsSecureBootBound(services, win32_EncryptableVolumeClass, fveInstancePath);
-                    if (isBound) {
-                        wprintf(L"BitLocker is Secure Boot-bound, needs rebinding\n");
-                    }
+                GetWbemInstancePath(fveOsDrive, &fveInstancePath);
+                isBound = FveIsSecureBootBound(services, win32_EncryptableVolumeClass, fveInstancePath);
+                if (isBound) {
+                    wprintf(L"BitLocker is Secure Boot-bound, needs rebinding\n");
                 }
             }
         }
