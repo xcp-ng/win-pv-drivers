@@ -47,6 +47,10 @@ param (
 
 $ErrorActionPreference = "Stop"
 
+if (![Environment]::Is64BitProcess) {
+    throw "XenClean cannot run in PowerShell x86!"
+}
+
 if (!$PSCmdlet.ShouldProcess("Local computer", "Remove Xen drivers and tools")) {
     exit;
 }

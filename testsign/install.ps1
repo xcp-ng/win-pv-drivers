@@ -8,6 +8,10 @@ param (
 
 $ErrorActionPreference = "Stop"
 
+if (![Environment]::Is64BitProcess) {
+    throw "Cannot install testsign certs from PowerShell x86!"
+}
+
 if (!$PSCmdlet.ShouldProcess("Local computer", "Set up testsigned XCP-ng driver - reduces your security")) {
     exit;
 }
