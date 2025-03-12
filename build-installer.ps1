@@ -13,6 +13,8 @@ param (
     [Parameter()]
     [switch]$ExportSymbols,
     [Parameter()]
+    [switch]$ExportExtras,
+    [Parameter()]
     [string]$ReleaseTag,
     [Parameter()]
     [switch]$NoBuild
@@ -55,6 +57,12 @@ if ($Target -ine "Clean") {
     $XenBootFixDir = "$PackageDir\XenBootFix"
     New-Item -Path $XenBootFixDir -ItemType Directory -Force
     Copy-Item -Path "$PSScriptRoot\XenBootFix\$Platform\$Configuration\*" -Include *.exe -Destination $XenBootFixDir\ -Force
+
+    if ($ExportExtras) {
+        $ExtrasDir = "$VersionDir\extras"
+        New-Item -Path $ExtrasDir -ItemType Directory -Force
+        Copy-Item -Path "$PSScriptRoot\extras\*" -Destination $ExtrasDir\ -Force
+    }
 
     if ($ExportCertificate) {
         $TestsignDir = "$VersionDir\testsign"
