@@ -33,18 +33,10 @@
 <#
 
 .SYNOPSIS
- Detects and remedies XSA-468 / CVE-2025-27462, CVE-2025-27463.
+ Mitigates XSA-468 / CVE-2025-27462, CVE-2025-27463.
 
 .DESCRIPTION
- This script operates in one of three modes:
-
- - In the default mode, this script applies security controls to existing Xen devices and drivers to mitigate XSA-468, and disables the XenServer/XCP-ng "batch command" feature of the guest agent. Optionally, the `-Install` parameter installs the script to the current Windows installation, and registers it to run at every system boot via Task Scheduler.
-
- - The `-Scan` parameter scans for the existence of devices vulnerable to XSA-468, as well as the XenServer/XCP-ng "batch command" feature.
-
- - The `-Uninstall` parameter removes this script from the Task Scheduler library and prevents it from starting at system boot. Note that the security controls and batch command disablement will not be undone.
-
- The `-WhatIf` parameter can be used to simulate the execution of the default and `-Uninstall` modes.
+ This script applies security controls to existing Xen devices and drivers to mitigate XSA-468.
 
 #>
 
@@ -55,22 +47,17 @@ using namespace System.Security.Principal
 
 [CmdletBinding(SupportsShouldProcess)]
 param (
-    # Scan for vulnerability.
-    [Parameter(Mandatory, ParameterSetName = "Scan")][switch]$Scan,
-
     # Don't apply security controls to running drivers.
-    [Parameter(ParameterSetName = "Install")][switch]$NoSecureObjects,
+    [Parameter(ParameterSetName = "Install")]
+    [Parameter(ParameterSetName = "Invoke")]
+    [switch]$NoSecureObjects,
     # Don't apply security controls to drivers at boot time.
-    [Parameter(ParameterSetName = "Install")][switch]$NoSetRegistry,
-    # Don't disable Xen management agent's "batch command" feature.
-    [Parameter(ParameterSetName = "Install")][switch]$NoDisableBatcmd,
-    # Install this script to run at every boot.
-    [Parameter(ParameterSetName = "Install")][switch]$Install,
-    # For internal use only.
-    [Parameter(ParameterSetName = "Install")][switch]$NoPinvokeAsJob,
+    [Parameter(ParameterSetName = "Install")]
+    [Parameter(ParameterSetName = "Invoke")]
+    [switch]$NoSetRegistry,
 
-    # Uninstall this script from the system.
-    [Parameter(Mandatory, ParameterSetName = "Uninstall")][switch]$Uninstall
+    # For internal use only.
+    [Parameter(Mandatory, ParameterSetName = "Invoke")][switch]$Invoke
 )
 
 $ErrorActionPreference = "Stop"
@@ -134,23 +121,8 @@ namespace XenToolsWorkaround {
 $Script:Sddl = "D:P(A;;GA;;;SY)(A;;GA;;;BA)"
 $Script:SecurityDescriptor = (ConvertFrom-SddlString $Script:Sddl).RawDescriptor
 $Script:ScheduledTaskName = "XenToolsWorkaround"
-$Script:InstallPath = "$env:SystemRoot\XenToolsWorkaround.ps1"
+$Script:InstallPath = "$env:ProgramFiles\XenToolsWorkaround.ps1"
 $Script:PowershellPath = Join-Path ([System.Environment]::SystemDirectory) "WindowsPowerShell\v1.0\powershell.exe"
-
-$Script:RegistryPaths = @(
-    "HKLM:\Software\XenServer\XenTools",
-    "HKLM:\Software\Citrix\XenTools",
-    "HKLM:\Software\XCP-ng\XenTools",
-    "HKLM:\SOFTWARE\WOW6432Node\XenServer\XenTools",
-    "HKLM:\SOFTWARE\WOW6432Node\Citrix\XenTools",
-    "HKLM:\SOFTWARE\WOW6432Node\XCP-ng\XenTools"
-)
-
-# Only list SIDs that belong to the default insecure configuration
-$Script:VulnerableSids = @(
-    [SecurityIdentifier]::new([WellKnownSidType]::WorldSid, $null),
-    [SecurityIdentifier]::new([WellKnownSidType]::RestrictedCodeSid, $null)
-)
 
 # Prepackaged arguments for each device type
 $Script:DeviceTypes = @(
@@ -229,7 +201,6 @@ function Protect-XenDeviceObjects {
         [Parameter(Mandatory)][CommonSecurityDescriptor]$SecurityDescriptor
     )
 
-    # stage local variables so that they could be passed to remote jobs
     $sdBytes = [byte[]](Get-SddlBytes -SecurityDescriptor $SecurityDescriptor)
 
     Get-XenDevice `
@@ -243,141 +214,29 @@ function Protect-XenDeviceObjects {
         }
         Write-Verbose "Protecting $deviceId, devicePath = $devicePath"
 
-        $ScriptBlock = [scriptblock] {
-            param (
-                [bool]$WIP,
-                [string]$TypeDefinition,
-                [string]$devicePath,
-                [byte[]]$sdBytes
-            )
-
-            $ErrorActionPreference = "Stop"
-
-            Write-Output "Loading helper types"
-            Add-Type -TypeDefinition $TypeDefinition
-
-            $deviceFilePath = Join-Path "\\.\GLOBALROOT" $devicePath
-            # FileInfo.SetAccessControl explodes when it encounters a kernel object, so we have to use this method
-            if ($WIP) {
-                Write-Output "What if: Set DACL of $($sdBytes.Length) bytes on $deviceFilePath"
-            }
-            else {
-                [XenToolsWorkaround.KernelObjects]::SetObjectDacl($deviceFilePath, $sdBytes)
-                Write-Output "Successfully set DACL on $deviceFilePath"
-            }
-        }
-
-        $jobArgs = @($WhatIfPreference, $Script:TypeDefinition, $devicePath, $sdBytes)
-        if ($NoPinvokeAsJob) {
-            & $ScriptBlock @jobArgs | Write-Verbose
-        }
-        else {
-            # isolate the loaded types from the current session
-            Start-Job $ScriptBlock -ArgumentList $jobArgs | `
-                Receive-Job -Wait -AutoRemoveJob | `
-                Write-Verbose
-        }
-    }
-}
-
-function Test-XenDeviceObjects {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory)][string]$CompatibleIdType,
-        [Parameter(Mandatory)][string]$CompatibleIdPattern,
-        [Parameter()][string]$Class
-    )
-
-    $foundObjects = @();
-    Get-XenDevice `
-        -Class $Class `
-        -CompatibleIdType $CompatibleIdType `
-        -CompatibleIdPattern $CompatibleIdPattern | ForEach-Object {
-        $deviceId = $_.DeviceID
-        $devicePath = (Get-PnpDeviceProperty -InputObject $_ DEVPKEY_Device_PDOName).Data
-        Write-Verbose "devicePath $devicePath"
-        if ([string]::IsNullOrEmpty($devicePath)) {
-            return
-        }
-        Write-Verbose "Testing $deviceId, devicePath = $devicePath"
+        Write-Verbose "Loading helper types"
+        Add-Type -TypeDefinition $Script:TypeDefinition
 
         $deviceFilePath = Join-Path "\\.\GLOBALROOT" $devicePath
-        $acl = Get-Acl $deviceFilePath
-        Write-Verbose $acl.Sddl
-        $acl.Access | Where-Object AccessControlType -eq Allow | ForEach-Object {
-            if (!$_.IdentityReference.IsValidTargetType([SecurityIdentifier])) {
-                continue
-            }
-            $subj = $_.IdentityReference.Translate([SecurityIdentifier])
-            if ($Script:VulnerableSids | Where-Object { $_ -eq $subj }) {
-                $foundObjects += @($deviceId)
-            }
+        # FileInfo.SetAccessControl explodes when it encounters a kernel object, so we have to use this method
+        if ($PSCmdlet.ShouldProcess($deviceFilePath, "Set DACL")) {
+            [XenToolsWorkaround.KernelObjects]::SetObjectDacl($deviceFilePath, $sdBytes)
+            Write-Verbose "Successfully set DACL on $deviceFilePath"
         }
-    }
-    return $foundObjects
-}
-
-function Test-XenBatCmdFeature {
-    if ($null -eq (Get-Service XenSvc -ErrorAction SilentlyContinue)) {
-        Write-Verbose "XenSvc doesn't exist"
-        return $false
-    }
-
-    $vulnerable = $true
-    foreach ($regpath in $Script:RegistryPaths) {
-        # Get-ItemPropertyValue -ErrorAction SilentlyContinue doesn't really work, so we have to test the value's existence first
-        if ($null -ne (Get-ItemProperty $regpath -Name NoRemoteExecution -ErrorAction SilentlyContinue)) {
-            $value = Get-ItemPropertyValue $regpath -Name NoRemoteExecution -ErrorAction SilentlyContinue
-            Write-Verbose "At ${regpath}: NoRemoteExecution = $value"
-            if (0 -eq $value) {
-                Write-Host "Batch command feature is intentionally enabled"
-                return $true
-            }
-            else {
-                $vulnerable = $false
-            }
-        }
-    }
-    return $vulnerable
-}
-
-if ($Scan) {
-    $Script:IsVulnerable = $false
-
-    Write-Host
-    Write-Host "Looking for vulnerable objects"
-    foreach ($devtype in $Script:DeviceTypes) {
-        Test-XenDeviceObjects @devtype | ForEach-Object {
-            Write-Host "Found vulnerable object $_"
-            $Script:IsVulnerable = $true
-        }
-    }
-
-    Write-Host
-    Write-Host "Looking for vulnerable management agent"
-    if (Test-XenBatCmdFeature) {
-        Write-Host "Batch command feature is not disabled"
-        $Script:IsVulnerable = $true
-    }
-    else {
-        Write-Host "OK, batch command feature is disabled"
-    }
-
-    Write-Host
-    if ($Script:IsVulnerable) {
-        Write-Host "Found potential vulnerability, installation is recommended"
-    }
-    else {
-        Write-Host "Did not find evidence of vulnerability, installation is not needed"
     }
 }
 
-elseif ($PSCmdlet.ParameterSetName -ieq "Install") {
+if ($PSCmdlet.ParameterSetName -ieq "Invoke") {
     if (!$NoSecureObjects) {
         Write-Host
         Write-Host "Protecting active Xen device objects"
         foreach ($devtype in $Script:DeviceTypes) {
-            Protect-XenDeviceObjects @devtype -SecurityDescriptor $SecurityDescriptor -WhatIf:$WhatIfPreference
+            try {
+                Protect-XenDeviceObjects @devtype -SecurityDescriptor $SecurityDescriptor -WhatIf:$WhatIfPreference
+            }
+            catch {
+                Write-Error $_
+            }
         }
     }
 
@@ -385,38 +244,27 @@ elseif ($PSCmdlet.ParameterSetName -ieq "Install") {
         Write-Host
         Write-Host "Setting Xen device security registry values"
         foreach ($devtype in $Script:DeviceTypes) {
-            # WS2016 (and maybe others) doesn't give administrators write rights to this key, only SYSTEM.
-            # Even if it fails, it's not a critical failure as long as -Install is used, since the scheduled task starts as SYSTEM.
             try {
                 Set-XenDriverSecurity @devtype -SecurityDescriptor $SecurityDescriptor -WhatIf:$WhatIfPreference
             }
             catch {
-                $Script:SetRegistryFailed = $true
+                Write-Error $_
             }
-        }
-    }
-
-    if (!$NoDisableBatcmd) {
-        Write-Host
-        Write-Host "Disabling batch command feature"
-        foreach ($regpath in $Script:RegistryPaths) {
-            Set-ItemProperty $regpath -Name NoRemoteExecution -Value 1 -Type DWord -WhatIf:$WhatIfPreference -ErrorAction SilentlyContinue
         }
     }
 }
 
-if ($Install) {
+elseif ($PSCmdlet.ParameterSetName -ieq "Install") {
     Write-Verbose "Current path: $PSCommandPath"
     Write-Verbose "Install path: $Script:InstallPath"
 
     Write-Host
-    Write-Host "Installing"
+    Write-Host "Running script as SYSTEM"
     if ((Convert-Path $PSCommandPath -ErrorAction SilentlyContinue) -ieq (Convert-Path $Script:InstallPath -ErrorAction SilentlyContinue)) {
         Write-Host "Cannot install from already-installed script, abandoning"
     }
     else {
-        Write-Host "Installing script to run at startup"
-
+        # copy the script to a secure location for the SYSTEM task
         Copy-Item $PSCommandPath -Destination $Script:InstallPath -Force -WhatIf:$WhatIfPreference
 
         $existingTask = Get-ScheduledTask -TaskName $Script:ScheduledTaskName -ErrorAction SilentlyContinue
@@ -426,10 +274,7 @@ if ($Install) {
         }
 
         $cmdArgs = @(
-            # We're not running in a user shell, no need to worry about Add-Type contamination
-            "-NoPinvokeAsJob",
-            # No need to disable batcmd every single time in installed instance
-            "-NoDisableBatcmd"
+            "-Invoke"
         )
         if ($NoSecureObjects) {
             $cmdArgs += @("-NoSecureObjects")
@@ -437,38 +282,22 @@ if ($Install) {
         if ($NoSetRegistry) {
             $cmdArgs += @("-NoSetRegistry")
         }
-        $argString = "-NoProfile -NonInteractive -ExecutionPolicy Bypass `"$Script:InstallPath`" $($cmdArgs -join ' ')"
+        $argString = "-NoProfile -NonInteractive -ExecutionPolicy Bypass `"& '$Script:InstallPath' $($cmdArgs -join ' ')`""
         Write-Verbose "Task executable: $Script:PowershellPath"
         Write-Verbose "Task arguments: $argString"
 
         $task = New-ScheduledTask `
             -Action (New-ScheduledTaskAction -Execute $Script:PowershellPath -Argument $argString) `
             -Principal (New-ScheduledTaskPrincipal -UserId "NT AUTHORITY\SYSTEM" -RunLevel Highest -LogonType ServiceAccount) `
-            -Trigger (New-ScheduledTaskTrigger -AtStartup) `
             -Settings (New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 5))
 
         # Register-ScheduledTask doesn't support -WhatIf
         if ($PSCmdlet.ShouldProcess($Script:ScheduledTaskName, "Create scheduled task")) {
-            $task | Register-ScheduledTask -TaskName $Script:ScheduledTaskName | Out-Null
+            $registeredTask = $task | Register-ScheduledTask -TaskName $Script:ScheduledTaskName
+            $registeredTask | Start-ScheduledTask | Out-Null
         }
     }
 }
-elseif ($Uninstall) {
-    Write-Host
-    Write-Host "Uninstalling scheduled task and files"
-    Get-ScheduledTask -TaskName $Script:ScheduledTaskName -ErrorAction SilentlyContinue | Unregister-ScheduledTask -Confirm:$false -WhatIf:$WhatIfPreference
-    Remove-Item -Force -Path $Script:InstallPath -WhatIf:$WhatIfPreference -ErrorAction SilentlyContinue
-}
 
 Write-Host
-if ($Script:SetRegistryFailed) {
-    if ($Install) {
-        Write-Host "Finished, you may need to reboot for the changes to take effect"
-    }
-    else {
-        Write-Host "Failed to set registry entries, try using -Install instead"
-    }
-}
-else {
-    Write-Host "Finished"
-}
+Write-Host "Finished, check Task Scheduler for status"
