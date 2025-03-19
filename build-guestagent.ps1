@@ -17,35 +17,17 @@ $PSNativeCommandArgumentPassing = "Legacy"
 Push-Location $PSScriptRoot\xen-guest-agent
 try {
     Write-Host "Reconfiguring xenstore-win"
-    cargo.exe remove --package publisher-xenstore --target --% "cfg(target_os = ""windows"")" xenstore-win
-    if ($LASTEXITCODE -ne 0) {
-        throw "cargo failed with error $LASTEXITCODE"
-    }
-    cargo.exe remove --package vif-detect --target --% "cfg(target_os = ""windows"")" xenstore-win
-    if ($LASTEXITCODE -ne 0) {
-        throw "cargo failed with error $LASTEXITCODE"
-    }
+    if (!(Get-Content -Encoding utf8 $PSScriptRoot\xen-guest-agent\Cargo.toml | Select-String -SimpleMatch "[patch.'https://github.com/TSnake41/xenstore-win.git']")) {
+        Add-Content -Encoding utf8 -Path $PSScriptRoot\xen-guest-agent\Cargo.toml -Value @"
 
-    cargo.exe add --package publisher-xenstore --target --% "cfg(target_os = ""windows"")" --path ..\xenstore-win
-    if ($LASTEXITCODE -ne 0) {
-        throw "cargo failed with error $LASTEXITCODE"
-    }
-    cargo.exe add --package vif-detect --target --% "cfg(target_os = ""windows"")" --path ..\xenstore-win
-    if ($LASTEXITCODE -ne 0) {
-        throw "cargo failed with error $LASTEXITCODE"
-    }
+[patch.'https://github.com/TSnake41/xenstore-win.git']
+xenstore-win = { path = "../xenstore-win" }
 
-    Write-Host "Installing winres"
-    cargo.exe add --build --package xen-guest-agent --target "cfg(windows)" "winres@0.1"
-    if ($LASTEXITCODE -ne 0) {
-        throw "cargo failed with error $LASTEXITCODE"
+"@
     }
 
     Copy-Item -Force ..\scripts\xen-guest-agent\build.rs .\xen-guest-agent\build.rs
-    Copy-Item -Force ..\scripts\xen-guest-agent\manifest.xml .\xen-guest-agent\manifest.xml
-    New-Item -Type Directory .\.cargo -Force
-    Copy-Item -Force ..\scripts\xen-guest-agent\config.toml .\.cargo\config.toml
-    ..\scripts\xen-guest-agent\genfiles.ps1 -ProjectDir .
+    & "$PSScriptRoot\scripts\xen-guest-agent\genfiles.ps1" -ProjectDir .
 
     Write-Host "Cleaning"
     cargo.exe clean
@@ -55,23 +37,27 @@ try {
 
     $cargoArgs = @(
         "--no-default-features",
-        "--locked",
-        "-p",
-        "xen-guest-agent"
+        "--locked"
     )
 
     if ($Configuration -ieq "release") {
         $cargoArgs += @("--release")
     }
 
-    Write-Host "Building"
-    cargo.exe build @cargoArgs
+    Write-Host "Building xen-guest-agent"
+    cargo.exe build @cargoArgs -p xen-guest-agent
+    if ($LASTEXITCODE -ne 0) {
+        throw "cargo failed with error $LASTEXITCODE"
+    }
+
+    Write-Host "Building xen-win-clipboard"
+    cargo.exe build @cargoArgs -p xen-win-clipboard
     if ($LASTEXITCODE -ne 0) {
         throw "cargo failed with error $LASTEXITCODE"
     }
 
     Write-Host "Signing"
-    Set-SignerFileSignature .\target\$Configuration\xen-guest-agent.exe
+    Set-SignerFileSignature .\target\$Configuration\xen-guest-agent.exe, .\target\$Configuration\xen-win-clipboard.exe
 }
 finally {
     Pop-Location
