@@ -15,7 +15,7 @@
 
 .LICENSEURI
 
-.PROJECTURI
+.PROJECTURI https://xenbits.xen.org/xsa/advisory-468.html
 
 .ICONURI
 
@@ -37,6 +37,9 @@
 
 .DESCRIPTION
  This script applies security controls to existing Xen devices and drivers to mitigate XSA-468.
+
+.LINK
+ https://xenbits.xen.org/xsa/advisory-468.html
 
 #>
 
@@ -120,8 +123,8 @@ namespace XenToolsWorkaround {
 
 $Script:Sddl = "D:P(A;;GA;;;SY)(A;;GA;;;BA)"
 $Script:SecurityDescriptor = (ConvertFrom-SddlString $Script:Sddl).RawDescriptor
-$Script:ScheduledTaskName = "XenToolsWorkaround"
-$Script:InstallPath = "$env:ProgramFiles\XenToolsWorkaround.ps1"
+$Script:ScheduledTaskName = "XSA468Workaround"
+$Script:InstallPath = "$env:ProgramFiles\XSA468Workaround.ps1"
 $Script:PowershellPath = Join-Path ([System.Environment]::SystemDirectory) "WindowsPowerShell\v1.0\powershell.exe"
 
 # Prepackaged arguments for each device type
@@ -293,11 +296,25 @@ elseif ($PSCmdlet.ParameterSetName -ieq "Install") {
 
         # Register-ScheduledTask doesn't support -WhatIf
         if ($PSCmdlet.ShouldProcess($Script:ScheduledTaskName, "Create scheduled task")) {
+            Write-Host "Starting mitigation task"
             $registeredTask = $task | Register-ScheduledTask -TaskName $Script:ScheduledTaskName
             $registeredTask | Start-ScheduledTask | Out-Null
+
+            Write-Host "Waiting for task to finish"
+            # wait for a max of 5 minutes before cleaning up
+            for ($i = 0; $i -lt 60; $i++) {
+                Start-Sleep -Seconds 5
+                if (($registeredTask | Get-ScheduledTask).State -ine "Running") {
+                    break
+                }
+            }
+
+            Write-Host "Cleaning up"
+            $registeredTask | Unregister-ScheduledTask -Confirm:$false -ErrorAction Continue
+            Remove-Item $Script:InstallPath -Force -ErrorAction Continue
         }
     }
 }
 
 Write-Host
-Write-Host "Finished, check Task Scheduler for status"
+Write-Host "Finished"
