@@ -26,13 +26,10 @@
 .EXTERNALSCRIPTDEPENDENCIES
 
 .RELEASENOTES
-XXXX-XX-XX Initial release
 
 .PRIVATEDATA
 
 #>
-
-
 
 <#
 
@@ -126,8 +123,16 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-namespace XenToolsWorkaround {
+namespace XSA468Workaround {
     public static class KernelObjects {
+        const uint READ_CONTROL = 0x00020000;
+        const uint WRITE_DAC = 0x00040000;
+        const uint FILE_SHARE_READ = 0x00000001;
+        const uint FILE_SHARE_WRITE = 0x00000002;
+        const uint OPEN_EXISTING = 3;
+        const uint DACL_SECURITY_INFORMATION = 0x00000004;
+        const int ERROR_INSUFFICIENT_BUFFER = 0x7a;
+
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         static extern SafeFileHandle CreateFile(
             string lpFileName,
@@ -138,10 +143,15 @@ namespace XenToolsWorkaround {
             uint dwFlagsAndAttributes,
             IntPtr hTemplateFile);
 
-        const uint WRITE_DAC = 0x00040000;
-        const uint FILE_SHARE_READ = 0x00000001;
-        const uint FILE_SHARE_WRITE = 0x00000002;
-        const uint OPEN_EXISTING = 3;
+        [DllImport("advapi32.dll", SetLastError = true)]
+        static extern bool GetKernelObjectSecurity(
+            SafeHandle Handle,
+            uint RequestedInformation,
+            [In, Out]
+            [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 3)]
+            byte[] pSecurityDescriptor,
+            uint nLength,
+            out uint lpnLengthNeeded);
 
         [DllImport("advapi32.dll", SetLastError = true)]
         static extern bool SetKernelObjectSecurity(
@@ -149,7 +159,31 @@ namespace XenToolsWorkaround {
             uint SecurityInformation,
             [In] byte[] SecurityDescriptor);
 
-        const uint DACL_SECURITY_INFORMATION = 0x00000004;
+        public static byte[] GetObjectDacl(string path) {
+            using (var handle = CreateFile(
+                path,
+                READ_CONTROL,
+                FILE_SHARE_READ | FILE_SHARE_WRITE,
+                IntPtr.Zero,
+                OPEN_EXISTING,
+                0,
+                IntPtr.Zero)) {
+                if (handle.IsInvalid) {
+                    throw new Win32Exception();
+                }
+                uint count = 0;
+                if (!GetKernelObjectSecurity(handle, DACL_SECURITY_INFORMATION, null, 0, out count) && Marshal.GetLastWin32Error() != ERROR_INSUFFICIENT_BUFFER) {
+                    throw new Win32Exception();
+                }
+                var sdBytes = new byte[count];
+                if (!GetKernelObjectSecurity(handle, DACL_SECURITY_INFORMATION, sdBytes, count, out count)) {
+                    throw new Win32Exception();
+                }
+                var realSdBytes = new byte[count];
+                Array.Copy(sdBytes, realSdBytes, count);
+                return realSdBytes;
+            }
+        }
 
         public static void SetObjectDacl(string path, byte[] sdBytes) {
             using (var handle = CreateFile(
@@ -181,14 +215,20 @@ $Script:PowershellPath = Join-Path ([System.Environment]::SystemDirectory) "Wind
 # Prepackaged arguments for each device type
 $Script:DeviceTypes = @(
     @{
-        Class               = "System";
-        CompatibleIdType    = "xenclass";
+        Class               = "System"
+        CompatibleIdType    = "xenclass"
         CompatibleIdPattern = '*&DEV_IFACE&*'
     },
     @{
-        CompatibleIdType    = "xendevice";
+        CompatibleIdType    = "xendevice"
         CompatibleIdPattern = '*&DEV_CONSOLE*'
     }
+)
+
+# Only list SIDs that belong to the default insecure configuration
+$Script:VulnerableSids = @(
+    [System.Security.Principal.SecurityIdentifier]::new([System.Security.Principal.WellKnownSidType]::WorldSid, $null),
+    [System.Security.Principal.SecurityIdentifier]::new([System.Security.Principal.WellKnownSidType]::RestrictedCodeSid, $null)
 )
 
 function Get-SddlBytes {
@@ -274,7 +314,7 @@ function Protect-XenDeviceObject {
         $deviceFilePath = Join-Path "\\.\GLOBALROOT" $devicePath
         # FileInfo.SetAccessControl explodes when it encounters a kernel object, so we have to use this method
         if ($PSCmdlet.ShouldProcess($deviceFilePath, "Set DACL")) {
-            [XenToolsWorkaround.KernelObjects]::SetObjectDacl($deviceFilePath, $sdBytes)
+            [XSA468Workaround.KernelObjects]::SetObjectDacl($deviceFilePath, $sdBytes)
             Write-Verbose "Successfully set DACL on $deviceFilePath"
         }
     }
@@ -288,7 +328,11 @@ function Test-XenDeviceObject {
         [Parameter()][string]$Class
     )
 
-    $foundObjects = @();
+    # isolating Add-Type with Start-Job makes the script too complicated, so just load it here
+    Write-Verbose "Loading helper types"
+    Add-Type -TypeDefinition $TypeDefinition | Out-Null
+
+    $foundObjects = @()
     Get-XenDevice `
         -Class $Class `
         -CompatibleIdType $CompatibleIdType `
@@ -302,13 +346,11 @@ function Test-XenDeviceObject {
         Write-Verbose "Testing $deviceId, devicePath = $devicePath"
 
         $deviceFilePath = Join-Path "\\.\GLOBALROOT" $devicePath
-        $acl = Get-Acl $deviceFilePath
-        Write-Verbose $acl.Sddl
-        $acl.Access | Where-Object AccessControlType -eq Allow | ForEach-Object {
-            if (!$_.IdentityReference.IsValidTargetType([SecurityIdentifier])) {
-                continue
-            }
-            $subj = $_.IdentityReference.Translate([SecurityIdentifier])
+        $sdBytes = [XSA468Workaround.KernelObjects]::GetObjectDacl($deviceFilePath)
+        $sd = [System.Security.AccessControl.RawSecurityDescriptor]::new($sdBytes, 0)
+        Write-Verbose ($sd.GetSddlForm([System.Security.AccessControl.AccessControlSections]::All))
+        $sd.DiscretionaryAcl | Where-Object AceType -eq AccessAllowed | ForEach-Object {
+            $subj = $_.SecurityIdentifier
             if ($Script:VulnerableSids | Where-Object { $_ -eq $subj }) {
                 $foundObjects += @($deviceId)
             }
@@ -414,7 +456,8 @@ elseif ($PSCmdlet.ParameterSetName -ieq "Install") {
             # wait for a max of 5 minutes before cleaning up
             for ($i = 0; $i -lt 60; $i++) {
                 Start-Sleep -Seconds 5
-                if (($registeredTask | Get-ScheduledTask).State -ine "Running") {
+                if (($registeredTask | Get-ScheduledTask).State -ine 4) {
+                    # 4=Running
                     break
                 }
             }
