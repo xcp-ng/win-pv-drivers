@@ -26,20 +26,68 @@
 .EXTERNALSCRIPTDEPENDENCIES
 
 .RELEASENOTES
+XXXX-XX-XX Initial release
 
+.PRIVATEDATA
 
 #>
+
+
 
 <#
 
 .SYNOPSIS
- Mitigates XSA-468 / CVE-2025-27462, CVE-2025-27463.
+
+Detects and mitigates XSA-468 / CVE-2025-27462, CVE-2025-27463.
 
 .DESCRIPTION
- This script applies security controls to existing Xen devices and drivers to mitigate XSA-468.
+
+This script applies security controls to existing Xen devices and drivers to mitigate XSA-468. No reboot is needed.
+
+This script also provides a detection function for XSA-468 using the -Scan switch.
+
+.EXAMPLE
+
+.\Install-XSA468Workaround.ps1 -Scan
+Looking for vulnerable objects
+Found vulnerable object XENBUS\VEN_XS0002&DEV_IFACE\_
+Found vulnerable object XENBUS\VEN_XS0002&DEV_IFACE\_
+Found vulnerability, it's recommended to run the script
+True
+
+This example shows how to detect XSA-468 using this script. In this example, the script reports that the vulnerability is present.
+
+.EXAMPLE
+
+.\Install-XSA468Workaround.ps1 -Scan
+Looking for vulnerable objects
+Did not find evidence of vulnerability, it's not necessary to run the script
+False
+
+This example shows how to programmatically detect XSA-468 using this script. In this example. the script reports that XSA-468 was not detected.
+
+.EXAMPLE
+
+.\Install-XSA468Workaround.ps1
+Running script as SYSTEM
+Starting mitigation task
+Waiting for task to finish
+Getting task status
+LastRunTime        : 3/24/2025 11:09:21 AM
+LastTaskResult     : 0
+NextRunTime        :
+NumberOfMissedRuns : 0
+TaskName           : XSA468Workaround
+TaskPath           : \
+PSComputerName     :
+Task finished successfully
+Cleaning up
+
+This example shows how to use this script to apply XSA-468 mitigations to a running system. The script reports whether it succeeded in its output.
 
 .LINK
- https://xenbits.xen.org/xsa/advisory-468.html
+
+https://xenbits.xen.org/xsa/advisory-468.html
 
 #>
 
@@ -50,11 +98,14 @@ using namespace System.Security.Principal
 
 [CmdletBinding(SupportsShouldProcess)]
 param (
-    # Don't apply security controls to running drivers.
+    # Scan for vulnerability.
+    [Parameter(Mandatory, ParameterSetName = "Scan")][switch]$Scan,
+
+    # Don't apply security controls to running devices.
     [Parameter(ParameterSetName = "Install")]
     [Parameter(ParameterSetName = "Invoke")]
     [switch]$NoSecureObjects,
-    # Don't apply security controls to drivers at boot time.
+    # Don't apply security controls to installed drivers.
     [Parameter(ParameterSetName = "Install")]
     [Parameter(ParameterSetName = "Invoke")]
     [switch]$NoSetRegistry,
@@ -195,7 +246,7 @@ function Set-XenDriverSecurity {
     }
 }
 
-function Protect-XenDeviceObjects {
+function Protect-XenDeviceObject {
     [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter(Mandatory)][string]$CompatibleIdType,
@@ -229,13 +280,72 @@ function Protect-XenDeviceObjects {
     }
 }
 
-if ($PSCmdlet.ParameterSetName -ieq "Invoke") {
+function Test-XenDeviceObject {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)][string]$CompatibleIdType,
+        [Parameter(Mandatory)][string]$CompatibleIdPattern,
+        [Parameter()][string]$Class
+    )
+
+    $foundObjects = @();
+    Get-XenDevice `
+        -Class $Class `
+        -CompatibleIdType $CompatibleIdType `
+        -CompatibleIdPattern $CompatibleIdPattern | ForEach-Object {
+        $deviceId = $_.DeviceID
+        $devicePath = (Get-PnpDeviceProperty -InputObject $_ DEVPKEY_Device_PDOName).Data
+        Write-Verbose "devicePath $devicePath"
+        if ([string]::IsNullOrEmpty($devicePath)) {
+            return
+        }
+        Write-Verbose "Testing $deviceId, devicePath = $devicePath"
+
+        $deviceFilePath = Join-Path "\\.\GLOBALROOT" $devicePath
+        $acl = Get-Acl $deviceFilePath
+        Write-Verbose $acl.Sddl
+        $acl.Access | Where-Object AccessControlType -eq Allow | ForEach-Object {
+            if (!$_.IdentityReference.IsValidTargetType([SecurityIdentifier])) {
+                continue
+            }
+            $subj = $_.IdentityReference.Translate([SecurityIdentifier])
+            if ($Script:VulnerableSids | Where-Object { $_ -eq $subj }) {
+                $foundObjects += @($deviceId)
+            }
+        }
+    }
+    return $foundObjects
+}
+
+if ($Scan) {
+    $Script:IsVulnerable = $false
+
+    Write-Host
+    Write-Host "Looking for vulnerable objects"
+    foreach ($devtype in $Script:DeviceTypes) {
+        Test-XenDeviceObject @devtype | ForEach-Object {
+            Write-Host "Found vulnerable object $_"
+            $Script:IsVulnerable = $true
+        }
+    }
+
+    Write-Host
+    if ($Script:IsVulnerable) {
+        Write-Host "Found vulnerability, it's recommended to run the script"
+    }
+    else {
+        Write-Host "Did not find evidence of vulnerability, it's not necessary to run the script"
+    }
+    Write-Output $Script:IsVulnerable
+}
+
+elseif ($PSCmdlet.ParameterSetName -ieq "Invoke") {
     if (!$NoSecureObjects) {
         Write-Host
         Write-Host "Protecting active Xen device objects"
         foreach ($devtype in $Script:DeviceTypes) {
             try {
-                Protect-XenDeviceObjects @devtype -SecurityDescriptor $SecurityDescriptor -WhatIf:$WhatIfPreference
+                Protect-XenDeviceObject @devtype -SecurityDescriptor $SecurityDescriptor -WhatIf:$WhatIfPreference
             }
             catch {
                 Write-Error $_
@@ -308,6 +418,15 @@ elseif ($PSCmdlet.ParameterSetName -ieq "Install") {
                     break
                 }
             }
+            Write-Host "Getting task status"
+            $taskInfo = $registeredTask | Get-ScheduledTask | Get-ScheduledTaskInfo
+            $taskInfo | Write-Output
+            if ($taskInfo.LastTaskResult -eq 0) {
+                Write-Host "Task finished successfully"
+            }
+            else {
+                Write-Error "Task failed with code $($taskInfo.LastTaskResult)"
+            }
 
             Write-Host "Cleaning up"
             $registeredTask | Unregister-ScheduledTask -Confirm:$false -ErrorAction Continue
@@ -315,6 +434,3 @@ elseif ($PSCmdlet.ParameterSetName -ieq "Install") {
         }
     }
 }
-
-Write-Host
-Write-Host "Finished"
