@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-2-Clause
 
 <#PSScriptInfo
 
@@ -9,25 +10,14 @@
 
 .COMPANYNAME Vates
 
-.COPYRIGHT
+.COPYRIGHT (c) 2025 Vates.
 
-.TAGS
-
-.LICENSEURI
+.LICENSEURI https://spdx.org/licenses/BSD-2-Clause.html
 
 .PROJECTURI https://xenbits.xen.org/xsa/advisory-468.html
 
-.ICONURI
-
-.EXTERNALMODULEDEPENDENCIES
-
-.REQUIREDSCRIPTS
-
-.EXTERNALSCRIPTDEPENDENCIES
-
 .RELEASENOTES
-
-.PRIVATEDATA
+XXXX-XX-XX Initial release - 1.0.0.0 TODO: change date
 
 #>
 
@@ -52,7 +42,7 @@ Found vulnerable object XENBUS\VEN_XS0002&DEV_IFACE\_
 Found vulnerability, it's recommended to run the script
 True
 
-This example shows how to detect XSA-468 using this script. In this example, the script reports that the vulnerability is present.
+This example shows how to detect XSA-468 using this script. In this example, the script reports that XSA-468 is present.
 
 .EXAMPLE
 
@@ -61,7 +51,7 @@ Looking for vulnerable objects
 Did not find evidence of vulnerability, it's not necessary to run the script
 False
 
-This example shows how to programmatically detect XSA-468 using this script. In this example. the script reports that XSA-468 was not detected.
+This example shows how to detect XSA-468 using this script. In this example, the script reports that XSA-468 was not detected.
 
 .EXAMPLE
 
@@ -206,6 +196,7 @@ namespace XSA468Workaround {
 }
 "@
 
+# SDDL_DEVOBJ_SYS_ALL_ADM_ALL
 $Script:Sddl = "D:P(A;;GA;;;SY)(A;;GA;;;BA)"
 $Script:SecurityDescriptor = (ConvertFrom-SddlString $Script:Sddl).RawDescriptor
 $Script:ScheduledTaskName = "XSA468Workaround"
@@ -312,7 +303,7 @@ function Protect-XenDeviceObject {
         Add-Type -TypeDefinition $Script:TypeDefinition
 
         $deviceFilePath = Join-Path "\\.\GLOBALROOT" $devicePath
-        # FileInfo.SetAccessControl explodes when it encounters a kernel object, so we have to use this method
+        # FileInfo.SetAccessControl explodes when it encounters a device object, so we have to use P/Invoke
         if ($PSCmdlet.ShouldProcess($deviceFilePath, "Set DACL")) {
             [XSA468Workaround.KernelObjects]::SetObjectDacl($deviceFilePath, $sdBytes)
             Write-Verbose "Successfully set DACL on $deviceFilePath"
@@ -346,6 +337,7 @@ function Test-XenDeviceObject {
         Write-Verbose "Testing $deviceId, devicePath = $devicePath"
 
         $deviceFilePath = Join-Path "\\.\GLOBALROOT" $devicePath
+        # on Server 2016 Get-Acl doesn't work on device objects, so we again have to use P/Invoke
         $sdBytes = [XSA468Workaround.KernelObjects]::GetObjectDacl($deviceFilePath)
         $sd = [System.Security.AccessControl.RawSecurityDescriptor]::new($sdBytes, 0)
         Write-Verbose ($sd.GetSddlForm([System.Security.AccessControl.AccessControlSections]::All))
@@ -424,7 +416,7 @@ elseif ($PSCmdlet.ParameterSetName -ieq "Install") {
 
         $existingTask = Get-ScheduledTask -TaskName $Script:ScheduledTaskName -ErrorAction SilentlyContinue
         if ($null -ne $existingTask) {
-            Write-Verbose "Scheduled task already installed, reinstalling"
+            Write-Verbose "Scheduled task is already installed, reinstalling"
             $existingTask | Unregister-ScheduledTask -Confirm:$false -WhatIf:$WhatIfPreference
         }
 
