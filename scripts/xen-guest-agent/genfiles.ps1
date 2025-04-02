@@ -7,24 +7,25 @@ param (
 . "$ProjectDir\..\branding.ps1"
 . "$ProjectDir\..\branding-generic.ps1"
 
-$BrandingFile = "$ProjectDir\xen-guest-agent\branding.rs"
-$OldBranding = Get-Content -Raw $BrandingFile -ErrorAction Ignore
+function Update-BrandingFile {
+    $BrandingFile = "$ProjectDir\xen-guest-agent\branding.rs"
+    $OldBranding = Get-Content -Raw $BrandingFile -ErrorAction Ignore
 
-$FileVersion = Get-PackageVersion XenGuestAgent
-$NewFileVersionValue = [string]::Format("0x{0:x}", `
-    ([uint64]$FileVersion.Major -shl 48) -bor `
-    ([uint64]$FileVersion.Minor -shl 32) -bor `
-    ([uint64]$FileVersion.Build -shl 16) -bor `
-        [uint64]$FileVersion.Revision)
+    $FileVersion = Get-PackageVersion XenGuestAgent
+    $NewFileVersionValue = [string]::Format("0x{0:x}", `
+        ([uint64]$FileVersion.Major -shl 48) -bor `
+        ([uint64]$FileVersion.Minor -shl 32) -bor `
+        ([uint64]$FileVersion.Build -shl 16) -bor `
+            [uint64]$FileVersion.Revision)
 
-$ProductVersion = Get-PackageVersion Product
-$NewProductVersionValue = [string]::Format("0x{0:x}", `
-    ([uint64]$ProductVersion.Major -shl 48) -bor `
-    ([uint64]$ProductVersion.Minor -shl 32) -bor `
-    ([uint64]$ProductVersion.Build -shl 16) -bor `
-        [uint64]$ProductVersion.Revision)
+    $ProductVersion = Get-PackageVersion Product
+    $NewProductVersionValue = [string]::Format("0x{0:x}", `
+        ([uint64]$ProductVersion.Major -shl 48) -bor `
+        ([uint64]$ProductVersion.Minor -shl 32) -bor `
+        ([uint64]$ProductVersion.Build -shl 16) -bor `
+            [uint64]$ProductVersion.Revision)
 
-$NewBranding = @"
+    $NewBranding = @"
 loop {
     res.set_version_info(winres::VersionInfo::FILEVERSION, ${NewFileVersionValue});
     res.set_version_info(winres::VersionInfo::PRODUCTVERSION, ${NewProductVersionValue});
@@ -45,7 +46,30 @@ loop {
 }
 "@
 
-if ($NewBranding -ne $OldBranding) {
-    Write-Output "Updating branding.rs"
-    Set-Content -Path $BrandingFile -Value $NewBranding -NoNewline
+    if ($NewBranding -ne $OldBranding) {
+        Write-Output "Updating branding.rs"
+        Set-Content -Path $BrandingFile -Value $NewBranding -NoNewline
+    }
 }
+
+function Update-AgentVersionFile {
+    $VersionFile = "$ProjectDir\xen-guest-agent\publishers\publisher-xenstore\version.rs"
+    $OldVersion = Get-Content -Raw $VersionFile -ErrorAction Ignore
+
+    $Version = Get-PackageVersion XenGuestAgent
+
+    $NewVersion = @"
+pub(crate) const AGENT_VERSION_MAJOR: &str = "$($Version.Major)"; // XO does not show version at all if 0
+pub(crate) const AGENT_VERSION_MINOR: &str = "$($Version.Minor)";
+pub(crate) const AGENT_VERSION_MICRO: &str = "$($Version.Build)"; // XAPI exposes "-1" if missing
+pub(crate) const AGENT_VERSION_BUILD: &str = "$($Version.Revision)";
+"@
+
+    if ($NewVersion -ne $OldVersion) {
+        Write-Output "Updating $VersionFile"
+        Set-Content -Path $VersionFile -Value $NewBranding -NoNewline
+    }
+}
+
+Update-BrandingFile
+Update-AgentVersionFile
