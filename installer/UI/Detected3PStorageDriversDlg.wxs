@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <UI>
+      <Dialog Id="Detected3PStorageDriversDlg" Width="300" Height="105" Title="!(loc.Detected3PStorageDriversDlg_Title)">
+        <Control Id="Continue" Type="PushButton" X="92" Y="80" Width="56" Height="17" Text="!(loc.XenDriversUIContinue)">
+          <Publish Event="EndDialog" Value="Return" />
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="152" Y="80" Width="56" Height="17" Default="yes" Cancel="yes" Text="!(loc.WixUICancel)">
+          <Publish Event="EndDialog" Value="Exit" />
+        </Control>
+        <Control Id="DriverListText" Type="Text" X="30" Y="15" Width="250" Height="20" NoPrefix="yes" Text="!(loc.Detected3PStorageDriversDlg_DriverListText)" />
+        <Control Id="WarningText" Type="Text" X="30" Y="35" Width="250" Height="30" NoPrefix="yes" Text="!(loc.Detected3PStorageDriversDlg_WarningText)" />
+      </Dialog>
+    </UI>
+  </Fragment>
+</Wix>

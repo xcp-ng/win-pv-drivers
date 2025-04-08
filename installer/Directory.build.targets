@@ -1,4 +1,0 @@
-<Project>
-    <!-- https://github.com/firegiant/HeatWaveSupport/issues/73 -->
-    <Target Condition="'$(MSBuildProjectExtension)'=='.wixproj'" Name="CollectSuggestedVisualStudioComponentIds" />
-</Project>
