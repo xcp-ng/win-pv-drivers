@@ -1,0 +1,70 @@
+name: build-installer
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build-drivers:
+    uses: ./.github/workflows/build-drivers.yml
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+
+  build-guestagent:
+    uses: ./.github/workflows/build-guestagent.yml
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+
+  build-installer:
+    needs:
+      - build-drivers
+      - build-guestagent
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download drivers
+        uses: actions/download-artifact@v4
+        with:
+          name: drivers
+          path: installer/output/
+      - name: Download guest agent
+        uses: actions/download-artifact@v4
+        with:
+          name: guestagent
+          path: xen-guest-agent/target/release/
+      - name: Add MSBuild
+        uses: microsoft/setup-msbuild@v2
+      - name: Configure branding
+        run: Set-Content -Path branding.ps1 -Value $Env:XCPNG_WINPV_BRANDING -Force
+        env:
+          XCPNG_WINPV_BRANDING: ${{vars.XCPNG_WINPV_BRANDING}}
+      - name: Build installer
+        run: .\build-installer.ps1 -Configuration Release -Platform x64 -ExportSymbols
+        env:
+          # The username doesn't matter, just insert a random user here
+          NuGetPackageSourceCredentials_xcpng: Username=xcp-ng;Password=${{secrets.GITHUB_TOKEN}}
+      - name: Upload artifact
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          path: output/
+          name: installer
+    outputs:
+      subject-name: installer
+      subject-digest: sha256:${{steps.upload.outputs.artifact-digest}}
+
+  attest-installer:
+    needs: [build-installer]
+    uses: ./.github/workflows/attest.yml
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+    with:
+      subject-name: ${{needs.build-installer.outputs.subject-name}}
+      subject-digest: ${{needs.build-installer.outputs.subject-digest}}

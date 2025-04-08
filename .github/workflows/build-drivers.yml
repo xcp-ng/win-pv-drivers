@@ -1,0 +1,41 @@
+name: build-drivers
+
+on:
+  workflow_call:
+
+jobs:
+  build-drivers:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Add MSBuild
+        uses: microsoft/setup-msbuild@v2
+      - name: Configure branding
+        run: Set-Content -Path branding.ps1 -Value $Env:XCPNG_WINPV_BRANDING -Force
+        env:
+          XCPNG_WINPV_BRANDING: ${{vars.XCPNG_WINPV_BRANDING}}
+      - name: Build drivers
+        run: .\build-drivers.ps1 -Configuration Release -Platform x64
+      - name: Upload artifact
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          path: installer/output/
+          name: drivers
+    outputs:
+      subject-name: drivers
+      subject-digest: sha256:${{steps.upload.outputs.artifact-digest}}
+
+  attest-drivers:
+    needs: [build-drivers]
+    uses: ./.github/workflows/attest.yml
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+    with:
+      subject-name: ${{needs.build-drivers.outputs.subject-name}}
+      subject-digest: ${{needs.build-drivers.outputs.subject-digest}}

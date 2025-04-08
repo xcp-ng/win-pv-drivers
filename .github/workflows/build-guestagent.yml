@@ -1,0 +1,42 @@
+name: build-guestagent
+
+on:
+  workflow_call:
+
+jobs:
+  build-guestagent:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Configure branding
+        run: Set-Content -Path branding.ps1 -Value $Env:XCPNG_WINPV_BRANDING -Force
+        env:
+          XCPNG_WINPV_BRANDING: ${{vars.XCPNG_WINPV_BRANDING}}
+      - name: Build guest agent
+        run: .\build-guestagent.ps1 -Configuration release
+      - name: Upload artifact
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: guestagent
+          path: |
+            xen-guest-agent/target/release/*.exe
+            xen-guest-agent/target/release/*.pdb
+            xen-guest-agent/target/release/.fingerprint/
+    outputs:
+      subject-name: guestagent
+      subject-digest: sha256:${{steps.upload.outputs.artifact-digest}}
+
+  attest-guestagent:
+    needs: [build-guestagent]
+    uses: ./.github/workflows/attest.yml
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+    with:
+      subject-name: ${{needs.build-guestagent.outputs.subject-name}}
+      subject-digest: ${{needs.build-guestagent.outputs.subject-digest}}
