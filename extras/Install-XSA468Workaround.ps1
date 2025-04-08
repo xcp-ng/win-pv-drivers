@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-2-Clause
 
+# IMPORTANT NOTE: This script only covers vulnerabilities in XenIface.
+
 <#PSScriptInfo
 
 .VERSION 1.0.0.0
@@ -17,7 +19,7 @@
 .PROJECTURI https://xenbits.xen.org/xsa/advisory-468.html
 
 .RELEASENOTES
-XXXX-XX-XX Initial release - 1.0.0.0 TODO: change date
+2025-04-29 Initial release - 1.0.0.0
 
 #>
 
@@ -25,33 +27,35 @@ XXXX-XX-XX Initial release - 1.0.0.0 TODO: change date
 
 .SYNOPSIS
 
-Detects and mitigates XSA-468 / CVE-2025-27462, CVE-2025-27463.
+Detects and mitigates XSA-468 (XenIface only).
 
 .DESCRIPTION
 
-This script applies security controls to existing Xen devices and drivers to mitigate XSA-468. No reboot is needed.
+This script applies security controls to existing XenIface devices and drivers to mitigate XSA-468. No reboot is needed.
 
-This script also provides a detection function for XSA-468 using the -Scan switch.
+This script also provides a detection function for XenIface devices vulnerable to XSA-468 using the -Scan switch.
+
+IMPORTANT NOTE: This script does not cover vulnerabilities in XenBus and XenCons.
 
 .EXAMPLE
 
 .\Install-XSA468Workaround.ps1 -Scan
-Looking for vulnerable objects
+Looking for vulnerable XenIface objects
 Found vulnerable object XENBUS\VEN_XS0002&DEV_IFACE\_
 Found vulnerable object XENBUS\VEN_XS0002&DEV_IFACE\_
-Found vulnerability, it's recommended to run the script
+Found XenIface vulnerability, it's recommended to run the script
 True
 
-This example shows how to detect XSA-468 using this script. In this example, the script reports that XSA-468 is present.
+This example shows how to detect XenIface devices vulnerable to XSA-468 using this script. In this example, the script reports that XenIface is vulnerable to XSA-468.
 
 .EXAMPLE
 
 .\Install-XSA468Workaround.ps1 -Scan
-Looking for vulnerable objects
-Did not find evidence of vulnerability, it's not necessary to run the script
+Looking for vulnerable XenIface objects
+Did not find evidence of XenIface vulnerability
 False
 
-This example shows how to detect XSA-468 using this script. In this example, the script reports that XSA-468 was not detected.
+This example shows how to detect XenIface devices vulnerable to XSA-468 using this script. In this example, the script reports that XenIface was not determined to be vulnerable to XSA-468.
 
 .EXAMPLE
 
@@ -70,7 +74,7 @@ PSComputerName     :
 Task finished successfully
 Cleaning up
 
-This example shows how to use this script to apply XSA-468 mitigations to a running system. The script reports whether it succeeded in its output.
+This example shows how to use this script to apply XSA-468 mitigations to XenIface on a running system. The script reports whether it succeeded in its output.
 
 .LINK
 
@@ -85,7 +89,7 @@ using namespace System.Security.Principal
 
 [CmdletBinding(SupportsShouldProcess)]
 param (
-    # Scan for vulnerability.
+    # Scan for XenIface vulnerability.
     [Parameter(Mandatory, ParameterSetName = "Scan")][switch]$Scan,
 
     # Don't apply security controls to running devices.
@@ -197,8 +201,13 @@ namespace XSA468Workaround {
 "@
 
 # SDDL_DEVOBJ_SYS_ALL_ADM_ALL
-$Script:Sddl = "D:P(A;;GA;;;SY)(A;;GA;;;BA)"
-$Script:SecurityDescriptor = (ConvertFrom-SddlString $Script:Sddl).RawDescriptor
+$Script:DeviceSddl = "D:P(A;;GA;;;SY)(A;;GA;;;BA)"
+$Script:DeviceSecurityDescriptor = (ConvertFrom-SddlString $Script:DeviceSddl).RawDescriptor
+
+$Script:WmiSddl = "O:BAG:BAD:(A;;GA;;;BA)(A;;GA;;;SY)"
+$Script:WmiSecurityDescriptor = (ConvertFrom-SddlString $Script:WmiSddl).RawDescriptor
+$Script:WmiSecurityKey = "HKLM:\SYSTEM\CurrentControlSet\Control\WMI\Security"
+
 $Script:ScheduledTaskName = "XSA468Workaround"
 $Script:InstallPath = "$env:ProgramFiles\XSA468Workaround.ps1"
 $Script:PowershellPath = Join-Path ([System.Environment]::SystemDirectory) "WindowsPowerShell\v1.0\powershell.exe"
@@ -209,11 +218,13 @@ $Script:DeviceTypes = @(
         Class               = "System"
         CompatibleIdType    = "xenclass"
         CompatibleIdPattern = '*&DEV_IFACE&*'
-    },
-    @{
-        CompatibleIdType    = "xendevice"
-        CompatibleIdPattern = '*&DEV_CONSOLE*'
     }
+)
+
+$Script:WmiGuids = @(
+    "1D80EB99-A1D6-4492-B62F-8B4549FF0B5E"
+    "12138A69-97B2-49DD-B9DE-54749AABC789"
+    "AB8136BF-8EA7-420D-ADAD-89C83E587925"
 )
 
 # Only list SIDs that belong to the default insecure configuration
@@ -222,7 +233,7 @@ $Script:VulnerableSids = @(
     [System.Security.Principal.SecurityIdentifier]::new([System.Security.Principal.WellKnownSidType]::RestrictedCodeSid, $null)
 )
 
-function Get-SddlBytes {
+function Get-SdBytes {
     param (
         [Parameter(Mandatory)][CommonSecurityDescriptor]$SecurityDescriptor
     )
@@ -268,11 +279,30 @@ function Set-XenDriverSecurity {
         Write-Verbose "regpath: $regpath"
         if ($PSCmdlet.ShouldProcess($regpath, "Set security")) {
             if ($null -eq (Get-ItemProperty $regpath -Name Security -ErrorAction SilentlyContinue)) {
-                Set-ItemProperty $regpath -Name Security -Value ([byte[]](Get-SddlBytes -SecurityDescriptor $SecurityDescriptor)) -WhatIf:$WhatIfPreference
+                Set-ItemProperty $regpath -Name Security -Value ([byte[]](Get-SdBytes -SecurityDescriptor $SecurityDescriptor)) -WhatIf:$WhatIfPreference
             }
             else {
                 Write-Verbose "Device $devid already has Security value, skipping"
             }
+        }
+    }
+}
+
+function Set-XenWmiSecurity {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory)][string]$WmiGuid,
+        [Parameter(Mandatory)][CommonSecurityDescriptor]$SecurityDescriptor
+    )
+
+    $sdBytes = [byte[]](Get-SdBytes -SecurityDescriptor $SecurityDescriptor)
+
+    if ($PSCmdlet.ShouldProcess($WmiGuid, "Set security")) {
+        if ($null -eq (Get-ItemProperty -Path $Script:WmiSecurityKey -Name $WmiGuid -ErrorAction SilentlyContinue)) {
+            Set-ItemProperty -Path $Script:WmiSecurityKey -Name $WmiGuid -Type Binary -Value $sdBytes -WhatIf:$WhatIfPreference
+        }
+        else {
+            Write-Verbose "WMI GUID $WmiGuid already has Security value, skipping"
         }
     }
 }
@@ -286,7 +316,7 @@ function Protect-XenDeviceObject {
         [Parameter(Mandatory)][CommonSecurityDescriptor]$SecurityDescriptor
     )
 
-    $sdBytes = [byte[]](Get-SddlBytes -SecurityDescriptor $SecurityDescriptor)
+    $sdBytes = [byte[]](Get-SdBytes -SecurityDescriptor $SecurityDescriptor)
 
     Get-XenDevice `
         -Class $Class `
@@ -355,7 +385,7 @@ if ($Scan) {
     $Script:IsVulnerable = $false
 
     Write-Host
-    Write-Host "Looking for vulnerable objects"
+    Write-Host "Looking for vulnerable XenIface objects"
     foreach ($devtype in $Script:DeviceTypes) {
         Test-XenDeviceObject @devtype | ForEach-Object {
             Write-Host "Found vulnerable object $_"
@@ -364,11 +394,21 @@ if ($Scan) {
     }
 
     Write-Host
+    Write-Host "Looking for vulnerable XenIface WMI GUIDs"
+    foreach ($wmiGuid in $Script:WmiGuids) {
+        Write-Verbose "Testing WMI GUID $wmiGuid"
+        if ($null -eq (Get-ItemProperty -Path $Script:WmiSecurityKey -Name $wmiGuid -ErrorAction SilentlyContinue)) {
+            Write-Host "Found vulnerable WMI GUID $wmiGuid"
+            $Script:IsVulnerable = $true
+        }
+    }
+
+    Write-Host
     if ($Script:IsVulnerable) {
-        Write-Host "Found vulnerability, it's recommended to run the script"
+        Write-Host "Found XenIface vulnerability, it's recommended to run the script"
     }
     else {
-        Write-Host "Did not find evidence of vulnerability, it's not necessary to run the script"
+        Write-Host "Did not find evidence of XenIface vulnerability"
     }
     Write-Output $Script:IsVulnerable
 }
@@ -379,7 +419,7 @@ elseif ($PSCmdlet.ParameterSetName -ieq "Invoke") {
         Write-Host "Protecting active Xen device objects"
         foreach ($devtype in $Script:DeviceTypes) {
             try {
-                Protect-XenDeviceObject @devtype -SecurityDescriptor $SecurityDescriptor -WhatIf:$WhatIfPreference
+                Protect-XenDeviceObject @devtype -SecurityDescriptor $Script:DeviceSecurityDescriptor -WhatIf:$WhatIfPreference
             }
             catch {
                 Write-Error $_
@@ -392,7 +432,18 @@ elseif ($PSCmdlet.ParameterSetName -ieq "Invoke") {
         Write-Host "Setting Xen device security registry values"
         foreach ($devtype in $Script:DeviceTypes) {
             try {
-                Set-XenDriverSecurity @devtype -SecurityDescriptor $SecurityDescriptor -WhatIf:$WhatIfPreference
+                Set-XenDriverSecurity @devtype -SecurityDescriptor $Script:DeviceSecurityDescriptor -WhatIf:$WhatIfPreference
+            }
+            catch {
+                Write-Error $_
+            }
+        }
+
+        Write-Host
+        Write-Host "Setting WMI security registry values"
+        foreach ($wmiGuid in $Script:WmiGuids) {
+            try {
+                Set-XenWmiSecurity -WmiGuid $wmiGuid -SecurityDescriptor $Script:WmiSecurityDescriptor -WhatIf:$WhatIfPreference
             }
             catch {
                 Write-Error $_
