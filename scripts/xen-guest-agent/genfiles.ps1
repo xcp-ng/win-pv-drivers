@@ -53,7 +53,7 @@ loop {
 }
 
 function Update-AgentVersionFile {
-    $VersionFile = "$ProjectDir\xen-guest-agent\publishers\publisher-xenstore\version.rs"
+    $VersionFile = "$ProjectDir\publishers\publisher-xenstore\src\version.rs"
     $OldVersion = Get-Content -Raw $VersionFile -ErrorAction Ignore
 
     $Version = Get-PackageVersion XenGuestAgent
@@ -67,7 +67,7 @@ pub(crate) const AGENT_VERSION_BUILD: &str = "$($Version.Revision)";
 
     if ($NewVersion -ne $OldVersion) {
         Write-Output "Updating $VersionFile"
-        Set-Content -Path $VersionFile -Value $NewBranding -NoNewline
+        Set-Content -Path $VersionFile -Value $NewVersion -NoNewline
     }
 }
 

@@ -16,16 +16,6 @@ $PSNativeCommandArgumentPassing = "Legacy"
 
 Push-Location $PSScriptRoot\xen-guest-agent
 try {
-    Write-Host "Reconfiguring xenstore-win"
-    if (!(Get-Content -Encoding utf8 $PSScriptRoot\xen-guest-agent\Cargo.toml | Select-String -SimpleMatch "[patch.'https://github.com/TSnake41/xenstore-win.git']")) {
-        Add-Content -Encoding utf8 -Path $PSScriptRoot\xen-guest-agent\Cargo.toml -Value @"
-
-[patch.'https://github.com/TSnake41/xenstore-win.git']
-xenstore-win = { path = "../xenstore-win" }
-
-"@
-    }
-
     Copy-Item -Force ..\scripts\xen-guest-agent\build.rs .\xen-guest-agent\build.rs
     & "$PSScriptRoot\scripts\xen-guest-agent\genfiles.ps1" -ProjectDir .
 
@@ -36,7 +26,7 @@ xenstore-win = { path = "../xenstore-win" }
     }
 
     $cargoArgs = @(
-        "--no-default-features",
+        "--no-default-features"
         "--locked"
     )
 
