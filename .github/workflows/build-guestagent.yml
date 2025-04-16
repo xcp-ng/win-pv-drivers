@@ -15,8 +15,25 @@ jobs:
         run: Set-Content -Path branding.ps1 -Value $Env:XCPNG_WINPV_BRANDING -Force
         env:
           XCPNG_WINPV_BRANDING: ${{vars.XCPNG_WINPV_BRANDING}}
+      - name: Install certificate
+        run: |
+          $pfxBytes = [System.Convert]::FromBase64String($Env:SIGNER_PFX_BASE64)
+          $pfxPath = Join-Path $pwd "Signer.pfx"
+          [IO.File]::WriteAllBytes($pfxPath, $pfxBytes)
+          try {
+            certutil -importpfx -f -user -p "" my $pfxPath nochain
+            if ($LASTEXITCODE -ne 0) {
+                throw "certutil failed with error $LASTEXITCODE"
+            }
+          } finally {
+            Remove-Item -Force $pfxPath
+          }
+        env:
+          SIGNER_PFX_BASE64: ${{secrets.SIGNER_PFX_BASE64}}
       - name: Build guest agent
         run: .\build-guestagent.ps1 -Configuration release
+      - name: Clean up certificates
+        run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue
       - name: Upload artifact
         id: upload
         uses: actions/upload-artifact@v4

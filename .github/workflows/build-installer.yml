@@ -10,6 +10,7 @@ jobs:
       id-token: write
       contents: read
       attestations: write
+    secrets: inherit
 
   build-guestagent:
     uses: ./.github/workflows/build-guestagent.yml
@@ -17,6 +18,7 @@ jobs:
       id-token: write
       contents: read
       attestations: write
+    secrets: inherit
 
   build-installer:
     needs:
@@ -42,11 +44,29 @@ jobs:
         run: Set-Content -Path branding.ps1 -Value $Env:XCPNG_WINPV_BRANDING -Force
         env:
           XCPNG_WINPV_BRANDING: ${{vars.XCPNG_WINPV_BRANDING}}
+      - name: Install certificate
+        # since this runs on new powershell, watch the certutil password parameter syntax
+        run: |
+          $pfxBytes = [System.Convert]::FromBase64String($Env:SIGNER_PFX_BASE64)
+          $pfxPath = Join-Path $pwd "Signer.pfx"
+          [IO.File]::WriteAllBytes($pfxPath, $pfxBytes)
+          try {
+            certutil -importpfx -f -user -p "" my $pfxPath nochain
+            if ($LASTEXITCODE -ne 0) {
+                throw "certutil failed with error $LASTEXITCODE"
+            }
+          } finally {
+            Remove-Item -Force $pfxPath
+          }
+        env:
+          SIGNER_PFX_BASE64: ${{secrets.SIGNER_PFX_BASE64}}
       - name: Build installer
         run: .\build-installer.ps1 -Configuration Release -Platform x64 -ExportSymbols
         env:
           # The username doesn't matter, just insert a random user here
           NuGetPackageSourceCredentials_xcpng: Username=xcp-ng;Password=${{secrets.GITHUB_TOKEN}}
+      - name: Clean up certificates
+        run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue
       - name: Upload artifact
         id: upload
         uses: actions/upload-artifact@v4
