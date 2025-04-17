@@ -8,16 +8,30 @@ using XenDriverUtils;
 namespace XenClean {
     internal static class UninstallProducts {
         static readonly List<string> KnownUpgradeCodes = new() {
-            // XCP-ng 8.2 x86
-            "{EE3B949D-C431-462B-B6DC-5BEDA078D772}",
-            // XCP-ng 8.2 x64
+            // x64 drivers version 6.6.557 from XS 6.6.90
+            // must be uninstalled in the correct order
+            // Citrix XenServer Tools Installer
+            "{21EF141F-9126-42DA-93CD-B50442047420}",
+            // Citrix XenServer Windows Guest Agent
             "{48E5492C-6843-452E-97A2-A5FE2D24B141}",
-            // Citrix 9.3
+            // Citrix XenServer VSS Provider
+            "{D8709720-65B7-4CD9-9F51-68DB592B604D}",
+            // Citrix Xen Windows x64 PV Drivers
+            "{53858014-F814-49A1-9D63-CA2578432E73}",
+
+            // Citrix uses the same package code as the Citrix XenServer Windows Guest Agent
+            // in their multi-package XS 6.6 drivers for their 7.1 series drivers
+            // (aka. 48E5492C-6843-452E-97A2-A5FE2D24B141)
+            // XCP-ng 8.2 x64 also uses the same upgrade code.
+
+            // Citrix Hypervisor/XS8
             "{AF9B2559-3E91-4206-98C2-F560009FF7F1}",
-            // generic x86
+
+            // generic x86 (does not work due to check in Invoke-XenClean)
             "{10828840-D8A9-4953-B44A-1F1D3CD7ECB0}",
             // generic x64
             "{D60FED1E-316C-41B0-B7A5-E44951A82618}",
+
             // ours
             VersionInfo.MsiUpgradeCodeX86,
             VersionInfo.MsiUpgradeCodeX64,
