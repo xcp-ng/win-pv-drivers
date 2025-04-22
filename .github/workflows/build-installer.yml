@@ -31,19 +31,23 @@ jobs:
       - name: Download drivers
         uses: actions/download-artifact@v4
         with:
-          name: drivers
+          name: drivers-signed
           path: installer/output/
       - name: Download guest agent
         uses: actions/download-artifact@v4
         with:
-          name: guestagent
+          name: guestagent-signed
           path: xen-guest-agent/target/release/
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v2
       - name: Configure branding
         run: Set-Content -Path branding.ps1 -Value $Env:XCPNG_WINPV_BRANDING -Force
         env:
-          XCPNG_WINPV_BRANDING: ${{vars.XCPNG_WINPV_BRANDING}}
+          # $Env:SIGNER must be injected here since unlike the drivers/guestagent,
+          # we can't externally sign the installer package
+          XCPNG_WINPV_BRANDING: |
+            ${{vars.XCPNG_WINPV_BRANDING}}
+            $Env:SIGNER='${{vars.XCPNG_WINPV_SIGNER}}'
       - name: Install certificate
         # since this runs on new powershell, watch the certutil password parameter syntax
         run: |
