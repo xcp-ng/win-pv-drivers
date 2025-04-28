@@ -20,5 +20,12 @@
         <ServiceControl Name="xenguestagent-rs" Start="install" Stop="uninstall" Remove="uninstall" />
       </Component>
     </ComponentGroup>
+
+    <ComponentGroup Id="WinClipboardComponent" Directory="XenGuestAgentFolder">
+      <Component>
+        <File Source="!(bindpath.xenguestagent)\xen-win-clipboard.exe" Id="xen_win_clipboard.exe" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run" Name="XCPng-XenWinClipboard" Type="string" Value="[#xen_win_clipboard.exe]" />
+      </Component>
+    </ComponentGroup>
   </Fragment>
 </Wix>
