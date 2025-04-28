@@ -373,38 +373,50 @@ function Test-XenDeviceObject {
         Write-Verbose ($sd.GetSddlForm([System.Security.AccessControl.AccessControlSections]::All))
         $sd.DiscretionaryAcl | Where-Object AceType -eq AccessAllowed | ForEach-Object {
             $subj = $_.SecurityIdentifier
-            if ($Script:VulnerableSids | Where-Object { $_ -eq $subj }) {
-                $foundObjects += @($deviceId)
-            }
+            $foundObjects += @(
+                [PSCustomObject]@{
+                    DeviceId   = $deviceId
+                    Vulnerable = !!($Script:VulnerableSids | Where-Object { $_ -eq $subj })
+                })
         }
     }
     return $foundObjects
 }
 
 if ($Scan) {
+    $Script:FoundDevice = $false
     $Script:IsVulnerable = $false
 
     Write-Host
     Write-Host "Looking for vulnerable XenIface objects"
     foreach ($devtype in $Script:DeviceTypes) {
-        Test-XenDeviceObject @devtype | ForEach-Object {
+        $objects = Test-XenDeviceObject @devtype
+        if ($objects) {
+            $Script:FoundDevice = $true
+        }
+        $objects | Where-Object Vulnerable | ForEach-Object {
             Write-Host "Found vulnerable object $_"
             $Script:IsVulnerable = $true
         }
     }
 
-    Write-Host
-    Write-Host "Looking for vulnerable XenIface WMI GUIDs"
-    foreach ($wmiGuid in $Script:WmiGuids) {
-        Write-Verbose "Testing WMI GUID $wmiGuid"
-        if ($null -eq (Get-ItemProperty -Path $Script:WmiSecurityKey -Name $wmiGuid -ErrorAction SilentlyContinue)) {
-            Write-Host "Found vulnerable WMI GUID $wmiGuid"
-            $Script:IsVulnerable = $true
+    if ($Script:FoundDevice) {
+        Write-Host
+        Write-Host "Looking for vulnerable XenIface WMI GUIDs"
+        foreach ($wmiGuid in $Script:WmiGuids) {
+            Write-Verbose "Testing WMI GUID $wmiGuid"
+            if ($null -eq (Get-ItemProperty -Path $Script:WmiSecurityKey -Name $wmiGuid -ErrorAction SilentlyContinue)) {
+                Write-Host "Found vulnerable WMI GUID $wmiGuid"
+                $Script:IsVulnerable = $true
+            }
         }
     }
 
     Write-Host
-    if ($Script:IsVulnerable) {
+    if (!$Script:FoundDevice) {
+        Write-Host "Did not detect XenIface"
+    }
+    elseif ($Script:IsVulnerable) {
         Write-Host "Found XenIface vulnerability, it's recommended to run the script"
     }
     else {
