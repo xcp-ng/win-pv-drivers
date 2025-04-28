@@ -15,7 +15,7 @@ param (
 )
 
 . $PSScriptRoot\branding.ps1
-. $PSScriptRoot\branding-generic.ps1
+. $PSScriptRoot\scripts\branding-generic.ps1
 . $PSScriptRoot\scripts\sign.ps1
 
 $OutputPath = "$PSScriptRoot\installer\output"

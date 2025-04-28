@@ -12,13 +12,28 @@ jobs:
         with:
           submodules: true
       - name: Configure branding
-        run: Set-Content -Path branding.ps1 -Value $Env:XCPNG_WINPV_BRANDING -Force
+        run: .\scripts\branding-ci.ps1
         env:
-          XCPNG_WINPV_BRANDING: ${{vars.XCPNG_WINPV_BRANDING}}
+          VENDOR_NAME: ${{vars.VENDOR_NAME}}
+          PRODUCT_NAME: ${{vars.PRODUCT_NAME}}
+          VENDOR_PREFIX: ${{vars.VENDOR_PREFIX}}
+          COPYRIGHT: ${{vars.COPYRIGHT}}
+          PackageVersions_Product: ${{vars.PackageVersions_Product}}
+          PackageVersions_xenbus: ${{vars.PackageVersions_xenbus}}
+          PackageVersions_xencons: ${{vars.PackageVersions_xencons}}
+          PackageVersions_xenhid: ${{vars.PackageVersions_xenhid}}
+          PackageVersions_xeniface: ${{vars.PackageVersions_xeniface}}
+          PackageVersions_xennet: ${{vars.PackageVersions_xennet}}
+          PackageVersions_xenvbd: ${{vars.PackageVersions_xenvbd}}
+          PackageVersions_xenvif: ${{vars.PackageVersions_xenvif}}
+          PackageVersions_xenvkbd: ${{vars.PackageVersions_xenvkbd}}
+          PackageVersions_XenClean: ${{vars.PackageVersions_XenClean}}
+          PackageVersions_XenBootFix: ${{vars.PackageVersions_XenBootFix}}
+          PackageVersions_XenGuestAgent: ${{vars.PackageVersions_XenGuestAgent}}
+          MSI_UPGRADE_CODE_X86: ${{vars.MSI_UPGRADE_CODE_X86}}
+          MSI_UPGRADE_CODE_X64: ${{vars.MSI_UPGRADE_CODE_X64}}
       - name: Build guest agent
         run: .\build-guestagent.ps1 -Configuration release
-      - name: Clean up certificates
-        run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue
       - name: Upload artifact
         id: upload
         uses: actions/upload-artifact@v4
@@ -58,18 +73,7 @@ jobs:
           path: xen-guest-agent/target/release/
           name: guestagent
       - name: Install certificate
-        run: |
-          $pfxBytes = [System.Convert]::FromBase64String($Env:SIGNER_PFX_BASE64)
-          $pfxPath = Join-Path $pwd "Signer.pfx"
-          [IO.File]::WriteAllBytes($pfxPath, $pfxBytes)
-          try {
-            certutil -importpfx -f -user -p "" my $pfxPath nochain
-            if ($LASTEXITCODE -ne 0) {
-                throw "certutil failed with error $LASTEXITCODE"
-            }
-          } finally {
-            Remove-Item -Force $pfxPath
-          }
+        run: .\scripts\signer-ci.ps1
         env:
           SIGNER_PFX_BASE64: ${{secrets.SIGNER_PFX_BASE64}}
       - name: Sign artifact
@@ -77,6 +81,7 @@ jobs:
           . .\scripts\sign.ps1
           Set-SignerFileSignature (Get-ChildItem xen-guest-agent\target\release -File -Recurse -Include *.dll, *.exe)
       - name: Clean up certificates
+        if: always()
         run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue
       - name: Upload artifact
         id: upload

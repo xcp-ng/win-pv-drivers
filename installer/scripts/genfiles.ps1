@@ -5,7 +5,7 @@ param (
 )
 
 . "$ProjectDir\..\branding.ps1"
-. "$ProjectDir\..\branding-generic.ps1"
+. "$ProjectDir\..\scripts\branding-generic.ps1"
 
 $BrandingFile = "$ProjectDir\Branding.wxi"
 $OldBranding = Get-Content -Raw $BrandingFile -ErrorAction Ignore

@@ -13,9 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XenClean", "..\XenClean\Xen
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{84018E1C-644B-466C-9788-939A31987B36}"
 	ProjectSection(SolutionItems) = preProject
-		..\branding-generic.ps1 = ..\branding-generic.ps1
 		..\branding.ps1 = ..\branding.ps1
-		..\buildall.ps1 = ..\buildall.ps1
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XenBootFix", "..\XenBootFix\XenBootFix.vcxproj", "{018433AB-F981-4625-8E23-6B3F22B7E5CF}"

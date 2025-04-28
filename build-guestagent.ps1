@@ -8,7 +8,7 @@ param (
 $ErrorActionPreference = "Stop"
 
 . $PSScriptRoot\branding.ps1
-. $PSScriptRoot\branding-generic.ps1
+. $PSScriptRoot\scripts\branding-generic.ps1
 . $PSScriptRoot\scripts\sign.ps1
 
 # PowerShell's quoting rules are unfortunately unstable between 5.1 and 7.x, thus the workaround

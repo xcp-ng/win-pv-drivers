@@ -5,7 +5,7 @@ param (
 )
 
 . "$ProjectDir\..\branding.ps1"
-. "$ProjectDir\..\branding-generic.ps1"
+. "$ProjectDir\..\scripts\branding-generic.ps1"
 
 function Update-BrandingFile {
     $BrandingFile = "$ProjectDir\xen-guest-agent\branding.rs"

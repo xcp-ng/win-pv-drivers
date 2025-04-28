@@ -9,7 +9,7 @@ param (
 )
 
 . "$ProjectDir\..\branding.ps1"
-. "$ProjectDir\..\branding-generic.ps1"
+. "$ProjectDir\..\scripts\branding-generic.ps1"
 . "$ProjectDir\..\scripts\sign.ps1"
 
 Update-ScriptFileInfo `
