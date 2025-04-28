@@ -65,12 +65,6 @@
       </Feature>
       <Feature Id="PVIfaceFeature" AllowAdvertise="no" Display="expand" Title="!(loc.PVIfaceFeatureTitle)" Description="!(loc.PVIfaceFeatureDescription)">
         <ComponentGroupRef Id="XenifaceComponent" />
-        <Feature Id="GuestAgentFeature" AllowAdvertise="no" Display="collapse" Title="!(loc.GuestAgentFeatureTitle)" Description="!(loc.GuestAgentFeatureDescription)">
-          <ComponentGroupRef Id="GuestAgentComponent" />
-          <Feature Id="WinClipboardFeature" AllowAdvertise="no" Title="!(loc.WinClipboardFeatureTitle)" Description="!(loc.WinClipboardFeatureDescription)">
-            <ComponentGroupRef Id="WinClipboardComponent" />
-          </Feature>
-        </Feature>
       </Feature>
       <Feature Id="PVNetworkFeature" AllowAdvertise="no" Title="!(loc.PVNetworkFeatureTitle)" Description="!(loc.PVNetworkFeatureDescription)">
         <ComponentGroupRef Id="XenvifComponent" />
@@ -84,6 +78,12 @@
           <ComponentGroupRef Id="XenvkbdComponent" />
           <ComponentGroupRef Id="XenhidComponent" />
         </Feature>
+      </Feature>
+    </Feature>
+    <Feature Id="GuestAgentFeature" AllowAdvertise="no" Display="collapse" Title="!(loc.GuestAgentFeatureTitle)" Description="!(loc.GuestAgentFeatureDescription)">
+      <ComponentGroupRef Id="GuestAgentComponent" />
+      <Feature Id="WinClipboardFeature" AllowAdvertise="no" Title="!(loc.WinClipboardFeatureTitle)" Description="!(loc.WinClipboardFeatureDescription)">
+        <ComponentGroupRef Id="WinClipboardComponent" />
       </Feature>
     </Feature>
     <Feature Id="ToolsFeature" AllowAdvertise="no" Display="collapse" Title="!(loc.ToolsFeatureTitle)" Description="!(loc.ToolsFeatureDescription)">

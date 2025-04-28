@@ -46,8 +46,8 @@ You may need to run the XenClean tool." />
   <String Id="XenBootFixFeatureTitle" Value="XenBootFix" />
   <String Id="XenBootFixFeatureDescription" Value="Offline tool for recovering from boot failures caused by older Xen PV drivers." />
   <String Id="GuestAgentFeatureTitle" Value="Xen Guest Agent" />
-  <String Id="GuestAgentFeatureDescription" Value="Rust-based guest agent, licensed under the GNU Affero General Public License." />
-  <String Id="GuestAgentServiceDisplayName" Value="Xen Guest Agent (Rust-based)" />
+  <String Id="GuestAgentFeatureDescription" Value="Rust-based guest agent, licensed under the GNU Affero General Public License. Requires PV interface driver." />
+  <String Id="GuestAgentServiceDisplayName" Value="$(VENDOR_NAME) Xen Guest Agent (Rust-based)" />
   <String Id="WinClipboardFeatureTitle" Value="Clipboard Agent" />
   <String Id="WinClipboardFeatureDescription" Value="Per-user clipboard agent for copy-paste support." />
 
