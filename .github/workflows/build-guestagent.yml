@@ -18,18 +18,18 @@ jobs:
           PRODUCT_NAME: ${{vars.PRODUCT_NAME}}
           VENDOR_PREFIX: ${{vars.VENDOR_PREFIX}}
           COPYRIGHT: ${{vars.COPYRIGHT}}
-          PackageVersions_Product: ${{vars.PackageVersions_Product}}
-          PackageVersions_xenbus: ${{vars.PackageVersions_xenbus}}
-          PackageVersions_xencons: ${{vars.PackageVersions_xencons}}
-          PackageVersions_xenhid: ${{vars.PackageVersions_xenhid}}
-          PackageVersions_xeniface: ${{vars.PackageVersions_xeniface}}
-          PackageVersions_xennet: ${{vars.PackageVersions_xennet}}
-          PackageVersions_xenvbd: ${{vars.PackageVersions_xenvbd}}
-          PackageVersions_xenvif: ${{vars.PackageVersions_xenvif}}
-          PackageVersions_xenvkbd: ${{vars.PackageVersions_xenvkbd}}
-          PackageVersions_XenClean: ${{vars.PackageVersions_XenClean}}
-          PackageVersions_XenBootFix: ${{vars.PackageVersions_XenBootFix}}
-          PackageVersions_XenGuestAgent: ${{vars.PackageVersions_XenGuestAgent}}
+          PackageVersions_Product: ${{vars.PackageVersions_Product}}.${{github.run_number}}
+          PackageVersions_xenbus: ${{vars.PackageVersions_xenbus}}.${{github.run_number}}
+          PackageVersions_xencons: ${{vars.PackageVersions_xencons}}.${{github.run_number}}
+          PackageVersions_xenhid: ${{vars.PackageVersions_xenhid}}.${{github.run_number}}
+          PackageVersions_xeniface: ${{vars.PackageVersions_xeniface}}.${{github.run_number}}
+          PackageVersions_xennet: ${{vars.PackageVersions_xennet}}.${{github.run_number}}
+          PackageVersions_xenvbd: ${{vars.PackageVersions_xenvbd}}.${{github.run_number}}
+          PackageVersions_xenvif: ${{vars.PackageVersions_xenvif}}.${{github.run_number}}
+          PackageVersions_xenvkbd: ${{vars.PackageVersions_xenvkbd}}.${{github.run_number}}
+          PackageVersions_XenClean: ${{vars.PackageVersions_XenClean}}.${{github.run_number}}
+          PackageVersions_XenBootFix: ${{vars.PackageVersions_XenBootFix}}.${{github.run_number}}
+          PackageVersions_XenGuestAgent: ${{vars.PackageVersions_XenGuestAgent}}.${{github.run_number}}
           MSI_UPGRADE_CODE_X86: ${{vars.MSI_UPGRADE_CODE_X86}}
           MSI_UPGRADE_CODE_X64: ${{vars.MSI_UPGRADE_CODE_X64}}
       - name: Build guest agent
