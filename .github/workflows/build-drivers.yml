@@ -36,15 +36,26 @@ jobs:
           MSI_UPGRADE_CODE_X64: ${{vars.MSI_UPGRADE_CODE_X64}}
       - name: Build drivers
         run: .\build-drivers.ps1 -Configuration Release -Platform x64
-      - name: Upload artifact
+      - name: Catalog drivers
+        run: |
+          Import-Module .\scripts\artifact.psm1 -Force
+          Get-ArtifactCatalog -Path .\installer\output -Include *.sys, *.dll, *.exe |
+          Export-Csv -NoTypeInformation drivers-catalog.csv
+      - name: Upload drivers
         id: upload
         uses: actions/upload-artifact@v4
         with:
           path: installer/output/
           name: drivers
+      - name: Upload drivers catalog
+        uses: actions/upload-artifact@v4
+        with:
+          path: drivers-catalog.csv
+          name: drivers-catalog
     outputs:
       subject-name: drivers
       subject-digest: sha256:${{steps.upload.outputs.artifact-digest}}
+      catalog-name: drivers-catalog
 
   attest-drivers:
     needs: [build-drivers]
@@ -56,6 +67,7 @@ jobs:
     with:
       subject-name: ${{needs.build-drivers.outputs.subject-name}}
       subject-digest: ${{needs.build-drivers.outputs.subject-digest}}
+      catalog-name: ${{needs.build-drivers.outputs.catalog-name}}
 
   selfsign-drivers:
     needs: [build-drivers]

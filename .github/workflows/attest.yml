@@ -9,6 +9,9 @@ on:
       subject-digest:
         required: true
         type: string
+      catalog-name:
+        required: false
+        type: string
 
 permissions:
   id-token: write
@@ -19,8 +22,19 @@ jobs:
   attest:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate artifact attestation
+      - name: Attest artifact
         uses: actions/attest-build-provenance@v2
         with:
           subject-name: ${{inputs.subject-name}}
           subject-digest: ${{inputs.subject-digest}}
+      - name: Download catalog
+        if: ${{inputs.catalog-name != ''}}
+        uses: actions/download-artifact@v4
+        with:
+          path: catalog/
+          name: ${{inputs.catalog-name}}
+      - name: Attest catalog
+        if: ${{inputs.catalog-name != ''}}
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: catalog/${{inputs.catalog-name}}.csv

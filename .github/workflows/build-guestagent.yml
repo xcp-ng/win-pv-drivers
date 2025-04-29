@@ -34,6 +34,11 @@ jobs:
           MSI_UPGRADE_CODE_X64: ${{vars.MSI_UPGRADE_CODE_X64}}
       - name: Build guest agent
         run: .\build-guestagent.ps1 -Configuration release
+      - name: Catalog guest agent
+        run: |
+          Import-Module .\scripts\artifact.psm1 -Force
+          Get-ArtifactCatalog -Path .\xen-guest-agent\target\release -Include *.exe |
+          Export-Csv -NoTypeInformation guestagent-catalog.csv
       - name: Upload artifact
         id: upload
         uses: actions/upload-artifact@v4
@@ -42,10 +47,15 @@ jobs:
           path: |
             xen-guest-agent/target/release/*.exe
             xen-guest-agent/target/release/*.pdb
-            xen-guest-agent/target/release/.fingerprint/
+      - name: Upload guest agent catalog
+        uses: actions/upload-artifact@v4
+        with:
+          path: guestagent-catalog.csv
+          name: guestagent-catalog
     outputs:
       subject-name: guestagent
       subject-digest: sha256:${{steps.upload.outputs.artifact-digest}}
+      catalog-name: guestagent-catalog
 
   attest-guestagent:
     needs: [build-guestagent]
@@ -57,6 +67,7 @@ jobs:
     with:
       subject-name: ${{needs.build-guestagent.outputs.subject-name}}
       subject-digest: ${{needs.build-guestagent.outputs.subject-digest}}
+      catalog-name: ${{needs.build-guestagent.outputs.catalog-name}}
 
   selfsign-guestagent:
     needs: [build-guestagent]
