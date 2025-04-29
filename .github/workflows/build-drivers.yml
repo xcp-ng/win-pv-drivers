@@ -14,7 +14,7 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v2
       - name: Configure branding
-        run: .\scripts\branding-ci.ps1
+        run: .\scripts\branding-ci.ps1 -OutFile .\branding.ps1
         env:
           VENDOR_NAME: ${{vars.VENDOR_NAME}}
           PRODUCT_NAME: ${{vars.PRODUCT_NAME}}
@@ -70,13 +70,14 @@ jobs:
           path: installer/output/
           name: drivers
       - name: Install certificate
-        run: .\scripts\signer-ci.ps1
+        run: .\scripts\signer-ci.ps1 -OutFile .\branding.ps1
         env:
           SIGNER_PFX_BASE64: ${{secrets.SIGNER_PFX_BASE64}}
       - name: Sign artifact
         run: |
+          . .\branding.ps1
           . .\scripts\sign.ps1
-          Set-SignerFileSignature (Get-ChildItem installer\output -File -Recurse -Include *.sys, *.dll, *.exe, *.cat)
+          Set-SignerFileSignature (Get-ChildItem .\installer\output -File -Recurse -Include *.sys, *.dll, *.exe, *.cat)
       - name: Clean up certificates
         run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue
       - name: Upload artifact

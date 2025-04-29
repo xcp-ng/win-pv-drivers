@@ -6,10 +6,10 @@
 
 [CmdletBinding()]
 param (
+    [Parameter(Mandatory)]
+    [string]$OutFile,
     [Parameter()]
-    [switch]$AddSigner,
-    [Parameter()]
-    [string]$OutFile = "$PSScriptRoot\..\branding.ps1"
+    [switch]$AddSigner
 )
 
 $ErrorActionPreference = 'Stop'

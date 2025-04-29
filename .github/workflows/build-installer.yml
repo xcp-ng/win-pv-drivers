@@ -41,7 +41,7 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v2
       - name: Configure branding
-        run: .\scripts\branding-ci.ps1 -AddSigner
+        run: .\scripts\branding-ci.ps1 -AddSigner -OutFile .\branding.ps1
         env:
           VENDOR_NAME: ${{vars.VENDOR_NAME}}
           PRODUCT_NAME: ${{vars.PRODUCT_NAME}}
@@ -61,7 +61,7 @@ jobs:
           PackageVersions_XenGuestAgent: ${{vars.PackageVersions_XenGuestAgent}}.${{github.run_number}}
           MSI_UPGRADE_CODE_X86: ${{vars.MSI_UPGRADE_CODE_X86}}
           MSI_UPGRADE_CODE_X64: ${{vars.MSI_UPGRADE_CODE_X64}}
-          # $Env:SIGNER must be injected here since unlike the drivers/guestagent,
+          # Signer cert must be injected here since unlike the drivers/guestagent,
           # we can't externally sign the installer package
           SIGNER_PFX_BASE64: ${{secrets.SIGNER_PFX_BASE64}}
       - name: Build installer

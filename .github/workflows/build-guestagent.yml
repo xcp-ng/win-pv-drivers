@@ -12,7 +12,7 @@ jobs:
         with:
           submodules: true
       - name: Configure branding
-        run: .\scripts\branding-ci.ps1
+        run: .\scripts\branding-ci.ps1 -OutFile .\branding.ps1
         env:
           VENDOR_NAME: ${{vars.VENDOR_NAME}}
           PRODUCT_NAME: ${{vars.PRODUCT_NAME}}
@@ -73,13 +73,14 @@ jobs:
           path: xen-guest-agent/target/release/
           name: guestagent
       - name: Install certificate
-        run: .\scripts\signer-ci.ps1
+        run: .\scripts\signer-ci.ps1 -OutFile .\branding.ps1
         env:
           SIGNER_PFX_BASE64: ${{secrets.SIGNER_PFX_BASE64}}
       - name: Sign artifact
         run: |
+          . .\branding.ps1
           . .\scripts\sign.ps1
-          Set-SignerFileSignature (Get-ChildItem xen-guest-agent\target\release -File -Recurse -Include *.dll, *.exe)
+          Set-SignerFileSignature (Get-ChildItem .\xen-guest-agent\target\release -File -Recurse -Include *.dll, *.exe)
       - name: Clean up certificates
         if: always()
         run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue

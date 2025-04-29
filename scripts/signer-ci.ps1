@@ -4,8 +4,8 @@
 
 [CmdletBinding()]
 param (
-    [Parameter()]
-    [string]$OutFile = "$PSScriptRoot\..\branding.ps1"
+    [Parameter(Mandatory)]
+    [string]$OutFile
 )
 
 $ErrorActionPreference = 'Stop'
