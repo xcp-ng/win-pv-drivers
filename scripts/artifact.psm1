@@ -47,7 +47,10 @@ function Compare-Artifact {
     $trustedCatalog = Get-ArtifactCatalog -Path $TrustedPath -Filter $Filter -Include $Include -Exclude $Exclude
     $compareCatalog = Get-ArtifactCatalog -Path $ComparePath -Filter $Filter -Include $Include -Exclude $Exclude
 
-    $differences = Compare-Object -ReferenceObject $trustedCatalog -DifferenceObject $compareCatalog -Property Path, AuthenticodeHash
+    $differences = Compare-Object `
+        -ReferenceObject $trustedCatalog `
+        -DifferenceObject $compareCatalog `
+        -Property Path, AuthenticodeHash
     if ($differences) {
         Write-Warning "The two catalogs differ"
         $differences | Write-Warning
@@ -71,7 +74,9 @@ function Test-ArtifactCatalog {
         [Parameter()]
         [string[]]$Include,
         [Parameter()]
-        [string[]]$Exclude
+        [string[]]$Exclude,
+        [Parameter()]
+        [switch]$IncludeEqual
     )
 
     $filteredTrustedCatalog = $TrustedCatalog | Where-Object {
@@ -88,5 +93,9 @@ function Test-ArtifactCatalog {
         }
     }
 
-    Compare-Object -ReferenceObject $filteredTrustedCatalog -DifferenceObject $compareCatalog -Property Path, AuthenticodeHash
+    Compare-Object `
+        -ReferenceObject $filteredTrustedCatalog `
+        -DifferenceObject $compareCatalog `
+        -Property Path, AuthenticodeHash `
+        -IncludeEqual:$IncludeEqual
 }
