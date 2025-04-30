@@ -72,8 +72,6 @@ jobs:
   selfsign-guestagent:
     needs: [build-guestagent]
     runs-on: windows-latest
-    env:
-      SIGNER: ${{vars.XCPNG_WINPV_SIGNER}}
     steps:
       # for the sign scripts
       - name: Checkout

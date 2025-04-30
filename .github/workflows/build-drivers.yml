@@ -91,6 +91,7 @@ jobs:
           . .\scripts\sign.ps1
           Set-SignerFileSignature (Get-ChildItem .\installer\output -File -Recurse -Include *.sys, *.dll, *.exe, *.cat)
       - name: Clean up certificates
+        if: always()
         run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue
       - name: Upload artifact
         id: upload
