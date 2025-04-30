@@ -39,7 +39,7 @@ jobs:
       - name: Catalog drivers
         run: |
           Import-Module .\scripts\artifact.psm1 -Force
-          Get-ArtifactCatalog -Path .\installer\output -Include *.sys, *.dll, *.exe |
+          Get-ArtifactCatalog -Path .\installer\output -Include *.sys, *.dll, *.exe, *.inf |
           Export-Csv -NoTypeInformation drivers-catalog.csv
       - name: Upload drivers
         id: upload
