@@ -70,14 +70,12 @@
         <ComponentGroupRef Id="XenvifComponent" />
         <ComponentGroupRef Id="XennetComponent" />
       </Feature>
-      <Feature Id="PVOptionalFeature" AllowAdvertise="no" Level="2" Title="!(loc.PVOptionalFeatureTitle)" Description="!(loc.PVOptionalFeatureDescription)">
-        <Feature Id="PVDiskFeature" AllowAdvertise="no" Title="!(loc.PVDiskFeatureTitle)" Description="!(loc.PVDiskFeatureDescription)">
-          <ComponentGroupRef Id="XenvbdComponent" />
-        </Feature>
-        <Feature Id="PVHidFeature" AllowAdvertise="no" Title="!(loc.PVHidFeatureTitle)" Description="!(loc.PVHidFeatureDescription)">
-          <ComponentGroupRef Id="XenvkbdComponent" />
-          <ComponentGroupRef Id="XenhidComponent" />
-        </Feature>
+      <Feature Id="PVDiskFeature" AllowAdvertise="no" Title="!(loc.PVDiskFeatureTitle)" Description="!(loc.PVDiskFeatureDescription)">
+        <ComponentGroupRef Id="XenvbdComponent" />
+      </Feature>
+      <Feature Id="PVHidFeature" AllowAdvertise="no" Title="!(loc.PVHidFeatureTitle)" Description="!(loc.PVHidFeatureDescription)">
+        <ComponentGroupRef Id="XenvkbdComponent" />
+        <ComponentGroupRef Id="XenhidComponent" />
       </Feature>
     </Feature>
     <Feature Id="GuestAgentFeature" AllowAdvertise="no" Display="collapse" Title="!(loc.GuestAgentFeatureTitle)" Description="!(loc.GuestAgentFeatureDescription)">
