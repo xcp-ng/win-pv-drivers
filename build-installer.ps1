@@ -32,7 +32,7 @@ if (!$NoBuild) {
 }
 
 if ([string]::IsNullOrEmpty($ReleaseTag)) {
-    $ReleaseTag = "$(Get-PackageVersion Product)-$Configuration-$Platform"
+    $ReleaseTag = "xcpng-winpv-$(Get-PackageVersion Product)-$Configuration-$Platform"
 }
 
 $VersionDir = "$OutDir\$ReleaseTag"
