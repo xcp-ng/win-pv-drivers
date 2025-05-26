@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
+# Host-side script for detecting VMs affected by XSA-468.
+
 from __future__ import print_function
 
+import csv
 import logging
 import sys
 
@@ -67,17 +70,19 @@ def check_vulnerable(pv_drivers_version):
             vm_driver,
             vm_version_string,
         )
-        vm_vendor, vm_vernum, vm_otherver = vm_version_string.split(" ", 3)
+        vm_vendor, vm_driverstr, vm_otherver = vm_version_string.split(" ", 3)
         driver_data["vm_vendor"] = vm_vendor
-        logging.debug("%s|%s|%s", vm_vendor, vm_vernum, vm_otherver)
+        driver_data["vm_driverstr"] = vm_driverstr
+        driver_data["vm_otherver"] = vm_otherver
+        logging.debug("%s|%s|%s", vm_vendor, vm_driverstr, vm_otherver)
         try:
-            vm_driverver = tuple(int(x) for x in vm_vernum.split("."))
+            vm_drivernum = tuple(int(x) for x in vm_driverstr.split("."))
         except:
-            logging.error("Error parsing driver version %s", vm_vernum)
+            logging.error("Error parsing driver version %s", vm_driverstr)
             yield driver_data
             continue
-        driver_data["vm_driverver"] = vm_driverver
-        logging.debug("Found driver version %s", vm_driverver)
+        driver_data["vm_drivernum"] = vm_drivernum
+        logging.debug("Found driver version %s", vm_drivernum)
 
         tocheck = MAX_VULNERABLE[vm_driver]
         if vm_vendor not in tocheck:
@@ -86,7 +91,7 @@ def check_vulnerable(pv_drivers_version):
         logging.debug("Vendor %s is affected", vm_vendor)
         driver_data["max_vulnerable"] = max_vulnerable = tocheck[vm_vendor]
         logging.debug("Max vulnerable version is %s", max_vulnerable)
-        if not version_lt(max_vulnerable, vm_driverver):
+        if not version_lt(max_vulnerable, vm_drivernum):
             driver_data["verdict"] = True
         yield driver_data
 
@@ -168,8 +173,19 @@ if __name__ == "__main__":
         logging.getLogger().setLevel(level=logging.DEBUG)
     logging.debug("Selftest OK")
 
+    if "--csv" in sys.argv:
+        writer = csv.DictWriter(
+            sys.stdout,
+            ["vm_uuid", "vm_vendor", "vm_driver", "vm_driverstr"],
+            extrasaction="ignore",
+        )
+        writer.writeheader()
+    else:
+        writer = None
+
     logging.warning(
-        "This script does not exhaustively detect all versions of Xen PV drivers vulnerable to XSA-468."
+        "This script does not exhaustively detect all versions of Xen PV "
+        "drivers vulnerable to XSA-468."
     )
 
     session = XenAPI.xapi_local()
@@ -177,6 +193,7 @@ if __name__ == "__main__":
         "root", "", XenAPI.API_VERSION_1_1, "detect_xsa468"
     )
     try:
+        count_success = 0
         vms = session.xenapi.VM.get_all()
         for vm in vms:
             logging.debug("scanning VM %s", vm)
@@ -190,28 +207,47 @@ if __name__ == "__main__":
                 if not session.xenapi.VM_guest_metrics.get_PV_drivers_detected(gm_ref):
                     logging.debug("PV drivers not detected, continuing")
                     continue
-                pv_drivers = session.xenapi.VM_guest_metrics.get_PV_drivers_version(
+                raw_version = session.xenapi.VM_guest_metrics.get_PV_drivers_version(
                     gm_ref
                 )
             except XenAPI.Failure as ex:
+                # mostly VMs with no guest_metrics, so we don't want to spam the log
                 logging.debug("cannot scan %s: %s", vm, ex)
                 continue
-            all_data = list(check_vulnerable(pv_drivers))
-            if all_data:
-                for driver_data in all_data:
-                    if driver_data["verdict"]:
-                        logging.warning(
-                            "Found vulnerable VM: {vm_uuid} ({vm_name_label}) running {vm_vendor} {vm_driver} {vm_driverver} <= {max_vulnerable}".format(
-                                vm_uuid=vm_uuid,
-                                vm_name_label=vm_name_label,
-                                **driver_data
-                            )
+            all_drivers = [
+                dict(x, vm_uuid=vm_uuid) for x in check_vulnerable(raw_version)
+            ]
+            if all_drivers:
+                count_success += 1
+                vulnerable_drivers = [x for x in all_drivers if x["verdict"]]
+                if vulnerable_drivers:
+                    if writer:
+                        writer.writerows(vulnerable_drivers)
+                    warning_string = ", ".join(
+                        "{vm_vendor} {vm_driver} {vm_driverstr}".format(**x)
+                        for x in vulnerable_drivers
+                    )
+                    logging.warning(
+                        "Found vulnerable VM:\n\t{vm_uuid} ({vm_name_label})"
+                        "\n\trunning {warning_string}".format(
+                            vm_uuid=vm_uuid,
+                            vm_name_label=vm_name_label,
+                            warning_string=warning_string,
                         )
+                    )
             else:
                 logging.warning(
-                    "Cannot determine if VM %s (%s) is vulnerable. Maybe you need to update XCP-ng, or the VM wasn't started recently?",
+                    "Cannot determine if VM is vulnerable: %s (%s)",
                     vm_uuid,
                     vm_name_label,
                 )
+        if not count_success:
+            logging.warning(
+                "Could not detect the driver versions of any VMs. Make sure to "
+                "launch your VMs with an updated XCP-ng to refresh the driver "
+                "version info."
+            )
+            sys.exit(1)
+
     finally:
         session.xenapi.logout()
