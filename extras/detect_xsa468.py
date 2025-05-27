@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 # Host-side script for detecting VMs affected by XSA-468.
+# See ./detect_xsa468.py --help for how to use.
 
 from __future__ import print_function
 
+import argparse
 import csv
 import logging
 import sys
@@ -168,12 +170,36 @@ def selftest():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="""
+Detects Windows VMs vulnerable to XSA-468 in an XCP-ng pool.
+Run this script from any pool member to create a report of vulnerable VMs.
+
+This script requires the following package:
+XCP-ng 8.2: xapi-1.249.41-1.2.xcpng8.2 or later
+XCP-ng 8.3: xapi-25.6.0-1.5.xcpng8.3 or later
+
+For detection to succeed, VMs must be running after the host is updated.
+Only VMs with platform:device_id="0002" (e.g. those based on Windows templates)
+will be scanned.
+""",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    parser.add_argument(
+        "--csv",
+        action="store_true",
+        help="CSV output. Tip: redirect output to a file.",
+    )
+
+    args = parser.parse_args()
+
     selftest()
-    if "--debug" in sys.argv:
+    if args.debug:
         logging.getLogger().setLevel(level=logging.DEBUG)
     logging.debug("Selftest OK")
 
-    if "--csv" in sys.argv:
+    if args.csv:
         writer = csv.DictWriter(
             sys.stdout,
             ["vm_uuid", "vm_vendor", "vm_driver", "vm_driverstr"],
