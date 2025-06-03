@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SiPolicy xmlns="urn:schemas-microsoft-com:sipolicy" PolicyType="Base Policy">
+  <VersionEx>10.0.0.0</VersionEx>
+  <PlatformID>{2E07F7E4-194C-4D20-B7C9-6F44A6C5A234}</PlatformID>
+  <Rules>
+    <Rule>
+      <Option>Enabled:Unsigned System Integrity Policy</Option>
+    </Rule>
+    <Rule>
+      <Option>Enabled:Advanced Boot Options Menu</Option>
+    </Rule>
+    <Rule>
+      <Option>Disabled:Script Enforcement</Option>
+    </Rule>
+    <Rule>
+      <Option>Enabled:Update Policy No Reboot</Option>
+    </Rule>
+    <Rule>
+      <Option>Enabled:Audit Mode</Option>
+    </Rule>
+  </Rules>
+  <!--EKUS-->
+  <EKUs>
+    <EKU ID="ID_EKU_E_1" Value="010A2B0601040182370A0305" FriendlyName="Windows Hardware Driver Verification" />
+  </EKUs>
+  <!--File Rules-->
+  <FileRules>
+    <Allow ID="ID_ALLOW_A_1" FileName="*" />
+    <Allow ID="ID_ALLOW_A_2" FileName="*" />
+    <FileAttrib ID="ID_FILEATTRIB_XENIFACE_XS" FriendlyName="xeniface.sys XenServer FileAttribute" FileName="XENIFACE.SYS" MinimumFileVersion="0.0.0.0" MaximumFileVersion="9.1.10.87" />
+    <FileAttrib ID="ID_FILEATTRIB_XENIFACE_XN" FriendlyName="xeniface.sys XCP-ng FileAttribute" FileName="XENIFACE.SYS" MinimumFileVersion="0.0.0.0" MaximumFileVersion="8.65535.65535.65535" />
+    <FileAttrib ID="ID_FILEATTRIB_XENIFACE_LF" FriendlyName="xeniface.sys Linux Foundation FileAttribute" FileName="XENIFACE.SYS" MinimumFileVersion="0.0.0.0" MaximumFileVersion="8.2.2.1" />
+  </FileRules>
+  <!--Signers-->
+  <Signers>
+    <Signer ID="ID_SIGNER_XS1" Name="VeriSign Class 3 Code Signing 2010 CA">
+      <CertRoot Type="TBS" Value="4843A82ED3B1F2BFBEE9671960E1940C942F688D" />
+      <CertPublisher Value="Citrix Systems, Inc." />
+      <FileAttribRef RuleID="ID_FILEATTRIB_XENIFACE_XS" />
+    </Signer>
+    <Signer ID="ID_SIGNER_XS2" Name="Microsoft Windows Hardware Compatibility PCA">
+      <CertRoot Type="TBS" Value="6B3242A9A639B0DA4D5882C7EEB402BE6615AD0C" />
+      <CertOemID Value="Citrix Systems, Inc" />
+      <FileAttribRef RuleID="ID_FILEATTRIB_XENIFACE_XS" />
+    </Signer>
+    <Signer ID="ID_SIGNER_XS3" Name="Microsoft Windows Third Party Component CA 2012">
+      <CertRoot Type="TBS" Value="CEC1AFD0E310C55C1DCC601AB8E172917706AA32FB5EAF826813547FDF02DD46" />
+      <CertOemID Value="Citrix Systems, Inc" />
+      <FileAttribRef RuleID="ID_FILEATTRIB_XENIFACE_XS" />
+    </Signer>
+    <Signer ID="ID_SIGNER_XN" Name="Certum Extended Validation Code Signing CA SHA2">
+      <CertRoot Type="TBS" Value="C38CF6E9A769DC2187A9AA094D019701B57A55CA267C4869184E4D9883038B19" />
+      <CertPublisher Value="Vates" />
+      <FileAttribRef RuleID="ID_FILEATTRIB_XENIFACE_XN" />
+    </Signer>
+    <Signer ID="ID_SIGNER_LF" Name="DigiCert EV Code Signing CA (SHA2)">
+      <CertRoot Type="TBS" Value="EEC58131DC11CD7F512501B15FDBC6074C603B68CA91F7162D5A042054EDB0CF" />
+      <CertPublisher Value="The Linux Foundation" />
+      <FileAttribRef RuleID="ID_FILEATTRIB_XENIFACE_LF" />
+    </Signer>
+  </Signers>
+  <!--Driver Signing Scenarios-->
+  <SigningScenarios>
+    <SigningScenario Value="131" ID="ID_SIGNINGSCENARIO_DRIVERS_1" FriendlyName="Auto generated policy on 06-03-2025">
+      <ProductSigners>
+        <FileRulesRef>
+          <FileRuleRef RuleID="ID_ALLOW_A_1" />
+        </FileRulesRef>
+        <DeniedSigners>
+          <DeniedSigner SignerId="ID_SIGNER_XS1" />
+          <DeniedSigner SignerId="ID_SIGNER_XS2" />
+          <DeniedSigner SignerId="ID_SIGNER_XS3" />
+          <DeniedSigner SignerId="ID_SIGNER_XN" />
+          <DeniedSigner SignerId="ID_SIGNER_LF" />
+        </DeniedSigners>
+      </ProductSigners>
+    </SigningScenario>
+    <SigningScenario Value="12" ID="ID_SIGNINGSCENARIO_WINDOWS" FriendlyName="Auto generated policy on 06-03-2025">
+      <ProductSigners>
+        <FileRulesRef>
+          <FileRuleRef RuleID="ID_ALLOW_A_2" />
+        </FileRulesRef>
+      </ProductSigners>
+    </SigningScenario>
+  </SigningScenarios>
+  <UpdatePolicySigners />
+  <CiSigners />
+  <HvciOptions>0</HvciOptions>
+  <BasePolicyID>{1A785F78-1622-4A2E-8866-34A6F87CF9F7}</BasePolicyID>
+  <PolicyID>{1A785F78-1622-4A2E-8866-34A6F87CF9F7}</PolicyID>
+</SiPolicy>
