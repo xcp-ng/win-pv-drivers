@@ -21,6 +21,7 @@
 .RELEASENOTES
 2025-04-29 Initial release - 1.0.0.0
 2025-06-02 Windows 7/PowerShell 2.0 compatibility - 1.1.0.0
+2025-06-06 PowerShell 3.0 compatibility - 1.2.0.0
 
 #>
 
@@ -83,8 +84,6 @@ The script reports whether it succeeded (see "Last Result").
 https://xenbits.xen.org/xsa/advisory-468.html
 
 #>
-
-#Requires -RunAsAdministrator
 
 [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = "Install")]
 param (
