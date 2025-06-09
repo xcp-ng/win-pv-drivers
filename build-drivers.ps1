@@ -29,7 +29,7 @@ foreach ($repo in $Drivers) {
         $Env:MICRO_VERSION = (Get-PackageVersion $repo).Build
         $Env:BUILD_NUMBER = (Get-PackageVersion $repo).Revision
 
-        git clean -fxd
+        git clean -fXd
 
         $DriverConfiguration = "$ConfigurationBase $Configuration"
         $DriverConfigShort = $DriverConfiguration.Replace(" ", "")
