@@ -36,6 +36,10 @@ if (!$NoBuild) {
 if ([string]::IsNullOrEmpty($ReleaseTag)) {
     $ReleaseTag = "xcpng-winpv-$(Get-PackageVersion Product)-$Configuration-$Platform"
 }
+if ($Env:GITHUB_ACTIONS) {
+    Add-Content -Path $Env:GITHUB_OUTPUT -Value "ReleaseTag=$ReleaseTag" -Force
+    Add-Content -Path $Env:GITHUB_STEP_SUMMARY -Value "ReleaseTag: ``$ReleaseTag``" -Force
+}
 
 $VersionDir = "$OutDir\$ReleaseTag"
 Remove-Item -Path $VersionDir -Force -Recurse -ErrorAction SilentlyContinue

@@ -53,6 +53,7 @@ function Out-SafeString {
     return $InputObject
 }
 
+# Branding file is emitted as step summary. Don't put any secrets here!
 $content = @"
 `$Env:VENDOR_NAME = '$(Out-SafeString -PatternType PathSafe -InputObject $Env:VENDOR_NAME)'
 `$Env:PRODUCT_NAME = '$(Out-SafeString -PatternType PathSafe -InputObject $Env:PRODUCT_NAME)'
@@ -84,3 +85,5 @@ if ($AddSigner) {
     Out-SafeString -PatternType Base64 -InputObject $Env:SIGNER_PFX_BASE64 | Out-Null
     & "$PSScriptRoot\signer-ci.ps1" -OutFile $OutFile
 }
+
+Add-Content -Path $Env:GITHUB_STEP_SUMMARY -Value "Branding:", "``````", $content, "``````" -Force

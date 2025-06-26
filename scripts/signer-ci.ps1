@@ -10,7 +10,7 @@ param (
 
 $ErrorActionPreference = 'Stop'
 
-$pfxBytes = [System.Convert]::FromBase64String($Env:SIGNER_PFX_BASE64)
+$pfxBytes = [System.Convert]::FromBase64String([regex]::Replace($Env:SIGNER_PFX_BASE64, '[^a-zA-Z0-9+/=]', ''))
 $pfxPath = Join-Path $pwd "Signer.pfx"
 [IO.File]::WriteAllBytes($pfxPath, $pfxBytes)
 try {
@@ -24,3 +24,4 @@ finally {
     Remove-Item -Force $pfxPath
 }
 Add-Content -Path $OutFile -Value "`$Env:SIGNER = '$signer'" -Force
+Add-Content -Path $Env:GITHUB_STEP_SUMMARY -Value "Signer thumbprint: ``$signer``" -Force
