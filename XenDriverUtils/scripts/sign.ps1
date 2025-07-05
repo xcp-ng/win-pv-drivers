@@ -12,4 +12,6 @@ param (
 . "$ProjectDir\..\scripts\branding-generic.ps1"
 . "$ProjectDir\..\scripts\sign.ps1"
 
-Set-SignerFileSignature -FilePath "$ProjectDir\bin\$Platform\$Configuration\*\xdutils.dll"
+Set-SignerFileSignature -FilePath `
+    "$ProjectDir\bin\$Platform\$Configuration\*\xdutils.dll", `
+    "$ProjectDir\bin\$Platform\$Configuration\*\Copy-XenVifSettings.ps1"
