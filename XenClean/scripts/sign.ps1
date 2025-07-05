@@ -21,6 +21,8 @@ Update-ScriptFileInfo `
     -Copyright $Env:COPYRIGHT `
     -Force
 
+# re Copy-XenVifSettings: Copied deps are copied from source (not output) and therefore need signing again.
 Set-SignerFileSignature -FilePath `
     "$ProjectDir\bin\$Platform\$Configuration\*\XenClean.exe", `
-    "$ProjectDir\bin\$Platform\$Configuration\*\Invoke-XenClean.ps1"
+    "$ProjectDir\bin\$Platform\$Configuration\*\Invoke-XenClean.ps1", `
+    "$ProjectDir\bin\$Platform\$Configuration\*\Copy-XenVifSettings.ps1"

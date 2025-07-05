@@ -2,6 +2,8 @@ using XenClean;
 using XenDriverUtils;
 
 Logger.SetLogger(new ConsoleLogger());
+XenOffboard.BackupXenvif();
+XenOffboard.PrepareRestoreXenvif();
 UninstallProducts.Execute();
 UninstallDevices.Execute();
 UninstallDrivers.Execute();
