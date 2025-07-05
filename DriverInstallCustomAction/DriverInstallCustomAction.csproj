@@ -13,6 +13,8 @@
 
   <ItemGroup>
     <Content Include="CustomAction.config" CopyToOutputDirectory="PreserveNewest" />
+    <!-- PackCustomAction does not pack dependency content, so we have to manually include our content -->
+    <Content Include="..\XenDriverUtils\Copy-XenVifSettings.ps1" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

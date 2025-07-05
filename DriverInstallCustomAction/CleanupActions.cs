@@ -41,5 +41,19 @@ namespace XenInstCA {
 
             return ActionResult.Success;
         }
+
+        [CustomAction]
+        public static ActionResult XenvifBackup(Session session) {
+            using var logScope = new LoggerScope(new MsiSessionLogger(session));
+            XenOffboard.BackupXenvif();
+            return ActionResult.Success;
+        }
+
+        [CustomAction]
+        public static ActionResult XenvifPrepareRestore(Session session) {
+            using var logScope = new LoggerScope(new MsiSessionLogger(session));
+            XenOffboard.PrepareRestoreXenvif();
+            return ActionResult.Success;
+        }
     }
 }

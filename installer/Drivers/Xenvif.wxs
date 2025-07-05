@@ -11,6 +11,8 @@
       <File Name="xenvif.sys" />
     </ComponentGroup>
 
+    <!-- see Xennet.wxs for Xenvif backup/restore -->
+
     <SetProperty Id="$(XenDriver)ServiceDelete" Value="Services=xenvif" After="CostFinalize" Sequence="execute" />
   </Fragment>
 </Wix>
