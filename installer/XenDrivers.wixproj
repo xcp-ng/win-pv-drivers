@@ -16,7 +16,6 @@
   <ItemGroup>
     <ProjectReference Include="..\DriverInstallCustomAction\DriverInstallCustomAction.csproj" />
     <ProjectReference Include="..\XenBootFix\XenBootFix.vcxproj" />
-    <ProjectReference Include="..\XenClean\XenClean.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="scripts\genfiles.ps1" />

@@ -41,8 +41,6 @@ You may need to run the XenClean tool." />
   
   <String Id="ToolsFeatureTitle" Value="Tools" />
   <String Id="ToolsFeatureDescription" Value="Useful tools for managing Xen paravirtualized drivers." />
-  <String Id="XenCleanFeatureTitle" Value="XenClean" />
-  <String Id="XenCleanFeatureDescription" Value="Tool for cleanly removing all installed Xen PV drivers." />
   <String Id="XenBootFixFeatureTitle" Value="XenBootFix" />
   <String Id="XenBootFixFeatureDescription" Value="Offline tool for recovering from boot failures caused by older Xen PV drivers." />
   <String Id="GuestAgentFeatureTitle" Value="Xen Guest Agent" />

@@ -85,9 +85,6 @@
       </Feature>
     </Feature>
     <Feature Id="ToolsFeature" AllowAdvertise="no" Display="collapse" Title="!(loc.ToolsFeatureTitle)" Description="!(loc.ToolsFeatureDescription)">
-      <Feature Id="XenCleanFeature" AllowAdvertise="no" Title="!(loc.XenCleanFeatureTitle)" Description="!(loc.XenCleanFeatureDescription)">
-        <ComponentGroupRef Id="XenCleanComponent" />
-      </Feature>
       <Feature Id="XenBootFixFeature" AllowAdvertise="no" Title="!(loc.XenBootFixFeatureTitle)" Description="!(loc.XenBootFixFeatureDescription)">
         <ComponentGroupRef Id="XenBootFixComponent" />
       </Feature>
