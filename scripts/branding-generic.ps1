@@ -2,13 +2,24 @@ function Get-PackageVersion {
     [CmdletBinding()]
     param (
         [Parameter(Position = 1)]
-        [string]$PackageName = 'Product'
+        [string]$PackageName = 'Product',
+        # Don't fill in 0 for non-existent build/revision numbers.
+        [Parameter()]
+        [switch]$Raw
     )
-    $Version = $PackageVersions[$PackageName]
-    if (!$Version) {
+    $VersionString = $PackageVersions[$PackageName]
+    if (!$VersionString) {
         throw "Cannot get $PackageName version"
     }
-    return [version]::Parse($Version)
+    $RawVersion = [version]::Parse($VersionString)
+    if ($Raw) {
+        return $RawVersion
+    }
+    else {
+        $build = if ($RawVersion.Build -eq -1) { 0 } else { $RawVersion.Build }
+        $rev = if ($RawVersion.Revision -eq -1) { 0 } else { $RawVersion.Revision }
+        return [version]::new($RawVersion.Major, $RawVersion.Minor, $build, $rev)
+    }
 }
 
 if (!$Env:VENDOR_NAME) {
@@ -37,7 +48,7 @@ if ($null -eq $PackageVersions) {
     }
 }
 if ($null -eq $PackageVersions['Product']) {
-    $PackageVersions['Product'] = '9.1.0'
+    $PackageVersions['Product'] = '9.1.0.0'
 }
 if ($null -eq $PackageVersions['xenbus']) {
     $PackageVersions['xenbus'] = $PackageVersions['Product']

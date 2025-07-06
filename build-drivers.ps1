@@ -5,12 +5,16 @@ param (
     [Parameter()]
     [string]$Target = "Build",
     [Parameter(Mandatory)]
+    [ValidateSet("Debug", "Release")]
     [string]$Configuration,
     [Parameter(Mandatory)]
+    [ValidateSet("x86", "x64")]
     [string]$Platform,
     [Parameter()]
+    [ValidateSet("vs2019", "vs2022")]
     [string]$SolutionDir = "vs2022",
     [Parameter()]
+    [ValidateSet("Windows 10")]
     [string]$ConfigurationBase = "Windows 10"
 )
 
@@ -18,16 +22,27 @@ param (
 . $PSScriptRoot\scripts\branding-generic.ps1
 . $PSScriptRoot\scripts\sign.ps1
 
+# Drivers are ordered by build date first so the HHmm gives you a more granular revision number (down to the minute).
+# The "1" is to avoid leading zeroes.
+$DriverTime = "1" + (Get-Date -Format HHmm)
+
 $OutputPath = "$PSScriptRoot\installer\output"
 Remove-Item -Path $OutputPath -Force -Recurse -ErrorAction SilentlyContinue
 $ErrorActionPreference = "Stop"
 foreach ($repo in $Drivers) {
     Push-Location $PSScriptRoot\$repo
     try {
-        $Env:MAJOR_VERSION = (Get-PackageVersion $repo).Major
-        $Env:MINOR_VERSION = (Get-PackageVersion $repo).Minor
-        $Env:MICRO_VERSION = (Get-PackageVersion $repo).Build
-        $Env:BUILD_NUMBER = (Get-PackageVersion $repo).Revision
+        $rawver = Get-PackageVersion -Raw $repo
+        $ver = Get-PackageVersion $repo
+        $Env:MAJOR_VERSION = $ver.Major
+        $Env:MINOR_VERSION = $ver.Minor
+        $Env:MICRO_VERSION = $ver.Build
+        if ($rawver.Revision -eq -1) {
+            $Env:BUILD_NUMBER = $DriverTime
+        }
+        else {
+            $Env:BUILD_NUMBER = $rawver.Revision
+        }
 
         git clean -fXd
 

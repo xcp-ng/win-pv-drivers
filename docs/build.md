@@ -27,6 +27,10 @@ $Env:PRODUCT_NAME = 'Xen'
 $Env:VENDOR_PREFIX = 'XP'
 $Env:COPYRIGHT = 'Copyright (c) Xen Project.'
 
+# These version numbers are used in multiple places.
+# You must have at least 2 version components (major.minor).
+# The third and fourth components will be 0-filled if absent, except in drivers where the revision will be the build time prefixed with "1".
+# For compatibility reasons, it's not recommended to have any version component exceed 255.255.65535.65535.
 $PackageVersions = @{
     Product       = '9.0.9000.0'
     xenbus        = '9.0.9001.0'  # defaults to product version
