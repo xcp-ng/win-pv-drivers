@@ -14,7 +14,7 @@ This file contains the declaration of all the localizable strings.
 
   <String Id="NetFx462RequiredError" Value="[ProductName] requires .NET 4.6.2 or later." />
 
-  <String Id="OldDriversDetectedError" Value="Old XCP-ng drivers detected. Uninstall them before continuing.
+  <String Id="OldDriversDetectedError" Value="Old Xen PV drivers detected. Uninstall them before continuing.
 You may need to run the XenClean tool." />
   <String Id="CitrixDriversDetectedError" Value="Citrix PV drivers detected. Uninstall them before continuing." />
   <String Id="DowngradeError" Value="A newer version of [ProductName] is already installed." />
@@ -31,20 +31,17 @@ You may need to run the XenClean tool." />
   <String Id="PVIfaceFeatureDescription" Value="XenStore usermode interface and power control agent." />
   <String Id="PVNetworkFeatureTitle" Value="PV Network Driver" />
   <String Id="PVNetworkFeatureDescription" Value="Xen paravirtualized network drivers." />
-
-  <String Id="PVOptionalFeatureTitle" Value="Optional drivers" />
-  <String Id="PVOptionalFeatureDescription" Value="Drivers that are not installed by default, but may be useful for some users." />
   <String Id="PVDiskFeatureTitle" Value="PV Storage Driver" />
   <String Id="PVDiskFeatureDescription" Value="Xen paravirtualized storage driver." />
   <String Id="PVHidFeatureTitle" Value="PV HID Driver" />
   <String Id="PVHidFeatureDescription" Value="Xen paravirtualized HID keyboard/mouse drivers." />
-  
+
   <String Id="ToolsFeatureTitle" Value="Tools" />
   <String Id="ToolsFeatureDescription" Value="Useful tools for managing Xen paravirtualized drivers." />
   <String Id="XenBootFixFeatureTitle" Value="XenBootFix" />
   <String Id="XenBootFixFeatureDescription" Value="Offline tool for recovering from boot failures caused by older Xen PV drivers." />
   <String Id="GuestAgentFeatureTitle" Value="Xen Guest Agent" />
-  <String Id="GuestAgentFeatureDescription" Value="Rust-based guest agent, licensed under the GNU Affero General Public License. Requires PV interface driver." />
+  <String Id="GuestAgentFeatureDescription" Value="Rust-based guest agent, licensed under the GNU AGPL. Requires PV interface driver." />
   <String Id="GuestAgentServiceDisplayName" Value="$(VENDOR_NAME) Xen Guest Agent (Rust-based)" />
   <String Id="WinClipboardFeatureTitle" Value="Clipboard Agent" />
   <String Id="WinClipboardFeatureDescription" Value="Per-user clipboard agent for copy-paste support." />
