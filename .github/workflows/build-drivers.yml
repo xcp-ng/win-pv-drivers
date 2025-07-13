@@ -2,6 +2,7 @@ name: build-drivers
 
 on:
   workflow_call:
+  workflow_dispatch:
 
 jobs:
   build-drivers:

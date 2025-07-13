@@ -2,6 +2,7 @@ name: build-guestagent
 
 on:
   workflow_call:
+  workflow_dispatch:
 
 jobs:
   build-guestagent:
