@@ -119,6 +119,18 @@ namespace XenDriverUtils {
             }
         }
 
+        public static void ResetForceUnplug() {
+            try {
+                using var key = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Services\\XEN", true);
+                if (key == null) {
+                    return;
+                }
+                Logger.Log("Resetting Unplug key");
+                key.DeleteSubKey("ForceUnplug");
+            } catch {
+            }
+        }
+
         // other code may want to use this list too, so make it public
         public static readonly List<string> DeleteableServices = new() {
             "xenagent",

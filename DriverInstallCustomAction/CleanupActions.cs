@@ -9,6 +9,7 @@ namespace XenInstCA {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
             XenCleanup.XenfiltClassCleanup();
             XenCleanup.ResetUnplug();
+            XenCleanup.ResetForceUnplug();
             return ActionResult.Success;
         }
 
