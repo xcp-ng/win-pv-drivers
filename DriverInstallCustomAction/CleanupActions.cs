@@ -1,3 +1,4 @@
+using System;
 using Windows.Win32;
 using WixToolset.Dtf.WindowsInstaller;
 using XenDriverUtils;
@@ -46,14 +47,22 @@ namespace XenInstCA {
         [CustomAction]
         public static ActionResult XenvifBackup(Session session) {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
-            XenOffboard.BackupXenvif();
+            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SAFEBOOT_OPTION"))) {
+                Logger.Log("Skipping Xenvif backup in Safe Mode");
+            } else {
+                XenOffboard.BackupXenvif();
+            }
             return ActionResult.Success;
         }
 
         [CustomAction]
         public static ActionResult XenvifPrepareRestore(Session session) {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
-            XenOffboard.PrepareRestoreXenvif();
+            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SAFEBOOT_OPTION"))) {
+                Logger.Log("Skipping Xenvif restore in Safe Mode");
+            } else {
+                XenOffboard.PrepareRestoreXenvif();
+            }
             return ActionResult.Success;
         }
     }

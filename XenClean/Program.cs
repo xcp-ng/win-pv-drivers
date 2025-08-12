@@ -1,9 +1,14 @@
+using System;
 using XenClean;
 using XenDriverUtils;
 
 Logger.SetLogger(new ConsoleLogger());
-XenOffboard.BackupXenvif();
-XenOffboard.PrepareRestoreXenvif();
+if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SAFEBOOT_OPTION"))) {
+    Logger.Log("Skipping Xenvif offboarding in Safe Mode");
+} else {
+    XenOffboard.BackupXenvif();
+    XenOffboard.PrepareRestoreXenvif();
+}
 UninstallProducts.Execute();
 UninstallDevices.Execute();
 UninstallDrivers.Execute();
