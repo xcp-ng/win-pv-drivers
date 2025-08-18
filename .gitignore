@@ -374,3 +374,4 @@ Branding.cs
 /XenBootFix/Branding.inc
 /package-*
 output/
+deps/
