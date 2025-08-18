@@ -32,11 +32,11 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           Remove-Item -Path .\deps -Recurse -Force -ErrorAction SilentlyContinue
-          Invoke-WebRequest -Uri $Env:WIX_ZIP_URI -OutFile wix-builder.zip
-          Expand-Archive -Path .\wix-builder.zip -DestinationPath .\deps\xcp-ng\wix-builder\ -Force
-          Remove-Item -Path .\deps\xcp-ng\wix-builder\* -Exclude *.nupkg -Recurse -Force  -ErrorAction SilentlyContinue
-          Invoke-WebRequest -Uri $Env:WIX_ATTEST_URI -OutFile .\deps\xcp-ng\wix-builder.json
-          .\scripts\Test-BuildAttestation.ps1 -Bundle .\deps\xcp-ng\wix-builder.json -Path .\deps\xcp-ng\wix-builder -Repository xcp-ng/wix-builder -InformationAction Continue
+          Invoke-WebRequest -Uri $Env:WIX_ZIP_URI -OutFile wix.zip
+          Expand-Archive -Path .\wix.zip -DestinationPath .\deps\wix\ -Force
+          Remove-Item -Path .\deps\wix\* -Exclude *.nupkg -Recurse -Force  -ErrorAction SilentlyContinue
+          Invoke-WebRequest -Uri $Env:WIX_ATTEST_URI -OutFile .\deps\wix.json
+          .\scripts\Test-BuildAttestation.ps1 -Bundle .\deps\wix.json -Path .\deps\wix -Repository xcp-ng/wix-builder -InformationAction Continue
         env:
           # Dependency download links hardcoded for transparency.
           WIX_ZIP_URI: https://github.com/xcp-ng/wix-builder/releases/download/v6.0.1-xcpng.0/artifacts.zip
