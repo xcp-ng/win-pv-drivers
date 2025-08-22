@@ -2,6 +2,12 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <?include Include.wxi ?>
   <Fragment>
+    <Feature Id="ToolsFeature" AllowAdvertise="no" Display="collapse" Title="!(loc.ToolsFeatureTitle)" Description="!(loc.ToolsFeatureDescription)">
+      <Feature Id="XenBootFixFeature" AllowAdvertise="no" Title="!(loc.XenBootFixFeatureTitle)" Description="!(loc.XenBootFixFeatureDescription)">
+        <ComponentGroupRef Id="XenBootFixComponent" />
+      </Feature>
+    </Feature>
+    
     <DirectoryRef Id="INSTALLFOLDER">
       <Directory Id="XenBootFixFolder" Name="XenBootFix" />
     </DirectoryRef>

@@ -3,6 +3,13 @@
   <?include Include.wxi ?>
 
   <Fragment>
+    <Feature Id="GuestAgentFeature" AllowAdvertise="no" Display="collapse" Title="!(loc.GuestAgentFeatureTitle)" Description="!(loc.GuestAgentFeatureDescription)">
+      <ComponentGroupRef Id="GuestAgentComponent" />
+      <Feature Id="WinClipboardFeature" AllowAdvertise="no" Title="!(loc.WinClipboardFeatureTitle)" Description="!(loc.WinClipboardFeatureDescription)">
+        <ComponentGroupRef Id="WinClipboardComponent" />
+      </Feature>
+    </Feature>
+    
     <DirectoryRef Id="INSTALLFOLDER">
       <Directory Id="XenGuestAgentFolder" Name="XenGuestAgent" />
     </DirectoryRef>

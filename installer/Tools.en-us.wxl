@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="en-us" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+  <String Id="ToolsFeatureTitle" Value="Tools" />
+  <String Id="ToolsFeatureDescription" Value="Useful tools for managing Xen paravirtualized drivers." />
+  <String Id="XenBootFixFeatureTitle" Value="XenBootFix" />
+  <String Id="XenBootFixFeatureDescription" Value="Offline tool for recovering from boot failures caused by older Xen PV drivers." />
+</WixLocalization>

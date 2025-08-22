@@ -58,37 +58,9 @@
 
     <ComponentGroupRef Id="BrandingComponent" />
 
-    <Feature Id="PVBusFeature" AllowAdvertise="no" AllowAbsent="no" Display="expand" Title="!(loc.PVBusFeatureTitle)" Description="!(loc.PVBusFeatureDescription)">
-      <ComponentGroupRef Id="XenbusComponent" />
-      <Feature Id="PVConsoleFeature" AllowAdvertise="no" Title="!(loc.PVConsoleFeatureTitle)" Description="!(loc.PVConsoleFeatureDescription)">
-        <ComponentGroupRef Id="XenconsComponent" />
-      </Feature>
-      <Feature Id="PVIfaceFeature" AllowAdvertise="no" Display="expand" Title="!(loc.PVIfaceFeatureTitle)" Description="!(loc.PVIfaceFeatureDescription)">
-        <ComponentGroupRef Id="XenifaceComponent" />
-      </Feature>
-      <Feature Id="PVNetworkFeature" AllowAdvertise="no" Title="!(loc.PVNetworkFeatureTitle)" Description="!(loc.PVNetworkFeatureDescription)">
-        <ComponentGroupRef Id="XenvifComponent" />
-        <ComponentGroupRef Id="XennetComponent" />
-      </Feature>
-      <Feature Id="PVDiskFeature" AllowAdvertise="no" Title="!(loc.PVDiskFeatureTitle)" Description="!(loc.PVDiskFeatureDescription)">
-        <ComponentGroupRef Id="XenvbdComponent" />
-      </Feature>
-      <Feature Id="PVHidFeature" AllowAdvertise="no" Title="!(loc.PVHidFeatureTitle)" Description="!(loc.PVHidFeatureDescription)">
-        <ComponentGroupRef Id="XenvkbdComponent" />
-        <ComponentGroupRef Id="XenhidComponent" />
-      </Feature>
-    </Feature>
-    <Feature Id="GuestAgentFeature" AllowAdvertise="no" Display="collapse" Title="!(loc.GuestAgentFeatureTitle)" Description="!(loc.GuestAgentFeatureDescription)">
-      <ComponentGroupRef Id="GuestAgentComponent" />
-      <Feature Id="WinClipboardFeature" AllowAdvertise="no" Title="!(loc.WinClipboardFeatureTitle)" Description="!(loc.WinClipboardFeatureDescription)">
-        <ComponentGroupRef Id="WinClipboardComponent" />
-      </Feature>
-    </Feature>
-    <Feature Id="ToolsFeature" AllowAdvertise="no" Display="collapse" Title="!(loc.ToolsFeatureTitle)" Description="!(loc.ToolsFeatureDescription)">
-      <Feature Id="XenBootFixFeature" AllowAdvertise="no" Title="!(loc.XenBootFixFeatureTitle)" Description="!(loc.XenBootFixFeatureDescription)">
-        <ComponentGroupRef Id="XenBootFixComponent" />
-      </Feature>
-    </Feature>
+    <FeatureRef Id="PVBusFeature" />
+    <FeatureRef Id="GuestAgentFeature" />
+    <FeatureRef Id="ToolsFeature" />
 
     <InstallExecuteSequence>
       <!-- We cannot afford to uninstall existing drivers during an upgrade. Thus the choice of InstallExecute. -->
