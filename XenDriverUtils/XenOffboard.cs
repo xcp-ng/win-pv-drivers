@@ -5,14 +5,29 @@ using System.Reflection;
 
 namespace XenDriverUtils {
     public class XenOffboard {
-        static void RunCopyXenvifScript(string mode, bool install = false) {
+        enum ScriptMode {
+            Backup,
+            Restore,
+        }
+
+        enum ExecutionMode {
+            Install,
+            Invoke,
+        }
+
+        enum DeviceType {
+            Paravirtualized,
+            Emulated,
+        }
+
+        static void RunCopyXenvifScript(ScriptMode mode, ExecutionMode execMode, DeviceType deviceType) {
             var dllPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var scriptPath = Path.Combine(dllPath, "Copy-XenVifSettings.ps1");
             var powershellPath = Path.Combine(Environment.SystemDirectory, "WindowsPowerShell\\v1.0\\powershell.exe");
 
             var startInfo = new ProcessStartInfo() {
                 FileName = powershellPath,
-                Arguments = $"-ExecutionPolicy Bypass -File \"{scriptPath}\" {(install ? "-Install" : "-Invoke")} -Mode {mode}",
+                Arguments = $"-ExecutionPolicy Bypass -File \"{scriptPath}\" -{mode} -{execMode} -{deviceType}",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -35,12 +50,12 @@ namespace XenDriverUtils {
 
         public static void BackupXenvif() {
             Logger.Log($"Backing up Xenvif settings");
-            RunCopyXenvifScript("Backup");
+            RunCopyXenvifScript(ScriptMode.Backup, ExecutionMode.Invoke, DeviceType.Paravirtualized);
         }
 
         public static void PrepareRestoreXenvif() {
             Logger.Log($"Scheduling Xenvif restore");
-            RunCopyXenvifScript("Restore", true);
+            RunCopyXenvifScript(ScriptMode.Restore, ExecutionMode.Install, DeviceType.Emulated);
         }
     }
 }

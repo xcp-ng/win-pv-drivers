@@ -6,15 +6,22 @@
 
 [CmdletBinding(SupportsShouldProcess)]
 param(
+    # Run the task now.
     [Parameter(Mandatory, ParameterSetName = "Invoke")]
     [switch]$Invoke,
     # Install scheduled task to run on reboot.
     [Parameter(Mandatory, ParameterSetName = "Install")]
     [switch]$Install,
 
-    [Parameter(Mandatory)]
-    [ValidateSet("Backup", "Restore")]
-    [string]$Mode,
+    [Parameter()]
+    [switch]$Backup,
+    [Parameter()]
+    [switch]$Restore,
+
+    [Parameter()]
+    [switch]$Paravirtualized,
+    [Parameter()]
+    [switch]$Emulated,
 
     # Delete script after running.
     [Parameter(ParameterSetName = "Invoke")]
@@ -43,11 +50,13 @@ function Backup-XenVifSettings {
     Remove-Item -Path HKLM:\SOFTWARE\XenOffboard\Xenvif\$PermanentAddress\Tcpip -Force -Recurse -ErrorAction SilentlyContinue -WhatIf:$WhatIfPreference
     New-Item -Path HKLM:\SOFTWARE\XenOffboard\Xenvif\$PermanentAddress\Tcpip -Force -WhatIf:$WhatIfPreference
     Get-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\$InterfaceGuid -ErrorAction Continue | `
+        Select-Object -Property * -ExcludeProperty PSPath, PSParentPath, PSChildName, PSDrive, PSProvider | `
         Set-ItemProperty -Path HKLM:\SOFTWARE\XenOffboard\Xenvif\$PermanentAddress\Tcpip -ErrorAction Continue -WhatIf:$WhatIfPreference
 
     Remove-Item -Path HKLM:\SOFTWARE\XenOffboard\Xenvif\$PermanentAddress\Tcpip6 -Force -Recurse -ErrorAction SilentlyContinue -WhatIf:$WhatIfPreference
     New-Item -Path HKLM:\SOFTWARE\XenOffboard\Xenvif\$PermanentAddress\Tcpip6 -Force -WhatIf:$WhatIfPreference
     Get-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters\Interfaces\$InterfaceGuid -ErrorAction Continue | `
+        Select-Object -Property * -ExcludeProperty PSPath, PSParentPath, PSChildName, PSDrive, PSProvider | `
         Set-ItemProperty -Path HKLM:\SOFTWARE\XenOffboard\Xenvif\$PermanentAddress\Tcpip6 -ErrorAction Continue -WhatIf:$WhatIfPreference
 }
 
@@ -64,6 +73,7 @@ function Restore-XenVifSettings {
         Write-Verbose "$PermanentAddress = $InterfaceGuid has Tcpip"
 
         Get-ItemProperty -Path HKLM:\SOFTWARE\XenOffboard\Xenvif\$PermanentAddress\Tcpip -ErrorAction Continue | `
+            Select-Object -Property * -ExcludeProperty PSPath, PSParentPath, PSChildName, PSDrive, PSProvider | `
             Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\$InterfaceGuid -ErrorAction Continue -WhatIf:$WhatIfPreference
 
         $Restored = $true
@@ -73,6 +83,7 @@ function Restore-XenVifSettings {
         Write-Verbose "$PermanentAddress = $InterfaceGuid has Tcpip6"
 
         Get-ItemProperty -Path HKLM:\SOFTWARE\XenOffboard\Xenvif\$PermanentAddress\Tcpip6 -ErrorAction Continue | `
+            Select-Object -Property * -ExcludeProperty PSPath, PSParentPath, PSChildName, PSDrive, PSProvider | `
             Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters\Interfaces\$InterfaceGuid -ErrorAction Continue -WhatIf:$WhatIfPreference
 
         $Restored = $true
@@ -86,17 +97,37 @@ function Restore-XenVifSettings {
     }
 }
 
-if ($PSCmdlet.ParameterSetName -ieq "Invoke") {
+if ($Backup -and $Restore) {
+    throw "-Backup and -Restore are mutually exclusive"
+}
+elseif (!$Backup -and !$Restore) {
+    throw "Must specify an action"
+}
+
+if ($Paravirtualized -and $Emulated) {
+    throw "-Paravirtualized and -Emulated are mutually exclusive"
+}
+elseif (!$Paravirtualized -and !$Emulated) {
+    throw "Must specify a device type"
+}
+
+if ($Invoke) {
     try {
-        if ($Mode -ieq "Backup") {
+        $MatchingInterfaces = if ($Paravirtualized) {
+            Get-NetAdapter | Where-Object PnPDeviceID -like "XENVIF\*"
+        }
+        elseif ($Emulated) {
+            Get-NetAdapter | Where-Object PnPDeviceID -like "PCI\*"
+        }
+
+        if ($Backup) {
             Remove-Item -Path HKLM:\SOFTWARE\XenOffboard\Xenvif -Force -Recurse -ErrorAction SilentlyContinue -WhatIf:$WhatIfPreference
-            $MatchingInterfaces = Get-NetAdapter | Where-Object PnPDeviceID -like "XENVIF\*"
             $MatchingInterfaces | ForEach-Object {
                 Backup-XenVifSettings -InterfaceGuid $_.InterfaceGuid -PermanentAddress $_.PermanentAddress -WhatIf:$WhatIfPreference
             }
         }
-        elseif ($Mode -ieq "Restore") {
-            Get-NetAdapter | ForEach-Object {
+        elseif ($Restore) {
+            $MatchingInterfaces | ForEach-Object {
                 Restore-XenVifSettings -InterfaceGuid $_.InterfaceGuid -PermanentAddress $_.PermanentAddress -WhatIf:$WhatIfPreference
             }
         }
@@ -110,7 +141,7 @@ if ($PSCmdlet.ParameterSetName -ieq "Invoke") {
     }
 }
 
-elseif ($PSCmdlet.ParameterSetName -ieq "Install") {
+elseif ($Install) {
     Write-Verbose "Current path: $PSCommandPath"
     Write-Verbose "Install path: $Script:InstallPath"
 
@@ -128,10 +159,23 @@ elseif ($PSCmdlet.ParameterSetName -ieq "Install") {
 
     $cmdArgs = @(
         "-Invoke",
-        "-Mode",
-        $Mode,
         "-SelfDestruct"
     )
+
+    if ($Backup) {
+        $cmdArgs += @("-Backup")
+    }
+    elseif ($Restore) {
+        $cmdArgs += @("-Restore")
+    }
+
+    if ($Paravirtualized) {
+        $cmdArgs += @("-Paravirtualized")
+    }
+    elseif ($Emulated) {
+        $cmdArgs += @("-Emulated")
+    }
+
     $argString = "-NoProfile -NonInteractive -ExecutionPolicy Bypass `"& '$Script:InstallPath' $($cmdArgs -join ' ')`""
     Write-Verbose "Task executable: $Script:PowershellPath"
     Write-Verbose "Task arguments: $argString"
