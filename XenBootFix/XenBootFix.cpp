@@ -283,6 +283,16 @@ static void DeleteOverrides(CRegKey& controlSetKey, const std::vector<ThirdParty
         DeleteOverride(controlSetKey, driver.ServiceName.c_str());
 }
 
+static void DeleteForceUnplug(CRegKey& controlSetKey) {
+    wprintf(L"Deleting ForceUnplug\n");
+
+    if (!dryrun) {
+        auto result = controlSetKey.RecurseDeleteKey(L"Services\\XEN\\ForceUnplug");
+        if (result != ERROR_SUCCESS)
+            wprintf(L"Couldn't delete ForceUnplug: 0x%lx\n", result);
+    }
+}
+
 static const std::array<const wchar_t*, 2> FiltersToRemove = {
     L"xenfilt",
     L"scsifilt",
@@ -522,6 +532,7 @@ int wmain(int argc, wchar_t** argv) {
         }
 
         DeleteOverrides(controlSetKey, found3PStorageDrivers);
+        DeleteForceUnplug(controlSetKey);
         RemoveFilters(controlSetKey);
         DisableServices(controlSetKey);
 
