@@ -81,9 +81,6 @@ jobs:
         id: build
         # this workflow is always testsigned, so -ExportCertificate is appropriate
         run: .\build-installer.ps1 -Configuration Release -Platform x64 -ExportSymbols -ExportExtras -ExportCertificate
-        env:
-          # The username doesn't matter, just insert a random user here
-          NuGetPackageSourceCredentials_xcpng: Username=xcp-ng;Password=${{secrets.GITHUB_TOKEN}}
       - name: Clean up certificates
         if: always()
         run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue
