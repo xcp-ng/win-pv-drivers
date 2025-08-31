@@ -32,7 +32,9 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           Remove-Item -Path .\deps -Recurse -Force -ErrorAction SilentlyContinue
-          Invoke-WebRequest -Uri $Env:WIX_ZIP_URI -OutFile wix.zip
+          Invoke-WebRequest -Uri $Env:WIX_ZIP_URI -OutFile .\wix.zip
+          $wixReport = (Get-FileHash .\wix.zip).Hash
+          Add-Content -Path $Env:GITHUB_STEP_SUMMARY -Value "wix.zip: ``$wixReport``" -Force
           Expand-Archive -Path .\wix.zip -DestinationPath .\deps\wix\ -Force
           Remove-Item -Path .\deps\wix\* -Exclude *.nupkg -Recurse -Force  -ErrorAction SilentlyContinue
           Invoke-WebRequest -Uri $Env:WIX_ATTEST_URI -OutFile .\deps\wix.json
