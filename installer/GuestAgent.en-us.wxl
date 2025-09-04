@@ -2,7 +2,7 @@
 <WixLocalization Culture="en-us" xmlns="http://wixtoolset.org/schemas/v4/wxl">
   <String Id="GuestAgentFeatureTitle" Value="Xen Guest Agent" />
   <String Id="GuestAgentFeatureDescription" Value="Rust-based guest agent, licensed under the GNU AGPL. Requires PV interface driver." />
-  <String Id="GuestAgentServiceDisplayName" Value="$(VENDOR_NAME) Xen Guest Agent (Rust-based)" />
+  <String Id="GuestAgentServiceDisplayName" Value="Xen Guest Agent (Rust-based)" />
   <String Id="WinClipboardFeatureTitle" Value="Clipboard Agent" />
   <String Id="WinClipboardFeatureDescription" Value="Per-user clipboard agent for copy-paste support." />
 </WixLocalization>
