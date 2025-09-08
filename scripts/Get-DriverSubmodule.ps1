@@ -38,13 +38,13 @@ foreach ($submodule in $submodules) {
         Write-Output "Current branch: $branch"
         Write-Output ""
 
-        if ($commits_since_parent) {
+        if (!$Downstream -and $commits_since_parent) {
             Write-Output "Uncommitted changes from ${submodule_head}:"
             $commits_since_parent
             Write-Output ""
         }
 
-        if ($downstream_commits) {
+        if ($Downstream -and $downstream_commits) {
             Write-Output "Downstream changes in ${branch}:"
             $downstream_commits
             Write-Output ""
