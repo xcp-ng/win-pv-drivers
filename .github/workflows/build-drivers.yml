@@ -21,6 +21,8 @@ jobs:
           PRODUCT_NAME: ${{vars.PRODUCT_NAME}}
           VENDOR_PREFIX: ${{vars.VENDOR_PREFIX}}
           COPYRIGHT: ${{vars.COPYRIGHT}}
+          FORCE_ACTIVATE: ${{vars.FORCE_ACTIVATE}}
+          FORCE_UNPLUG: ${{vars.FORCE_UNPLUG}}
           PackageVersions_Product: ${{vars.PackageVersions_Product}}.${{github.run_number}}
           PackageVersions_xenbus: ${{vars.PackageVersions_xenbus}}.${{github.run_number}}
           PackageVersions_xencons: ${{vars.PackageVersions_xencons}}.${{github.run_number}}
