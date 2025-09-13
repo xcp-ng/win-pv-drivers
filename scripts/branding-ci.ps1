@@ -17,7 +17,7 @@ $ErrorActionPreference = 'Stop'
 function Out-SafeString {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory)]
+        [Parameter()]
         [string]$InputObject,
         [Parameter(Mandatory)]
         [ValidateSet("Version", "VendorPrefix", "PathSafe", "Freeform", "Hex", "Guid", "Base64", "OneOrEmpty")]
