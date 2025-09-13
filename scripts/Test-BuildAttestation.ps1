@@ -38,10 +38,10 @@ try {
                 --bundle $bundlePath `
                 --deny-self-hosted-runners `
                 --repo $Repository > $null
-            Write-Information "Attestation succeeded for $_"
             if ($LASTEXITCODE -ne 0) {
                 throw "Attestation failed for $_"
             }
+            Write-Information "Attestation succeeded for $_"
         })
 }
 finally {
