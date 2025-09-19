@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <WixLocalization Culture="en-us" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+  <?include Include.wxi ?>
+
   <String Id="PVBusFeatureTitle" Value="PV Drivers" />
-  <String Id="PVBusFeatureDescription" Value="Core Xen paravirtualized bus driver (required)." />
+  <String Id="PVBusFeatureDescription" Value="Core Xen paravirtualized bus driver (required). Xenbus $(XenbusVersion)." />
   <String Id="PVConsoleFeatureTitle" Value="PV Console Driver" />
-  <String Id="PVConsoleFeatureDescription" Value="Xen paravirtualized console driver with command shell." />
+  <String Id="PVConsoleFeatureDescription" Value="Xen paravirtualized console driver with command shell. Xencons $(XenconsVersion)." />
   <String Id="PVIfaceFeatureTitle" Value="PV Interface Driver" />
-  <String Id="PVIfaceFeatureDescription" Value="XenStore usermode interface and power control agent." />
+  <String Id="PVIfaceFeatureDescription" Value="XenStore usermode interface and power control agent. Xeniface $(XenifaceVersion)." />
   <String Id="PVNetworkFeatureTitle" Value="PV Network Driver" />
-  <String Id="PVNetworkFeatureDescription" Value="Xen paravirtualized network drivers." />
+  <String Id="PVNetworkFeatureDescription" Value="Xen paravirtualized network drivers. Xenvif $(XenvifVersion) and Xennet $(XennetVersion)." />
   <String Id="PVDiskFeatureTitle" Value="PV Storage Driver" />
-  <String Id="PVDiskFeatureDescription" Value="Xen paravirtualized storage driver." />
+  <String Id="PVDiskFeatureDescription" Value="Xen paravirtualized storage driver. Xenvbd $(XenvbdVersion)." />
   <String Id="PVHidFeatureTitle" Value="PV HID Driver" />
-  <String Id="PVHidFeatureDescription" Value="Xen paravirtualized HID keyboard/mouse drivers." />
+  <String Id="PVHidFeatureDescription" Value="Xen paravirtualized HID keyboard/mouse drivers. Xenvkbd $(XenvkbdVersion) and Xenhid $(XenhidVersion)." />
 </WixLocalization>
