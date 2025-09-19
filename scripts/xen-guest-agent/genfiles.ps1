@@ -56,7 +56,7 @@ function Update-AgentVersionFile {
     $VersionFile = "$ProjectDir\publishers\publisher-xenstore\src\version.rs"
     $OldVersion = Get-Content -Raw $VersionFile -ErrorAction Ignore
 
-    $Version = Get-PackageVersion XenGuestAgent
+    $Version = Get-PackageVersion Product
 
     $NewVersion = @"
 pub(crate) const AGENT_VERSION_MAJOR: &str = "$($Version.Major)"; // XO does not show version at all if 0
