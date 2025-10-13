@@ -1,6 +1,6 @@
-# Windows PV Drivers for XCP-ng
+# XCP-ng Windows Guest Tools
 
-This repo contains the Windows PV guest driver installer for XCP-ng guests.
+This repository contains the XCP-ng Windows Guest Tools installer source code.
 
 The relevant source code may be found at these locations:
 

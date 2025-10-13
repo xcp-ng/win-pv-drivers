@@ -5,8 +5,8 @@ This file contains the declaration of all the localizable strings.
 <WixLocalization xmlns="http://wixtoolset.org/schemas/v4/wxl" Culture="en-US">
   <?include Include.wxi ?>
 
-  <String Id="GenericProductName" Value="Windows PV Drivers" />
-  <String Id="ProductName" Value="$(VENDOR_NAME) Windows PV Drivers" />
+  <String Id="GenericProductName" Value="Windows Guest Tools" />
+  <String Id="ProductName" Value="$(VENDOR_NAME) Windows Guest Tools" />
 
   <String Id="XenWindowsNotSupportedError" Value="This version of Windows is not supported. Minimum supported version: [XenMinSupportedVersion]. Current version: [XenWindowsNotSupported]." />
 

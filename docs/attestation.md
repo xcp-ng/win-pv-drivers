@@ -1,7 +1,7 @@
 # Artifact attestation
 
 Artifact attestation helps establish a link between the built binaries and their corresponding source code.
-In the context of Windows PV Drivers for XCP-ng (WinPV for short), our artifact attestation aims to extend this link to signed binaries (WHQL-signed drivers, EV-signed guest agent, etc.)
+In the context of XCP-ng Windows Guest Tools (WinPV for short), our artifact attestation aims to extend this link to signed binaries (WHQL-signed drivers, EV-signed guest agent, etc.)
 With this, even signed binaries benefit from an attested build pipeline.
 
 ## How to verify binaries

@@ -12,4 +12,4 @@ param (
 . "$ProjectDir\..\scripts\branding-generic.ps1"
 . "$ProjectDir\..\scripts\sign.ps1"
 
-Set-SignerFileSignature -FilePath "$ProjectDir\bin\$Platform\$Configuration\*\XenDrivers-$Platform.msi"
+Set-SignerFileSignature -FilePath "$ProjectDir\bin\$Platform\$Configuration\*\*.msi"

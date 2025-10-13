@@ -1,7 +1,7 @@
 ﻿<Project Sdk="WixToolset.Sdk/6.0.1-xcpng.0">
   <PropertyGroup>
     <Platforms>x86;x64;ARM64</Platforms>
-    <OutputName>$(MSBuildProjectName)-$(Platform)</OutputName>
+    <OutputName>XenTools-$(Platform)</OutputName>
     <SuppressSpecificWarnings>1103</SuppressSpecificWarnings>
   </PropertyGroup>
   <ItemGroup>
