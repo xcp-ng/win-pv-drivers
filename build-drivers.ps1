@@ -63,7 +63,7 @@ foreach ($repo in $Drivers) {
             throw "MSBuild failed with error $LASTEXITCODE"
         }
 
-        $DriverOutput = "$OutputPath\$repo\$Platform\$Configuration"
+        $DriverOutput = "$OutputPath\$Platform\$Configuration\$repo"
         New-Item -ItemType Directory -Path $DriverOutput -Force
         Copy-Item -Path .\$SolutionDir\$DriverConfigShort\$Platform\package\* -Destination $DriverOutput\ -Force -Recurse
 

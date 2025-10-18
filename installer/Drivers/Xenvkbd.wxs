@@ -5,7 +5,7 @@
     <?define XenDriverDependsOn="Xenbus" ?>
     <?include ../Driver.wxi ?>
 
-    <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.output)$(XenDriver)/$(Platform)/$(Configuration)">
+    <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.output)$(XenDriver)">
       <File Name="xenvkbd.cat" DefaultVersion="$(XenvkbdVersion)" DefaultLanguage="1033" />
       <File Name="xenvkbd.inf" Id="Xenvkbd.inf" DefaultVersion="$(XenvkbdVersion)" DefaultLanguage="1033" />
       <File Name="xenvkbd.sys" />

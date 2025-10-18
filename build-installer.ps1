@@ -84,7 +84,7 @@ if ($Target -ine "Clean") {
 
         $DriversSymbolDir = "$VersionDir\symbols\drivers"
         New-Item -Path $DriversSymbolDir -ItemType Directory -Force
-        Copy-Item -Path "$PSScriptRoot\installer\output\*\$Platform\$Configuration\*" -Filter *.pdb -Destination $DriversSymbolDir\ -Force
+        Copy-Item -Path "$PSScriptRoot\installer\output\$Platform\$Configuration\*\*" -Filter *.pdb -Destination $DriversSymbolDir\ -Force
 
         $XenCleanSymbolDir = "$SymbolDir\XenClean"
         New-Item -Path $XenCleanSymbolDir -ItemType Directory -Force
