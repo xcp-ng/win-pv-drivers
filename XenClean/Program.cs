@@ -3,7 +3,7 @@ using XenClean;
 using XenDriverUtils;
 
 Logger.SetLogger(new ConsoleLogger());
-if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SAFEBOOT_OPTION"))) {
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SAFEBOOT_OPTION"))) {
     Logger.Log("Skipping Xenvif offboarding in Safe Mode");
 } else {
     XenOffboard.BackupXenvif();
