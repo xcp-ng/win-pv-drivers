@@ -123,12 +123,16 @@ if ($Invoke) {
         if ($Backup) {
             Remove-Item -Path HKLM:\SOFTWARE\XenOffboard\Xenvif -Force -Recurse -ErrorAction SilentlyContinue -WhatIf:$WhatIfPreference
             $MatchingInterfaces | ForEach-Object {
-                Backup-XenVifSettings -InterfaceGuid $_.InterfaceGuid -PermanentAddress $_.PermanentAddress -WhatIf:$WhatIfPreference
+                if ($_.InterfaceGuid -ne $null -and $_.PermanentAddress -ne $null) {
+                    Backup-XenVifSettings -InterfaceGuid $_.InterfaceGuid -PermanentAddress $_.PermanentAddress -WhatIf:$WhatIfPreference
+                }
             }
         }
         elseif ($Restore) {
             $MatchingInterfaces | ForEach-Object {
-                Restore-XenVifSettings -InterfaceGuid $_.InterfaceGuid -PermanentAddress $_.PermanentAddress -WhatIf:$WhatIfPreference
+                if ($_.InterfaceGuid -ne $null -and $_.PermanentAddress -ne $null) {
+                    Restore-XenVifSettings -InterfaceGuid $_.InterfaceGuid -PermanentAddress $_.PermanentAddress -WhatIf:$WhatIfPreference
+                }
             }
         }
     }
