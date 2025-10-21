@@ -6,18 +6,17 @@
 
 class RegHive {
 public:
-    RegHive(HKEY hkey, LPCWSTR subkey, LPCWSTR file) :_hkey(hkey), _subkey(subkey) {
+    RegHive(HKEY hkey, LPCWSTR subkey, LPCWSTR file) : _hkey(hkey), _subkey(subkey) {
         auto result = RegLoadKeyW(hkey, subkey, file);
         if (result != ERROR_SUCCESS)
             throw std::system_error(result, std::system_category(), "RegLoadKeyW");
-
     }
-    RegHive(const RegHive&) = delete;
-    RegHive& operator=(const RegHive&) = delete;
-    RegHive(RegHive&& other) noexcept {
+    RegHive(const RegHive &) = delete;
+    RegHive &operator=(const RegHive &) = delete;
+    RegHive(RegHive &&other) noexcept {
         swap(*this, other);
     }
-    RegHive& operator=(RegHive&& other) noexcept {
+    RegHive &operator=(RegHive &&other) noexcept {
         if (this != &other) {
             dispose();
             swap(*this, other);
@@ -40,7 +39,7 @@ public:
         dispose();
     }
 
-    friend void swap(RegHive& self, RegHive& other) noexcept {
+    friend void swap(RegHive &self, RegHive &other) noexcept {
         using std::swap;
         swap(self._hkey, other._hkey);
         swap(self._subkey, other._subkey);

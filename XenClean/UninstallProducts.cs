@@ -46,7 +46,9 @@ namespace XenClean {
                 var msiexecPath = Path.Combine(Environment.SystemDirectory, "msiexec.exe");
                 foreach (var moObject in moObjects) {
                     Logger.Log($"Uninstalling product {moObject["ProductCode"]}");
-                    using var msiexecProcess = Process.Start(msiexecPath, $"/x \"{moObject["ProductCode"]}\" /passive /norestart");
+                    using var msiexecProcess = Process.Start(
+                        msiexecPath,
+                        $"/x \"{moObject["ProductCode"]}\" /passive /norestart");
                     msiexecProcess.WaitForExit();
                     if (msiexecProcess.ExitCode != 0) {
                         Logger.Log($"Msiexec exited with code {msiexecProcess.ExitCode}");

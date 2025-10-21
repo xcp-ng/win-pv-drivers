@@ -24,12 +24,14 @@ static constexpr auto HiveMountName = L"XenBootFix";
 
 static bool dryrun = false;
 
-static void PrintUsage(wchar_t* name) {
-    wprintf(L"XenBootFix recovers an unbootable system caused by installation/uninstallation of older Xen PV drivers or OS upgrades.\n");
+static void PrintUsage(wchar_t *name) {
+    wprintf(
+        L"XenBootFix recovers an unbootable system caused by installation/uninstallation of older Xen PV drivers or OS "
+        L"upgrades.\n");
     wprintf(L"Usage: %s [--force] [--backup <path>] [--dry-run] <windir>|--system-hive <hive>\n", name);
 }
 
-static std::vector<std::wstring> ParseMultiStrings(_In_reads_(count) const wchar_t* buf, size_t count) {
+static std::vector<std::wstring> ParseMultiStrings(_In_reads_(count) const wchar_t *buf, size_t count) {
     std::vector<std::wstring> strings;
     size_t first = 0;
     for (size_t i = 0; i < count; i++) {
@@ -54,7 +56,7 @@ static void EnablePrivileges() {
         throw std::system_error(GetLastError(), std::system_category(), "EnablePrivilege(SE_RESTORE_NAME)");
 }
 
-static DWORD GetCurrentControlSet(const RegHive& hive) {
+static DWORD GetCurrentControlSet(const RegHive &hive) {
     auto keyName = std::wstring(hive.SubKey()) + L"\\Select";
 
     CRegKey selectKey;
@@ -72,7 +74,7 @@ static DWORD GetCurrentControlSet(const RegHive& hive) {
     return value;
 }
 
-static void OpenControlSet(const RegHive& hive, CRegKey& key, DWORD controlSet, REGSAM samDesired) {
+static void OpenControlSet(const RegHive &hive, CRegKey &key, DWORD controlSet, REGSAM samDesired) {
     std::vector<wchar_t> csName(wcslen(hive.SubKey()) + wcslen(L"\\ControlSet000") + 1);
     auto csNameFormat = std::wstring(hive.SubKey()) + L"\\ControlSet%03lu";
     auto hr = StringCchPrintfW(csName.data(), csName.size(), csNameFormat.c_str(), controlSet);
@@ -84,25 +86,26 @@ static void OpenControlSet(const RegHive& hive, CRegKey& key, DWORD controlSet, 
         throw std::system_error(hr, std::system_category(), "Couldn't open control set key");
 }
 
-static void Backup(CRegKey& key, const wchar_t* path) {
+static void Backup(CRegKey &key, const wchar_t *path) {
     auto result = RegSaveKeyExW(key, path, NULL, REG_LATEST_FORMAT);
     if (result != ERROR_SUCCESS)
         // Failure to back up is fatal
         throw std::system_error(result, std::system_category(), "Couldn't back up control set key");
 }
 
-static const std::array<const wchar_t*, 2> StorageClasses = {
+static const std::array<const wchar_t *, 2> StorageClasses = {
     L"{4d36e96a-e325-11ce-bfc1-08002be10318}", // HDC
     L"{4d36e97b-e325-11ce-bfc1-08002be10318}", // SCSIAdapter
 };
 
-static bool StripStringNulls(std::wstring& s) {
+static bool StripStringNulls(std::wstring &s) {
     if (s.ends_with(wchar_t(0)))
         s.pop_back();
     return s.find(wchar_t(0)) == std::wstring::npos;
 }
 
-static LSTATUS RegKeyQueryString(CRegKey& key, const wchar_t* valueName, std::wstring& value, ULONG lengthLimit = ULONG_MAX) {
+static LSTATUS
+RegKeyQueryString(CRegKey &key, const wchar_t *valueName, std::wstring &value, ULONG lengthLimit = ULONG_MAX) {
     // Note that unlike RegQueryValueEx, CRegKey.QueryStringValue deals with chars and not bytes!
 
     value.clear();
@@ -112,8 +115,7 @@ static LSTATUS RegKeyQueryString(CRegKey& key, const wchar_t* valueName, std::ws
     // limit guidLength since it's supposed to only contains a GUID
     if (result != ERROR_SUCCESS || length > lengthLimit) {
         return result;
-    }
-    else if (!length) {
+    } else if (!length) {
         return ERROR_SUCCESS;
     }
 
@@ -130,7 +132,8 @@ static LSTATUS RegKeyQueryString(CRegKey& key, const wchar_t* valueName, std::ws
     return ERROR_SUCCESS;
 }
 
-static void Scan3PStorageDriversOnNode(CRegKey& controlSetKey, CRegKey& nodeKey, std::vector<ThirdPartyStorageDriver>& output) {
+static void
+Scan3PStorageDriversOnNode(CRegKey &controlSetKey, CRegKey &nodeKey, std::vector<ThirdPartyStorageDriver> &output) {
     // Enumerate device subkeys of nodeKey = ControlSetXXX\Enum\PCI\VEN_XXX
     wchar_t keyName[255];
     for (DWORD i = 0;; i++) {
@@ -159,10 +162,9 @@ static void Scan3PStorageDriversOnNode(CRegKey& controlSetKey, CRegKey& nodeKey,
                 return;
             }
 
-            auto found = std::any_of(
-                StorageClasses.begin(),
-                StorageClasses.end(),
-                [&](auto sc) { return CompareStringOrdinal(sc, -1, classGuid.c_str(), -1, TRUE) == CSTR_EQUAL; });
+            auto found = std::any_of(StorageClasses.begin(), StorageClasses.end(), [&](auto sc) {
+                return CompareStringOrdinal(sc, -1, classGuid.c_str(), -1, TRUE) == CSTR_EQUAL;
+            });
             if (found)
                 wprintf(L"Device node \"%s\" class \"%s\"\n", keyName, classGuid.c_str());
             else
@@ -209,7 +211,7 @@ static void Scan3PStorageDriversOnNode(CRegKey& controlSetKey, CRegKey& nodeKey,
                 return;
             }
 
-            output.push_back(ThirdPartyStorageDriver{ .DriverName = infPath, .ServiceName = serviceName });
+            output.push_back(ThirdPartyStorageDriver{.DriverName = infPath, .ServiceName = serviceName});
             break;
         }
         case ERROR_NO_MORE_ITEMS:
@@ -221,7 +223,7 @@ static void Scan3PStorageDriversOnNode(CRegKey& controlSetKey, CRegKey& nodeKey,
     }
 }
 
-static void Scan3PStorageDrivers(CRegKey& controlSetKey, std::vector<ThirdPartyStorageDriver>& output) {
+static void Scan3PStorageDrivers(CRegKey &controlSetKey, std::vector<ThirdPartyStorageDriver> &output) {
     CRegKey pciKey;
     // We only look at the PCI bus, which is a good-enough assumption on XCP VMs.
     // It also excludes the weird stuff (virtual disks etc.) and most importantly Xenbus.
@@ -259,13 +261,13 @@ static void Scan3PStorageDrivers(CRegKey& controlSetKey, std::vector<ThirdPartyS
     }
 }
 
-static const std::array<const wchar_t*, 3> OverridesToDelete = {
+static const std::array<const wchar_t *, 3> OverridesToDelete = {
     L"stornvme",
     L"storahci",
     L"pciide",
 };
 
-static void DeleteOverride(ATL::CRegKey& controlSetKey, const wchar_t* overrideName) {
+static void DeleteOverride(ATL::CRegKey &controlSetKey, const wchar_t *overrideName) {
     auto keyName = std::wstring(L"Services\\") + overrideName + L"\\StartOverride";
     wprintf(L"Deleting key \"%s\"\n", keyName.c_str());
 
@@ -276,14 +278,14 @@ static void DeleteOverride(ATL::CRegKey& controlSetKey, const wchar_t* overrideN
     }
 }
 
-static void DeleteOverrides(CRegKey& controlSetKey, const std::vector<ThirdPartyStorageDriver>& found3PStorageDrivers) {
+static void DeleteOverrides(CRegKey &controlSetKey, const std::vector<ThirdPartyStorageDriver> &found3PStorageDrivers) {
     for (auto overrideName : OverridesToDelete)
         DeleteOverride(controlSetKey, overrideName);
-    for (const auto& driver : found3PStorageDrivers)
+    for (const auto &driver : found3PStorageDrivers)
         DeleteOverride(controlSetKey, driver.ServiceName.c_str());
 }
 
-static void DeleteForceUnplug(CRegKey& controlSetKey) {
+static void DeleteForceUnplug(CRegKey &controlSetKey) {
     wprintf(L"Deleting ForceUnplug\n");
 
     if (!dryrun) {
@@ -293,12 +295,12 @@ static void DeleteForceUnplug(CRegKey& controlSetKey) {
     }
 }
 
-static const std::array<const wchar_t*, 2> FiltersToRemove = {
+static const std::array<const wchar_t *, 2> FiltersToRemove = {
     L"xenfilt",
     L"scsifilt",
 };
 
-static void RemoveFilter(CRegKey& key, const wchar_t* valueName) {
+static void RemoveFilter(CRegKey &key, const wchar_t *valueName) {
     ULONG bufsize = 0;
 
     auto result = key.QueryMultiStringValue(valueName, nullptr, &bufsize);
@@ -316,16 +318,15 @@ static void RemoveFilter(CRegKey& key, const wchar_t* valueName) {
 
     auto filters = ParseMultiStrings(buf.data(), bufsize);
     wprintf(L"Old value \"%s\": ", valueName);
-    for (const auto& filter : filters)
+    for (const auto &filter : filters)
         wprintf(L"\"%s\", ", filter.c_str());
     wprintf(L"\n");
 
     std::vector<std::wstring> newFilters;
-    for (const auto& filter : filters)
-        if (std::none_of(
-            FiltersToRemove.begin(),
-            FiltersToRemove.end(),
-            [&](auto& f) { return CompareStringOrdinal(filter.c_str(), -1, f, -1, TRUE) == CSTR_EQUAL; }))
+    for (const auto &filter : filters)
+        if (std::none_of(FiltersToRemove.begin(), FiltersToRemove.end(), [&](auto &f) {
+                return CompareStringOrdinal(filter.c_str(), -1, f, -1, TRUE) == CSTR_EQUAL;
+            }))
             newFilters.emplace_back(filter);
 
     if (newFilters.empty()) {
@@ -338,21 +339,20 @@ static void RemoveFilter(CRegKey& key, const wchar_t* valueName) {
                 return;
             }
         }
-    }
-    else {
+    } else {
         wprintf(L"New value \"%s\": ", valueName);
-        for (const auto& filter : newFilters)
+        for (const auto &filter : newFilters)
             wprintf(L"\"%s\", ", filter.c_str());
         wprintf(L"\n");
 
         bufsize = 1;
-        for (const auto& filter : newFilters)
+        for (const auto &filter : newFilters)
             bufsize += (ULONG)filter.size() + 1;
         buf.clear();
         buf.resize(bufsize, 0);
 
-        wchar_t* ptr = buf.data();
-        for (const auto& filter : newFilters) {
+        wchar_t *ptr = buf.data();
+        for (const auto &filter : newFilters) {
             ptr = std::copy(filter.begin(), filter.end(), ptr);
             *ptr++ = 0;
         }
@@ -368,17 +368,17 @@ static void RemoveFilter(CRegKey& key, const wchar_t* valueName) {
     }
 }
 
-static const std::array<const wchar_t*, 2> FilteredClasses = {
+static const std::array<const wchar_t *, 2> FilteredClasses = {
     L"{4d36e96a-e325-11ce-bfc1-08002be10318}", // HDC
     L"{4d36e97d-e325-11ce-bfc1-08002be10318}", // System
 };
 
-static const std::array<const wchar_t*, 2> FilterValues = {
+static const std::array<const wchar_t *, 2> FilterValues = {
     L"LowerFilters",
     L"UpperFilters",
 };
 
-static void RemoveFilters(const CRegKey& controlSetKey) {
+static void RemoveFilters(const CRegKey &controlSetKey) {
     for (auto clsid : FilteredClasses) {
         auto keyName = std::wstring(L"Control\\Class\\") + clsid;
         wprintf(L"Cleaning key \"%s\"\n", keyName.c_str());
@@ -396,7 +396,7 @@ static void RemoveFilters(const CRegKey& controlSetKey) {
     }
 }
 
-static const std::array<const wchar_t*, 15> ServicesToDisable = {
+static const std::array<const wchar_t *, 15> ServicesToDisable = {
     L"xenagent",
     L"xenbus",
     L"xenbus_monitor",
@@ -414,7 +414,7 @@ static const std::array<const wchar_t*, 15> ServicesToDisable = {
     L"xenvkbd",
 };
 
-static void DisableServices(const CRegKey& controlSetKey) {
+static void DisableServices(const CRegKey &controlSetKey) {
     for (auto serviceName : ServicesToDisable) {
         auto keyName = std::wstring(L"Services\\") + serviceName;
         CRegKey key;
@@ -434,40 +434,34 @@ static void DisableServices(const CRegKey& controlSetKey) {
     }
 }
 
-int wmain(int argc, wchar_t** argv) {
-    wchar_t* windir = nullptr;
+int wmain(int argc, wchar_t **argv) {
+    wchar_t *windir = nullptr;
     std::wstring hivePath;
     bool force = false;
-    wchar_t* backup = nullptr;
+    wchar_t *backup = nullptr;
 
     for (int i = 1; i < argc; i++) {
         if (CompareStringOrdinal(L"--force", -1, argv[i], -1, TRUE) == CSTR_EQUAL) {
             force = true;
-        }
-        else if (CompareStringOrdinal(L"--backup", -1, argv[i], -1, TRUE) == CSTR_EQUAL) {
+        } else if (CompareStringOrdinal(L"--backup", -1, argv[i], -1, TRUE) == CSTR_EQUAL) {
             if (i >= argc - 1)
                 goto help;
             backup = argv[++i];
-        }
-        else if (CompareStringOrdinal(L"--dry-run", -1, argv[i], -1, TRUE) == CSTR_EQUAL) {
+        } else if (CompareStringOrdinal(L"--dry-run", -1, argv[i], -1, TRUE) == CSTR_EQUAL) {
             dryrun = true;
-        }
-        else if (CompareStringOrdinal(L"--system-hive", -1, argv[i], -1, TRUE) == CSTR_EQUAL) {
+        } else if (CompareStringOrdinal(L"--system-hive", -1, argv[i], -1, TRUE) == CSTR_EQUAL) {
             if (i >= argc - 1)
                 goto help;
             hivePath = std::wstring(argv[++i]);
-        }
-        else if (!windir) {
+        } else if (!windir) {
             windir = argv[i];
-        }
-        else {
+        } else {
             goto help;
         }
     }
     if (!windir == hivePath.empty()) {
         goto help;
-    }
-    else if (windir) {
+    } else if (windir) {
         auto configPath = std::filesystem::path(windir, std::filesystem::path::native_format);
         configPath /= L"System32\\config\\SYSTEM";
         hivePath = configPath.wstring();
@@ -476,12 +470,12 @@ int wmain(int argc, wchar_t** argv) {
     try {
         {
             CRegKey winPeKey;
-            if (winPeKey.Open(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\MiniNT", KEY_READ) != ERROR_SUCCESS) {
+            if (winPeKey.Open(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\MiniNT", KEY_READ) !=
+                ERROR_SUCCESS) {
                 wprintf(L"XenBootFix must run from within Windows PE/Windows RE!\n");
                 if (force) {
                     wprintf(L"Continuing anyway. (--force)\n");
-                }
-                else {
+                } else {
                     wprintf(L"Specify --force to continue.\n");
                     throw std::runtime_error("XenBootFix must run from within Windows PE/Windows RE");
                 }
@@ -510,16 +504,17 @@ int wmain(int argc, wchar_t** argv) {
         Scan3PStorageDrivers(controlSetKey, found3PStorageDrivers);
         if (!found3PStorageDrivers.empty()) {
             wprintf(L"Found third-party storage drivers!\n");
-            for (const auto& driver : found3PStorageDrivers)
+            for (const auto &driver : found3PStorageDrivers)
                 wprintf(L"Driver: \"%s\", service: \"%s\"\n", driver.DriverName.c_str(), driver.ServiceName.c_str());
             // StartOverride issue only exists if xenvbd is installed
             if (xenvbdPresent) {
                 wprintf(L"Xenvbd is currently enabled on your Windows installation.\n");
-                wprintf(L"In some cases, continuing with XenBootFix while third-party storage drivers are present may cause boot failures.\n");
+                wprintf(
+                    L"In some cases, continuing with XenBootFix while third-party storage drivers are present may "
+                    L"cause boot failures.\n");
                 if (force) {
                     wprintf(L"Continuing anyway. (--force)\n");
-                }
-                else {
+                } else {
                     wprintf(L"If you want to continue anyway, specify --force.\n");
                     throw std::runtime_error("Found third-party storage drivers");
                 }
@@ -538,15 +533,13 @@ int wmain(int argc, wchar_t** argv) {
 
         if (dryrun) {
             wprintf(L"Success! (dry-run)\n");
-        }
-        else {
+        } else {
             wprintf(L"Success!\n");
             wprintf(L"You must run XenClean from the VM to remove all remaining driver traces.\n");
         }
 
         return 0;
-    }
-    catch (const std::exception& ex) {
+    } catch (const std::exception &ex) {
         wprintf(L"Error: %S\n", ex.what());
         return 2;
     }

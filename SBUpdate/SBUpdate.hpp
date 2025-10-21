@@ -22,16 +22,16 @@ static constexpr DWORD SBUPDATE_VARIABLE_ATTRIBUTE_TIME_BASED_AUTHENTICATED_WRIT
 static constexpr DWORD SBUPDATE_VARIABLE_ATTRIBUTE_APPEND_WRITE = 0x00000040;
 
 struct SecureBootVariable {
-    const wchar_t* VariableName;
-    const wchar_t* VariableGuid;
+    const wchar_t *VariableName;
+    const wchar_t *VariableGuid;
     const DWORD VariableAttributes;
 };
 
 // win32_encryptablevolume.mof
 
-static constexpr const wchar_t* FveNamespace = L"Root\\CIMV2\\Security\\MicrosoftVolumeEncryption";
-static constexpr const wchar_t* FveGetSecureBootBindingState = L"GetSecureBootBindingState";
-static constexpr const wchar_t* FveDisableKeyProtectors = L"DisableKeyProtectors";
+static constexpr const wchar_t *FveNamespace = L"Root\\CIMV2\\Security\\MicrosoftVolumeEncryption";
+static constexpr const wchar_t *FveGetSecureBootBindingState = L"GetSecureBootBindingState";
+static constexpr const wchar_t *FveDisableKeyProtectors = L"DisableKeyProtectors";
 
 enum FveSecureBootBindingState {
     FveSecureBootBindingStateNotPossible,

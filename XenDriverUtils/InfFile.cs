@@ -60,7 +60,14 @@ namespace XenDriverUtils {
                     }
                     var mem = Marshal.AllocHGlobal((int)requiredChars * sizeof(char));
                     try {
-                        if (!PInvoke.SetupGetLineText(pContext, null, null, null, new PWSTR((char*)mem.ToPointer()), requiredChars, null)) {
+                        if (!PInvoke.SetupGetLineText(
+                            pContext,
+                            null,
+                            null,
+                            null,
+                            new PWSTR((char*)mem.ToPointer()),
+                            requiredChars,
+                            null)) {
                             var err = Marshal.GetLastWin32Error();
                             throw new Win32Exception(err, $"Inf cannot get line {err}");
                         }
@@ -82,7 +89,12 @@ namespace XenDriverUtils {
                     }
                     var mem = Marshal.AllocHGlobal((int)requiredSize * sizeof(char));
                     try {
-                        if (!PInvoke.SetupGetStringField(pContext, fieldIndex, new PWSTR((char*)mem.ToPointer()), requiredSize, null)) {
+                        if (!PInvoke.SetupGetStringField(
+                            pContext,
+                            fieldIndex,
+                            new PWSTR((char*)mem.ToPointer()),
+                            requiredSize,
+                            null)) {
                             var err = Marshal.GetLastWin32Error();
                             throw new Win32Exception(err, $"Inf cannot get field {err}");
                         }

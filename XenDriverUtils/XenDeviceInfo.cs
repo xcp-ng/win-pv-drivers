@@ -9,7 +9,10 @@ namespace XenDriverUtils {
         public IReadOnlyList<string> HardwareIds { get; }
         public IReadOnlyList<string> IncompatibleIds { get; } = new List<string>();
 
-        public XenDeviceInfo(Guid? ClassGuid, IEnumerable<string> HardwareIds, IEnumerable<string> IncompatibleIds = null) {
+        public XenDeviceInfo(
+            Guid? ClassGuid,
+            IEnumerable<string> HardwareIds,
+            IEnumerable<string> IncompatibleIds = null) {
             this.ClassGuid = ClassGuid;
             this.HardwareIds = new List<string>(HardwareIds);
             if (IncompatibleIds is not null) {
@@ -23,18 +26,22 @@ namespace XenDriverUtils {
             if (checkKnown && HardwareIds.Contains(deviceId, StringComparer.OrdinalIgnoreCase))
                 return true;
             // use a substring match with IncompatibleIds to match all device versions at the same time
-            if (checkIncompatible && IncompatibleIds.Any(substr => deviceId.IndexOf(substr, StringComparison.OrdinalIgnoreCase) != -1))
+            if (checkIncompatible
+                && IncompatibleIds.Any(substr => deviceId.IndexOf(substr, StringComparison.OrdinalIgnoreCase) != -1))
                 return true;
             return false;
         }
 
-        public static readonly IReadOnlyDictionary<string, XenDeviceInfo> KnownDevices = new Dictionary<string, XenDeviceInfo>(StringComparer.OrdinalIgnoreCase) {
+        public static readonly IReadOnlyDictionary<string, XenDeviceInfo> KnownDevices
+            = new Dictionary<string, XenDeviceInfo>(StringComparer.OrdinalIgnoreCase) {
             {
                 "Xenbus",
                 new XenDeviceInfo(
                     ClassGuid: PInvoke.GUID_DEVCLASS_SYSTEM,
                     HardwareIds: new List<string>() {
-                        string.IsNullOrEmpty(VersionInfo.VendorDeviceId) ? null : $"PCI\\VEN_5853&DEV_{VersionInfo.VendorDeviceId}&SUBSYS_{VersionInfo.VendorDeviceId}5853&REV_01",
+                        string.IsNullOrEmpty(VersionInfo.VendorDeviceId)
+                            ? null
+                            : $"PCI\\VEN_5853&DEV_{VersionInfo.VendorDeviceId}&SUBSYS_{VersionInfo.VendorDeviceId}5853&REV_01",
                         // these two entries cover all Xenbus devices
                         "PCI\\VEN_5853&DEV_0001",
                         "PCI\\VEN_5853&DEV_0002",
@@ -50,7 +57,9 @@ namespace XenDriverUtils {
                 new XenDeviceInfo(
                     ClassGuid: PInvoke.GUID_DEVCLASS_SYSTEM,
                     HardwareIds: new List<string>() {
-                        string.IsNullOrEmpty(VersionInfo.VendorDeviceId) ? null : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VBD&REV_09000000",
+                        string.IsNullOrEmpty(VersionInfo.VendorDeviceId)
+                            ? null
+                            : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VBD&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_CONS&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_CONS&REV_09000000",
                     },
@@ -66,7 +75,9 @@ namespace XenDriverUtils {
                 new XenDeviceInfo(
                     ClassGuid: PInvoke.GUID_DEVCLASS_HIDCLASS,
                     HardwareIds: new List<string>() {
-                        string.IsNullOrEmpty(VersionInfo.VendorDeviceId) ? null : $"XENVKBD\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_HID&REV_09000000",
+                        string.IsNullOrEmpty(VersionInfo.VendorDeviceId)
+                            ? null
+                            : $"XENVKBD\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_HID&REV_09000000",
                         $"XENVKBD\\VEN_{VersionInfo.VendorPrefix}0001&DEV_HID&REV_09000000",
                         $"XENVKBD\\VEN_{VersionInfo.VendorPrefix}0002&DEV_HID&REV_09000000",
                     },
@@ -82,7 +93,9 @@ namespace XenDriverUtils {
                 new XenDeviceInfo(
                     ClassGuid: PInvoke.GUID_DEVCLASS_SYSTEM,
                     HardwareIds: new List<string>() {
-                        string.IsNullOrEmpty(VersionInfo.VendorDeviceId) ? null : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_IFACE&REV_09000000",
+                        string.IsNullOrEmpty(VersionInfo.VendorDeviceId)
+                            ? null
+                            : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_IFACE&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_IFACE&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_IFACE&REV_09000000",
                     },
@@ -106,7 +119,9 @@ namespace XenDriverUtils {
                 new XenDeviceInfo(
                     ClassGuid: PInvoke.GUID_DEVCLASS_NET,
                     HardwareIds: new List<string>() {
-                        string.IsNullOrEmpty(VersionInfo.VendorDeviceId) ? null : $"XENVIF\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_NET&REV_09000000",
+                        string.IsNullOrEmpty(VersionInfo.VendorDeviceId)
+                            ? null
+                            : $"XENVIF\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_NET&REV_09000000",
                         $"XENVIF\\VEN_{VersionInfo.VendorPrefix}0001&DEV_NET&REV_09000000",
                         $"XENVIF\\VEN_{VersionInfo.VendorPrefix}0002&DEV_NET&REV_09000000",
                     },
@@ -130,7 +145,9 @@ namespace XenDriverUtils {
                 new XenDeviceInfo(
                     ClassGuid: PInvoke.GUID_DEVCLASS_SCSIADAPTER,
                     HardwareIds: new List<string>() {
-                        string.IsNullOrEmpty(VersionInfo.VendorDeviceId) ? null : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VBD&REV_09000000",
+                        string.IsNullOrEmpty(VersionInfo.VendorDeviceId)
+                            ? null
+                            : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VBD&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_VBD&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_VBD&REV_09000000",
                     },
@@ -154,7 +171,9 @@ namespace XenDriverUtils {
                 new XenDeviceInfo(
                     ClassGuid: PInvoke.GUID_DEVCLASS_SYSTEM,
                     HardwareIds: new List<string>() {
-                        string.IsNullOrEmpty(VersionInfo.VendorDeviceId) ? null : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VIF&REV_09000000",
+                        string.IsNullOrEmpty(VersionInfo.VendorDeviceId)
+                            ? null
+                            : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VIF&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_VIF&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_VIF&REV_09000000",
                     },
@@ -178,7 +197,9 @@ namespace XenDriverUtils {
                 new XenDeviceInfo(
                     ClassGuid: PInvoke.GUID_DEVCLASS_SYSTEM,
                     HardwareIds: new List<string>() {
-                        string.IsNullOrEmpty(VersionInfo.VendorDeviceId) ? null : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VKBD&REV_09000000",
+                        string.IsNullOrEmpty(VersionInfo.VendorDeviceId)
+                            ? null
+                            : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VKBD&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_VKBD&REV_09000000",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_VKBD&REV_09000000",
                     },

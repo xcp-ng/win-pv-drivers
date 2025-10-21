@@ -34,7 +34,10 @@ namespace XenInstCA {
                 return ActionResult.Success;
             }
 
-            if (CustomActionUtils.ReportAction(session, $"{driver.DriverName}Install", driver.DriverName) == MessageResult.Cancel) {
+            if (CustomActionUtils.ReportAction(
+                session,
+                $"{driver.DriverName}Install",
+                driver.DriverName) == MessageResult.Cancel) {
                 return ActionResult.UserExit;
             }
             Logger.Log($"Installing {driver.DriverName} inf {driver.InfPath}");
@@ -63,7 +66,10 @@ namespace XenInstCA {
                 return ActionResult.Success;
             }
 
-            if (CustomActionUtils.ReportAction(session, $"{driver.DriverName}Uninstall", driver.DriverName) == MessageResult.Cancel) {
+            if (CustomActionUtils.ReportAction(
+                session,
+                $"{driver.DriverName}Uninstall",
+                driver.DriverName) == MessageResult.Cancel) {
                 return ActionResult.UserExit;
             }
 
@@ -120,7 +126,8 @@ namespace XenInstCA {
             // Why uninstall everything during DriverInstall?
             // Some older drivers (e.g. old XCP-ng drivers) don't like it when downgraded from a newer version.
             // Remove them all just to be sure.
-            // We should arguably require running XenClean first but this covers cases where older drivers are installed after ours.
+            // We should arguably require running XenClean first but this covers cases where older drivers are installed
+            // after ours.
             DriverUtils.UninstallDriverByNames(driver.DriverName);
 
             if (needsReboot) {

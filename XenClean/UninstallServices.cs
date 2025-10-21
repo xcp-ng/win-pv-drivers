@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Management;
 using System.Runtime.InteropServices;
 using Windows.Win32;
 using XenDriverUtils;
@@ -13,8 +10,8 @@ namespace XenClean {
                 Logger.Log($"Cannot open SCM: error {Marshal.GetLastWin32Error()}");
                 return;
             }
-            foreach (var serviceName in XenDriverUtils.XenCleanup.DeleteableServices) {
-                XenDriverUtils.XenCleanup.DeleteService(scm, serviceName);
+            foreach (var serviceName in XenCleanup.DeleteableServices) {
+                XenCleanup.DeleteService(scm, serviceName);
             }
         }
     }

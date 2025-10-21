@@ -22,10 +22,14 @@ namespace XenDriverUtils {
             var found3PDrivers = new List<ThirdPartyStorageDriver>();
             foreach (var classGuid in StorageClasses) {
                 var devInfo = PInvoke.SetupDiGetClassDevs(classGuid, null, HWND.Null, 0);
-                foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo).Where(x => DriverUtils.GetDeviceEnumeratorName(devInfo, x) == "PCI")) {
+                foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)
+                    .Where(x => DriverUtils.GetDeviceEnumeratorName(devInfo, x) == "PCI")) {
                     var driverPath = DriverUtils.GetDeviceDriverInfPath(devInfo, devInfoData);
                     if (driverPath.StartsWith("oem", StringComparison.OrdinalIgnoreCase)) {
-                        found3PDrivers.Add(new ThirdPartyStorageDriver() { DriverInfPath = driverPath, Service = DriverUtils.GetDeviceService(devInfo, devInfoData) });
+                        found3PDrivers.Add(new ThirdPartyStorageDriver() {
+                            DriverInfPath = driverPath,
+                            Service = DriverUtils.GetDeviceService(devInfo, devInfoData),
+                        });
                     }
                 }
             }
@@ -62,7 +66,9 @@ namespace XenDriverUtils {
                         if (classSubkey.GetValueKind(filterValue) == RegistryValueKind.MultiString) {
                             var filters = (string[])classSubkey.GetValue(filterValue);
                             Logger.Log($"Class filters for {classGuid}: {string.Join(",", filters)}");
-                            var newFilters = filters.Where(x => !FilterNameList.Contains(x, StringComparer.OrdinalIgnoreCase)).ToArray();
+                            var newFilters = filters.Where(x => !FilterNameList
+                                .Contains(x, StringComparer.OrdinalIgnoreCase))
+                                .ToArray();
                             Logger.Log($"New filters for {classGuid}: {string.Join(",", newFilters)}");
                             classSubkey.SetValue(filterValue, newFilters, RegistryValueKind.MultiString);
                         }
@@ -80,7 +86,9 @@ namespace XenDriverUtils {
             try {
                 foreach (var overrideName in OverridesToDelete.Concat(Find3PStorageDrivers().Select(x => x.Service))) {
                     Logger.Log($"Resetting {overrideName} StartOverride");
-                    Registry.LocalMachine.DeleteSubKey($"SYSTEM\\CurrentControlSet\\Services\\{overrideName}\\StartOverride", false);
+                    Registry.LocalMachine.DeleteSubKey(
+                        $"SYSTEM\\CurrentControlSet\\Services\\{overrideName}\\StartOverride",
+                        false);
                 }
             } catch (Exception ex) {
                 Logger.Log($"Cannot delete StartOverride subkey: {ex.Message}");
@@ -94,7 +102,9 @@ namespace XenDriverUtils {
         };
 
         public static void XenfiltReset() {
-            using var paramKey = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Services\\xenfilt\\Parameters", true);
+            using var paramKey = Registry.LocalMachine.OpenSubKey(
+                "SYSTEM\\CurrentControlSet\\Services\\xenfilt\\Parameters",
+                true);
             if (paramKey == null) {
                 return;
             }
