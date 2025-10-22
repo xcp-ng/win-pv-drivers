@@ -37,7 +37,9 @@ namespace XenDriverUtils {
             {
                 "Xenbus",
                 new XenDeviceInfo(
-                    ClassGuid: PInvoke.GUID_DEVCLASS_SYSTEM,
+                    // Note: ClassGuid is set to null here to remove non-present Xenbus devices, which may belong to an
+                    // unknown class.
+                    ClassGuid: null,
                     HardwareIds: new List<string>() {
                         string.IsNullOrEmpty(VersionInfo.VendorDeviceId)
                             ? null
