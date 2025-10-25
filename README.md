@@ -19,7 +19,7 @@ The relevant source code may be found at these locations:
 * [XenClean](XenClean/)
 * [XenBootFix](XenBootFix/)
 * [Xen Guest Agent](https://github.com/xcp-ng/xen-guest-agent)
-    * [xenstore-win dependency](xenstore-win/)
+    * [xenstore-win dependency](https://github.com/xcp-ng/xenstore-win)
 * [Developer support scripts](scripts/)
 * [Supplemental tools](extras/)
 * [Source documentation](docs/)
