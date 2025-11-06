@@ -47,7 +47,7 @@ namespace XenInstCA {
         [CustomAction]
         public static ActionResult XenvifBackup(Session session) {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
-            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SAFEBOOT_OPTION"))) {
+            if (XenCleanup.IsSafeMode()) {
                 Logger.Log("Skipping Xenvif backup in Safe Mode");
             } else {
                 XenOffboard.BackupXenvif();
@@ -58,7 +58,7 @@ namespace XenInstCA {
         [CustomAction]
         public static ActionResult XenvifPrepareRestore(Session session) {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
-            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SAFEBOOT_OPTION"))) {
+            if (XenCleanup.IsSafeMode()) {
                 Logger.Log("Skipping Xenvif restore in Safe Mode");
             } else {
                 XenOffboard.PrepareRestoreXenvif();

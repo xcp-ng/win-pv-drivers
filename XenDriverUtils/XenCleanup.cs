@@ -188,5 +188,9 @@ namespace XenDriverUtils {
                 Logger.Log($"DeleteService({serviceName}) error {Marshal.GetLastWin32Error()}");
             }
         }
+
+        public static bool IsSafeMode() {
+            return !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SAFEBOOT_OPTION"));
+        }
     }
 }
