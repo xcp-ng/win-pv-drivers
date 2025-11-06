@@ -4,14 +4,16 @@ using XenDriverUtils;
 
 namespace XenClean {
     internal static class UninstallServices {
-        public static void Execute() {
+        public static void Execute(bool removeNonDriverServices) {
             using var scm = PInvoke.OpenSCManager((string)null, (string)null, PInvoke.SC_MANAGER_ALL_ACCESS);
             if (scm.IsInvalid) {
                 Logger.Log($"Cannot open SCM: error {Marshal.GetLastWin32Error()}");
                 return;
             }
-            foreach (var serviceName in XenCleanup.DeleteableServices) {
-                XenCleanup.DeleteService(scm, serviceName);
+            foreach (var service in XenCleanup.DeleteableServices) {
+                if (service.Item2 || removeNonDriverServices) {
+                    XenCleanup.DeleteService(scm, service.Item1);
+                }
             }
         }
     }

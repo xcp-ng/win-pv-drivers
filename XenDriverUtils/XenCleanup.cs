@@ -141,27 +141,28 @@ namespace XenDriverUtils {
             }
         }
 
+        // (ServiceName, IsDriverService)
         // other code may want to use this list too, so make it public
-        public static readonly List<string> DeleteableServices = new() {
-            "xenagent",
-            "xenbus",
-            "xenbus_monitor",
-            "xencons",
-            "xencons_monitor",
-            "xendisk",
-            "xenfilt",
-            "xenhid",
-            "xeniface",
-            "XenInstall",
-            "xennet",
-            "XenSvc",
-            "xenvbd",
-            "xenvif",
-            "xenvkbd",
+        public static readonly List<Tuple<string, bool>> DeleteableServices = new() {
+            new("xenagent", true),
+            new("xenbus", true),
+            new("xenbus_monitor", true),
+            new("xencons", true),
+            new("xencons_monitor", true),
+            new("xendisk", true),
+            new("xenfilt", true),
+            new("xenhid", true),
+            new("xeniface", true),
+            new("xennet", true),
+            new("xenvbd", true),
+            new("xenvif", true),
+            new("xenvkbd", true),
+            new("XenInstall", false),
+            new("XenSvc", false),
         };
 
         public static void DeleteService(CloseServiceHandleSafeHandle scm, string serviceName, bool stop = true) {
-            if (!DeleteableServices.Contains(serviceName, StringComparer.OrdinalIgnoreCase)) {
+            if (!DeleteableServices.Any(x => string.Equals(x.Item1, serviceName, StringComparison.OrdinalIgnoreCase))) {
                 Logger.Log($"Refusing to delete service {serviceName}");
                 return;
             }
