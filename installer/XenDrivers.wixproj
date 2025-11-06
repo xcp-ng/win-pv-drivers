@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="WixToolset.Netfx.wixext" Version="6.0.1-xcpng.0" />
     <PackageReference Include="WixToolset.UI.wixext" Version="6.0.1-xcpng.0" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="6.0.1-xcpng.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DriverInstallCustomAction\DriverInstallCustomAction.csproj" />

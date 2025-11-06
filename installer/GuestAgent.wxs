@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix
+  xmlns="http://wixtoolset.org/schemas/v4/wxs"
+  xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <?include Include.wxi ?>
 
   <Fragment>
@@ -9,7 +11,7 @@
         <ComponentGroupRef Id="WinClipboardComponent" />
       </Feature>
     </Feature>
-    
+
     <DirectoryRef Id="INSTALLFOLDER">
       <Directory Id="XenGuestAgentFolder" Name="XenGuestAgent" />
     </DirectoryRef>
@@ -25,7 +27,13 @@
           Type="ownProcess"
           Start="auto"
           Account="NT AUTHORITY\SYSTEM"
-          ErrorControl="ignore" />
+          ErrorControl="ignore">
+          <util:ServiceConfig
+            FirstFailureActionType="restart"
+            SecondFailureActionType="restart"
+            ThirdFailureActionType="restart"
+            RestartServiceDelayInSeconds="300" />
+        </ServiceInstall>
         <ServiceControl Name="$(VENDOR_PREFIX)-xenguestagent-rs" Start="install" Stop="uninstall" Remove="uninstall" />
       </Component>
     </ComponentGroup>
