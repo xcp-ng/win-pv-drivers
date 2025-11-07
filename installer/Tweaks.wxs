@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <?include Include.wxi ?>
+
+  <Fragment>
+    <!-- empty ComponentGroup just for reference -->
+    <ComponentGroup Id="TweaksComponent" />
+    <FeatureRef Id="PVIfaceFeature">
+      <Component>
+        <!--
+          xenagent's time sync causes a very annoying drift, so don't do that periodically.
+          TimeSyncMode=0 still does the post-resume sync, which is the only critical one.
+        -->
+        <RegistryValue Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\xenagent" Name="TimeSyncMode" Type="integer" Value="0" />
+      </Component>
+    </FeatureRef>
+  </Fragment>
+</Wix>

@@ -14,14 +14,6 @@
       <File Name="xeniface.inf" Id="Xeniface.inf" DefaultVersion="$(XenifaceVersion)"
           DefaultLanguage="1033" />
       <File Name="xeniface.sys" />
-
-      <Component>
-        <!--
-          xenagent's time sync causes a very annoying drift, so don't do that periodically.
-          TimeSyncMode=0 still does the post-resume sync, which is the only critical one.
-        -->
-        <RegistryValue Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\xenagent" Name="TimeSyncMode" Type="integer" Value="0" />
-      </Component>
     </ComponentGroup>
 
     <SetProperty Id="$(XenDriver)ServiceDelete" Value="Services=xenagent,xeniface" After="CostFinalize" Sequence="execute" />
