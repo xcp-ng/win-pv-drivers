@@ -19,7 +19,7 @@ $NewBranding = @"
     <?define COPYRIGHT="${Env:COPYRIGHT}"?>
 "@
 
-foreach ($package in @("Product", "Xenbus", "Xencons", "Xenhid", "Xeniface", "Xennet", "Xenvbd", "Xenvif", "Xenvkbd", "XenClean", "XenBootFix", "XenGuestAgent")) {
+foreach ($package in @("Product", "Xenbus", "Xencons", "Xenhid", "Xeniface", "Xennet", "Xenvbd", "Xenvif", "Xenvkbd", "XenClean", "XenBootFix", "XenGuestAgent", "XenTimeProvider")) {
     $NewBranding += @"
 
     <?define ${package}Version="$(Get-PackageVersion $package)"?>

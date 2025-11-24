@@ -74,6 +74,7 @@ jobs:
           PackageVersions_XenClean: ${{vars.PackageVersions_XenClean}}.${{github.run_number}}
           PackageVersions_XenBootFix: ${{vars.PackageVersions_XenBootFix}}.${{github.run_number}}
           PackageVersions_XenGuestAgent: ${{vars.PackageVersions_XenGuestAgent}}.${{github.run_number}}
+          PackageVersions_XenTimeProvider: ${{vars.PackageVersions_XenTimeProvider}}.${{github.run_number}}
           MSI_UPGRADE_CODE_X86: ${{vars.MSI_UPGRADE_CODE_X86}}
           MSI_UPGRADE_CODE_X64: ${{vars.MSI_UPGRADE_CODE_X64}}
           # Signer cert must be injected here since unlike the drivers/guestagent,

@@ -32,18 +32,19 @@ $Env:COPYRIGHT = 'Copyright (c) Xen Project.'
 # The third and fourth components will be 0-filled if absent, except in drivers where the revision will be the build time prefixed with "1".
 # For compatibility reasons, it's not recommended to have any version component exceed 255.255.65535.65535.
 $PackageVersions = @{
-    Product       = '9.0.9000.0'
-    xenbus        = '9.0.9001.0'  # defaults to product version
-    xencons       = '9.0.9002.0'  # defaults to product version
-    xenhid        = '9.0.9003.0'  # defaults to product version
-    xeniface      = '9.0.9004.0'  # defaults to product version
-    xennet        = '9.0.9005.0'  # defaults to product version
-    xenvbd        = '9.0.9006.0'  # defaults to product version
-    xenvif        = '9.0.9007.0'  # defaults to product version
-    xenvkbd       = '9.0.9008.0'  # defaults to product version
-    XenClean      = '9.0.9009.0'  # defaults to product version
-    XenBootFix    = '9.0.9010.0'  # defaults to product version
-    XenGuestAgent = '9.0.9011.0'  # defaults to product version
+    Product         = '9.0.9000.0'
+    xenbus          = '9.0.9001.0'  # defaults to product version
+    xencons         = '9.0.9002.0'  # defaults to product version
+    xenhid          = '9.0.9003.0'  # defaults to product version
+    xeniface        = '9.0.9004.0'  # defaults to product version
+    xennet          = '9.0.9005.0'  # defaults to product version
+    xenvbd          = '9.0.9006.0'  # defaults to product version
+    xenvif          = '9.0.9007.0'  # defaults to product version
+    xenvkbd         = '9.0.9008.0'  # defaults to product version
+    XenClean        = '9.0.9009.0'  # defaults to product version
+    XenBootFix      = '9.0.9010.0'  # defaults to product version
+    XenGuestAgent   = '9.0.9011.0'  # defaults to product version
+XenTimeProvider = '9.0.9012.0'  # defaults to product version
 }
 
 # These variables influence the UpgradeCode property of generated MSI packages.
@@ -80,6 +81,16 @@ Simply run the command:
 ```
 
 The binaries are located at `xen-guest-agent\target\<configuration>`.
+
+## Building the Xen time provider
+
+Run the command:
+
+```powershell
+.\build-timeprovider.ps1 -Configuration Release
+```
+
+The binaries are located at `xentimeprovider\<platform>\<configuration>`.
 
 ## Building the installer and release package
 

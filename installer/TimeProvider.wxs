@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix
+  xmlns="http://wixtoolset.org/schemas/v4/wxs"
+  xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <?include Include.wxi?>
+
+  <Fragment>
+    <Feature
+      Id="TimeProviderFeature"
+      AllowAdvertise="no"
+      Level="2"
+      Title="!(loc.TimeProviderFeatureTitle)"
+      Description="!(loc.TimeProviderFeatureDescription)">
+      <ComponentGroupRef Id="TimeProviderComponent" />
+    </Feature>
+
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Directory Id="XenTimeProviderFolder" Name="XenTimeProvider" />
+    </DirectoryRef>
+
+    <ComponentGroup Id="TimeProviderComponent" Directory="XenTimeProviderFolder">
+      <Component>
+        <File Source="!(bindpath.xentimeprovider)\xentimeprovider.dll" Id="xentimeprovider.dll" />
+        <RegistryKey
+          Root="HKLM"
+          Key="SYSTEM\CurrentControlSet\Services\W32Time\TimeProviders\XenTimeProvider">
+          <RegistryValue Name="DllName" Type="string" Value="[#xentimeprovider.dll]" />
+          <RegistryValue Name="Enabled" Type="integer" Value="1" />
+          <RegistryValue Name="InputProvider" Type="integer" Value="1" />
+          <RegistryKey Key="Parameters">
+            <RegistryValue Name="AllowFallback" Type="integer" Value="1" />
+          </RegistryKey>
+        </RegistryKey>
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

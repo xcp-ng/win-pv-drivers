@@ -3,8 +3,10 @@ param (
     [Parameter()]
     [string]$Target = "Rebuild",
     [Parameter(Mandatory)]
+    [ValidateSet("Debug", "Release")]
     [string]$Configuration,
     [Parameter(Mandatory)]
+    [ValidateSet("x86", "x64")]
     [string]$Platform,
     [Parameter()]
     [string]$OutDir = "$PSScriptRoot\output",
@@ -97,5 +99,9 @@ if ($Target -ine "Clean") {
         $XenGuestAgentSymbolDir = "$SymbolDir\xen-guest-agent"
         New-Item -Path $XenGuestAgentSymbolDir -ItemType Directory -Force
         Copy-Item -Path "$PSScriptRoot\xen-guest-agent\target\$Configuration\*" -Include *.pdb -Destination $XenGuestAgentSymbolDir\ -Force
+
+        $XenTimeProviderSymbolDir = "$SymbolDir\xentimeprovider"
+        New-Item -Path $XenTimeProviderSymbolDir -ItemType Directory -Force
+        Copy-Item -Path "$PSScriptRoot\xentimeprovider\$Platform\$Configuration\*" -Include *.pdb -Destination $XenTimeProviderSymbolDir\ -Force
     }
 }

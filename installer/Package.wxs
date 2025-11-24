@@ -61,6 +61,7 @@
 
     <FeatureRef Id="PVBusFeature" />
     <FeatureRef Id="GuestAgentFeature" />
+    <FeatureRef Id="TimeProviderFeature" />
     <FeatureRef Id="ToolsFeature" />
 
     <InstallExecuteSequence>

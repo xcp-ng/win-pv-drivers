@@ -31,6 +31,9 @@
     <BindPath Include="$(SolutionDir)..\xen-guest-agent\target\$(Configuration)">
       <BindName>xenguestagent</BindName>
     </BindPath>
+    <BindPath Include="$(SolutionDir)..\xentimeprovider\$(Platform)\$(Configuration)">
+      <BindName>xentimeprovider</BindName>
+    </BindPath>
   </ItemGroup>
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="$(SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)" />
