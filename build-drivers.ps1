@@ -15,7 +15,9 @@ param (
     [string]$SolutionDir = "vs2022",
     [Parameter()]
     [ValidateSet("Windows 10")]
-    [string]$ConfigurationBase = "Windows 10"
+    [string]$ConfigurationBase = "Windows 10",
+    [Parameter()]
+    [switch]$Kasan
 )
 
 . $PSScriptRoot\branding.ps1
@@ -57,6 +59,9 @@ foreach ($repo in $Drivers) {
             "/p:SignMode=Off",
             "/t:$Target"
         )
+        if ($Kasan) {
+            $BuildArgs += @("/p:EnableKASAN=true")
+        }
 
         msbuild.exe @BuildArgs
         if ($LASTEXITCODE -ne 0) {
