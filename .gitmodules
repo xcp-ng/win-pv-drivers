@@ -28,3 +28,6 @@
 [submodule "xenstore-win"]
 	path = xenstore-win
 	url = https://github.com/xcp-ng/xenstore-win.git
+[submodule "xentimeprovider"]
+	path = xentimeprovider
+	url = https://github.com/xcp-ng/win-xentimeprovider.git

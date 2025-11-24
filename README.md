@@ -20,6 +20,7 @@ The relevant source code may be found at these locations:
 * [XenBootFix](XenBootFix/)
 * [Xen Guest Agent](https://github.com/xcp-ng/xen-guest-agent)
     * [xenstore-win dependency](https://github.com/xcp-ng/xenstore-win)
+* [Xen Time Provider](https://github.com/xcp-ng/win-xentimeprovider)
 * [Developer support scripts](scripts/)
 * [Supplemental tools](extras/)
 * [Source documentation](docs/)
