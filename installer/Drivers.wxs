@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <?include Include.wxi ?>
-  
+
   <Fragment>
-    <Feature Id="PVBusFeature" AllowAdvertise="no" AllowAbsent="no" Display="expand" Title="!(loc.PVBusFeatureTitle)" Description="!(loc.PVBusFeatureDescription)">
+    <Feature Id="PVBusFeature" AllowAdvertise="no" Display="expand" Title="!(loc.PVBusFeatureTitle)" Description="!(loc.PVBusFeatureDescription)">
       <ComponentGroupRef Id="XenbusComponent" />
       <Feature Id="PVConsoleFeature" AllowAdvertise="no" Title="!(loc.PVConsoleFeatureTitle)" Description="!(loc.PVConsoleFeatureDescription)">
         <ComponentGroupRef Id="XenconsComponent" />
