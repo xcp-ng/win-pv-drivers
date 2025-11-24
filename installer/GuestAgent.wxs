@@ -2,12 +2,21 @@
 <Wix
   xmlns="http://wixtoolset.org/schemas/v4/wxs"
   xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
-  <?include Include.wxi ?>
+  <?include Include.wxi?>
 
   <Fragment>
-    <Feature Id="GuestAgentFeature" AllowAdvertise="no" Display="collapse" Title="!(loc.GuestAgentFeatureTitle)" Description="!(loc.GuestAgentFeatureDescription)">
+    <Feature
+      Id="GuestAgentFeature"
+      AllowAdvertise="no"
+      Display="collapse"
+      Title="!(loc.GuestAgentFeatureTitle)"
+      Description="!(loc.GuestAgentFeatureDescription)">
       <ComponentGroupRef Id="GuestAgentComponent" />
-      <Feature Id="WinClipboardFeature" AllowAdvertise="no" Title="!(loc.WinClipboardFeatureTitle)" Description="!(loc.WinClipboardFeatureDescription)">
+      <Feature
+        Id="WinClipboardFeature"
+        AllowAdvertise="no"
+        Title="!(loc.WinClipboardFeatureTitle)"
+        Description="!(loc.WinClipboardFeatureDescription)">
         <ComponentGroupRef Id="WinClipboardComponent" />
       </Feature>
     </Feature>
@@ -34,14 +43,23 @@
             ThirdFailureActionType="restart"
             RestartServiceDelayInSeconds="300" />
         </ServiceInstall>
-        <ServiceControl Name="$(VENDOR_PREFIX)-xenguestagent-rs" Start="install" Stop="uninstall" Remove="uninstall" />
+        <ServiceControl
+          Name="$(VENDOR_PREFIX)-xenguestagent-rs"
+          Start="install"
+          Stop="both"
+          Remove="uninstall" />
       </Component>
     </ComponentGroup>
 
     <ComponentGroup Id="WinClipboardComponent" Directory="XenGuestAgentFolder">
       <Component>
         <File Source="!(bindpath.xenguestagent)\xen-win-clipboard.exe" Id="xen_win_clipboard.exe" />
-        <RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run" Name="$(VENDOR_PREFIX)-xen-win-clipboard" Type="string" Value='"[#xen_win_clipboard.exe]"' />
+        <RegistryValue
+          Root="HKLM"
+          Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+          Name="$(VENDOR_PREFIX)-xen-win-clipboard"
+          Type="string"
+          Value='"[#xen_win_clipboard.exe]"' />
       </Component>
     </ComponentGroup>
   </Fragment>
