@@ -6,9 +6,15 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 15
+    groups:
+      trusted:
+        patterns:
+          - "actions/*"
   - package-ecosystem: "nuget"
     directory: "/"
     schedule:
       interval: "weekly"
     cooldown:
       default-days: 15
+    ignore:
+      - dependency-name: "WixToolset.*"
