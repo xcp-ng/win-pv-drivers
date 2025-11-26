@@ -1,0 +1,105 @@
+name: build-timeprovider
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  build-timeprovider:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Add MSBuild
+        uses: microsoft/setup-msbuild@v2
+      - name: Configure branding
+        run: .\scripts\branding-ci.ps1 -OutFile .\branding.ps1
+        env:
+          VENDOR_NAME: ${{vars.VENDOR_NAME}}
+          PRODUCT_NAME: ${{vars.PRODUCT_NAME}}
+          VENDOR_PREFIX: ${{vars.VENDOR_PREFIX}}
+          COPYRIGHT: ${{vars.COPYRIGHT}}
+          FORCE_ACTIVATE: ${{vars.FORCE_ACTIVATE}}
+          FORCE_UNPLUG: ${{vars.FORCE_UNPLUG}}
+          PackageVersions_Product: ${{vars.PackageVersions_Product}}.${{github.run_number}}
+          PackageVersions_xenbus: ${{vars.PackageVersions_xenbus}}.${{github.run_number}}
+          PackageVersions_xencons: ${{vars.PackageVersions_xencons}}.${{github.run_number}}
+          PackageVersions_xenhid: ${{vars.PackageVersions_xenhid}}.${{github.run_number}}
+          PackageVersions_xeniface: ${{vars.PackageVersions_xeniface}}.${{github.run_number}}
+          PackageVersions_xennet: ${{vars.PackageVersions_xennet}}.${{github.run_number}}
+          PackageVersions_xenvbd: ${{vars.PackageVersions_xenvbd}}.${{github.run_number}}
+          PackageVersions_xenvif: ${{vars.PackageVersions_xenvif}}.${{github.run_number}}
+          PackageVersions_xenvkbd: ${{vars.PackageVersions_xenvkbd}}.${{github.run_number}}
+          PackageVersions_XenClean: ${{vars.PackageVersions_XenClean}}.${{github.run_number}}
+          PackageVersions_XenBootFix: ${{vars.PackageVersions_XenBootFix}}.${{github.run_number}}
+          PackageVersions_XenGuestAgent: ${{vars.PackageVersions_XenGuestAgent}}.${{github.run_number}}
+          PackageVersions_XenTimeProvider: ${{vars.PackageVersions_XenTimeProvider}}.${{github.run_number}}
+          MSI_UPGRADE_CODE_X86: ${{vars.MSI_UPGRADE_CODE_X86}}
+          MSI_UPGRADE_CODE_X64: ${{vars.MSI_UPGRADE_CODE_X64}}
+      - name: Build time provider
+        run: .\build-timeprovider.ps1 -Configuration Release -Platform x64
+      - name: Catalog time provider
+        run: |
+          Import-Module .\scripts\artifact.psm1 -Force
+          Get-ArtifactCatalog -Path .\xentimeprovider\x64\Release -Include *.dll |
+          Export-Csv -NoTypeInformation timeprovider-catalog.csv
+      - name: Upload time provider
+        id: upload
+        uses: actions/upload-artifact@v5
+        with:
+          path: xentimeprovider/x64/Release/
+          name: timeprovider
+      - name: Upload timeprovider catalog
+        uses: actions/upload-artifact@v5
+        with:
+          path: timeprovider-catalog.csv
+          name: timeprovider-catalog
+    outputs:
+      subject-name: timeprovider
+      subject-digest: sha256:${{steps.upload.outputs.artifact-digest}}
+      catalog-name: timeprovider-catalog
+
+  attest-timeprovider:
+    needs: [build-timeprovider]
+    uses: ./.github/workflows/attest.yml
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+    with:
+      subject-name: ${{needs.build-timeprovider.outputs.subject-name}}
+      subject-digest: ${{needs.build-timeprovider.outputs.subject-digest}}
+      catalog-name: ${{needs.build-timeprovider.outputs.catalog-name}}
+
+  selfsign-timeprovider:
+    needs: [build-timeprovider]
+    runs-on: windows-latest
+    steps:
+      # for the sign scripts
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download artifact
+        uses: actions/download-artifact@v6
+        with:
+          path: xentimeprovider/x64/Release/
+          name: timeprovider
+      - name: Install certificate
+        run: .\scripts\signer-ci.ps1 -OutFile .\branding.ps1
+        env:
+          SIGNER_PFX_BASE64: ${{secrets.SIGNER_PFX_BASE64}}
+      - name: Sign artifact
+        run: |
+          . .\branding.ps1
+          . .\scripts\sign.ps1
+          Set-SignerFileSignature (Get-ChildItem .\xentimeprovider\x64\Release -File -Recurse -Include *.dll)
+      - name: Clean up certificates
+        if: always()
+        run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue
+      - name: Upload artifact
+        id: upload
+        uses: actions/upload-artifact@v5
+        with:
+          path: xentimeprovider/x64/Release/
+          name: timeprovider-signed
