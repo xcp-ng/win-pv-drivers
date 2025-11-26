@@ -8,7 +8,8 @@
     <Feature
       Id="TimeProviderFeature"
       AllowAdvertise="no"
-      Level="2"
+      Display="hidden"
+      Level="0"
       Title="!(loc.TimeProviderFeatureTitle)"
       Description="!(loc.TimeProviderFeatureDescription)">
       <ComponentGroupRef Id="TimeProviderComponent" />
