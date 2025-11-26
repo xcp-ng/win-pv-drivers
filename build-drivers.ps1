@@ -17,7 +17,9 @@ param (
     [ValidateSet("Windows 10")]
     [string]$ConfigurationBase = "Windows 10",
     [Parameter()]
-    [switch]$Kasan
+    [switch]$Kasan,
+    [Parameter()]
+    [switch]$Sbom
 )
 
 . $PSScriptRoot\branding.ps1
@@ -71,6 +73,10 @@ foreach ($repo in $Drivers) {
         $DriverOutput = "$OutputPath\$Platform\$Configuration\$repo"
         New-Item -ItemType Directory -Path $DriverOutput -Force
         Copy-Item -Path .\$SolutionDir\$DriverConfigShort\$Platform\package\* -Destination $DriverOutput\ -Force -Recurse
+
+        if ($Sbom) {
+            sbom.exe generate -b $DriverOutput -bc . -D true -ps $Env:VENDOR_NAME -pn $repo -pv (Get-PackageVersion $repo)
+        }
 
         Set-SignerFileSignature $DriverOutput\*.sys, $DriverOutput\*.dll, $DriverOutput\*.exe, $DriverOutput\*.cat
     }

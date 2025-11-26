@@ -12,6 +12,7 @@
 * Windows Driver Kit matching your Windows SDK
 * Git for Windows
 * Rustup and latest Rust stable
+* [Microsoft SBOM Tool](https://github.com/microsoft/sbom-tool) available as `sbom.exe` in PATH (installable via WinGet)
 
 Windows SDK and WDK dependencies can be found on [Microsoft Learn](https://learn.microsoft.com/en-us/windows-hardware/drivers/other-wdk-downloads).
 
@@ -44,7 +45,7 @@ $PackageVersions = @{
     XenClean        = '9.0.9009.0'  # defaults to product version
     XenBootFix      = '9.0.9010.0'  # defaults to product version
     XenGuestAgent   = '9.0.9011.0'  # defaults to product version
-XenTimeProvider = '9.0.9012.0'  # defaults to product version
+    XenTimeProvider = '9.0.9012.0'  # defaults to product version
 }
 
 # These variables influence the UpgradeCode property of generated MSI packages.
