@@ -44,12 +44,12 @@ jobs:
           WIX_ZIP_URI: https://github.com/xcp-ng/wix-builder/releases/download/v6.0.1-xcpng.0/artifacts.zip
           WIX_ATTEST_URI: https://github.com/xcp-ng/wix-builder/releases/download/v6.0.1-xcpng.0/xcp-ng-wix-builder-attestation-7718663.sigstore.json
       - name: Download drivers
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: drivers-signed
           path: installer/output/
       - name: Download guest agent
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: guestagent-signed
           path: xen-guest-agent/target/release/

@@ -29,7 +29,7 @@ jobs:
           subject-digest: ${{inputs.subject-digest}}
       - name: Download catalog
         if: ${{inputs.catalog-name != ''}}
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: catalog/
           name: ${{inputs.catalog-name}}
