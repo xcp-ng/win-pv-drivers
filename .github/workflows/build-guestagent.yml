@@ -43,14 +43,14 @@ jobs:
           Export-Csv -NoTypeInformation guestagent-catalog.csv
       - name: Upload artifact
         id: upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: guestagent
           path: |
             xen-guest-agent/target/release/*.exe
             xen-guest-agent/target/release/*.pdb
       - name: Upload guest agent catalog
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           path: guestagent-catalog.csv
           name: guestagent-catalog
@@ -79,7 +79,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: xen-guest-agent/target/release/
           name: guestagent
@@ -97,7 +97,7 @@ jobs:
         run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue
       - name: Upload artifact
         id: upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           path: xen-guest-agent/target/release/
           name: guestagent-signed
