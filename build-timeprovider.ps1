@@ -18,6 +18,11 @@ $ErrorActionPreference = "Stop"
 
 Push-Location $PSScriptRoot\xentimeprovider
 try {
+    nuget.exe restore xentimeprovider.sln
+    if ($LASTEXITCODE -ne 0) {
+        throw "NuGet restore failed with error $LASTEXITCODE"
+    }
+
     $BuildArgs = @(
         (Resolve-Path xentimeprovider.sln),
         "/m:4",
