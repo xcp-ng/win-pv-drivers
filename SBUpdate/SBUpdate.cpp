@@ -62,7 +62,7 @@ static void ReadVariableBlob(_In_ const wchar_t *blobpath, _Out_ std::vector<uin
     ULONGLONG pos = 0;
     while (pos < blobsize) {
         DWORD readcount;
-        hr = blobfile.Read(&blob[pos], blob.size() - pos, readcount);
+        hr = blobfile.Read(&blob[pos], static_cast<DWORD>(blob.size() - pos), readcount);
         if (FAILED(hr)) {
             throw std::system_error(hr, std::system_category(), "blobfile.Read");
         }
