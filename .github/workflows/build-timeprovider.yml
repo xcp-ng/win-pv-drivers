@@ -14,6 +14,14 @@ jobs:
           submodules: true
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v2
+      - name: Add SBOM tool
+        run: |
+          New-Item -Type Directory -Path $Env:RUNNER_TEMP/sbom-tool/
+          Invoke-WebRequest -Uri https://github.com/microsoft/sbom-tool/releases/download/v4.1.4/sbom-tool-win-x64.exe -OutFile $Env:RUNNER_TEMP/sbom-tool/sbom.exe
+          if ((Get-FileHash $Env:RUNNER_TEMP/sbom-tool/sbom.exe -Algorithm SHA256).Hash -ine "9ba208cbec21c93b6d1ba01f50681a47d9d14d302f59b33e505b220b89aa0363") {
+            throw "sbom-tool failed verification"
+          }
+          Add-Content -Path $Env:GITHUB_PATH -Value "$Env:RUNNER_TEMP/sbom-tool" -Force
       - name: Configure branding
         run: .\scripts\branding-ci.ps1 -OutFile .\branding.ps1
         env:
@@ -39,7 +47,7 @@ jobs:
           MSI_UPGRADE_CODE_X86: ${{vars.MSI_UPGRADE_CODE_X86}}
           MSI_UPGRADE_CODE_X64: ${{vars.MSI_UPGRADE_CODE_X64}}
       - name: Build time provider
-        run: .\build-timeprovider.ps1 -Configuration Release -Platform x64
+        run: .\build-timeprovider.ps1 -Configuration Release -Platform x64 -Sbom
       - name: Catalog time provider
         run: |
           Import-Module .\scripts\artifact.psm1 -Force

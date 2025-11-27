@@ -7,7 +7,9 @@ param (
     [string]$Configuration,
     [Parameter(Mandatory)]
     [ValidateSet("x86", "x64")]
-    [string]$Platform
+    [string]$Platform,
+    [Parameter()]
+    [switch]$Sbom
 )
 
 $ErrorActionPreference = "Stop"
@@ -34,6 +36,13 @@ try {
     msbuild.exe @BuildArgs
     if ($LASTEXITCODE -ne 0) {
         throw "MSBuild failed with error $LASTEXITCODE"
+    }
+
+    if ($Sbom) {
+        sbom.exe generate -b .\$Platform\$Configuration -bc . -D true -ps $Env:VENDOR_NAME -pn XenTimeProvider -pv (Get-PackageVersion XenTimeProvider)
+        if ($LASTEXITCODE -ne 0) {
+            throw "sbom-tool failed with error $LASTEXITCODE"
+        }
     }
 }
 finally {
