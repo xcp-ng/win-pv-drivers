@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="en-us" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+  <?include Include.wxi ?>
+
+  <String Id="DisableTimeSyncFeatureTitle" Value="Disable time sync" />
+  <String Id="DisableTimeSyncFeatureDescription" Value="Disable the periodic time sync functionality of the PV interface driver. VM time will still be synchronized after resuming or migration." />
+</WixLocalization>
