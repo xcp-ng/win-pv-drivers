@@ -37,6 +37,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Add SBOM tools
+        run: |
+          New-Item -Type Directory -Path $Env:RUNNER_TEMP/tools/
+
+          Invoke-WebRequest -Uri https://github.com/microsoft/sbom-tool/releases/download/v4.1.4/sbom-tool-win-x64.exe -OutFile $Env:RUNNER_TEMP\tools\sbom.exe
+          if ((Get-FileHash $Env:RUNNER_TEMP\tools\sbom.exe -Algorithm SHA256).Hash -ine "9ba208cbec21c93b6d1ba01f50681a47d9d14d302f59b33e505b220b89aa0363") {
+            throw "sbom-tool failed verification"
+          }
+
+          Invoke-WebRequest -Uri https://github.com/anchore/syft/releases/download/v1.38.0/syft_1.38.0_windows_amd64.zip -OutFile $Env:RUNNER_TEMP\tools\syft.zip
+          if ((Get-FileHash $Env:RUNNER_TEMP\tools\syft.zip -Algorithm SHA256).Hash -ine "11a3de4c82b001dae3b69e336f1b89391b676b3e74cead73790c97ff57445941") {
+            throw "syft failed verification"
+          }
+          Expand-Archive $Env:RUNNER_TEMP\tools\syft.zip -DestinationPath $Env:RUNNER_TEMP\tools\syft -Force
+          Copy-Item $Env:RUNNER_TEMP\tools\syft\syft.exe $Env:RUNNER_TEMP\tools\syft.exe -Force
+
+          Add-Content -Path $Env:GITHUB_PATH -Value "$Env:RUNNER_TEMP/tools" -Force
       - name: Download Wix
         run: |
           $ErrorActionPreference = 'Stop'
@@ -63,7 +80,7 @@ jobs:
           name: guestagent-signed
           path: xen-guest-agent/target/release/
       - name: Download time provider
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: timeprovider-signed
           path: xentimeprovider/x64/Release/
@@ -97,7 +114,7 @@ jobs:
       - name: Build installer
         id: build
         # this workflow is always testsigned, so -ExportCertificate is appropriate
-        run: .\build-installer.ps1 -Configuration Release -Platform x64 -ExportSymbols -ExportExtras -ExportCertificate
+        run: .\build-installer.ps1 -Configuration Release -Platform x64 -ExportSymbols -ExportExtras -ExportCertificate -Sbom
       - name: Clean up certificates
         if: always()
         run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue
