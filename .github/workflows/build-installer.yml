@@ -42,16 +42,16 @@ jobs:
           $ErrorActionPreference = 'Stop'
           Remove-Item -Path .\deps -Recurse -Force -ErrorAction SilentlyContinue
           Invoke-WebRequest -Uri $Env:WIX_ZIP_URI -OutFile .\wix.zip
-          $wixReport = (Get-FileHash .\wix.zip).Hash
-          Add-Content -Path $Env:GITHUB_STEP_SUMMARY -Value "wix.zip: ``$wixReport``" -Force
+          $wixZipHash = (Get-FileHash .\wix.zip).Hash
+          if ($wixZipHash -ine $Env:WIX_ZIP_SHA256) {
+            throw "wix.zip failed verification"
+          }
+          Add-Content -Path $Env:GITHUB_STEP_SUMMARY -Value "wix.zip: ``$wixZipHash``" -Force
           Expand-Archive -Path .\wix.zip -DestinationPath .\deps\wix\ -Force
-          Remove-Item -Path .\deps\wix\* -Exclude *.nupkg -Recurse -Force  -ErrorAction SilentlyContinue
-          Invoke-WebRequest -Uri $Env:WIX_ATTEST_URI -OutFile .\deps\wix.json
-          .\scripts\Test-BuildAttestation.ps1 -Bundle .\deps\wix.json -Path .\deps\wix -Repository xcp-ng/wix-builder -InformationAction Continue
         env:
           # Dependency download links hardcoded for transparency.
-          WIX_ZIP_URI: https://github.com/xcp-ng/wix-builder/releases/download/v6.0.1-xcpng.0/artifacts.zip
-          WIX_ATTEST_URI: https://github.com/xcp-ng/wix-builder/releases/download/v6.0.1-xcpng.0/xcp-ng-wix-builder-attestation-7718663.sigstore.json
+          WIX_ZIP_URI: https://github.com/xcp-ng/wix-builder/releases/download/v6.0.2-xcpng.1/wix.zip
+          WIX_ZIP_SHA256: ccfe8c75f95ea4c4f68a920be827f46c33ce381cc9201a10f565999e3d3b6dd1
       - name: Download drivers
         uses: actions/download-artifact@v6
         with:
