@@ -76,6 +76,9 @@ foreach ($repo in $Drivers) {
 
         if ($Sbom) {
             sbom.exe generate -b $DriverOutput -bc . -D true -ps $Env:VENDOR_NAME -pn $repo -pv (Get-PackageVersion $repo)
+            if ($LASTEXITCODE -ne 0) {
+                throw "sbom-tool failed with error $LASTEXITCODE"
+            }
         }
 
         Set-SignerFileSignature $DriverOutput\*.sys, $DriverOutput\*.dll, $DriverOutput\*.exe, $DriverOutput\*.cat
