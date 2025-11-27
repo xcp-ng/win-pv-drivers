@@ -35,13 +35,13 @@ try {
     }
 
     Write-Host "Building xen-guest-agent"
-    cargo.exe build @cargoArgs -p xen-guest-agent
+    cargo.exe auditable build @cargoArgs -p xen-guest-agent
     if ($LASTEXITCODE -ne 0) {
         throw "cargo failed with error $LASTEXITCODE"
     }
 
     Write-Host "Building xen-win-clipboard"
-    cargo.exe build @cargoArgs -p xen-win-clipboard
+    cargo.exe auditable build @cargoArgs -p xen-win-clipboard
     if ($LASTEXITCODE -ne 0) {
         throw "cargo failed with error $LASTEXITCODE"
     }

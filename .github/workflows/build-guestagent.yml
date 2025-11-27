@@ -7,7 +7,24 @@ on:
 jobs:
   build-guestagent:
     runs-on: windows-latest
+    env:
+      X_CARGO_AUDITABLE_VERSION: 0.7.2
     steps:
+      - name: Restore cargo auditable
+        id: restore-cargo-auditable
+        uses: actions/cache/restore@v4
+        with:
+          path: ~\.cargo\bin\
+          key: ${{runner.os}}-cargo-auditable-${{env.X_CARGO_AUDITABLE_VERSION}}
+      - name: Install cargo auditable
+        if: steps.restore-cargo-auditable.outputs.cache-hit != 'true'
+        run: cargo install cargo-auditable@${{env.X_CARGO_AUDITABLE_VERSION}} --locked
+      - name: Save cargo auditable
+        if: steps.restore-cargo-auditable.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~\.cargo\bin\
+          key: ${{steps.restore-cargo-auditable.outputs.cache-primary-key}}
       - name: Checkout
         uses: actions/checkout@v4
         with:
