@@ -67,8 +67,8 @@ namespace XenDriverUtils {
                 SP_DEVINFO_DATA devInfoData,
                 DEVPROPKEY propKey,
                 DEVPROPTYPE expectedType) where T : unmanaged {
-            uint requiredBytes;
             long numElements;
+            uint requiredBytes;
             unsafe {
                 if (!PInvoke.SetupDiGetDeviceProperty(
                         devInfo,
@@ -76,7 +76,7 @@ namespace XenDriverUtils {
                         propKey,
                         out var ptype,
                         Span<byte>.Empty,
-                        &requiredBytes,
+                        out requiredBytes,
                         0)
                     || ptype != expectedType
                     || requiredBytes < sizeof(T)
@@ -102,7 +102,7 @@ namespace XenDriverUtils {
                             propKey,
                             out _,
                             new Span<byte>(p, (int)requiredBytes),
-                            null,
+                            out _,
                             0)) {
                         var err = Marshal.GetLastWin32Error();
                         throw new Win32Exception(err, $"SetupDiGetDeviceProperty {err}");
@@ -205,13 +205,12 @@ namespace XenDriverUtils {
             SP_DEVINFO_DATA devInfoData, out bool needsReboot) {
             needsReboot = false;
             unsafe {
-                BOOL thisNeedsReboot;
                 if (PInvoke.DiUninstallDevice(
                         HWND.Null,
                         devInfo,
                         devInfoData,
                         0,
-                        &thisNeedsReboot)) {
+                        out var thisNeedsReboot)) {
                     needsReboot = thisNeedsReboot;
                 } else {
                     var err = Marshal.GetLastWin32Error();
@@ -240,12 +239,11 @@ namespace XenDriverUtils {
         public static void InstallDriver(string infPath, out bool needsReboot) {
             needsReboot = false;
             unsafe {
-                BOOL thisNeedsReboot = false;
                 if (PInvoke.DiInstallDriver(
                     HWND.Null,
                     infPath,
                     DIINSTALLDRIVER_FLAGS.DIIRFLAG_FORCE_INF,
-                    &thisNeedsReboot)) {
+                    out var thisNeedsReboot)) {
                     needsReboot = thisNeedsReboot;
                 } else {
                     var err = Marshal.GetLastWin32Error();

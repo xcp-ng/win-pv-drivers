@@ -14,17 +14,14 @@ namespace XenDriverUtils {
         }
 
         public static InfFile Open(string FileName, string InfClass, INF_STYLE InfStyle, out uint ErrorLine) {
-            IntPtr infHandle = HANDLE.INVALID_HANDLE_VALUE;
             unsafe {
-                fixed (uint* pErrorLine = &ErrorLine) {
-                    infHandle = (IntPtr)PInvoke.SetupOpenInfFile(FileName, InfClass, InfStyle, pErrorLine);
+                var infHandle = (IntPtr)PInvoke.SetupOpenInfFile(FileName, InfClass, InfStyle, out ErrorLine);
+                if (infHandle == HANDLE.INVALID_HANDLE_VALUE) {
+                    var err = Marshal.GetLastWin32Error();
+                    throw new Win32Exception(err, $"SetupOpenInfFile {err}");
                 }
+                return new InfFile(infHandle, true);
             }
-            if (infHandle == HANDLE.INVALID_HANDLE_VALUE) {
-                var err = Marshal.GetLastWin32Error();
-                throw new Win32Exception(err, $"SetupOpenInfFile {err}");
-            }
-            return new InfFile(infHandle, true);
         }
 
         private INFCONTEXT FindFirstLine(string section, string key) {
