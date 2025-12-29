@@ -36,7 +36,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Add SBOM tools
         run: |
           New-Item -Type Directory -Path $Env:RUNNER_TEMP/tools/
@@ -70,17 +70,17 @@ jobs:
           WIX_ZIP_URI: https://github.com/xcp-ng/wix-builder/releases/download/v6.0.1-xcpng.0/artifacts.zip
           WIX_ZIP_SHA256: 4d93cd40e778c1b9bebee7b0f2b1232c8e87f470a50eac212e2ed3bebad6e5b8
       - name: Download drivers
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: drivers-signed
           path: installer/output/
       - name: Download guest agent
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: guestagent-signed
           path: xen-guest-agent/target/release/
       - name: Download time provider
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: timeprovider-signed
           path: xentimeprovider/x64/Release/
@@ -120,12 +120,12 @@ jobs:
         run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue
       - name: Upload installer
         id: upload
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           path: output/
           name: installer
       - name: Upload XenClean
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           path: output/${{steps.build.outputs.ReleaseTag}}/package/XenClean/
           name: XenClean
