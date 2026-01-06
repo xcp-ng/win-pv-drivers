@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Restore cargo auditable
         id: restore-cargo-auditable
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ~\.cargo\bin\
           key: ${{runner.os}}-cargo-auditable-${{env.X_CARGO_AUDITABLE_VERSION}}
@@ -21,12 +21,12 @@ jobs:
         run: cargo install cargo-auditable@${{env.X_CARGO_AUDITABLE_VERSION}} --locked
       - name: Save cargo auditable
         if: steps.restore-cargo-auditable.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: ~\.cargo\bin\
           key: ${{steps.restore-cargo-auditable.outputs.cache-primary-key}}
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: true
       - name: Configure branding
@@ -60,14 +60,14 @@ jobs:
           Export-Csv -NoTypeInformation guestagent-catalog.csv
       - name: Upload artifact
         id: upload
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: guestagent
           path: |
             xen-guest-agent/target/release/*.exe
             xen-guest-agent/target/release/*.pdb
       - name: Upload guest agent catalog
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           path: guestagent-catalog.csv
           name: guestagent-catalog
@@ -94,9 +94,9 @@ jobs:
     steps:
       # for the sign scripts
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Download artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: xen-guest-agent/target/release/
           name: guestagent
@@ -114,7 +114,7 @@ jobs:
         run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue
       - name: Upload artifact
         id: upload
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           path: xen-guest-agent/target/release/
           name: guestagent-signed
