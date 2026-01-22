@@ -21,7 +21,7 @@ namespace XenClean {
             "Xenbus",
         };
 
-        static void RemoveDevices(XenDeviceInfo xenInfo) {
+        static void RemoveDevices(XenDeviceInfo xenInfo, bool dryRun) {
             var devInfo = PInvoke.SetupDiGetClassDevs(
                 xenInfo.ClassGuid,
                 null,
@@ -42,20 +42,22 @@ namespace XenClean {
                     Logger.Log($"Found device");
                 }
 
-                try {
-                    DriverUtils.UninstallDevice(devInfo, devInfoData, out var thisNeedsReboot);
-                    needsReboot |= thisNeedsReboot;
-                } catch (Exception ex) {
-                    Logger.Log($"Cannot uninstall device: {ex.Message}");
+                if (!dryRun) {
+                    try {
+                        DriverUtils.UninstallDevice(devInfo, devInfoData, out var thisNeedsReboot);
+                        needsReboot |= thisNeedsReboot;
+                    } catch (Exception ex) {
+                        Logger.Log($"Cannot uninstall device: {ex.Message}");
+                    }
                 }
             }
         }
 
-        public static void Execute() {
+        public static void Execute(bool dryRun) {
             foreach (var driver in UninstallOrder) {
                 var xenInfo = XenDeviceInfo.KnownDevices[driver];
                 Logger.Log($"Uninstalling {driver}");
-                RemoveDevices(xenInfo);
+                RemoveDevices(xenInfo, dryRun: dryRun);
             }
         }
     }

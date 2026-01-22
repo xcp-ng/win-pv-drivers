@@ -3,8 +3,8 @@ using XenDriverUtils;
 
 namespace XenClean {
     internal static class UninstallDrivers {
-        public static void Execute() {
-            DriverUtils.UninstallDriverByNames(XenDeviceInfo.KnownDevices.Keys.ToArray());
+        public static void Execute(bool dryRun) {
+            DriverUtils.UninstallDriverByNames(dryRun: dryRun, XenDeviceInfo.KnownDevices.Keys.ToArray());
         }
     }
 }

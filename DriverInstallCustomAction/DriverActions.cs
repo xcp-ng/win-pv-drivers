@@ -117,7 +117,7 @@ namespace XenInstCA {
             if (collectedInfPaths.Count > 0) {
                 foreach (var oemInfName in collectedInfPaths) {
                     try {
-                        DriverUtils.UninstallDriver(oemInfName);
+                        DriverUtils.UninstallDriver(oemInfName, dryRun: false);
                     } catch (Exception ex) {
                         Logger.Log($"Cannot uninstall driver {oemInfName}: {ex.Message}");
                     }
@@ -128,7 +128,7 @@ namespace XenInstCA {
             // Remove them all just to be sure.
             // We should arguably require running XenClean first but this covers cases where older drivers are installed
             // after ours.
-            DriverUtils.UninstallDriverByNames(driver.DriverName);
+            DriverUtils.UninstallDriverByNames(dryRun: false, driver.DriverName);
 
             if (needsReboot) {
                 CustomActionUtils.ScheduleReboot();

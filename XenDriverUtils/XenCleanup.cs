@@ -51,7 +51,7 @@ namespace XenDriverUtils {
             "scsifilt",
         };
 
-        public static void XenfiltClassCleanup() {
+        public static void XenfiltClassCleanup(bool dryRun) {
             using var classKey = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Control\\Class", true);
             if (classKey == null) {
                 return;
@@ -70,7 +70,9 @@ namespace XenDriverUtils {
                                 .Contains(x, StringComparer.OrdinalIgnoreCase))
                                 .ToArray();
                             Logger.Log($"New filters for {classGuid}: {string.Join(",", newFilters)}");
-                            classSubkey.SetValue(filterValue, newFilters, RegistryValueKind.MultiString);
+                            if (!dryRun) {
+                                classSubkey.SetValue(filterValue, newFilters, RegistryValueKind.MultiString);
+                            }
                         }
                     } catch {
                     }
@@ -82,13 +84,15 @@ namespace XenDriverUtils {
             "stornvme",
         };
 
-        public static void ResetStartOverride() {
+        public static void ResetStartOverride(bool dryRun) {
             try {
                 foreach (var overrideName in OverridesToDelete.Concat(Find3PStorageDrivers().Select(x => x.Service))) {
                     Logger.Log($"Resetting {overrideName} StartOverride");
-                    Registry.LocalMachine.DeleteSubKey(
-                        $"SYSTEM\\CurrentControlSet\\Services\\{overrideName}\\StartOverride",
-                        false);
+                    if (!dryRun) {
+                        Registry.LocalMachine.DeleteSubKey(
+                            $"SYSTEM\\CurrentControlSet\\Services\\{overrideName}\\StartOverride",
+                            false);
+                    }
                 }
             } catch (Exception ex) {
                 Logger.Log($"Cannot delete StartOverride subkey: {ex.Message}");
@@ -101,7 +105,7 @@ namespace XenDriverUtils {
             "ActiveLocationInformation",
         };
 
-        public static void XenfiltReset() {
+        public static void XenfiltReset(bool dryRun) {
             using var paramKey = Registry.LocalMachine.OpenSubKey(
                 "SYSTEM\\CurrentControlSet\\Services\\xenfilt\\Parameters",
                 true);
@@ -110,40 +114,46 @@ namespace XenDriverUtils {
             }
             foreach (var paramName in XenfiltParametersToDelete) {
                 try {
-                    paramKey.DeleteValue(paramName);
+                    if (!dryRun) {
+                        paramKey.DeleteValue(paramName);
+                    }
                     Logger.Log($"Deleted xenfilt parameter {paramName}");
                 } catch {
                 }
             }
         }
 
-        public static void ResetUnplug() {
+        public static void ResetUnplug(bool dryRun) {
             try {
                 using var key = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Services\\XEN", true);
                 if (key == null) {
                     return;
                 }
                 Logger.Log("Resetting Unplug key");
-                key.DeleteSubKey("Unplug");
+                if (!dryRun) {
+                    key.DeleteSubKey("Unplug");
+                }
             } catch {
             }
         }
 
-        public static void ResetForceUnplug() {
+        public static void ResetForceUnplug(bool dryRun) {
             try {
                 using var key = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Services\\XEN", true);
                 if (key == null) {
                     return;
                 }
                 Logger.Log("Resetting Unplug key");
-                key.DeleteSubKey("ForceUnplug");
+                if (!dryRun) {
+                    key.DeleteSubKey("ForceUnplug");
+                }
             } catch {
             }
         }
 
         // (ServiceName, IsDriverService)
         // other code may want to use this list too, so make it public
-        public static readonly List<Tuple<string, bool>> DeleteableServices = new() {
+        public static readonly IReadOnlyList<Tuple<string, bool>> DeleteableServices = new List<Tuple<string, bool>>() {
             new("xenagent", true),
             new("xenbus", true),
             new("xenbus_monitor", true),
@@ -161,7 +171,7 @@ namespace XenDriverUtils {
             new("XenSvc", false),
         };
 
-        public static void DeleteService(CloseServiceHandleSafeHandle scm, string serviceName, bool stop = true) {
+        public static void DeleteService(CloseServiceHandleSafeHandle scm, string serviceName, bool dryRun, bool stop = true) {
             if (!DeleteableServices.Any(x => string.Equals(x.Item1, serviceName, StringComparison.OrdinalIgnoreCase))) {
                 Logger.Log($"Refusing to delete service {serviceName}");
                 return;
@@ -174,18 +184,20 @@ namespace XenDriverUtils {
                 return;
             }
 
-            if (stop) {
-                if (PInvoke.ControlService(service, PInvoke.SERVICE_CONTROL_STOP, out var status)) {
-                    Logger.Log($"Service {serviceName} stopped");
-                } else {
-                    Logger.Log($"ControlService({serviceName}, SERVICE_CONTROL_STOP) error {Marshal.GetLastWin32Error()}");
+            if (!dryRun) {
+                if (stop) {
+                    if (PInvoke.ControlService(service, PInvoke.SERVICE_CONTROL_STOP, out var status)) {
+                        Logger.Log($"Service {serviceName} stopped");
+                    } else {
+                        Logger.Log($"ControlService({serviceName}, SERVICE_CONTROL_STOP) error {Marshal.GetLastWin32Error()}");
+                    }
                 }
-            }
 
-            if (PInvoke.DeleteService(service)) {
-                Logger.Log($"Service {serviceName} deleted");
-            } else {
-                Logger.Log($"DeleteService({serviceName}) error {Marshal.GetLastWin32Error()}");
+                if (PInvoke.DeleteService(service)) {
+                    Logger.Log($"Service {serviceName} deleted");
+                } else {
+                    Logger.Log($"DeleteService({serviceName}) error {Marshal.GetLastWin32Error()}");
+                }
             }
         }
 

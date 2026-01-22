@@ -257,15 +257,17 @@ namespace XenDriverUtils {
             }
         }
 
-        public static void UninstallDriver(string oemInfName) {
+        public static void UninstallDriver(string oemInfName, bool dryRun) {
             Logger.Log($"Uninstalling {oemInfName}");
-            if (!PInvoke.SetupUninstallOEMInf(oemInfName, PInvoke.SUOI_FORCEDELETE)) {
-                var err = Marshal.GetLastWin32Error();
-                throw new Win32Exception(err, $"SetupUninstallOEMInf {err}");
+            if (!dryRun) {
+                if (!PInvoke.SetupUninstallOEMInf(oemInfName, PInvoke.SUOI_FORCEDELETE)) {
+                    var err = Marshal.GetLastWin32Error();
+                    throw new Win32Exception(err, $"SetupUninstallOEMInf {err}");
+                }
             }
         }
 
-        public static void UninstallDriverByInfPath(string infPath) {
+        public static void UninstallDriverByInfPath(string infPath, bool dryRun) {
             var baseName = Path.GetFileNameWithoutExtension(infPath);
             if (string.IsNullOrEmpty(baseName)) {
                 return;
@@ -291,14 +293,14 @@ namespace XenDriverUtils {
                 }
                 var oemInfName = Path.GetFileName(oemInfPath);
                 try {
-                    UninstallDriver(oemInfName);
+                    UninstallDriver(oemInfName, dryRun: dryRun);
                 } catch (Exception ex) {
                     Logger.Log($"Cannot uninstall driver {oemInfName}: {ex.Message}");
                 }
             }
         }
 
-        public static void UninstallDriverByNames(params string[] driverNames) {
+        public static void UninstallDriverByNames(bool dryRun, params string[] driverNames) {
             var wantedCatalogName = driverNames.Select(x => x + ".cat").ToList();
             var windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
             var infdir = Path.Combine(windir, "inf");
@@ -320,7 +322,7 @@ namespace XenDriverUtils {
                 }
                 var oemInfName = Path.GetFileName(oemInfPath);
                 try {
-                    DriverUtils.UninstallDriver(oemInfName);
+                    UninstallDriver(oemInfName, dryRun: dryRun);
                 } catch (Exception ex) {
                     Logger.Log($"Cannot uninstall driver {oemInfName}: {ex.Message}");
                 }
