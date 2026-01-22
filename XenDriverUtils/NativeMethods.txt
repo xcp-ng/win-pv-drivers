@@ -41,3 +41,8 @@ DeleteService
 SC_MANAGER_ALL_ACCESS
 SERVICE_ALL_ACCESS
 SERVICE_CONTROL_STOP
+
+ConvertStringSecurityDescriptorToSecurityDescriptor
+CreateDirectory
+SDDL_REVISION_1
+WIN32_ERROR
