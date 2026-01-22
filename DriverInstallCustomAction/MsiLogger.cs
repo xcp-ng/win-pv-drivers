@@ -10,8 +10,13 @@ namespace XenInstCA {
             _session = session;
         }
 
-        public override void Write(string message) {
+        protected override void Write(LogLevel level, string message) {
             _session.Log(message);
+        }
+
+        protected override void WriteFormat(LogLevel level, string format, params object[] args) {
+            var toWrite = string.Format(format, args);
+            _session.Log(toWrite);
         }
     }
 
