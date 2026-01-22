@@ -1,0 +1,75 @@
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace XenDriverUtils {
+    public class ProcessRedirector : IDisposable {
+        readonly StreamReader _source;
+        readonly CancellationToken _ct;
+        readonly Task _task;
+
+        public ProcessRedirector(StreamReader source, CancellationToken ct = default) {
+            _source = source;
+            _ct = ct;
+            _task = Task.Run(() => Redirect());
+        }
+
+        public void Dispose() {
+            _task.Wait(5000);
+            if (!_task.IsCompleted) {
+                Logger.Log(LogLevel.Alert, "ProcessRedirector task stuck");
+            }
+        }
+
+        void Redirect() {
+            while (!_ct.IsCancellationRequested) {
+                try {
+                    var line = _source.ReadLine();
+                    if (line == null) {
+                        break;
+                    }
+                    Logger.Log(LogLevel.Info, line);
+                } catch (OperationCanceledException) {
+                    break;
+                }
+            }
+        }
+
+        public static void LogProcessOutput(Process process, TimeSpan? timeout) {
+            var cts = new CancellationTokenSource();
+            using var outputRedir = new ProcessRedirector(process.StandardOutput, cts.Token);
+            using var errorRedir = new ProcessRedirector(process.StandardError, cts.Token);
+            if (timeout != null) {
+                process.WaitForExit((int)timeout.Value.TotalMilliseconds);
+                if (!process.HasExited) {
+                    process.Kill();
+                    Logger.LogFormat(LogLevel.Alert, "Process {0} timed out", process.Id);
+                }
+            } else {
+                process.WaitForExit();
+            }
+            cts.Cancel();
+        }
+
+        public static Process LogCommand(string program, string args, TimeSpan? timeout) {
+            var psi = new ProcessStartInfo() {
+                FileName = program,
+                Arguments = args,
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            };
+
+            using var _ = new LogSection($"{program} {args}");
+            var process = Process.Start(psi);
+            process.StandardInput.Close();
+
+            LogProcessOutput(process, timeout);
+            return process;
+        }
+    }
+}
