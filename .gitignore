@@ -375,3 +375,4 @@ Branding.cs
 /package-*
 output/
 deps/
+/XenDriverUtils/Copy-XenVifSettings.signed.ps1

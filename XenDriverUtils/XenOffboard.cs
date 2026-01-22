@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
@@ -20,42 +19,58 @@ namespace XenDriverUtils {
             Emulated,
         }
 
-        static void RunCopyXenvifScript(ScriptMode mode, ExecutionMode execMode, DeviceType deviceType) {
-            var dllPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var scriptPath = Path.Combine(dllPath, "Copy-XenVifSettings.ps1");
-            var powershellPath = Path.Combine(Environment.SystemDirectory, "WindowsPowerShell\\v1.0\\powershell.exe");
+        static string ExtractCopyXenvifScript() {
+            var tempdir = PathUtils.CreateSecureTempDirectory();
+            var scriptPath = Path.Combine(tempdir.FullName, "Copy-XenVifSettings.ps1");
 
-            var startInfo = new ProcessStartInfo() {
-                FileName = powershellPath,
-                Arguments = $"-ExecutionPolicy Bypass -File \"{scriptPath}\" -{mode} -{execMode} -{deviceType}",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            };
+            var resourceName = nameof(XenDriverUtils) + ".Copy-XenVifSettings.signed.ps1";
+            using var scriptData = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+            using var scriptFile = File.Create(scriptPath);
 
-            using var process = Process.Start(startInfo);
-            process.WaitForExit();
-
-            var output = process.StandardOutput.ReadToEnd();
-            var error = process.StandardError.ReadToEnd();
-
-            if (process.ExitCode != 0) {
-                Logger.Log($"Copy-XenVifSettings.ps1 error {process.ExitCode}: {error}");
-                throw new Exception($"Copy-XenVifSettings.ps1 error {process.ExitCode}");
+            var buffer = new byte[4096];
+            while (true) {
+                var count = scriptData.Read(buffer, 0, buffer.Length);
+                if (count == 0) {
+                    break;
+                }
+                scriptFile.Write(buffer, 0, count);
             }
 
-            Logger.Log($"Copy-XenVifSettings.ps1 output: {output}");
+            return scriptPath;
         }
 
-        public static void BackupXenvif() {
-            Logger.Log($"Backing up Xenvif settings");
-            RunCopyXenvifScript(ScriptMode.Backup, ExecutionMode.Invoke, DeviceType.Paravirtualized);
+        static void RunCopyXenvifScript(ScriptMode mode, ExecutionMode execMode, DeviceType deviceType, bool dryRun) {
+            var powershellPath = Path.Combine(Environment.SystemDirectory, "WindowsPowerShell\\v1.0\\powershell.exe");
+            var scriptPath = ExtractCopyXenvifScript();
+
+            Logger.LogFormat(
+                LogLevel.Info,
+                "Running {0} mode={1} execMode={2} deviceType={3} {4}",
+                scriptPath,
+                mode,
+                execMode,
+                deviceType,
+                dryRun ? "(dry-run)" : "");
+
+            using var process = ProcessRedirector.LogCommand(
+                powershellPath,
+                $"-ExecutionPolicy Bypass -File \"{scriptPath}\" -{mode} -{execMode} -{deviceType} {(dryRun ? "-WhatIf" : "")}",
+                TimeSpan.FromMinutes(5));
+
+            if (process.ExitCode != 0) {
+                Logger.LogFormat(LogLevel.Alert, "Copy-XenVifSettings.ps1 error {0}: {1}", process.ExitCode);
+                throw new Exception($"Copy-XenVifSettings.ps1 error {process.ExitCode}");
+            }
         }
 
-        public static void PrepareRestoreXenvif() {
-            Logger.Log($"Scheduling Xenvif restore");
-            RunCopyXenvifScript(ScriptMode.Restore, ExecutionMode.Install, DeviceType.Emulated);
+        public static void BackupXenvif(bool dryRun) {
+            Logger.Log("Backing up Xenvif settings");
+            RunCopyXenvifScript(ScriptMode.Backup, ExecutionMode.Invoke, DeviceType.Paravirtualized, dryRun: dryRun);
+        }
+
+        public static void PrepareRestoreXenvif(bool dryRun) {
+            Logger.Log("Scheduling Xenvif restore");
+            RunCopyXenvifScript(ScriptMode.Restore, ExecutionMode.Install, DeviceType.Emulated, dryRun: dryRun);
         }
     }
 }
