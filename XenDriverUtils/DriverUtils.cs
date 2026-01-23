@@ -267,30 +267,50 @@ namespace XenDriverUtils {
             }
         }
 
+        static IEnumerable<string> GetMatchingOemInfs(IEnumerable<string> wantedCatalogNames, string provider = null) {
+            var windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            var infdir = Path.Combine(windir, "inf");
+
+            foreach (var oemInfPath in Directory.EnumerateFiles(infdir, "oem*.inf", SearchOption.TopDirectoryOnly)) {
+                if (!string.Equals(".inf", Path.GetExtension(oemInfPath), StringComparison.OrdinalIgnoreCase)) {
+                    // netfx bug when using asterisks
+                    continue;
+                }
+
+                string matchingPath = null;
+                try {
+                    using var infFile = InfFile.Open(oemInfPath, null, INF_STYLE.INF_STYLE_WIN4, out _);
+                    var infCatalog = infFile.GetStringField("Version", "CatalogFile", 1);
+
+                    if (!wantedCatalogNames.Contains(infCatalog, StringComparer.OrdinalIgnoreCase)) {
+                        continue;
+                    }
+
+                    if (provider == null) {
+                        matchingPath = oemInfPath;
+                    } else {
+                        var infProvider = infFile.GetStringField("Version", "Provider", 1);
+                        if (provider.Equals(infProvider, StringComparison.OrdinalIgnoreCase)) {
+                            matchingPath = oemInfPath;
+                        }
+                    }
+                } catch (Exception ex) {
+                    Logger.LogFormat(LogLevel.Interactive, "Cannot parse {0}: {1} {2}", oemInfPath, ex.HResult, ex.Message);
+                }
+
+                if (matchingPath != null) {
+                    yield return matchingPath;
+                }
+            }
+        }
+
         public static void UninstallDriverByInfPath(string infPath, bool dryRun) {
             var baseName = Path.GetFileNameWithoutExtension(infPath);
             if (string.IsNullOrEmpty(baseName)) {
                 return;
             }
             var wantedCatalogName = $"{baseName}.cat";
-            var windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
-            var infdir = Path.Combine(windir, "inf");
-            foreach (var oemInfPath in Directory.EnumerateFiles(infdir, "oem*.inf", SearchOption.TopDirectoryOnly)) {
-                if (!string.Equals(".inf", Path.GetExtension(oemInfPath), StringComparison.OrdinalIgnoreCase)) {
-                    // netfx bug when using asterisks
-                    continue;
-                }
-                try {
-                    using var infFile = InfFile.Open(oemInfPath, null, INF_STYLE.INF_STYLE_WIN4, out _);
-                    var infCatalog = infFile.GetStringField("Version", "CatalogFile", 1);
-                    var infProvider = infFile.GetStringField("Version", "Provider", 1);
-                    if (!string.Equals(wantedCatalogName, infCatalog, StringComparison.OrdinalIgnoreCase)
-                        || !string.Equals(VersionInfo.VendorName, infProvider, StringComparison.OrdinalIgnoreCase)) {
-                        continue;
-                    }
-                } catch (Exception ex) {
-                    Logger.Log($"Cannot parse {oemInfPath}: {ex.Message}");
-                }
+            foreach (var oemInfPath in GetMatchingOemInfs(new[] { wantedCatalogName }, VersionInfo.VendorName)) {
                 var oemInfName = Path.GetFileName(oemInfPath);
                 try {
                     UninstallDriver(oemInfName, dryRun: dryRun);
@@ -301,25 +321,9 @@ namespace XenDriverUtils {
         }
 
         public static void UninstallDriverByNames(bool dryRun, params string[] driverNames) {
-            var wantedCatalogName = driverNames.Select(x => x + ".cat").ToList();
-            var windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
-            var infdir = Path.Combine(windir, "inf");
-            foreach (var oemInfPath in Directory.EnumerateFiles(infdir, "oem*.inf", SearchOption.TopDirectoryOnly)) {
-                if (!string.Equals(".inf", Path.GetExtension(oemInfPath), StringComparison.OrdinalIgnoreCase)) {
-                    // netfx bug when using asterisks
-                    continue;
-                }
-                try {
-                    using var infFile = InfFile.Open(oemInfPath, null, INF_STYLE.INF_STYLE_WIN4, out _);
-                    var infCatalog = infFile.GetStringField("Version", "CatalogFile", 1);
-                    if (wantedCatalogName.Contains(infCatalog, StringComparer.OrdinalIgnoreCase)) {
-                        Logger.Log($"Found driver: {oemInfPath}");
-                    } else {
-                        continue;
-                    }
-                } catch (Exception ex) {
-                    Logger.Log($"Cannot parse {oemInfPath}: {ex.Message}");
-                }
+            var wantedCatalogNames = driverNames.Select(x => x + ".cat").ToList();
+            foreach (var oemInfPath in GetMatchingOemInfs(wantedCatalogNames)) {
+                Logger.Log($"Found driver: {oemInfPath}");
                 var oemInfName = Path.GetFileName(oemInfPath);
                 try {
                     UninstallDriver(oemInfName, dryRun: dryRun);
@@ -327,6 +331,16 @@ namespace XenDriverUtils {
                     Logger.Log($"Cannot uninstall driver {oemInfName}: {ex.Message}");
                 }
             }
+        }
+
+        public static bool FindDriverByNames(params string[] driverNames) {
+            var wantedCatalogNames = driverNames.Select(x => x + ".cat").ToList();
+            var oemInfPath = GetMatchingOemInfs(wantedCatalogNames).FirstOrDefault();
+            if (oemInfPath != null) {
+                Logger.Log($"Found driver: {oemInfPath}");
+                return true;
+            }
+            return false;
         }
 
         public static bool WaitNoPendingInstallEvents(uint timeout) {
