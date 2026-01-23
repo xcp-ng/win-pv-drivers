@@ -10,7 +10,8 @@ namespace XenClean {
             using var process = ProcessRedirector.LogCommand(
                 powershellPath,
                 $"-ExecutionPolicy Bypass -Command \"Checkpoint-Computer -Description {runName} -RestorePointType APPLICATION_UNINSTALL {(dryRun ? "-WhatIf" : "")}\"",
-                TimeSpan.FromMinutes(5));
+                TimeSpan.FromMinutes(5),
+                LogLevel.Info);
 
             if (process.ExitCode != 0) {
                 throw new Exception($"Checkpoint-Computer error {process.ExitCode}");

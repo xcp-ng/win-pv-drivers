@@ -74,9 +74,9 @@ namespace XenClean {
         public static void LogSystemState() {
             var pnputil = Path.Combine(Environment.SystemDirectory, "pnputil.exe");
 
-            using (ProcessRedirector.LogCommand(pnputil, "/enum-drivers", TimeSpan.FromMinutes(1))) { }
+            using (ProcessRedirector.LogCommand(pnputil, "/enum-drivers", TimeSpan.FromMinutes(1), LogLevel.Trace)) { }
             if (Environment.OSVersion.Version >= new Version(10, 0, 18362)) {
-                using (ProcessRedirector.LogCommand(pnputil, "/enum-devices /relations", TimeSpan.FromMinutes(2))) { }
+                using (ProcessRedirector.LogCommand(pnputil, "/enum-devices /relations", TimeSpan.FromMinutes(2), LogLevel.Trace)) { }
             }
 
             LogRegistryKey(Registry.LocalMachine, "SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e96a-e325-11ce-bfc1-08002be10318}");

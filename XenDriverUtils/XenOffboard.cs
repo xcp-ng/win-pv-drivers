@@ -55,7 +55,8 @@ namespace XenDriverUtils {
             using var process = ProcessRedirector.LogCommand(
                 powershellPath,
                 $"-ExecutionPolicy Bypass -File \"{scriptPath}\" -{mode} -{execMode} -{deviceType} {(dryRun ? "-WhatIf" : "")}",
-                TimeSpan.FromMinutes(5));
+                TimeSpan.FromMinutes(5),
+                LogLevel.Info);
 
             if (process.ExitCode != 0) {
                 Logger.LogFormat(LogLevel.Alert, "Copy-XenVifSettings.ps1 error {0}: {1}", process.ExitCode);

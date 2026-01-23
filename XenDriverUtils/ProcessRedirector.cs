@@ -9,10 +9,12 @@ namespace XenDriverUtils {
         readonly StreamReader _source;
         readonly CancellationToken _ct;
         readonly Task _task;
+        readonly LogLevel _level;
 
-        public ProcessRedirector(StreamReader source, CancellationToken ct = default) {
+        public ProcessRedirector(StreamReader source, LogLevel level, CancellationToken ct = default) {
             _source = source;
             _ct = ct;
+            _level = level;
             _task = Task.Run(() => Redirect());
         }
 
@@ -30,17 +32,17 @@ namespace XenDriverUtils {
                     if (line == null) {
                         break;
                     }
-                    Logger.Log(LogLevel.Info, line);
+                    Logger.Log(_level, line);
                 } catch (OperationCanceledException) {
                     break;
                 }
             }
         }
 
-        public static void LogProcessOutput(Process process, TimeSpan? timeout) {
+        public static void LogProcessOutput(Process process, TimeSpan? timeout, LogLevel level) {
             var cts = new CancellationTokenSource();
-            using var outputRedir = new ProcessRedirector(process.StandardOutput, cts.Token);
-            using var errorRedir = new ProcessRedirector(process.StandardError, cts.Token);
+            using var outputRedir = new ProcessRedirector(process.StandardOutput, level, cts.Token);
+            using var errorRedir = new ProcessRedirector(process.StandardError, level, cts.Token);
             if (timeout != null) {
                 process.WaitForExit((int)timeout.Value.TotalMilliseconds);
                 if (!process.HasExited) {
@@ -50,10 +52,11 @@ namespace XenDriverUtils {
             } else {
                 process.WaitForExit();
             }
+            Logger.LogFormat(LogLevel.Info, "Process {0} exited with code {1}", process.Id, process.ExitCode);
             cts.Cancel();
         }
 
-        public static Process LogCommand(string program, string args, TimeSpan? timeout) {
+        public static Process LogCommand(string program, string args, TimeSpan? timeout, LogLevel level) {
             var psi = new ProcessStartInfo() {
                 FileName = program,
                 Arguments = args,
@@ -68,7 +71,7 @@ namespace XenDriverUtils {
             var process = Process.Start(psi);
             process.StandardInput.Close();
 
-            LogProcessOutput(process, timeout);
+            LogProcessOutput(process, timeout, level);
             return process;
         }
     }
