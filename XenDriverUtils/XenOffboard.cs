@@ -19,8 +19,7 @@ namespace XenDriverUtils {
             Emulated,
         }
 
-        static string ExtractCopyXenvifScript() {
-            var tempdir = PathUtils.CreateSecureTempDirectory();
+        static string ExtractCopyXenvifScript(DirectoryInfo tempdir) {
             var scriptPath = Path.Combine(tempdir.FullName, "Copy-XenVifSettings.ps1");
 
             var resourceName = nameof(XenDriverUtils) + ".Copy-XenVifSettings.signed.ps1";
@@ -41,26 +40,34 @@ namespace XenDriverUtils {
 
         static void RunCopyXenvifScript(ScriptMode mode, ExecutionMode execMode, DeviceType deviceType, bool dryRun) {
             var powershellPath = Path.Combine(Environment.SystemDirectory, "WindowsPowerShell\\v1.0\\powershell.exe");
-            var scriptPath = ExtractCopyXenvifScript();
+            var tempdir = PathUtils.CreateSecureTempDirectory();
 
-            Logger.LogFormat(
-                LogLevel.Info,
-                "Running {0} mode={1} execMode={2} deviceType={3} {4}",
-                scriptPath,
-                mode,
-                execMode,
-                deviceType,
-                dryRun ? "(dry-run)" : "");
+            try {
+                var scriptPath = ExtractCopyXenvifScript(tempdir);
+                Logger.LogFormat(
+                    LogLevel.Info,
+                    "Running {0} mode={1} execMode={2} deviceType={3} {4}",
+                    scriptPath,
+                    mode,
+                    execMode,
+                    deviceType,
+                    dryRun ? "(dry-run)" : "");
 
-            using var process = ProcessRedirector.LogCommand(
-                powershellPath,
-                $"-ExecutionPolicy Bypass -File \"{scriptPath}\" -{mode} -{execMode} -{deviceType} {(dryRun ? "-WhatIf" : "")}",
-                TimeSpan.FromMinutes(5),
-                LogLevel.Info);
+                using var process = ProcessRedirector.LogCommand(
+                    powershellPath,
+                    $"-ExecutionPolicy Bypass -File \"{scriptPath}\" -{mode} -{execMode} -{deviceType} {(dryRun ? "-WhatIf" : "")}",
+                    TimeSpan.FromMinutes(5),
+                    LogLevel.Info);
 
-            if (process.ExitCode != 0) {
-                Logger.LogFormat(LogLevel.Alert, "Copy-XenVifSettings.ps1 error {0}: {1}", process.ExitCode);
-                throw new Exception($"Copy-XenVifSettings.ps1 error {process.ExitCode}");
+                if (process.ExitCode != 0) {
+                    Logger.LogFormat(LogLevel.Alert, "Copy-XenVifSettings.ps1 error {0}: {1}", process.ExitCode);
+                    throw new Exception($"Copy-XenVifSettings.ps1 error {process.ExitCode}");
+                }
+            } finally {
+                try {
+                    tempdir.Delete(true);
+                } catch {
+                }
             }
         }
 
