@@ -10,9 +10,10 @@ namespace XenClean {
         public string LogPath => _logPath;
 
         public TempFileLogger() {
-            _logPath = Path.GetTempFileName();
+            _logPath = Path.Combine(Path.GetTempPath(), $"xenclean_{Guid.NewGuid():D}.log");
             try {
-                _writer = File.CreateText(_logPath);
+                var file = new FileStream(_logPath, FileMode.CreateNew, FileAccess.Write, FileShare.Read | FileShare.Delete);
+                _writer = new StreamWriter(file);
             } catch (Exception ex) {
                 _writer = null;
                 WriteFormat(LogLevel.Alert, "Opening log path {0} failed: {1} {2}", _logPath, ex.HResult, ex.Message);
