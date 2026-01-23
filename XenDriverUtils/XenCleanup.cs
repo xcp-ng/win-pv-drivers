@@ -65,11 +65,13 @@ namespace XenDriverUtils {
                     try {
                         if (classSubkey.GetValueKind(filterValue) == RegistryValueKind.MultiString) {
                             var filters = (string[])classSubkey.GetValue(filterValue);
-                            Logger.Log($"Class filters for {classGuid}: {string.Join(",", filters)}");
+                            Logger.LogFormat(LogLevel.Info, "Class filters for {0}: {1}", classGuid, string.Join(",", filters));
+
                             var newFilters = filters.Where(x => !FilterNameList
                                 .Contains(x, StringComparer.OrdinalIgnoreCase))
                                 .ToArray();
-                            Logger.Log($"New filters for {classGuid}: {string.Join(",", newFilters)}");
+                            Logger.LogFormat(LogLevel.Info, "New filters for {0}: {1}", classGuid, string.Join(",", newFilters));
+
                             if (!dryRun) {
                                 classSubkey.SetValue(filterValue, newFilters, RegistryValueKind.MultiString);
                             }
@@ -176,27 +178,40 @@ namespace XenDriverUtils {
                 Logger.Log($"Refusing to delete service {serviceName}");
                 return;
             }
-            Logger.Log($"Deleting service {serviceName}");
+            Logger.LogFormat(LogLevel.Info, "Deleting service {0}", serviceName);
 
             using var service = PInvoke.OpenService(scm, serviceName, PInvoke.SERVICE_ALL_ACCESS);
             if (service.IsInvalid) {
-                Logger.Log($"OpenService {serviceName} error {Marshal.GetLastWin32Error()}");
+                var err = Marshal.GetLastWin32Error();
+                if (err == (int)WIN32_ERROR.ERROR_SERVICE_DOES_NOT_EXIST) {
+                    Logger.LogFormat(LogLevel.Info, "Service {0} does not exist", serviceName);
+                } else {
+                    Logger.LogFormat(LogLevel.Interactive, "OpenService({0}) error {1}", serviceName, err);
+                }
                 return;
             }
 
             if (!dryRun) {
                 if (stop) {
                     if (PInvoke.ControlService(service, PInvoke.SERVICE_CONTROL_STOP, out var status)) {
-                        Logger.Log($"Service {serviceName} stopped");
+                        Logger.LogFormat(LogLevel.Interactive, "Stopped service {0}", serviceName);
                     } else {
-                        Logger.Log($"ControlService({serviceName}, SERVICE_CONTROL_STOP) error {Marshal.GetLastWin32Error()}");
+                        Logger.LogFormat(
+                            LogLevel.Alert,
+                            "ControlService({0}, SERVICE_CONTROL_STOP) error {1}",
+                            serviceName,
+                            Marshal.GetLastWin32Error());
                     }
                 }
 
                 if (PInvoke.DeleteService(service)) {
-                    Logger.Log($"Service {serviceName} deleted");
+                    Logger.LogFormat(LogLevel.Interactive, "Deleted service {0}", serviceName);
                 } else {
-                    Logger.Log($"DeleteService({serviceName}) error {Marshal.GetLastWin32Error()}");
+                    Logger.LogFormat(
+                        LogLevel.Alert,
+                        "DeleteService({0}) error {1}",
+                        serviceName,
+                        Marshal.GetLastWin32Error());
                 }
             }
         }
