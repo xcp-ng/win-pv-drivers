@@ -44,7 +44,7 @@ namespace XenInstCA {
 
             DriverUtils.InstallDriver(driver.InfPath, out var needsReboot);
             if (needsReboot) {
-                CustomActionUtils.ScheduleReboot();
+                XenOnboard.CaScheduleReboot();
             }
             return ActionResult.Success;
         }
@@ -131,7 +131,7 @@ namespace XenInstCA {
             DriverUtils.UninstallDriverByNames(dryRun: false, driver.DriverName);
 
             if (needsReboot) {
-                CustomActionUtils.ScheduleReboot();
+                XenOnboard.CaScheduleReboot();
             }
             return ActionResult.Success;
         }

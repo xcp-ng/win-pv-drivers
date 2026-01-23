@@ -28,7 +28,7 @@ namespace XenInstCA {
 
         [CustomAction]
         public static ActionResult CheckReboot(Session session) {
-            if (CustomActionUtils.IsRebootScheduled()) {
+            if (XenOnboard.CaIsRebootScheduled()) {
                 session.SetMode(InstallRunMode.RebootAtEnd, true);
             }
             return ActionResult.Success;
