@@ -42,6 +42,7 @@ namespace XenClean {
                     Logger.Log($"Found device");
                 }
 
+                Logger.LogFormat(LogLevel.Interactive, "Uninstalling device {0}", instanceId ?? "");
                 if (!dryRun) {
                     try {
                         DriverUtils.UninstallDevice(devInfo, devInfoData, out var thisNeedsReboot);
@@ -56,7 +57,7 @@ namespace XenClean {
         public static void Execute(bool dryRun) {
             foreach (var driver in UninstallOrder) {
                 var xenInfo = XenDeviceInfo.KnownDevices[driver];
-                Logger.Log($"Uninstalling {driver}");
+                Logger.LogFormat(LogLevel.Info, "Finding driver {0}", driver);
                 RemoveDevices(xenInfo, dryRun: dryRun);
             }
         }

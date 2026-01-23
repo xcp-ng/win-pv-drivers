@@ -38,8 +38,9 @@ namespace XenClean {
         };
 
         public static void Execute(bool dryRun) {
+            Logger.Log(LogLevel.Interactive, "Finding products to uninstall");
             foreach (var upgradeCode in KnownUpgradeCodes.Keys) {
-                Logger.LogFormat(LogLevel.Interactive, "Trying to uninstall products with upgrade code {0}", upgradeCode);
+                Logger.LogFormat(LogLevel.Info, "Trying to uninstall products with upgrade code {0}", upgradeCode);
                 var msiexecPath = Path.Combine(Environment.SystemDirectory, "msiexec.exe");
 
                 foreach (var productCode in ProductUtils.EnumerateProducts(upgradeCode)) {
@@ -56,6 +57,8 @@ namespace XenClean {
         public static void FindRelatedProducts(string onboardFamily, out bool foundCompatible, out bool foundIncompatible) {
             foundCompatible = false;
             foundIncompatible = false;
+
+            Logger.LogFormat(LogLevel.Interactive, "Finding products for onboarding of family {0}", onboardFamily);
 
             foreach (var entry in KnownUpgradeCodes) {
                 Logger.LogFormat(LogLevel.Info, "Finding products with upgrade code {0}", entry.Key);
