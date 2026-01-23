@@ -23,6 +23,7 @@ namespace XenClean {
     internal static class VersionInfo {
         public const string MsiUpgradeCodeX86 = "${Env:MSI_UPGRADE_CODE_X86}";
         public const string MsiUpgradeCodeX64 = "${Env:MSI_UPGRADE_CODE_X64}";
+        public const string VendorName = "${Env:VENDOR_NAME}";
     }
 }
 "@
