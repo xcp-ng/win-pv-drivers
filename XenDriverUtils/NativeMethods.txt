@@ -46,3 +46,5 @@ ConvertStringSecurityDescriptorToSecurityDescriptor
 CreateDirectory
 SDDL_REVISION_1
 WIN32_ERROR
+
+MsiEnumRelatedProducts

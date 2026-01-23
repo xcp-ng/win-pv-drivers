@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Management;
 using XenDriverUtils;
 
 namespace XenClean {
@@ -42,16 +41,11 @@ namespace XenClean {
             foreach (var upgradeCode in KnownUpgradeCodes.Keys) {
                 Logger.LogFormat(LogLevel.Interactive, "Trying to uninstall products with upgrade code {0}", upgradeCode);
                 var msiexecPath = Path.Combine(Environment.SystemDirectory, "msiexec.exe");
-                var moSearcher = new ManagementObjectSearcher(
-                    $"SELECT ProductCode FROM Win32_Property WHERE Property='UpgradeCode' AND Value='{upgradeCode}'");
-                var moObjects = moSearcher.Get();
 
-                foreach (var moObject in moObjects) {
-                    Logger.LogFormat(LogLevel.Interactive, "Uninstalling product {0}", moObject["ProductCode"]);
+                foreach (var productCode in ProductUtils.EnumerateProducts(upgradeCode)) {
+                    Logger.LogFormat(LogLevel.Interactive, "Uninstalling product {0}", productCode);
                     if (!dryRun) {
-                        using var msiexecProcess = Process.Start(
-                            msiexecPath,
-                            $"/x \"{moObject["ProductCode"]}\" /passive /norestart");
+                        using var msiexecProcess = Process.Start(msiexecPath, $"/x \"{productCode}\" /passive /norestart");
                         msiexecProcess.WaitForExit();
                         Logger.LogFormat(LogLevel.Interactive, "Msiexec exited with code {0}", msiexecProcess.ExitCode);
                     }
@@ -65,19 +59,17 @@ namespace XenClean {
 
             foreach (var entry in KnownUpgradeCodes) {
                 Logger.LogFormat(LogLevel.Info, "Finding products with upgrade code {0}", entry.Key);
-                var moSearcher = new ManagementObjectSearcher(
-                    $"SELECT ProductCode FROM Win32_Property WHERE Property='UpgradeCode' AND Value='{entry.Key}'");
-                var moObjects = moSearcher.Get();
+                var products = ProductUtils.EnumerateProducts(entry.Key);
 
-                foreach (var moObject in moObjects) {
+                foreach (var productCode in products) {
                     Logger.LogFormat(
                         LogLevel.Info,
                         "Found family {0} with product {1}",
                         entry.Value,
-                        moObject["ProductCode"]);
+                        productCode);
                 }
 
-                if (moObjects.Count > 0 && !entry.Value.Equals(onboardFamily, StringComparison.OrdinalIgnoreCase)) {
+                if (products.Count > 0 && !entry.Value.Equals(onboardFamily, StringComparison.OrdinalIgnoreCase)) {
                     if (entry.Value.Equals(onboardFamily, StringComparison.OrdinalIgnoreCase)) {
                         foundCompatible = true;
                     } else {
