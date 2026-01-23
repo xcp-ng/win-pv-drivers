@@ -21,7 +21,7 @@ namespace XenDriverUtils {
         public static List<ThirdPartyStorageDriver> Find3PStorageDrivers() {
             var found3PDrivers = new List<ThirdPartyStorageDriver>();
             foreach (var classGuid in StorageClasses) {
-                var devInfo = PInvoke.SetupDiGetClassDevs(classGuid, null, HWND.Null, 0);
+                using var devInfo = PInvoke.SetupDiGetClassDevs(classGuid, null, HWND.Null, 0);
                 foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)
                     .Where(x => DriverUtils.GetDeviceEnumeratorName(devInfo, x) == "PCI")) {
                     var driverPath = DriverUtils.GetDeviceDriverInfPath(devInfo, devInfoData);

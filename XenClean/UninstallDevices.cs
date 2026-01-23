@@ -22,7 +22,7 @@ namespace XenClean {
         };
 
         static void RemoveDevices(XenDeviceInfo xenInfo, bool dryRun) {
-            var devInfo = PInvoke.SetupDiGetClassDevs(
+            using var devInfo = PInvoke.SetupDiGetClassDevs(
                 xenInfo.ClassGuid,
                 null,
                 HWND.Null,

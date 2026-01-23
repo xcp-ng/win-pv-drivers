@@ -79,38 +79,38 @@ namespace XenInstCA {
                 return ActionResult.Success;
             }
 
-            var devInfo = PInvoke.SetupDiGetClassDevs(
+            var collectedInfPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            using (var devInfo = PInvoke.SetupDiGetClassDevs(
                 xenInfo.ClassGuid,
                 null,
                 HWND.Null,
-                xenInfo.ClassGuid.HasValue ? 0 : SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES);
-            var collectedInfPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                xenInfo.ClassGuid.HasValue ? 0 : SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES)) {
+                foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)) {
+                    List<string> hardwareIds = DriverUtils.GetDeviceHardwareAndCompatibleIds(devInfo, devInfoData);
+                    if (hardwareIds.All(x => !xenInfo.MatchesId(x, checkKnown: true, checkIncompatible: false))) {
+                        continue;
+                    }
 
-            foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)) {
-                List<string> hardwareIds = DriverUtils.GetDeviceHardwareAndCompatibleIds(devInfo, devInfoData);
-                if (hardwareIds.All(x => !xenInfo.MatchesId(x, checkKnown: true, checkIncompatible: false))) {
-                    continue;
-                }
+                    var instanceId = DriverUtils.GetDeviceInstanceId(devInfo, devInfoData);
+                    if (instanceId != null) {
+                        Logger.Log($"Found {driver.DriverName} device: {instanceId}");
+                    } else {
+                        Logger.Log($"Found {driver.DriverName} device");
+                    }
 
-                var instanceId = DriverUtils.GetDeviceInstanceId(devInfo, devInfoData);
-                if (instanceId != null) {
-                    Logger.Log($"Found {driver.DriverName} device: {instanceId}");
-                } else {
-                    Logger.Log($"Found {driver.DriverName} device");
-                }
+                    var infName = DriverUtils.GetDeviceDriverInfPath(devInfo, devInfoData);
+                    Logger.Log($"Current inf path: {infName}");
+                    if (!string.IsNullOrEmpty(infName)
+                            && infName.StartsWith("oem", StringComparison.OrdinalIgnoreCase)) {
+                        collectedInfPaths.Add(infName);
+                    }
 
-                var infName = DriverUtils.GetDeviceDriverInfPath(devInfo, devInfoData);
-                Logger.Log($"Current inf path: {infName}");
-                if (!string.IsNullOrEmpty(infName)
-                        && infName.StartsWith("oem", StringComparison.OrdinalIgnoreCase)) {
-                    collectedInfPaths.Add(infName);
-                }
-
-                try {
-                    DriverUtils.UninstallDevice(devInfo, devInfoData, out var thisNeedsReboot);
-                    needsReboot |= thisNeedsReboot;
-                } catch (Exception ex) {
-                    Logger.Log($"Cannot uninstall device: {ex.Message}");
+                    try {
+                        DriverUtils.UninstallDevice(devInfo, devInfoData, out var thisNeedsReboot);
+                        needsReboot |= thisNeedsReboot;
+                    } catch (Exception ex) {
+                        Logger.Log($"Cannot uninstall device: {ex.Message}");
+                    }
                 }
             }
 

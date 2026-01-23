@@ -40,7 +40,7 @@ namespace XenInstCA {
 
             var incompatibilities = new List<string>();
 
-            var devInfo = PInvoke.SetupDiGetClassDevs(
+            using var devInfo = PInvoke.SetupDiGetClassDevs(
                 (Guid?)null,
                 null,
                 HWND.Null,
