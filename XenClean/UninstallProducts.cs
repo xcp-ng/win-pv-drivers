@@ -2,22 +2,23 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using XenDriverUtils;
 
 namespace XenClean {
     static class UninstallProducts {
         // maps from upgrade code to onboard family
-        static readonly IReadOnlyDictionary<string, string> KnownUpgradeCodes = new Dictionary<string, string>() {
+        static readonly IReadOnlyDictionary<string, IReadOnlyList<string>> KnownUpgradeCodes = new Dictionary<string, IReadOnlyList<string>>() {
             // x64 drivers version 6.6.557 from XS 6.6.90
             // must be uninstalled in the correct order
             // Citrix XenServer Tools Installer
-            { "{21EF141F-9126-42DA-93CD-B50442047420}", "XenServer" },
+            { "{21EF141F-9126-42DA-93CD-B50442047420}", new List<string>() { "XenServer" } },
             // Citrix XenServer Windows Guest Agent
-            { "{48E5492C-6843-452E-97A2-A5FE2D24B141}", "XenServer" },
+            { "{48E5492C-6843-452E-97A2-A5FE2D24B141}", new List<string>() { "XenServer" } },
             // Citrix XenServer VSS Provider
-            { "{D8709720-65B7-4CD9-9F51-68DB592B604D}", "XenServer" },
+            { "{D8709720-65B7-4CD9-9F51-68DB592B604D}", new List<string>() { "XenServer" } },
             // Citrix Xen Windows x64 PV Drivers
-            { "{53858014-F814-49A1-9D63-CA2578432E73}", "XenServer" },
+            { "{53858014-F814-49A1-9D63-CA2578432E73}", new List<string>() { "XenServer" } },
 
             // Citrix uses the same package code as the Citrix XenServer Windows Guest Agent
             // in their multi-package XS 6.6 drivers for their 7.1 series drivers
@@ -25,16 +26,16 @@ namespace XenClean {
             // XCP-ng 8.2 x64 also uses the same upgrade code.
 
             // Citrix Hypervisor/XS8
-            { "{AF9B2559-3E91-4206-98C2-F560009FF7F1}", "XenServer+XCP-ng" },
+            { "{AF9B2559-3E91-4206-98C2-F560009FF7F1}", new List<string>() { "XenServer", "XCP-ng" } },
 
             // generic x86 (does not work due to check in Invoke-XenClean)
-            { "{10828840-D8A9-4953-B44A-1F1D3CD7ECB0}", "XenServer" },
+            { "{10828840-D8A9-4953-B44A-1F1D3CD7ECB0}", new List<string>() { "Unknown" } },
             // generic x64
-            { "{D60FED1E-316C-41B0-B7A5-E44951A82618}", "XenServer" },
+            { "{D60FED1E-316C-41B0-B7A5-E44951A82618}", new List<string>() { "Unknown" } },
 
             // ours
-            { VersionInfo.MsiUpgradeCodeX86, VersionInfo.VendorName },
-            { VersionInfo.MsiUpgradeCodeX64, VersionInfo.VendorName },
+            { VersionInfo.MsiUpgradeCodeX86, new List<string>() { VersionInfo.VendorName } },
+            { VersionInfo.MsiUpgradeCodeX64, new List<string>() { VersionInfo.VendorName } },
         };
 
         public static void Execute(bool dryRun) {
@@ -65,17 +66,15 @@ namespace XenClean {
                 var products = ProductUtils.EnumerateProducts(entry.Key);
 
                 foreach (var productCode in products) {
-                    Logger.LogFormat(
-                        LogLevel.Info,
-                        "Found family {0} with product {1}",
-                        entry.Value,
-                        productCode);
+                    Logger.LogFormat(LogLevel.Info, "Found product {0}", productCode);
                 }
 
-                if (products.Count > 0 && !entry.Value.Equals(onboardFamily, StringComparison.OrdinalIgnoreCase)) {
-                    if (entry.Value.Equals(onboardFamily, StringComparison.OrdinalIgnoreCase)) {
+                if (products.Count > 0) {
+                    if (entry.Value.All(x => x.Equals(onboardFamily, StringComparison.OrdinalIgnoreCase))) {
+                        Logger.LogFormat(LogLevel.Info, "Found compatible products of upgrade code {0}", entry.Key);
                         foundCompatible = true;
                     } else {
+                        Logger.LogFormat(LogLevel.Info, "Found INCOMPATIBLE products of upgrade code {0}", entry.Key);
                         foundIncompatible = true;
                     }
                 }
