@@ -80,6 +80,8 @@
     <Property Id="XenMinSupportedVersion" Value="10.0.14393" />
     <CustomActionRef Id="XenCheckWindowsVersion" />
 
+    <CustomActionRef Id="XenCheckReadyForCopyXenvif" />
+
     <CustomActionRef Id="XenCheck3PStorageDrivers" />
 
     <CustomActionRef Id="XenWaitDriverInstall" />

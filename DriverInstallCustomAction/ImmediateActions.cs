@@ -32,6 +32,16 @@ namespace XenInstCA {
         }
 
         [CustomAction]
+        public static ActionResult CheckReadyForCopyXenvif(Session session) {
+            using var logScope = new LoggerScope(new MsiSessionLogger(session));
+
+            if (!XenOffboard.IsReadyForCopyXenvif()) {
+                session["NotReadyForCopyXenvif"] = "1";
+            }
+            return ActionResult.Success;
+        }
+
+        [CustomAction]
         public static ActionResult Check3PStorageDrivers(Session session) {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
 

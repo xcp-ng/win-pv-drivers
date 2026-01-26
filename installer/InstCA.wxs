@@ -29,6 +29,17 @@
   </Fragment>
 
   <Fragment>
+    <CustomAction Id="XenCheckReadyForCopyXenvif" BinaryRef="xeninst.dll" DllEntry="CheckReadyForCopyXenvif" Execute="firstSequence" Impersonate="no" />
+    <InstallUISequence>
+      <Custom Action="XenCheckReadyForCopyXenvif" Before="LaunchConditions" />
+    </InstallUISequence>
+    <InstallExecuteSequence>
+      <Custom Action="XenCheckReadyForCopyXenvif" Before="LaunchConditions" />
+    </InstallExecuteSequence>
+    <Launch Condition="NOT NotReadyForCopyXenvif" Message="!(loc.RebootPendingError)" />
+  </Fragment>
+
+  <Fragment>
     <CustomAction Id="XenCheck3PStorageDrivers" BinaryRef="xeninst.dll" DllEntry="Check3PStorageDrivers" Execute="immediate" Impersonate="no" />
     <!-- Check3PStorageDrivers is currently only used for Detected3PStorageDriversDlg. So no need to run this during InstallExecuteSequence. -->
     <InstallUISequence>

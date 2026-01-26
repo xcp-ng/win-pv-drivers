@@ -80,5 +80,18 @@ namespace XenDriverUtils {
             Logger.Log("Scheduling Xenvif restore");
             RunCopyXenvifScript(ScriptMode.Restore, ExecutionMode.Install, DeviceType.Emulated, dryRun: dryRun);
         }
+
+        public static bool IsReadyForCopyXenvif() {
+            var schtasksPath = Path.Combine(Environment.SystemDirectory, "schtasks.exe");
+
+            using var process = ProcessRedirector.LogCommand(
+                schtasksPath,
+                "/query /tn Copy-XenVifSettings /hresult",
+                TimeSpan.FromMinutes(1),
+                LogLevel.Info);
+
+            // 0x80070002 (ERROR_FILE_NOT_FOUND in HRESULT form)
+            return process.ExitCode == -2147024894;
+        }
     }
 }
