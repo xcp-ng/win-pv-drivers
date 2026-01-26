@@ -23,14 +23,6 @@ namespace XenInstCA {
         }
 
         [CustomAction]
-        public static ActionResult CheckReboot(Session session) {
-            if (XenOnboard.CaIsRebootScheduled()) {
-                session.SetMode(InstallRunMode.RebootAtEnd, true);
-            }
-            return ActionResult.Success;
-        }
-
-        [CustomAction]
         public static ActionResult CheckIncompatibleDevices(Session session) {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
 
@@ -45,6 +37,14 @@ namespace XenInstCA {
 
             var found3PDrivers = XenCleanup.Find3PStorageDrivers();
             session["ThirdPartyStorageDrivers"] = string.Join(",", found3PDrivers.Select(x => x.DriverInfPath));
+            return ActionResult.Success;
+        }
+
+        [CustomAction]
+        public static ActionResult ScheduleReboot(Session session) {
+            if (XenOnboard.CaIsRebootScheduled()) {
+                session.SetMode(InstallRunMode.RebootAtEnd, true);
+            }
             return ActionResult.Success;
         }
     }

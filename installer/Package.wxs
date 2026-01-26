@@ -75,13 +75,15 @@
       <ScheduleReboot After="InstallFinalize" Condition="XenNeedsReboot" />
     </InstallExecuteSequence>
 
-    <CustomActionRef Id="CheckRebootCA" />
     <CustomActionRef Id="XenCheckIncompatibleDevices" />
-    <CustomActionRef Id="XenWaitDriverInstall" />
 
     <Property Id="XenMinSupportedVersion" Value="10.0.14393" />
     <CustomActionRef Id="XenCheckWindowsVersion" />
 
     <CustomActionRef Id="XenCheck3PStorageDrivers" />
+
+    <CustomActionRef Id="XenWaitDriverInstall" />
+
+    <CustomActionRef Id="XenScheduleRebootCA" />
   </Package>
 </Wix>

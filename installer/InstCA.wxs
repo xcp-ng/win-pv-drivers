@@ -3,6 +3,8 @@
   <Fragment>
     <Binary Id="xeninst.dll" SourceFile="xeninst.CA.dll" />
   </Fragment>
+  
+  <!-- Note that launch conditions here mean "continue if true", and so conditions that block installation must be inverted -->
 
   <Fragment>
     <CustomAction Id="XenCheckIncompatibleDevices" BinaryRef="xeninst.dll" DllEntry="CheckIncompatibleDevices" Execute="firstSequence" Impersonate="no" />
@@ -13,13 +15,6 @@
       <Custom Action="XenCheckIncompatibleDevices" Before="LaunchConditions" />
     </InstallExecuteSequence>
     <Launch Condition="NOT IncompatibleDevices" Message="!(loc.IncompatibleDevicesError)" />
-  </Fragment>
-
-  <Fragment>
-    <CustomAction Id="CheckRebootCA" BinaryRef="xeninst.dll" DllEntry="CheckReboot" Execute="immediate" Impersonate="no" />
-    <InstallExecuteSequence>
-      <Custom Action="CheckRebootCA" After="InstallFinalize" />
-    </InstallExecuteSequence>
   </Fragment>
 
   <Fragment>
@@ -34,6 +29,14 @@
   </Fragment>
 
   <Fragment>
+    <CustomAction Id="XenCheck3PStorageDrivers" BinaryRef="xeninst.dll" DllEntry="Check3PStorageDrivers" Execute="immediate" Impersonate="no" />
+    <!-- Check3PStorageDrivers is currently only used for Detected3PStorageDriversDlg. So no need to run this during InstallExecuteSequence. -->
+    <InstallUISequence>
+      <Custom Action="XenCheck3PStorageDrivers" Before="LaunchConditions" Condition="NOT(REINSTALL OR REMOVE)" />
+    </InstallUISequence>
+  </Fragment>
+
+  <Fragment>
     <CustomAction Id="XenWaitDriverInstall" BinaryRef="xeninst.dll" DllEntry="DriverWaitInstallFinish" Execute="deferred" Impersonate="no" />
     <InstallExecuteSequence>
       <Custom Action="XenWaitDriverInstall" After="WriteRegistryValues" />
@@ -44,9 +47,9 @@
   </Fragment>
 
   <Fragment>
-    <CustomAction Id="XenCheck3PStorageDrivers" BinaryRef="xeninst.dll" DllEntry="Check3PStorageDrivers" Execute="immediate" Impersonate="no" />
-    <InstallUISequence>
-      <Custom Action="XenCheck3PStorageDrivers" Before="LaunchConditions" Condition="NOT(REINSTALL OR REMOVE)" />
-    </InstallUISequence>
+    <CustomAction Id="XenScheduleRebootCA" BinaryRef="xeninst.dll" DllEntry="ScheduleReboot" Execute="immediate" Impersonate="no" />
+    <InstallExecuteSequence>
+      <Custom Action="XenScheduleRebootCA" After="InstallFinalize" />
+    </InstallExecuteSequence>
   </Fragment>
 </Wix>
