@@ -53,5 +53,23 @@ namespace XenDriverUtils {
 
             return result;
         }
+
+        public static bool HasIncompatibleXenbus() {
+            using var devInfo = PInvoke.SetupDiGetClassDevs(
+                (Guid?)null,
+                null,
+                HWND.Null,
+                // we are only interested in present vendor Xenbus (which we can't remove)
+                SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_PRESENT | SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES);
+            foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)) {
+                List<string> deviceIds = DriverUtils.GetDeviceHardwareAndCompatibleIds(devInfo, devInfoData);
+                if (deviceIds.Any(x => XenDeviceInfo.KnownDevices["Xenbus"].MatchesId(x, checkKnown: false, checkIncompatible: true))) {
+                    Logger.LogFormat(LogLevel.Interactive, "Found incompatible Xenbus: {0}", string.Join(",", deviceIds));
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }

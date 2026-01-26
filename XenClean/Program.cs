@@ -12,6 +12,12 @@ class Program {
             return false;
         }
 
+        if (XenOnboard.HasIncompatibleXenbus()) {
+            Logger.Log(LogLevel.Alert, "Onboarding denied due to presence of incompatible Xenbus device");
+            exitCode = ExitCode.OnboardDenied;
+            return false;
+        }
+
         var thirdparty = XenCleanup.Find3PStorageDrivers();
         if (thirdparty.Count > 0) {
             Logger.Log(LogLevel.Alert, "Onboarding denied due to 3rd-party storage drivers");
