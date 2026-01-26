@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization xmlns="http://wixtoolset.org/schemas/v4/wxl" Culture="en-US">
+  <?include ../Include.wxi ?>
+
+  <String Id="Detected3PStorageDriversDlg_Title" Value="Third-party storage drivers detected" />
+  <String Id="Detected3PStorageDriversDlg_DriverListText" Value="Found third-party storage drivers: [ThirdPartyStorageDrivers]" />
+  <String Id="Detected3PStorageDriversDlg_WarningText" Value="To avoid boot failures during uninstallation, it is not recommended to install !(loc.PVDiskFeatureTitle) on systems with third-party storage drivers. Continue anyway?" />
+  <String Id="XenDriversUIContinue" Value="Continue" />
+</WixLocalization>

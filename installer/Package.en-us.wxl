@@ -8,8 +8,6 @@ This file contains the declaration of all the localizable strings.
   <String Id="GenericProductName" Value="Windows Guest Tools" />
   <String Id="ProductName" Value="$(VENDOR_NAME) Windows Guest Tools" />
 
-  <String Id="XenWindowsNotSupportedError" Value="This version of Windows is not supported. Minimum supported version: [XenMinSupportedVersion]. Current version: [XenWindowsNotSupported]." />
-
   <String Id="MachineIsX64Error" Value="Please install the 64-bit version of this package on 64-bit systems." />
 
   <String Id="NetFx462RequiredError" Value="[ProductName] requires .NET 4.6.2 or later." />
@@ -18,19 +16,9 @@ This file contains the declaration of all the localizable strings.
 You may need to run the XenClean tool." />
   <String Id="CitrixDriversDetectedError" Value="Citrix PV drivers detected. Uninstall them before continuing." />
   <String Id="DowngradeError" Value="A newer version of [ProductName] is already installed." />
-  <String Id="RebootPendingError" Value="A reboot is pending. Reboot the system before attempting install." />
-  <String Id="IncompatibleDevicesError" Value="Found incompatible devices: [IncompatibleDevices].
-Disable the &quot;Manage Citrix PV drivers via Windows Update&quot; feature and uninstall all existing drivers before continuing.
-You may need to run the XenClean tool." />
 
   <String Id="DriverInstallText" Value="Preparing install" />
   <String Id="DriverUninstallText" Value="Preparing uninstall" />
-  <String Id="XenWaitDriverInstallText" Value="Finalizing" />
 
   <String Id="XenbusCleanupText" Value="Cleaning up" />
-
-  <String Id="Detected3PStorageDriversDlg_Title" Value="Third-party storage drivers detected" />
-  <String Id="Detected3PStorageDriversDlg_DriverListText" Value="Found third-party storage drivers: [ThirdPartyStorageDrivers]" />
-  <String Id="Detected3PStorageDriversDlg_WarningText" Value="To avoid boot failures during uninstallation, it is not recommended to install !(loc.PVDiskFeatureTitle) on systems with third-party storage drivers. Continue anyway?" />
-  <String Id="XenDriversUIContinue" Value="Continue" />
 </WixLocalization>
