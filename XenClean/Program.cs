@@ -12,12 +12,6 @@ class Program {
             return false;
         }
 
-        if (XenOnboard.HasIncompatibleXenbus()) {
-            Logger.Log(LogLevel.Alert, "Onboarding denied due to presence of incompatible Xenbus device");
-            exitCode = ExitCode.OnboardDenied;
-            return false;
-        }
-
         var thirdparty = XenCleanup.Find3PStorageDrivers();
         if (thirdparty.Count > 0) {
             Logger.Log(LogLevel.Alert, "Onboarding denied due to 3rd-party storage drivers");
@@ -27,21 +21,30 @@ class Program {
 
         UninstallProducts.FindRelatedProducts(onboardFamily, out var foundCompatible, out var foundIncompatible);
         var foundDrivers = UninstallDrivers.FindDrivers();
+        var foundXenbus = XenOnboard.HasIncompatibleXenbus();
+
         Logger.LogFormat(
             LogLevel.Info,
-            "foundCompatible={0} foundIncompatible={1} foundDrivers={2}",
+            "foundCompatible={0} foundIncompatible={1} foundDrivers={2} foundXenbus={3}",
             foundCompatible,
             foundIncompatible,
-            foundDrivers);
+            foundDrivers,
+            foundXenbus);
 
         if (foundCompatible && !foundIncompatible) {
             Logger.Log(LogLevel.Interactive, "Onboarding already completed");
             exitCode = ExitCode.AlreadyOnboarded;
             return false;
         } else if (!foundCompatible && !foundIncompatible && !foundDrivers) {
-            Logger.Log(LogLevel.Interactive, "No drivers present, ready for onboard");
-            exitCode = ExitCode.ReadyForOnboard;
-            return false;
+            if (foundXenbus) {
+                Logger.Log(LogLevel.Alert, "Onboarding denied due to presence of incompatible Xenbus device");
+                exitCode = ExitCode.OnboardDenied;
+                return false;
+            } else {
+                Logger.Log(LogLevel.Interactive, "No drivers present, ready for onboard");
+                exitCode = ExitCode.ReadyForOnboard;
+                return false;
+            }
         }
 
         exitCode = ExitCode.Error;
