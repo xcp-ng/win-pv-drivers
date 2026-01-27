@@ -51,13 +51,13 @@ namespace XenClean {
                     }
 
                     if (value == null) {
-                        Logger.LogFormat(LogLevel.Info, "{0}=({1})(null)", displayName, kind);
+                        Logger.LogFormat(LogLevel.Trace, "{0}=({1})(null)", displayName, kind);
                     } else if (value is string[] stringArray) {
-                        Logger.LogFormat(LogLevel.Info, "{0}=({1}){2}", displayName, kind, string.Join("|", stringArray));
+                        Logger.LogFormat(LogLevel.Trace, "{0}=({1}){2}", displayName, kind, string.Join("|", stringArray));
                     } else if (value is byte[] byteArray) {
-                        Logger.LogFormat(LogLevel.Info, "{0}=({1}){2}", displayName, kind, ToHexString(byteArray));
+                        Logger.LogFormat(LogLevel.Trace, "{0}=({1}){2}", displayName, kind, ToHexString(byteArray));
                     } else {
-                        Logger.LogFormat(LogLevel.Info, "{0}=({1}){2}", displayName, kind, value);
+                        Logger.LogFormat(LogLevel.Trace, "{0}=({1}){2}", displayName, kind, value);
                     }
                 }
 
