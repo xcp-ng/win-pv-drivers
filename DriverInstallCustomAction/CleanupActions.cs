@@ -9,13 +9,22 @@ namespace XenInstCA {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
             XenCleanup.XenfiltClassCleanup(dryRun: false);
             XenCleanup.ResetUnplug(dryRun: false);
-            XenCleanup.ResetForceUnplug(dryRun: false);
+            XenCleanup.ResetAllForceUnplug(dryRun: false);
             return ActionResult.Success;
         }
 
         [CustomAction]
         public static ActionResult XenvbdCleanup(Session session) {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
+            XenCleanup.ResetForceUnplug(UnplugType.Disks, dryRun: false);
+            XenCleanup.ResetStartOverride(dryRun: false);
+            return ActionResult.Success;
+        }
+
+        [CustomAction]
+        public static ActionResult XennetCleanup(Session session) {
+            using var logScope = new LoggerScope(new MsiSessionLogger(session));
+            XenCleanup.ResetForceUnplug(UnplugType.Nics, dryRun: false);
             XenCleanup.ResetStartOverride(dryRun: false);
             return ActionResult.Success;
         }

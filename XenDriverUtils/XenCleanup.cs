@@ -12,6 +12,11 @@ namespace XenDriverUtils {
         public string Service { get; set; }
     }
 
+    public enum UnplugType {
+        Disks,
+        Nics,
+    }
+
     public class XenCleanup {
         static readonly IReadOnlyList<Guid> StorageClasses = new List<Guid>() {
             PInvoke.GUID_DEVCLASS_HDC,
@@ -139,15 +144,36 @@ namespace XenDriverUtils {
             }
         }
 
-        public static void ResetForceUnplug(bool dryRun) {
+        public static void ResetAllForceUnplug(bool dryRun) {
             try {
                 using var key = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Services\\XEN", true);
                 if (key == null) {
                     return;
                 }
-                Logger.Log("Resetting Unplug key");
+                Logger.Log("Resetting ForceUnplug key");
                 if (!dryRun) {
                     key.DeleteSubKey("ForceUnplug");
+                }
+            } catch {
+            }
+        }
+
+        public static void ResetForceUnplug(UnplugType unplugType, bool dryRun) {
+            try {
+                using var key = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Services\\XEN\\ForceUnplug", true);
+                if (key == null) {
+                    return;
+                }
+                Logger.LogFormat(LogLevel.Interactive, "Resetting ForceUnplug for type {0}", unplugType);
+                if (!dryRun) {
+                    switch (unplugType) {
+                        case UnplugType.Disks:
+                            key.DeleteValue("DISKS");
+                            break;
+                        case UnplugType.Nics:
+                            key.DeleteValue("NICS");
+                            break;
+                    }
                 }
             } catch {
             }

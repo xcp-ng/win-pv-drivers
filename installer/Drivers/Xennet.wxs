@@ -12,6 +12,8 @@
       <File Name="xennet.sys" />
     </ComponentGroup>
 
+    <CustomAction Id="XennetCleanup" BinaryRef="xeninst.dll" DllEntry="XennetCleanup" Execute="deferred" Impersonate="no" />
+
     <!-- although the actions are named Xenvif, they must be executed during Xennet uninstall since the VIF settings are bound to Xennet instances -->
 
     <CustomAction Id="XenvifBackup" BinaryRef="xeninst.dll" DllEntry="XenvifBackup" Execute="deferred" Impersonate="no" />
@@ -20,6 +22,7 @@
     <InstallExecuteSequence>
       <Custom Action="XenvifPrepareRestore" Before="XennetUninstall" Condition="$Xennet.inf=2" />
       <Custom Action="XenvifBackup" Before="XenvifPrepareRestore" Condition="$Xennet.inf=2" />
+      <Custom Action="XennetCleanup" Before="XenbusCleanup" Condition="$Xennet.inf=2" />
     </InstallExecuteSequence>
 
     <SetProperty Id="$(XenDriver)ServiceDelete" Value="Services=xennet" After="CostFinalize" Sequence="execute" />
