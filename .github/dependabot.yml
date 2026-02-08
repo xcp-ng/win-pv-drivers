@@ -11,7 +11,12 @@ updates:
         patterns:
           - "actions/*"
   - package-ecosystem: "nuget"
-    directory: "/"
+    directories:
+      - "/DriverInstallCustomAction"
+      - "/installer"
+      - "/XenBootFix"
+      - "/XenClean"
+      - "/XenDriverUtils"
     schedule:
       interval: "weekly"
     cooldown:
