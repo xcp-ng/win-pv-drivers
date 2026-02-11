@@ -20,8 +20,13 @@ namespace XenDriverUtils {
             return PInvoke.GlobalFindAtom(RebootScheduledAtomName) != 0;
         }
 
-        public static List<string> FindIncompatibleDevices() {
+        public static List<string> FindIncompatibleDevices(bool presentOnly) {
             var result = new List<string>();
+
+            var flags = SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES;
+            if (presentOnly) {
+                flags |= SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_PRESENT;
+            }
 
             using var devInfo = PInvoke.SetupDiGetClassDevs(
                 (Guid?)null,

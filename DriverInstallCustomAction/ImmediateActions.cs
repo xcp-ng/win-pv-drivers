@@ -26,7 +26,7 @@ namespace XenInstCA {
         public static ActionResult CheckIncompatibleDevices(Session session) {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
 
-            var incompatibilities = XenOnboard.FindIncompatibleDevices();
+            var incompatibilities = XenOnboard.FindIncompatibleDevices(true);
             session["IncompatibleDevices"] = string.Join(",", incompatibilities);
             return ActionResult.Success;
         }
