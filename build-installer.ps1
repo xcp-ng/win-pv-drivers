@@ -65,15 +65,9 @@ if ($Target -ine "Clean") {
     $XenCleanDir = "$PackageDir\XenClean"
     New-Item -Path $XenCleanDir -ItemType Directory -Force
     Copy-Item `
-        -Path "$PSScriptRoot\XenClean\bin\$Platform\$Configuration\net462\Invoke-XenClean.ps1" `
-        -Destination $XenCleanDir\ `
-        -Force
-
-    New-Item -Path $XenCleanDir\bin -ItemType Directory -Force
-    Copy-Item `
         -Path "$PSScriptRoot\XenClean\bin\$Platform\$Configuration\net462\*" `
-        -Exclude Invoke-XenClean.ps1, *.pdb `
-        -Destination $XenCleanDir\bin\ `
+        -Include *.exe `
+        -Destination $XenCleanDir\ `
         -Force
 
     # XenBootFix
