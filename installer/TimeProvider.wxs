@@ -3,17 +3,28 @@
   xmlns="http://wixtoolset.org/schemas/v4/wxs"
   xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <?include Include.wxi?>
+  <?if $(Configuration) = Debug?>
+  <?define TimeProviderFeatureDisplay = "collapse"?>
+  <?define TimeProviderFeatureLevel = "1"?>
+  <?else?>
+  <?define TimeProviderFeatureDisplay = "hidden"?>
+  <?define TimeProviderFeatureLevel = "0"?>
+  <?endif?>
 
   <Fragment>
-    <Feature
-      Id="TimeProviderFeature"
-      AllowAdvertise="no"
-      Display="hidden"
-      Level="0"
-      Title="!(loc.TimeProviderFeatureTitle)"
-      Description="!(loc.TimeProviderFeatureDescription)">
-      <ComponentGroupRef Id="TimeProviderComponent" />
-    </Feature>
+    <ComponentGroup Id="TimeProviderImportComponent" />
+    <FeatureRef Id="PVIfaceFeature">
+      <Feature
+        Id="TimeProviderFeature"
+        AllowAdvertise="no"
+        Display="$(var.TimeProviderFeatureDisplay)"
+        Level="$(var.TimeProviderFeatureLevel)"
+        Title="!(loc.TimeProviderFeatureTitle)"
+        Description="!(loc.TimeProviderFeatureDescription)">
+        <ComponentGroupRef Id="TimeProviderComponent" />
+        <ComponentGroupRef Id="DisableTimeSyncComponent" />
+      </Feature>
+    </FeatureRef>
 
     <DirectoryRef Id="INSTALLFOLDER">
       <Directory Id="XenTimeProviderFolder" Name="XenTimeProvider" />

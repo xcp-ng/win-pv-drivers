@@ -12,15 +12,19 @@
         Level="2"
         Title="!(loc.DisableTimeSyncFeatureTitle)"
         Description="!(loc.DisableTimeSyncFeatureDescription)">
-        <Component>
-          <RegistryValue
-            Root="HKLM"
-            Key="SYSTEM\CurrentControlSet\Services\xenagent"
-            Name="TimeSyncMode"
-            Type="integer"
-            Value="0" />
-        </Component>
+        <ComponentGroupRef Id="DisableTimeSyncComponent" />
       </Feature>
     </FeatureRef>
+
+    <ComponentGroup Id="DisableTimeSyncComponent">
+      <Component>
+        <RegistryValue
+          Root="HKLM"
+          Key="SYSTEM\CurrentControlSet\Services\xenagent"
+          Name="TimeSyncMode"
+          Type="integer"
+          Value="0" />
+      </Component>
+    </ComponentGroup>
   </Fragment>
 </Wix>
