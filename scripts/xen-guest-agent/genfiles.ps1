@@ -26,6 +26,7 @@ function Update-BrandingFile {
             [uint64]$ProductVersion.Revision)
 
     $NewBranding = @"
+#[allow(clippy::never_loop)]
 loop {
     res.set_version_info(winres::VersionInfo::FILEVERSION, ${NewFileVersionValue});
     res.set_version_info(winres::VersionInfo::PRODUCTVERSION, ${NewProductVersionValue});
