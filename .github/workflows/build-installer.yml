@@ -67,8 +67,8 @@ jobs:
           Expand-Archive -Path .\wix.zip -DestinationPath .\deps\wix\ -Force
         env:
           # Dependency download links hardcoded for transparency.
-          WIX_ZIP_URI: https://github.com/xcp-ng/wix-builder/releases/download/v6.0.1-xcpng.0/artifacts.zip
-          WIX_ZIP_SHA256: 4d93cd40e778c1b9bebee7b0f2b1232c8e87f470a50eac212e2ed3bebad6e5b8
+          WIX_ZIP_URI: https://github.com/xcp-ng/wix-builder/releases/download/v6.0.2-xcpng.1/wix.zip
+          WIX_ZIP_SHA256: ccfe8c75f95ea4c4f68a920be827f46c33ce381cc9201a10f565999e3d3b6dd1
       - name: Download drivers
         uses: actions/download-artifact@v7
         with:

@@ -18,8 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="WixToolset.Dtf.CustomAction" Version="6.0.1-xcpng.0" />
-    <PackageReference Include="WixToolset.Dtf.WindowsInstaller" Version="6.0.1-xcpng.0" />
+    <PackageReference Include="WixToolset.Dtf.CustomAction" Version="6.0.2-xcpng.1" />
+    <PackageReference Include="WixToolset.Dtf.WindowsInstaller" Version="6.0.2-xcpng.1" />
   </ItemGroup>
 
   <ItemGroup>
