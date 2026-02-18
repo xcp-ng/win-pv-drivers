@@ -31,3 +31,6 @@
 [submodule "xentimeprovider"]
 	path = xentimeprovider
 	url = https://github.com/xcp-ng/win-xentimeprovider.git
+[submodule "xstdvga"]
+	path = xstdvga
+	url = https://github.com/xcp-ng/win-xstdvga.git

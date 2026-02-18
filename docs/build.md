@@ -46,6 +46,7 @@ $PackageVersions = @{
     XenBootFix      = '9.0.9010.0'  # defaults to product version
     XenGuestAgent   = '9.0.9011.0'  # defaults to product version
     XenTimeProvider = '9.0.9012.0'  # defaults to product version
+    xstdvga         = '9.0.9013.0'  # defaults to product version
 }
 
 # These variables influence the UpgradeCode property of generated MSI packages.
@@ -88,10 +89,20 @@ The binaries are located at `xen-guest-agent\target\<configuration>`.
 Run the command:
 
 ```powershell
-.\build-timeprovider.ps1 -Configuration Release
+.\build-timeprovider.ps1 -Configuration Release -Platform x64
 ```
 
 The binaries are located at `xentimeprovider\<platform>\<configuration>`.
+
+## Building the XSTDVGA driver
+
+Run the command:
+
+```powershell
+.\build-xstdvga.ps1 -Configuration Release -Platform x64
+```
+
+The binaries are located at `xstdvga\<VS version>\<platform>\<configuration>\xstdvga`.
 
 ## Building the installer and release package
 

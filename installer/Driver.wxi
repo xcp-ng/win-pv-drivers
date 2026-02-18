@@ -19,6 +19,8 @@
   <!-- we can use the standard DeleteServices action, but we use our CA instead since we want to reuse the action in XenClean -->
   <CustomAction Id="$(XenDriver)ServiceDelete" BinaryRef="xeninst.dll" DllEntry="XenServiceDelete" Execute="deferred" Impersonate="no" />
 
+  <?ifndef $(XenDriverManualInstallSequence) ?>
+  
   <?ifdef $(XenDriverDependsOn) ?>
   <InstallExecuteSequence>
     <Custom Action="$(XenDriver)InstallRollback" After="$(XenDriverDependsOn)Install" />
@@ -27,11 +29,22 @@
     <Custom Action="$(XenDriver)UninstallRollback" Before="$(XenDriver)Uninstall" />
     <Custom Action="$(XenDriver)ServiceDelete" Before="$(XenDriverDependsOn)ServiceDelete" Condition="$$$(XenDriver).inf=2 AND $(XenDriver)ServiceDelete" />
   </InstallExecuteSequence>
+  <?else ?>
+  <InstallExecuteSequence>
+    <Custom Action="$(XenDriver)InstallRollback" After="InstallFiles" />
+    <Custom Action="$(XenDriver)Install" After="$(XenDriver)InstallRollback" Condition="$$$(XenDriver).inf=3" />
+    <Custom Action="$(XenDriver)UninstallRollback" After="DeleteServices" />
+    <Custom Action="$(XenDriver)Uninstall" After="$(XenDriver)UninstallRollback" Condition="$$$(XenDriver).inf=2" />
+    <Custom Action="$(XenDriver)ServiceDelete" Before="RemoveFiles" Condition="$$$(XenDriver).inf=2 AND $(XenDriver)ServiceDelete" />
+  </InstallExecuteSequence>
+  <?endif ?>
+
   <!-- setting the template doesn't work in either ProgressText or ActionStart[3] and I don't know why -->
   <UI>
     <ProgressText Action="$(XenDriver)Install" Message="!(loc.DriverInstallText)" />
     <ProgressText Action="$(XenDriver)Uninstall" Message="!(loc.DriverUninstallText)" />
   </UI>
+  
   <?endif ?>
 
   <?ifdef $(XenDriverUpgradeNeedsReboot) ?>

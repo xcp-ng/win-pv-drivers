@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <?define XenDriver="Xstdvga" ?>
+    <?include ../Driver.wxi ?>
+
+    <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.xstdvga)">
+      <File Name="xstdvga.cat" DefaultVersion="$(XstdvgaVersion)" DefaultLanguage="1033" />
+      <File Name="xstdvga.inf" Id="Xstdvga.inf" DefaultVersion="$(XstdvgaVersion)" DefaultLanguage="1033" />
+      <File Name="xstdvga.sys" />
+    </ComponentGroup>
+  </Fragment>
+</Wix>

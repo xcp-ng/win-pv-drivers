@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="en-us" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+  <?include Include.wxi ?>
+
+  <String Id="XstdvgaFeatureTitle" Value="VGA Driver" />
+  <String Id="XstdvgaFeatureDescription" Value="Provides high-resolution consoles and resolution switching. Version $(XstdvgaVersion)." />
+</WixLocalization>

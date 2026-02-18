@@ -28,11 +28,20 @@ jobs:
       attestations: write
     secrets: inherit
 
+  build-xstdvga:
+    uses: ./.github/workflows/build-xstdvga.yml
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+    secrets: inherit
+
   build-installer:
     needs:
       - build-drivers
       - build-guestagent
       - build-timeprovider
+      - build-xstdvga
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -84,6 +93,11 @@ jobs:
         with:
           name: timeprovider-signed
           path: xentimeprovider/x64/Release/
+      - name: Download XSTDVGA
+        uses: actions/download-artifact@v7
+        with:
+          name: xstdvga-signed
+          path: xstdvga/vs2022/x64/Release/xstdvga/
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v2
       - name: Configure branding
@@ -106,6 +120,7 @@ jobs:
           PackageVersions_XenBootFix: ${{vars.PackageVersions_XenBootFix}}.${{github.run_number}}
           PackageVersions_XenGuestAgent: ${{vars.PackageVersions_XenGuestAgent}}.${{github.run_number}}
           PackageVersions_XenTimeProvider: ${{vars.PackageVersions_XenTimeProvider}}.${{github.run_number}}
+          PackageVersions_xstdvga: ${{vars.PackageVersions_xstdvga}}.${{github.run_number}}
           MSI_UPGRADE_CODE_X86: ${{vars.MSI_UPGRADE_CODE_X86}}
           MSI_UPGRADE_CODE_X64: ${{vars.MSI_UPGRADE_CODE_X64}}
           # Signer cert must be injected here since unlike the drivers/guestagent,

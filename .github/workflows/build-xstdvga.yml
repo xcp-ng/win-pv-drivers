@@ -1,34 +1,32 @@
-name: build-guestagent
+name: build-xstdvga
 
 on:
   workflow_call:
   workflow_dispatch:
 
 jobs:
-  build-guestagent:
-    runs-on: windows-latest
-    env:
-      X_CARGO_AUDITABLE_VERSION: 0.7.2
+  build-xstdvga:
+    runs-on: windows-2022
     steps:
-      - name: Restore cargo auditable
-        id: restore-cargo-auditable
-        uses: actions/cache/restore@v5
-        with:
-          path: ~\.cargo\bin\
-          key: ${{runner.os}}-cargo-auditable-${{env.X_CARGO_AUDITABLE_VERSION}}
-      - name: Install cargo auditable
-        if: steps.restore-cargo-auditable.outputs.cache-hit != 'true'
-        run: cargo install cargo-auditable@${{env.X_CARGO_AUDITABLE_VERSION}} --locked
-      - name: Save cargo auditable
-        if: steps.restore-cargo-auditable.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v5
-        with:
-          path: ~\.cargo\bin\
-          key: ${{steps.restore-cargo-auditable.outputs.cache-primary-key}}
       - name: Checkout
         uses: actions/checkout@v6
         with:
           submodules: true
+      - name: Add MSBuild
+        uses: microsoft/setup-msbuild@v2
+      - name: Add CodeQL
+        id: add_codeql
+        uses: github/codeql-action/init@v4.32.0
+        with:
+          build-mode: none
+      - name: Add CodeQL to PATH
+        run: Resolve-Path "${{steps.add_codeql.outputs.codeql-path}}\.." | Add-Content -Path $Env:GITHUB_PATH -Force
+      - name: Download packs
+        run: |
+          codeql pack download microsoft/windows-drivers@1.8.2 microsoft/cpp-queries@0.0.4
+          if ($LASTEXITCODE -ne 0) {
+            throw "CodeQL download failed with error $LASTEXITCODE"
+          }
       - name: Configure branding
         run: .\scripts\branding-ci.ps1 -OutFile .\branding.ps1
         env:
@@ -36,6 +34,8 @@ jobs:
           PRODUCT_NAME: ${{vars.PRODUCT_NAME}}
           VENDOR_PREFIX: ${{vars.VENDOR_PREFIX}}
           COPYRIGHT: ${{vars.COPYRIGHT}}
+          FORCE_ACTIVATE: ${{vars.FORCE_ACTIVATE}}
+          FORCE_UNPLUG: ${{vars.FORCE_UNPLUG}}
           PackageVersions_Product: ${{vars.PackageVersions_Product}}.${{github.run_number}}
           PackageVersions_xenbus: ${{vars.PackageVersions_xenbus}}.${{github.run_number}}
           PackageVersions_xencons: ${{vars.PackageVersions_xencons}}.${{github.run_number}}
@@ -52,45 +52,43 @@ jobs:
           PackageVersions_xstdvga: ${{vars.PackageVersions_xstdvga}}.${{github.run_number}}
           MSI_UPGRADE_CODE_X86: ${{vars.MSI_UPGRADE_CODE_X86}}
           MSI_UPGRADE_CODE_X64: ${{vars.MSI_UPGRADE_CODE_X64}}
-      - name: Build guest agent
-        run: .\build-guestagent.ps1 -Configuration release
-      - name: Catalog guest agent
+      - name: Build xstdvga
+        run: .\build-xstdvga.ps1 -Configuration Release -Platform x64
+      - name: Catalog xstdvga
         run: |
           Import-Module .\scripts\artifact.psm1 -Force
-          Get-ArtifactCatalog -Path .\xen-guest-agent\target\release -Include *.exe |
-          Export-Csv -NoTypeInformation guestagent-catalog.csv
-      - name: Upload artifact
+          Get-ArtifactCatalog -Path .\xstdvga\vs2022\x64\Release\xstdvga -Include *.sys |
+          Export-Csv -NoTypeInformation xstdvga-catalog.csv
+      - name: Upload xstdvga
         id: upload
         uses: actions/upload-artifact@v6
         with:
-          name: guestagent
-          path: |
-            xen-guest-agent/target/release/*.exe
-            xen-guest-agent/target/release/*.pdb
-      - name: Upload guest agent catalog
+          path: xstdvga/vs2022/x64/Release/xstdvga
+          name: xstdvga
+      - name: Upload xstdvga catalog
         uses: actions/upload-artifact@v6
         with:
-          path: guestagent-catalog.csv
-          name: guestagent-catalog
+          path: xstdvga-catalog.csv
+          name: xstdvga-catalog
     outputs:
-      subject-name: guestagent
+      subject-name: xstdvga
       subject-digest: sha256:${{steps.upload.outputs.artifact-digest}}
-      catalog-name: guestagent-catalog
+      catalog-name: xstdvga-catalog
 
-  attest-guestagent:
-    needs: [build-guestagent]
+  attest-xstdvga:
+    needs: [build-xstdvga]
     uses: ./.github/workflows/attest.yml
     permissions:
       id-token: write
       contents: read
       attestations: write
     with:
-      subject-name: ${{needs.build-guestagent.outputs.subject-name}}
-      subject-digest: ${{needs.build-guestagent.outputs.subject-digest}}
-      catalog-name: ${{needs.build-guestagent.outputs.catalog-name}}
+      subject-name: ${{needs.build-xstdvga.outputs.subject-name}}
+      subject-digest: ${{needs.build-xstdvga.outputs.subject-digest}}
+      catalog-name: ${{needs.build-xstdvga.outputs.catalog-name}}
 
-  selfsign-guestagent:
-    needs: [build-guestagent]
+  selfsign-xstdvga:
+    needs: [build-xstdvga]
     runs-on: windows-latest
     steps:
       # for the sign scripts
@@ -99,8 +97,8 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v7
         with:
-          path: xen-guest-agent/target/release/
-          name: guestagent
+          path: xstdvga/vs2022/x64/Release/xstdvga/
+          name: xstdvga
       - name: Install certificate
         run: .\scripts\signer-ci.ps1 -OutFile .\branding.ps1
         env:
@@ -109,7 +107,7 @@ jobs:
         run: |
           . .\branding.ps1
           . .\scripts\sign.ps1
-          Set-SignerFileSignature (Get-ChildItem .\xen-guest-agent\target\release -File -Recurse -Include *.dll, *.exe)
+          Set-SignerFileSignature (Get-ChildItem .\xstdvga\vs2022\x64\Release\xstdvga -File -Recurse -Include *.sys, *.cat)
       - name: Clean up certificates
         if: always()
         run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue
@@ -117,5 +115,5 @@ jobs:
         id: upload
         uses: actions/upload-artifact@v6
         with:
-          path: xen-guest-agent/target/release/
-          name: guestagent-signed
+          path: xstdvga/vs2022/x64/Release/xstdvga/
+          name: xstdvga-signed

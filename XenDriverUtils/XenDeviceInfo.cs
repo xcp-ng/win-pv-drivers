@@ -212,6 +212,17 @@ namespace XenDriverUtils {
                     }
                 )
             },
+            // non-Xen
+            {
+                "Xstdvga",
+                new XenDeviceInfo(
+                    ClassGuid: PInvoke.GUID_DEVCLASS_DISPLAY,
+                    HardwareIds: new List<string>() {
+                        $"PCI\\VEN_1234&DEV_1111&CC_0300",
+                        $"PCI\\VEN_1234&DEV_1111&CC_0380",
+                    }
+                )
+            },
             // pseudo-devices
             {
                 "Xendevice",

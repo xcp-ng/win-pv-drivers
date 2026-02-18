@@ -62,6 +62,7 @@
 
     <FeatureRef Id="PVBusFeature" />
     <FeatureRef Id="GuestAgentFeature" />
+    <FeatureRef Id="XstdvgaFeature" />
     <FeatureRef Id="ToolsFeature" />
 
     <InstallExecuteSequence>

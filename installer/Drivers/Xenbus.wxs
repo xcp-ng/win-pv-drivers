@@ -2,6 +2,7 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
     <?define XenDriver="Xenbus" ?>
+    <?define XenDriverManualInstallSequence ?>
     <?define XenDriverUpgradeNeedsReboot ?>
     <?include ../Driver.wxi ?>
 

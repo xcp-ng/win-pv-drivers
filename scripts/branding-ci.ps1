@@ -20,7 +20,17 @@ function Out-SafeString {
         [Parameter()]
         [string]$InputObject,
         [Parameter(Mandatory)]
-        [ValidateSet("Version", "VendorPrefix", "PathSafe", "Freeform", "Hex", "Guid", "Base64", "OneOrEmpty")]
+        [ValidateSet(
+            "Version",
+            "VendorPrefix",
+            "PathSafe",
+            "Freeform",
+            "Hex",
+            "Guid",
+            "Base64",
+            "OneOrEmpty",
+            "DriverVer"
+        )]
         [string]$PatternType
     )
 
@@ -37,6 +47,7 @@ function Out-SafeString {
         "Guid"         = '^\{[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\}$'
         "Base64"       = '^[a-z0-9+/=\r\n\t ]*$'
         "OneOrEmpty"   = '^1?$'
+        "DriverVer"    = '^[0-9]{2}/[0-9]{2}/[0-9]{4},[0-9]+(\.[0-9]+){0,3}$'
     }
 
     if ($InputObject -isnot [string]) {
@@ -78,6 +89,7 @@ $content = @"
     XenBootFix      = '$(Out-SafeString -PatternType Version -InputObject $Env:PackageVersions_XenBootFix)'
     XenGuestAgent   = '$(Out-SafeString -PatternType Version -InputObject $Env:PackageVersions_XenGuestAgent)'
     XenTimeProvider = '$(Out-SafeString -PatternType Version -InputObject $Env:PackageVersions_XenTimeProvider)'
+    xstdvga         = '$(Out-SafeString -PatternType Version -InputObject $Env:PackageVersions_xstdvga)'
 }
 
 `$Env:MSI_UPGRADE_CODE_X86 = '$(Out-SafeString -PatternType Guid -InputObject $Env:MSI_UPGRADE_CODE_X86)'

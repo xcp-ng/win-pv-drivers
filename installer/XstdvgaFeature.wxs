@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <?include Include.wxi?>
+
+  <Fragment>
+    <Feature
+      Id="XstdvgaFeature"
+      AllowAdvertise="no"
+      Title="!(loc.XstdvgaFeatureTitle)"
+      Description="!(loc.XstdvgaFeatureDescription)">
+      <ComponentGroupRef Id="XstdvgaComponent" />
+    </Feature>
+  </Fragment>
+</Wix>
