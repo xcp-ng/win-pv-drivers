@@ -3,16 +3,17 @@
   <Fragment>
     <Binary Id="xeninst.dll" SourceFile="xeninst.CA.dll" />
   </Fragment>
-  
+
   <!-- Note that launch conditions here mean "continue if true", and so conditions that block installation must be inverted -->
 
   <Fragment>
     <CustomAction Id="XenCheckIncompatibleDevices" BinaryRef="xeninst.dll" DllEntry="CheckIncompatibleDevices" Execute="firstSequence" Impersonate="no" />
+    <!-- Need to block upgrade, thus the check for UPGRADINGPRODUCTCODE. Change is blocked but uninstall is still possible -->
     <InstallUISequence>
-      <Custom Action="XenCheckIncompatibleDevices" Before="LaunchConditions" />
+      <Custom Action="XenCheckIncompatibleDevices" Before="LaunchConditions" Condition="NOT REMOVE OR UPGRADINGPRODUCTCODE" />
     </InstallUISequence>
     <InstallExecuteSequence>
-      <Custom Action="XenCheckIncompatibleDevices" Before="LaunchConditions" />
+      <Custom Action="XenCheckIncompatibleDevices" Before="LaunchConditions" Condition="NOT REMOVE OR UPGRADINGPRODUCTCODE" />
     </InstallExecuteSequence>
     <Launch Condition="NOT IncompatibleDevices" Message="!(loc.IncompatibleDevicesError)" />
   </Fragment>
