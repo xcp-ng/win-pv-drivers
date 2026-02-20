@@ -16,7 +16,7 @@ jobs:
         uses: microsoft/setup-msbuild@v2
       - name: Add CodeQL
         id: add_codeql
-        uses: github/codeql-action/init@v4.32.0
+        uses: github/codeql-action/init@v4.32.3
         with:
           build-mode: none
       - name: Add CodeQL to PATH
