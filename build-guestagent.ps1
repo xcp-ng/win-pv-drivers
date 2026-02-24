@@ -19,6 +19,8 @@ try {
     Copy-Item -Force ..\scripts\xen-guest-agent\build.rs .\xen-guest-agent\build.rs
     & "$PSScriptRoot\scripts\xen-guest-agent\genfiles.ps1" -ProjectDir .
 
+    $Env:CARGO_PROFILE_RELEASE_PANIC = "abort"
+
     Write-Host "Cleaning"
     cargo.exe clean
     if ($LASTEXITCODE -ne 0) {
