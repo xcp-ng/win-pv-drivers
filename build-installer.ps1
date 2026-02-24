@@ -21,7 +21,9 @@ param (
     [Parameter()]
     [switch]$NoBuild,
     [Parameter()]
-    [switch]$Sbom
+    [switch]$Sbom,
+    [Parameter()]
+    [switch]$Iso
 )
 
 $ErrorActionPreference = "Stop"
@@ -265,5 +267,12 @@ if ($Target -ine "Clean") {
             -Include *.pdb `
             -Destination $XstdvgaSymbolDir\ `
             -Force
+    }
+
+    if ($Iso) {
+        & "$PSScriptRoot\scripts\New-IsoImage.ps1" `
+            -Path $VersionDir `
+            -ImageFilePath "$OutDir\$ReleaseTag.iso" `
+            -VolumeLabel $ReleaseTag
     }
 }
