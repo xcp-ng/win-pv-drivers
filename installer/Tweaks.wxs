@@ -9,7 +9,6 @@
       <Feature
         Id="DisableTimeSyncFeature"
         AllowAdvertise="no"
-        Level="2"
         Title="!(loc.DisableTimeSyncFeatureTitle)"
         Description="!(loc.DisableTimeSyncFeatureDescription)">
         <ComponentGroupRef Id="DisableTimeSyncComponent" />
