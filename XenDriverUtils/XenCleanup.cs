@@ -130,49 +130,44 @@ namespace XenDriverUtils {
             }
         }
 
-        public static void ResetUnplug(bool dryRun) {
+        static readonly IReadOnlyList<string> UnplugKeys = new List<string>() {
+            "Unplug",
+            "ForceUnplug",
+        };
+
+        public static void ResetAllUnplug(bool dryRun) {
             try {
                 using var key = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Services\\XEN", true);
                 if (key == null) {
                     return;
                 }
-                Logger.Log("Resetting Unplug key");
-                if (!dryRun) {
-                    key.DeleteSubKey("Unplug");
+                foreach (var unplugKey in UnplugKeys) {
+                    Logger.LogFormat(LogLevel.Interactive, "Resetting {0}", unplugKey);
+                    if (!dryRun) {
+                        key.DeleteSubKey(unplugKey);
+                    }
                 }
             } catch {
             }
         }
 
-        public static void ResetAllForceUnplug(bool dryRun) {
+        public static void ResetUnplug(UnplugType unplugType, bool dryRun) {
             try {
-                using var key = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Services\\XEN", true);
-                if (key == null) {
-                    return;
-                }
-                Logger.Log("Resetting ForceUnplug key");
-                if (!dryRun) {
-                    key.DeleteSubKey("ForceUnplug");
-                }
-            } catch {
-            }
-        }
-
-        public static void ResetForceUnplug(UnplugType unplugType, bool dryRun) {
-            try {
-                using var key = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Services\\XEN\\ForceUnplug", true);
-                if (key == null) {
-                    return;
-                }
-                Logger.LogFormat(LogLevel.Interactive, "Resetting ForceUnplug for type {0}", unplugType);
-                if (!dryRun) {
-                    switch (unplugType) {
-                        case UnplugType.Disks:
-                            key.DeleteValue("DISKS");
-                            break;
-                        case UnplugType.Nics:
-                            key.DeleteValue("NICS");
-                            break;
+                foreach (var unplugKey in UnplugKeys) {
+                    using var key = Registry.LocalMachine.OpenSubKey($"SYSTEM\\CurrentControlSet\\Services\\XEN\\{unplugKey}", true);
+                    if (key == null) {
+                        return;
+                    }
+                    Logger.LogFormat(LogLevel.Interactive, "Resetting {0} for type {1}", unplugKey, unplugType);
+                    if (!dryRun) {
+                        switch (unplugType) {
+                            case UnplugType.Disks:
+                                key.DeleteValue("DISKS");
+                                break;
+                            case UnplugType.Nics:
+                                key.DeleteValue("NICS");
+                                break;
+                        }
                     }
                 }
             } catch {

@@ -6,8 +6,7 @@ namespace XenClean {
             XenCleanup.ResetStartOverride(dryRun);
 
             XenCleanup.XenfiltClassCleanup(dryRun);
-            XenCleanup.ResetUnplug(dryRun);
-            XenCleanup.ResetAllForceUnplug(dryRun);
+            XenCleanup.ResetAllUnplug(dryRun);
 
             XenCleanup.XenfiltReset(dryRun);
         }

@@ -8,15 +8,14 @@ namespace XenInstCA {
         public static ActionResult XenbusCleanup(Session session) {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
             XenCleanup.XenfiltClassCleanup(dryRun: false);
-            XenCleanup.ResetUnplug(dryRun: false);
-            XenCleanup.ResetAllForceUnplug(dryRun: false);
+            XenCleanup.ResetAllUnplug(dryRun: false);
             return ActionResult.Success;
         }
 
         [CustomAction]
         public static ActionResult XenvbdCleanup(Session session) {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
-            XenCleanup.ResetForceUnplug(UnplugType.Disks, dryRun: false);
+            XenCleanup.ResetUnplug(UnplugType.Disks, dryRun: false);
             XenCleanup.ResetStartOverride(dryRun: false);
             return ActionResult.Success;
         }
@@ -24,7 +23,7 @@ namespace XenInstCA {
         [CustomAction]
         public static ActionResult XennetCleanup(Session session) {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
-            XenCleanup.ResetForceUnplug(UnplugType.Nics, dryRun: false);
+            XenCleanup.ResetUnplug(UnplugType.Nics, dryRun: false);
             XenCleanup.ResetStartOverride(dryRun: false);
             return ActionResult.Success;
         }
