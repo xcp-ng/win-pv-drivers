@@ -1,0 +1,36 @@
+<Solution>
+  <Configurations>
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Solution Items/">
+    <File Path="../branding.ps1" />
+  </Folder>
+  <Project Path="../DriverInstallCustomAction/DriverInstallCustomAction.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+  </Project>
+  <Project Path="../HlkxSigner/HlkxSigner.csproj">
+    <Build Project="false" />
+  </Project>
+  <Project Path="../SBUpdate/SBUpdate.vcxproj" Id="0972c789-7fa6-4ecc-a40b-71192b1bbf29">
+    <Platform Solution="*|ARM64" Project="x64" />
+    <Build Project="false" />
+  </Project>
+  <Project Path="../XenBootFix/XenBootFix.vcxproj" Id="018433ab-f981-4625-8e23-6b3f22b7e5cf">
+    <Platform Solution="*|ARM64" Project="x64" />
+  </Project>
+  <Project Path="../XenClean/XenClean.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+  </Project>
+  <Project Path="../XenDriverUtils/XenDriverUtils.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+  </Project>
+  <Project Path="XenDrivers.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0" />
+</Solution>

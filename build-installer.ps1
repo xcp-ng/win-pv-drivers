@@ -34,7 +34,7 @@ $ErrorActionPreference = "Stop"
 
 if (!$NoBuild) {
     msbuild.exe `
-        "$PSScriptRoot\installer\installer.sln" `
+        "$PSScriptRoot\installer\installer.slnx" `
         /t:$Target `
         /restore `
         /p:Configuration=$Configuration `
