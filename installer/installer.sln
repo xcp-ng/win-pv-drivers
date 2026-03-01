@@ -20,6 +20,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XenBootFix", "..\XenBootFix
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SBUpdate", "..\SBUpdate\SBUpdate.vcxproj", "{0972C789-7FA6-4ECC-A40B-71192B1BBF29}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HlkxSigner", "..\HlkxSigner\HlkxSigner.csproj", "{91C46976-B8F0-4573-9C71-C8077C259B88}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -96,6 +98,12 @@ Global
 		{0972C789-7FA6-4ECC-A40B-71192B1BBF29}.Release|ARM64.ActiveCfg = Release|x64
 		{0972C789-7FA6-4ECC-A40B-71192B1BBF29}.Release|x64.ActiveCfg = Release|x64
 		{0972C789-7FA6-4ECC-A40B-71192B1BBF29}.Release|x86.ActiveCfg = Release|Win32
+		{91C46976-B8F0-4573-9C71-C8077C259B88}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{91C46976-B8F0-4573-9C71-C8077C259B88}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{91C46976-B8F0-4573-9C71-C8077C259B88}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{91C46976-B8F0-4573-9C71-C8077C259B88}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{91C46976-B8F0-4573-9C71-C8077C259B88}.Release|x64.ActiveCfg = Release|Any CPU
+		{91C46976-B8F0-4573-9C71-C8077C259B88}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
