@@ -20,7 +20,7 @@ using System.Reflection;
 [assembly:AssemblyTitle("Xen PV driver utility library")]
 
 namespace XenDriverUtils {
-    internal static class VersionInfo {
+    public static class VersionInfo {
         public const string VendorName = "${Env:VENDOR_NAME}";
         public const string ProductName = "${Env:PRODUCT_NAME}";
         public const string VendorPrefix = "${Env:VENDOR_PREFIX}";
