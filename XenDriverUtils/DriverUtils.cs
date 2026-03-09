@@ -49,15 +49,18 @@ namespace XenDriverUtils {
 
         public static List<string> ParseMultiString(char[] buf) {
             var strings = new List<string>();
-            int first = 0;
+            if (buf == null || buf.Length == 0) {
+                return strings;
+            }
             for (int i = 0; i < buf.Length; i++) {
                 if (buf[i] == '\0') {
-                    strings.Add(new string(buf, first, i - first));
-                    first = i + 1;
+                    break;
                 }
-            }
-            if (strings.Last() == "") {
-                strings.RemoveAt(strings.Count - 1);
+                int start = i;
+                while (i < buf.Length && buf[i] != '\0') {
+                    i++;
+                }
+                strings.Add(new string(buf, start, i - start));
             }
             return strings;
         }
