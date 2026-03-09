@@ -23,11 +23,11 @@ namespace XenDriverUtils {
         public bool MatchesId(string deviceId, bool checkKnown, bool checkIncompatible) {
             if (string.IsNullOrEmpty(deviceId))
                 return false;
-            if (checkKnown && HardwareIds.Contains(deviceId, StringComparer.OrdinalIgnoreCase))
+            if (checkKnown
+                && HardwareIds.Any(substr => deviceId.StartsWith(substr, StringComparison.OrdinalIgnoreCase)))
                 return true;
-            // use a substring match with IncompatibleIds to match all device versions at the same time
             if (checkIncompatible
-                && IncompatibleIds.Any(substr => deviceId.IndexOf(substr, StringComparison.OrdinalIgnoreCase) != -1))
+                && IncompatibleIds.Any(substr => deviceId.StartsWith(substr, StringComparison.OrdinalIgnoreCase)))
                 return true;
             return false;
         }
@@ -61,9 +61,9 @@ namespace XenDriverUtils {
                     HardwareIds: new List<string>() {
                         string.IsNullOrEmpty(VersionInfo.VendorDeviceId)
                             ? null
-                            : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VBD&REV_09000000",
-                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_CONS&REV_09000000",
-                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_CONS&REV_09000000",
+                            : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_CONS&REV_09",
+                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_CONS&REV_09",
+                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_CONS&REV_09",
                     },
                     IncompatibleIds: new List<string>() {
                         // Upstream any version
@@ -79,9 +79,9 @@ namespace XenDriverUtils {
                     HardwareIds: new List<string>() {
                         string.IsNullOrEmpty(VersionInfo.VendorDeviceId)
                             ? null
-                            : $"XENVKBD\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_HID&REV_09000000",
-                        $"XENVKBD\\VEN_{VersionInfo.VendorPrefix}0001&DEV_HID&REV_09000000",
-                        $"XENVKBD\\VEN_{VersionInfo.VendorPrefix}0002&DEV_HID&REV_09000000",
+                            : $"XENVKBD\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_HID&REV_09",
+                        $"XENVKBD\\VEN_{VersionInfo.VendorPrefix}0001&DEV_HID&REV_09",
+                        $"XENVKBD\\VEN_{VersionInfo.VendorPrefix}0002&DEV_HID&REV_09",
                     },
                     IncompatibleIds: new List<string>() {
                         // Upstream any version
@@ -97,9 +97,9 @@ namespace XenDriverUtils {
                     HardwareIds: new List<string>() {
                         string.IsNullOrEmpty(VersionInfo.VendorDeviceId)
                             ? null
-                            : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_IFACE&REV_09000000",
-                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_IFACE&REV_09000000",
-                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_IFACE&REV_09000000",
+                            : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_IFACE&REV_09",
+                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_IFACE&REV_09",
+                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_IFACE&REV_09",
                     },
                     IncompatibleIds: new List<string>() {
                         // Upstream any version
@@ -123,9 +123,9 @@ namespace XenDriverUtils {
                     HardwareIds: new List<string>() {
                         string.IsNullOrEmpty(VersionInfo.VendorDeviceId)
                             ? null
-                            : $"XENVIF\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_NET&REV_09000000",
-                        $"XENVIF\\VEN_{VersionInfo.VendorPrefix}0001&DEV_NET&REV_09000000",
-                        $"XENVIF\\VEN_{VersionInfo.VendorPrefix}0002&DEV_NET&REV_09000000",
+                            : $"XENVIF\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_NET&REV_09",
+                        $"XENVIF\\VEN_{VersionInfo.VendorPrefix}0001&DEV_NET&REV_09",
+                        $"XENVIF\\VEN_{VersionInfo.VendorPrefix}0002&DEV_NET&REV_09",
                     },
                     IncompatibleIds: new List<string>() {
                         // Upstream any version
@@ -149,9 +149,9 @@ namespace XenDriverUtils {
                     HardwareIds: new List<string>() {
                         string.IsNullOrEmpty(VersionInfo.VendorDeviceId)
                             ? null
-                            : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VBD&REV_09000000",
-                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_VBD&REV_09000000",
-                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_VBD&REV_09000000",
+                            : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VBD&REV_09",
+                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_VBD&REV_09",
+                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_VBD&REV_09",
                     },
                     IncompatibleIds: new List<string>() {
                         // Upstream any version
@@ -175,12 +175,11 @@ namespace XenDriverUtils {
                     HardwareIds: new List<string>() {
                         string.IsNullOrEmpty(VersionInfo.VendorDeviceId)
                             ? null
-                            : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VIF&REV_09000000",
-                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_VIF&REV_09000000",
-                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_VIF&REV_09000000",
+                            : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VIF&REV_09",
+                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_VIF&REV_09",
+                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_VIF&REV_09",
                     },
                     IncompatibleIds: new List<string>() {
-                        // Upstream any version
                         "XENBUS\\VEN_XP0001&DEV_VIF",
                         "XENBUS\\VEN_XP0002&DEV_VIF",
                         // Citrix any version
@@ -201,9 +200,9 @@ namespace XenDriverUtils {
                     HardwareIds: new List<string>() {
                         string.IsNullOrEmpty(VersionInfo.VendorDeviceId)
                             ? null
-                            : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VKBD&REV_09000000",
-                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_VKBD&REV_09000000",
-                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_VKBD&REV_09000000",
+                            : $"XENBUS\\VEN_{VersionInfo.VendorPrefix}{VersionInfo.VendorDeviceId}&DEV_VKBD&REV_09",
+                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_VKBD&REV_09",
+                        $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_VKBD&REV_09",
                     },
                     IncompatibleIds: new List<string>() {
                         // Upstream any version
