@@ -1,33 +1,35 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Windows.Win32;
 
 namespace XenDriverUtils {
     public class XenDeviceInfo {
         public Guid? ClassGuid { get; }
         public IReadOnlyList<string> HardwareIds { get; }
-        public IReadOnlyList<string> IncompatibleIds { get; } = new List<string>();
+        public IReadOnlyList<string> IncompatibleIdRegexes { get; } = new List<string>();
 
         public XenDeviceInfo(
             Guid? ClassGuid,
             IEnumerable<string> HardwareIds,
-            IEnumerable<string> IncompatibleIds = null) {
+            IEnumerable<string> IncompatibleIdRegexes = null) {
             this.ClassGuid = ClassGuid;
             this.HardwareIds = new List<string>(HardwareIds);
-            if (IncompatibleIds is not null) {
-                this.IncompatibleIds = new List<string>(IncompatibleIds);
+            if (IncompatibleIdRegexes is not null) {
+                this.IncompatibleIdRegexes = new List<string>(IncompatibleIdRegexes);
             }
         }
 
         public bool MatchesId(string deviceId, bool checkKnown, bool checkIncompatible) {
             if (string.IsNullOrEmpty(deviceId))
                 return false;
-            if (checkKnown
-                && HardwareIds.Any(substr => deviceId.StartsWith(substr, StringComparison.OrdinalIgnoreCase)))
+            var matchesHardwareId = HardwareIds.Any(substr => substr != null && deviceId.StartsWith(substr, StringComparison.OrdinalIgnoreCase));
+            if (checkKnown && matchesHardwareId)
                 return true;
             if (checkIncompatible
-                && IncompatibleIds.Any(substr => deviceId.StartsWith(substr, StringComparison.OrdinalIgnoreCase)))
+                && !matchesHardwareId
+                && IncompatibleIdRegexes.Any(re => re != null && Regex.IsMatch(deviceId, re, RegexOptions.IgnoreCase)))
                 return true;
             return false;
         }
@@ -48,9 +50,8 @@ namespace XenDriverUtils {
                         "PCI\\VEN_5853&DEV_0001",
                         "PCI\\VEN_5853&DEV_0002",
                     },
-                    IncompatibleIds: new List<string>() {
-                        // Citrix any version
-                        "PCI\\VEN_5853&DEV_C000",
+                    IncompatibleIdRegexes: new List<string>() {
+                        "^PCI\\\\VEN_5853&DEV_(?<id>[0-9A-F]{4})&SUBSYS_\\k<id>5853&REV_01"
                     }
                 )
             },
@@ -65,10 +66,8 @@ namespace XenDriverUtils {
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_CONS&REV_09",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_CONS&REV_09",
                     },
-                    IncompatibleIds: new List<string>() {
-                        // Upstream any version
-                        "XENBUS\\VEN_XP0001&DEV_CONS",
-                        "XENBUS\\VEN_XP0002&DEV_CONS",
+                    IncompatibleIdRegexes: new List<string>() {
+                        "^XENBUS\\\\VEN_[A-Z0-9]{2}[0-9A-F]{4}&DEV_CONS",
                     }
                 )
             },
@@ -83,10 +82,8 @@ namespace XenDriverUtils {
                         $"XENVKBD\\VEN_{VersionInfo.VendorPrefix}0001&DEV_HID&REV_09",
                         $"XENVKBD\\VEN_{VersionInfo.VendorPrefix}0002&DEV_HID&REV_09",
                     },
-                    IncompatibleIds: new List<string>() {
-                        // Upstream any version
-                        "XENVKBD\\VEN_XP0001&DEV_HID",
-                        "XENVKBD\\VEN_XP0002&DEV_HID",
+                    IncompatibleIdRegexes: new List<string>() {
+                        "^XENVKBD\\\\VEN_[A-Z0-9]{2}[0-9A-F]{4}&DEV_HID",
                     }
                 )
             },
@@ -101,18 +98,8 @@ namespace XenDriverUtils {
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_IFACE&REV_09",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_IFACE&REV_09",
                     },
-                    IncompatibleIds: new List<string>() {
-                        // Upstream any version
-                        "XENBUS\\VEN_XP0001&DEV_IFACE",
-                        "XENBUS\\VEN_XP0002&DEV_IFACE",
-                        // Citrix any version
-                        "XENBUS\\VEN_XSC000&DEV_IFACE",
-                        "XENBUS\\VEN_XS0001&DEV_IFACE",
-                        "XENBUS\\VEN_XS0002&DEV_IFACE",
-                        // XCP-ng v8
-                        "XENBUS\\VEN_XNC000&DEV_IFACE&REV_08",
-                        "XENBUS\\VEN_XN0001&DEV_IFACE&REV_08",
-                        "XENBUS\\VEN_XN0002&DEV_IFACE&REV_08",
+                    IncompatibleIdRegexes: new List<string>() {
+                        "^XENBUS\\\\VEN_[A-Z0-9]{2}[0-9A-F]{4}&DEV_IFACE",
                     }
                 )
             },
@@ -127,18 +114,8 @@ namespace XenDriverUtils {
                         $"XENVIF\\VEN_{VersionInfo.VendorPrefix}0001&DEV_NET&REV_09",
                         $"XENVIF\\VEN_{VersionInfo.VendorPrefix}0002&DEV_NET&REV_09",
                     },
-                    IncompatibleIds: new List<string>() {
-                        // Upstream any version
-                        "XENVIF\\VEN_XP0001&DEV_NET",
-                        "XENVIF\\VEN_XP0002&DEV_NET",
-                        // Citrix any version
-                        "XENVIF\\VEN_XSC000&DEV_NET",
-                        "XENVIF\\VEN_XS0001&DEV_NET",
-                        "XENVIF\\VEN_XS0002&DEV_NET",
-                        // XCP-ng v8
-                        "XENVIF\\VEN_XNC000&DEV_NET&REV_08",
-                        "XENVIF\\VEN_XN0001&DEV_NET&REV_08",
-                        "XENVIF\\VEN_XN0002&DEV_NET&REV_08",
+                    IncompatibleIdRegexes: new List<string>() {
+                        "^XENVIF\\\\VEN_[A-Z0-9]{2}[0-9A-F]{4}&DEV_NET",
                     }
                 )
             },
@@ -153,18 +130,8 @@ namespace XenDriverUtils {
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_VBD&REV_09",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_VBD&REV_09",
                     },
-                    IncompatibleIds: new List<string>() {
-                        // Upstream any version
-                        "XENBUS\\VEN_XP0001&DEV_VBD",
-                        "XENBUS\\VEN_XP0002&DEV_VBD",
-                        // Citrix any version
-                        "XENBUS\\VEN_XSC000&DEV_VBD",
-                        "XENBUS\\VEN_XS0001&DEV_VBD",
-                        "XENBUS\\VEN_XS0002&DEV_VBD",
-                        // XCP-ng v8
-                        "XENBUS\\VEN_XNC000&DEV_VBD&REV_08",
-                        "XENBUS\\VEN_XN0001&DEV_VBD&REV_08",
-                        "XENBUS\\VEN_XN0002&DEV_VBD&REV_08",
+                    IncompatibleIdRegexes: new List<string>() {
+                        "^XENBUS\\\\VEN_[A-Z0-9]{2}[0-9A-F]{4}&DEV_VBD",
                     }
                 )
             },
@@ -179,17 +146,8 @@ namespace XenDriverUtils {
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_VIF&REV_09",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_VIF&REV_09",
                     },
-                    IncompatibleIds: new List<string>() {
-                        "XENBUS\\VEN_XP0001&DEV_VIF",
-                        "XENBUS\\VEN_XP0002&DEV_VIF",
-                        // Citrix any version
-                        "XENBUS\\VEN_XSC000&DEV_VIF",
-                        "XENBUS\\VEN_XS0001&DEV_VIF",
-                        "XENBUS\\VEN_XS0002&DEV_VIF",
-                        // XCP-ng v8
-                        "XENBUS\\VEN_XNC000&DEV_VIF&REV_08",
-                        "XENBUS\\VEN_XN0001&DEV_VIF&REV_08",
-                        "XENBUS\\VEN_XN0002&DEV_VIF&REV_08",
+                    IncompatibleIdRegexes: new List<string>() {
+                        "^XENBUS\\\\VEN_[A-Z0-9]{2}[0-9A-F]{4}&DEV_VIF",
                     }
                 )
             },
@@ -204,10 +162,8 @@ namespace XenDriverUtils {
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0001&DEV_VKBD&REV_09",
                         $"XENBUS\\VEN_{VersionInfo.VendorPrefix}0002&DEV_VKBD&REV_09",
                     },
-                    IncompatibleIds: new List<string>() {
-                        // Upstream any version
-                        "XENBUS\\VEN_XP0001&DEV_VKBD",
-                        "XENBUS\\VEN_XP0002&DEV_VKBD",
+                    IncompatibleIdRegexes: new List<string>() {
+                        "^XENBUS\\\\VEN_[A-Z0-9]{2}[0-9A-F]{4}&DEV_VKBD",
                     }
                 )
             },
