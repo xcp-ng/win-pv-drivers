@@ -13,6 +13,7 @@ The relevant source code may be found at these locations:
     * [Console Driver](https://github.com/xcp-ng/win-xencons)
     * [Keyboard/Mouse Driver](https://github.com/xcp-ng/win-xenvkbd)
     * [HID Minidriver](https://github.com/xcp-ng/win-xenhid)
+    * [Standard VGA Display Driver](https://github.com/xcp-ng/win-xstdvga)
 * [Driver installation support library](XenDriverUtils/)
 * [Installer package](installer/)
     * [Custom WiX actions](DriverInstallCustomAction/)
@@ -21,8 +22,9 @@ The relevant source code may be found at these locations:
 * [Xen Guest Agent](https://github.com/xcp-ng/xen-guest-agent)
     * [xenstore-win dependency](https://github.com/xcp-ng/xenstore-win)
 * [Xen Time Provider](https://github.com/xcp-ng/win-xentimeprovider)
+* [Assorted installer tests](InstallerTests/)
 * [Developer support scripts](scripts/)
-* [Supplemental tools](extras/)
+* Supplemental tools: [bundled extras](extras/), [SBUpdate](SBUpdate/), [HlkxSigner](HlkxSigner/)
 * [Source documentation](docs/)
 
 # Usage
