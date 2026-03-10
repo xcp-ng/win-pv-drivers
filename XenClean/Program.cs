@@ -53,16 +53,20 @@ class Program {
 
     static ExitCode DoCleanupTasks(bool dryRun) {
         if (XenCleanup.IsSafeMode()) {
-            Logger.Log("Skipping Xenvif offboarding in Safe Mode");
+            Logger.Log("Skipping product uninstallation and offboarding in Safe Mode");
         } else {
-            XenOffboard.BackupXenvif(dryRun);
-            XenOffboard.PrepareRestoreXenvif(dryRun);
-        }
+            if (!XenOffboard.IsReadyForCopyXenvif()) {
+                Logger.Log(LogLevel.Alert, "Xenvif offboarding task found, needs reboot");
+                return ExitCode.RebootPending;
+            }
 
-        if (XenCleanup.IsSafeMode()) {
-            Logger.Log("Skipping product uninstallation in Safe Mode");
-        } else {
             UninstallProducts.Execute(dryRun);
+
+            if (XenOffboard.IsReadyForCopyXenvif()) {
+                // the uninstallers did not implement Xenvif offboard, it's up to us to do it
+                XenOffboard.BackupXenvif(dryRun);
+                XenOffboard.PrepareRestoreXenvif(dryRun);
+            }
         }
 
         UninstallDevices.Execute(dryRun);
