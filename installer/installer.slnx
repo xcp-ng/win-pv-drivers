@@ -15,7 +15,9 @@
   <Project Path="../HlkxSigner/HlkxSigner.csproj">
     <Build Project="false" />
   </Project>
-  <Project Path="../InstallerTests/InstallerTests.csproj" Id="396acdb0-550c-498d-a8ef-d9592cd77c7d" />
+  <Project Path="../InstallerTests/InstallerTests.csproj" Id="396acdb0-550c-498d-a8ef-d9592cd77c7d">
+    <Build Project="false" />
+  </Project>
   <Project Path="../SBUpdate/SBUpdate.vcxproj" Id="0972c789-7fa6-4ecc-a40b-71192b1bbf29">
     <Platform Solution="*|ARM64" Project="x64" />
     <Build Project="false" />
