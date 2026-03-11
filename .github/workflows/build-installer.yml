@@ -79,22 +79,22 @@ jobs:
           WIX_ZIP_URI: https://github.com/xcp-ng/wix-builder/releases/download/v6.0.2-xcpng.1/wix.zip
           WIX_ZIP_SHA256: ccfe8c75f95ea4c4f68a920be827f46c33ce381cc9201a10f565999e3d3b6dd1
       - name: Download drivers
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: drivers-signed
           path: installer/output/
       - name: Download guest agent
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: guestagent-signed
           path: xen-guest-agent/target/release/
       - name: Download time provider
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: timeprovider-signed
           path: xentimeprovider/x64/Release/
       - name: Download XSTDVGA
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: xstdvga-signed
           path: xstdvga/vs2022/x64/Release/xstdvga/
