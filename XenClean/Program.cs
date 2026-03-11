@@ -60,13 +60,13 @@ class Program {
                 return ExitCode.RebootPending;
             }
 
-            UninstallProducts.Execute(dryRun);
-
-            if (XenOffboard.IsReadyForCopyXenvif()) {
-                // the uninstallers did not implement Xenvif offboard, it's up to us to do it
+            var products = UninstallProducts.FindProducts(out var foundHasXenvifOffboard);
+            if (!foundHasXenvifOffboard) {
+                // the detected uninstallers do not implement Xenvif offboard, it's up to us to do it
                 XenOffboard.BackupXenvif(dryRun);
                 XenOffboard.PrepareRestoreXenvif(dryRun);
             }
+            UninstallProducts.Execute(products, dryRun);
         }
 
         UninstallDevices.Execute(dryRun);

@@ -9,19 +9,30 @@ using Windows.Win32.Foundation;
 using XenDriverUtils;
 
 namespace XenClean {
+    class KnownProduct {
+        public IReadOnlyList<string> OnboardFamilies { get; }
+        public bool HasXenvifOffboard { get; }
+        // TODO: describe the range of product versions that support Xenvif offboarding instead of just a bool
+
+        public KnownProduct(IEnumerable<string> OnboardFamilies, bool HasXenvifOffboard) {
+            this.OnboardFamilies = new List<string>(OnboardFamilies);
+            this.HasXenvifOffboard = HasXenvifOffboard;
+        }
+    }
+
     static class UninstallProducts {
-        // maps from upgrade code to onboard family
-        static readonly IReadOnlyDictionary<string, IReadOnlyList<string>> KnownUpgradeCodes = new Dictionary<string, IReadOnlyList<string>>() {
+        // maps from upgrade code to known product
+        static readonly IReadOnlyDictionary<string, KnownProduct> KnownProducts = new Dictionary<string, KnownProduct>() {
             // x64 drivers version 6.6.557 from XS 6.6.90
             // must be uninstalled in the correct order
             // Citrix XenServer Tools Installer
-            { "{21EF141F-9126-42DA-93CD-B50442047420}", new List<string>() { "XenServer" } },
+            { "{21EF141F-9126-42DA-93CD-B50442047420}", new KnownProduct(new List<string>() { "XenServer" }, false) },
             // Citrix XenServer Windows Guest Agent
-            { "{48E5492C-6843-452E-97A2-A5FE2D24B141}", new List<string>() { "XenServer" } },
+            { "{48E5492C-6843-452E-97A2-A5FE2D24B141}", new KnownProduct(new List<string>() { "XenServer" }, false) },
             // Citrix XenServer VSS Provider
-            { "{D8709720-65B7-4CD9-9F51-68DB592B604D}", new List<string>() { "XenServer" } },
+            { "{D8709720-65B7-4CD9-9F51-68DB592B604D}", new KnownProduct(new List<string>() { "XenServer" }, false) },
             // Citrix Xen Windows x64 PV Drivers
-            { "{53858014-F814-49A1-9D63-CA2578432E73}", new List<string>() { "XenServer" } },
+            { "{53858014-F814-49A1-9D63-CA2578432E73}", new KnownProduct(new List<string>() { "XenServer" }, false) },
 
             // Citrix uses the same package code as the Citrix XenServer Windows Guest Agent
             // in their multi-package XS 6.6 drivers for their 7.1 series drivers
@@ -29,30 +40,48 @@ namespace XenClean {
             // XCP-ng 8.2 x64 also uses the same upgrade code.
 
             // Citrix Hypervisor/XS8
-            { "{AF9B2559-3E91-4206-98C2-F560009FF7F1}", new List<string>() { "XenServer", "XCP-ng" } },
+            { "{AF9B2559-3E91-4206-98C2-F560009FF7F1}", new KnownProduct(new List<string>() { "XenServer", "XCP-ng" }, false) },
 
             // generic x86 (does not work due to check in Invoke-XenClean)
-            { "{10828840-D8A9-4953-B44A-1F1D3CD7ECB0}", new List<string>() { "Unknown" } },
+            { "{10828840-D8A9-4953-B44A-1F1D3CD7ECB0}", new KnownProduct(new List<string>() { "Unknown" }, true) },
             // generic x64
-            { "{D60FED1E-316C-41B0-B7A5-E44951A82618}", new List<string>() { "Unknown" } },
+            { "{D60FED1E-316C-41B0-B7A5-E44951A82618}", new KnownProduct(new List<string>() { "Unknown" }, true) },
 
             // ours
-            { VersionInfo.MsiUpgradeCodeX86, new List<string>() { VersionInfo.VendorName } },
-            { VersionInfo.MsiUpgradeCodeX64, new List<string>() { VersionInfo.VendorName } },
+            { VersionInfo.MsiUpgradeCodeX86, new KnownProduct(new List<string>() { VersionInfo.VendorName }, true) },
+            { VersionInfo.MsiUpgradeCodeX64, new KnownProduct(new List<string>() { VersionInfo.VendorName }, true) },
         };
 
-        public static void Execute(bool dryRun) {
+        public static List<string> FindProducts(out bool foundHasXenvifOffboard) {
+            foundHasXenvifOffboard = false;
+            var result = new List<string>();
+
+            Logger.Log(LogLevel.Interactive, "Finding existing products");
+            foreach (var entry in KnownProducts) {
+                Logger.LogFormat(LogLevel.Info, "Finding products with upgrade code {0}", entry.Key);
+                var products = ProductUtils.EnumerateProducts(entry.Key);
+
+                foreach (var productCode in products) {
+                    Logger.LogFormat(LogLevel.Info, "Found product {0}", productCode);
+                    result.Add(productCode);
+                }
+
+                if (products.Count > 0 && entry.Value.HasXenvifOffboard) {
+                    foundHasXenvifOffboard = true;
+                }
+            }
+
+            return result;
+        }
+
+        public static void Execute(IEnumerable<string> productCodes, bool dryRun) {
             var msiexecPath = Path.Combine(Environment.SystemDirectory, "msiexec.exe");
             var msiLogDir = PathUtils.CreateSecureTempDirectory();
 
-            Logger.Log(LogLevel.Interactive, "Finding products to uninstall");
-            foreach (var upgradeCode in KnownUpgradeCodes.Keys) {
+            foreach (var upgradeCode in KnownProducts.Keys) {
                 Logger.LogFormat(LogLevel.Info, "Trying to uninstall products with upgrade code {0}", upgradeCode);
 
-                foreach (var productCode in ProductUtils.EnumerateProducts(upgradeCode)) {
-                    if (string.IsNullOrEmpty(productCode)) {
-                        continue;
-                    }
+                foreach (var productCode in productCodes) {
                     Logger.LogFormat(LogLevel.Interactive, "Uninstalling product {0}", productCode);
                     var logPath = Path.Combine(msiLogDir.FullName, Regex.Replace(productCode, "[^a-z0-9-_]", "", RegexOptions.IgnoreCase) + ".log");
                     Logger.LogFormat(LogLevel.Info, "Msiexec log path is {0}", logPath);
@@ -86,7 +115,7 @@ namespace XenClean {
 
             Logger.LogFormat(LogLevel.Interactive, "Finding products for onboarding of family {0}", onboardFamily);
 
-            foreach (var entry in KnownUpgradeCodes) {
+            foreach (var entry in KnownProducts) {
                 Logger.LogFormat(LogLevel.Info, "Finding products with upgrade code {0}", entry.Key);
                 var products = ProductUtils.EnumerateProducts(entry.Key);
 
@@ -95,7 +124,7 @@ namespace XenClean {
                 }
 
                 if (products.Count > 0) {
-                    if (entry.Value.All(x => x.Equals(onboardFamily, StringComparison.OrdinalIgnoreCase))) {
+                    if (entry.Value.OnboardFamilies.All(x => x.Equals(onboardFamily, StringComparison.OrdinalIgnoreCase))) {
                         Logger.LogFormat(LogLevel.Info, "Found compatible products of upgrade code {0}", entry.Key);
                         foundCompatible = true;
                     } else {
