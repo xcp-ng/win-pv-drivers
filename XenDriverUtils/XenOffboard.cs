@@ -90,8 +90,8 @@ namespace XenDriverUtils {
                 TimeSpan.FromMinutes(1),
                 LogLevel.Info);
 
-            // 0x80070002 (ERROR_FILE_NOT_FOUND in HRESULT form)
-            return process.ExitCode == -2147024894;
+            // 0x80070002/0x80070003 (ERROR_FILE_NOT_FOUND/ERROR_PATH_NOT_FOUND in HRESULT form)
+            return process.ExitCode == -2147024894 || process.ExitCode == -2147024893;
         }
     }
 }
