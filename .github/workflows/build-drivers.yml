@@ -48,12 +48,12 @@ jobs:
           Export-Csv -NoTypeInformation drivers-catalog.csv
       - name: Upload drivers
         id: upload
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           path: installer/output/
           name: drivers
       - name: Upload drivers catalog
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           path: drivers-catalog.csv
           name: drivers-catalog
@@ -100,7 +100,7 @@ jobs:
         run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue
       - name: Upload artifact
         id: upload
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           path: installer/output/
           name: drivers-signed

@@ -61,12 +61,12 @@ jobs:
           Export-Csv -NoTypeInformation xstdvga-catalog.csv
       - name: Upload xstdvga
         id: upload
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           path: xstdvga/vs2022/x64/Release/xstdvga
           name: xstdvga
       - name: Upload xstdvga catalog
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           path: xstdvga-catalog.csv
           name: xstdvga-catalog
@@ -113,7 +113,7 @@ jobs:
         run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue
       - name: Upload artifact
         id: upload
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           path: xstdvga/vs2022/x64/Release/xstdvga/
           name: xstdvga-signed

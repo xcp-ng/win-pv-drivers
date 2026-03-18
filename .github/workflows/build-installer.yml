@@ -135,12 +135,12 @@ jobs:
         run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue
       - name: Upload installer
         id: upload
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           path: output/
           name: installer
       - name: Upload XenClean
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           path: output/${{steps.build.outputs.ReleaseTag}}/package/XenClean/
           name: XenClean

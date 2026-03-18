@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Attest artifact
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-name: ${{inputs.subject-name}}
           subject-digest: ${{inputs.subject-digest}}
@@ -35,6 +35,6 @@ jobs:
           name: ${{inputs.catalog-name}}
       - name: Attest catalog
         if: ${{inputs.catalog-name != ''}}
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: catalog/${{inputs.catalog-name}}.csv

@@ -48,12 +48,12 @@ jobs:
           Export-Csv -NoTypeInformation timeprovider-catalog.csv
       - name: Upload time provider
         id: upload
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           path: xentimeprovider/x64/Release/
           name: timeprovider
       - name: Upload timeprovider catalog
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           path: timeprovider-catalog.csv
           name: timeprovider-catalog
@@ -100,7 +100,7 @@ jobs:
         run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue
       - name: Upload artifact
         id: upload
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           path: xentimeprovider/x64/Release/
           name: timeprovider-signed
