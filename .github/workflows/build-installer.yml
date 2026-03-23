@@ -45,7 +45,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Add SBOM tools
         run: |
           New-Item -Type Directory -Path $Env:RUNNER_TEMP/tools/
@@ -79,27 +79,27 @@ jobs:
           WIX_ZIP_URI: https://github.com/xcp-ng/wix-builder/releases/download/v6.0.2-xcpng.1/wix.zip
           WIX_ZIP_SHA256: ccfe8c75f95ea4c4f68a920be827f46c33ce381cc9201a10f565999e3d3b6dd1
       - name: Download drivers
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: drivers-signed
           path: installer/output/
       - name: Download guest agent
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: guestagent-signed
           path: xen-guest-agent/target/release/
       - name: Download time provider
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: timeprovider-signed
           path: xentimeprovider/x64/Release/
       - name: Download XSTDVGA
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: xstdvga-signed
           path: xstdvga/vs2022/x64/Release/xstdvga/
       - name: Add MSBuild
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
       - name: Configure branding
         run: .\scripts\branding-ci.ps1 -AddSigner -OutFile .\branding.ps1
         env:
@@ -135,12 +135,12 @@ jobs:
         run: Remove-Item Cert:\CurrentUser\My\* -ErrorAction SilentlyContinue
       - name: Upload installer
         id: upload
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           path: output/
           name: installer
       - name: Upload XenClean
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           path: output/${{steps.build.outputs.ReleaseTag}}/package/XenClean/
           name: XenClean
