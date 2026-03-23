@@ -1,0 +1,35 @@
+name: branding
+description: Configure branding
+inputs:
+  branding-data:
+    required: true
+    description: Branding data, in JSON form
+runs:
+  using: "composite"
+  steps:
+    - run: .\scripts\branding-ci.ps1 -OutFile .\branding.ps1
+      shell: pwsh
+      env:
+        VENDOR_NAME: ${{fromJSON(inputs.branding-data).VENDOR_NAME}}
+        PRODUCT_NAME: ${{fromJSON(inputs.branding-data).PRODUCT_NAME}}
+        VENDOR_PREFIX: ${{fromJSON(inputs.branding-data).VENDOR_PREFIX}}
+        COPYRIGHT: ${{fromJSON(inputs.branding-data).COPYRIGHT}}
+        FORCE_ACTIVATE: ${{fromJSON(inputs.branding-data).FORCE_ACTIVATE}}
+        FORCE_UNPLUG: ${{fromJSON(inputs.branding-data).FORCE_UNPLUG}}
+        # Installer-specific products are not branded with run number
+        PackageVersions_Product: ${{fromJSON(inputs.branding-data).PackageVersions_Product}}
+        PackageVersions_XenClean: ${{fromJSON(inputs.branding-data).PackageVersions_XenClean}}
+        PackageVersions_XenBootFix: ${{fromJSON(inputs.branding-data).PackageVersions_XenBootFix}}
+        PackageVersions_xenbus: ${{fromJSON(inputs.branding-data).PackageVersions_xenbus}}.${{github.run_number}}
+        PackageVersions_xencons: ${{fromJSON(inputs.branding-data).PackageVersions_xencons}}.${{github.run_number}}
+        PackageVersions_xenhid: ${{fromJSON(inputs.branding-data).PackageVersions_xenhid}}.${{github.run_number}}
+        PackageVersions_xeniface: ${{fromJSON(inputs.branding-data).PackageVersions_xeniface}}.${{github.run_number}}
+        PackageVersions_xennet: ${{fromJSON(inputs.branding-data).PackageVersions_xennet}}.${{github.run_number}}
+        PackageVersions_xenvbd: ${{fromJSON(inputs.branding-data).PackageVersions_xenvbd}}.${{github.run_number}}
+        PackageVersions_xenvif: ${{fromJSON(inputs.branding-data).PackageVersions_xenvif}}.${{github.run_number}}
+        PackageVersions_xenvkbd: ${{fromJSON(inputs.branding-data).PackageVersions_xenvkbd}}.${{github.run_number}}
+        PackageVersions_XenGuestAgent: ${{fromJSON(inputs.branding-data).PackageVersions_XenGuestAgent}}.${{github.run_number}}
+        PackageVersions_XenTimeProvider: ${{fromJSON(inputs.branding-data).PackageVersions_XenTimeProvider}}.${{github.run_number}}
+        PackageVersions_xstdvga: ${{fromJSON(inputs.branding-data).PackageVersions_xstdvga}}.${{github.run_number}}
+        MSI_UPGRADE_CODE_X86: ${{fromJSON(inputs.branding-data).MSI_UPGRADE_CODE_X86}}
+        MSI_UPGRADE_CODE_X64: ${{fromJSON(inputs.branding-data).MSI_UPGRADE_CODE_X64}}

@@ -7,9 +7,7 @@
 [CmdletBinding()]
 param (
     [Parameter(Mandatory)]
-    [string]$OutFile,
-    [Parameter()]
-    [switch]$AddSigner
+    [string]$OutFile
 )
 
 $ErrorActionPreference = 'Stop'
@@ -96,11 +94,3 @@ $content = @"
 `$Env:MSI_UPGRADE_CODE_X64 = '$(Out-SafeString -PatternType Guid -InputObject $Env:MSI_UPGRADE_CODE_X64)'
 "@
 Set-Content -Path $OutFile -Value $content -Force
-
-if ($AddSigner) {
-    # Doesn't hurt to verify again.
-    Out-SafeString -PatternType Base64 -InputObject $Env:SIGNER_PFX_BASE64 | Out-Null
-    & "$PSScriptRoot\signer-ci.ps1" -OutFile $OutFile
-}
-
-Add-Content -Path $Env:GITHUB_STEP_SUMMARY -Value "Branding:", "``````", $content, "``````" -Force

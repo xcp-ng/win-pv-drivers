@@ -4,128 +4,96 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-drivers:
-    uses: ./.github/workflows/build-drivers.yml
+  build-attested:
+    uses: ./.github/workflows/build-attested.yml
     permissions:
       id-token: write
       contents: read
       attestations: write
     secrets: inherit
-
-  build-guestagent:
-    uses: ./.github/workflows/build-guestagent.yml
-    permissions:
-      id-token: write
-      contents: read
-      attestations: write
-    secrets: inherit
-
-  build-timeprovider:
-    uses: ./.github/workflows/build-timeprovider.yml
-    permissions:
-      id-token: write
-      contents: read
-      attestations: write
-    secrets: inherit
-
-  build-xstdvga:
-    uses: ./.github/workflows/build-xstdvga.yml
-    permissions:
-      id-token: write
-      contents: read
-      attestations: write
-    secrets: inherit
-
   build-installer:
     needs:
-      - build-drivers
-      - build-guestagent
-      - build-timeprovider
-      - build-xstdvga
+      - build-attested
     runs-on: windows-latest
+    env:
+      # should match up with the WINPV_OUTPUT of each sub-artifact workflow
+      DRIVER_EXTRACT: installer/output
+      GUESTAGENT_EXTRACT: xen-guest-agent/target/release
+      TIMEPROVIDER_EXTRACT: xentimeprovider/x64/Release
+      XSTDVGA_EXTRACT: xstdvga/vs2022/x64/Release/xstdvga
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Add SBOM tools
+      - name: Download build deps
         run: |
-          New-Item -Type Directory -Path $Env:RUNNER_TEMP/tools/
+          $ErrorActionPreference = 'Stop'
 
-          Invoke-WebRequest -Uri https://github.com/microsoft/sbom-tool/releases/download/v4.1.4/sbom-tool-win-x64.exe -OutFile $Env:RUNNER_TEMP\tools\sbom.exe
-          if ((Get-FileHash $Env:RUNNER_TEMP\tools\sbom.exe -Algorithm SHA256).Hash -ine "9ba208cbec21c93b6d1ba01f50681a47d9d14d302f59b33e505b220b89aa0363") {
+          New-Item -Type Directory -Path $Env:RUNNER_TEMP/tools/
+          Invoke-WebRequest -Uri $Env:SBOM_TOOL_URI -OutFile $Env:RUNNER_TEMP\tools\sbom.exe
+          if ((Get-FileHash $Env:RUNNER_TEMP\tools\sbom.exe -Algorithm SHA256).Hash -ine $Env:SBOM_TOOL_SHA256) {
             throw "sbom-tool failed verification"
           }
-
-          Invoke-WebRequest -Uri https://github.com/anchore/syft/releases/download/v1.38.0/syft_1.38.0_windows_amd64.zip -OutFile $Env:RUNNER_TEMP\tools\syft.zip
-          if ((Get-FileHash $Env:RUNNER_TEMP\tools\syft.zip -Algorithm SHA256).Hash -ine "11a3de4c82b001dae3b69e336f1b89391b676b3e74cead73790c97ff57445941") {
+          Invoke-WebRequest -Uri $Env:SYFT_URI -OutFile $Env:RUNNER_TEMP\tools\syft.zip
+          if ((Get-FileHash $Env:RUNNER_TEMP\tools\syft.zip -Algorithm SHA256).Hash -ine $Env:SYFT_SHA256) {
             throw "syft failed verification"
           }
           Expand-Archive $Env:RUNNER_TEMP\tools\syft.zip -DestinationPath $Env:RUNNER_TEMP\tools\syft -Force
           Copy-Item $Env:RUNNER_TEMP\tools\syft\syft.exe $Env:RUNNER_TEMP\tools\syft.exe -Force
-
           Add-Content -Path $Env:GITHUB_PATH -Value "$Env:RUNNER_TEMP/tools" -Force
-      - name: Download Wix
-        run: |
-          $ErrorActionPreference = 'Stop'
+
           Remove-Item -Path .\deps -Recurse -Force -ErrorAction SilentlyContinue
-          Invoke-WebRequest -Uri $Env:WIX_ZIP_URI -OutFile .\wix.zip
-          $wixZipHash = (Get-FileHash .\wix.zip).Hash
-          if ($wixZipHash -ine $Env:WIX_ZIP_SHA256) {
+          Invoke-WebRequest -Uri $Env:WIX_ZIP_URI -OutFile $Env:RUNNER_TEMP\wix.zip
+          if ((Get-FileHash $Env:RUNNER_TEMP\wix.zip).Hash -ine $Env:WIX_ZIP_SHA256) {
             throw "wix.zip failed verification"
           }
-          Add-Content -Path $Env:GITHUB_STEP_SUMMARY -Value "wix.zip: ``$wixZipHash``" -Force
-          Expand-Archive -Path .\wix.zip -DestinationPath .\deps\wix\ -Force
+          Expand-Archive -Path $Env:RUNNER_TEMP\wix.zip -DestinationPath .\deps\wix\ -Force
         env:
           # Dependency download links hardcoded for transparency.
+          SBOM_TOOL_URI: https://github.com/microsoft/sbom-tool/releases/download/v4.1.4/sbom-tool-win-x64.exe
+          SBOM_TOOL_SHA256: 9ba208cbec21c93b6d1ba01f50681a47d9d14d302f59b33e505b220b89aa0363
+          SYFT_URI: https://github.com/anchore/syft/releases/download/v1.38.0/syft_1.38.0_windows_amd64.zip
+          SYFT_SHA256: 11a3de4c82b001dae3b69e336f1b89391b676b3e74cead73790c97ff57445941
           WIX_ZIP_URI: https://github.com/xcp-ng/wix-builder/releases/download/v6.0.2-xcpng.1/wix.zip
           WIX_ZIP_SHA256: ccfe8c75f95ea4c4f68a920be827f46c33ce381cc9201a10f565999e3d3b6dd1
-      - name: Download drivers
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: drivers-signed
-          path: installer/output/
-      - name: Download guest agent
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: guestagent-signed
-          path: xen-guest-agent/target/release/
-      - name: Download time provider
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: timeprovider-signed
-          path: xentimeprovider/x64/Release/
-      - name: Download XSTDVGA
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: xstdvga-signed
-          path: xstdvga/vs2022/x64/Release/xstdvga/
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
       - name: Configure branding
-        run: .\scripts\branding-ci.ps1 -AddSigner -OutFile .\branding.ps1
+        uses: ./.github/actions/branding
+        with:
+          branding-data: ${{toJson(vars)}}
+      - name: Configure test signer
+        run: .\scripts\signer-ci.ps1 -OutFile .\branding.ps1
         env:
-          VENDOR_NAME: ${{vars.VENDOR_NAME}}
-          PRODUCT_NAME: ${{vars.PRODUCT_NAME}}
-          VENDOR_PREFIX: ${{vars.VENDOR_PREFIX}}
-          COPYRIGHT: ${{vars.COPYRIGHT}}
-          PackageVersions_Product: ${{vars.PackageVersions_Product}}.${{github.run_number}}
-          PackageVersions_xenbus: ${{vars.PackageVersions_xenbus}}.${{github.run_number}}
-          PackageVersions_xencons: ${{vars.PackageVersions_xencons}}.${{github.run_number}}
-          PackageVersions_xenhid: ${{vars.PackageVersions_xenhid}}.${{github.run_number}}
-          PackageVersions_xeniface: ${{vars.PackageVersions_xeniface}}.${{github.run_number}}
-          PackageVersions_xennet: ${{vars.PackageVersions_xennet}}.${{github.run_number}}
-          PackageVersions_xenvbd: ${{vars.PackageVersions_xenvbd}}.${{github.run_number}}
-          PackageVersions_xenvif: ${{vars.PackageVersions_xenvif}}.${{github.run_number}}
-          PackageVersions_xenvkbd: ${{vars.PackageVersions_xenvkbd}}.${{github.run_number}}
-          PackageVersions_XenClean: ${{vars.PackageVersions_XenClean}}.${{github.run_number}}
-          PackageVersions_XenBootFix: ${{vars.PackageVersions_XenBootFix}}.${{github.run_number}}
-          PackageVersions_XenGuestAgent: ${{vars.PackageVersions_XenGuestAgent}}.${{github.run_number}}
-          PackageVersions_XenTimeProvider: ${{vars.PackageVersions_XenTimeProvider}}.${{github.run_number}}
-          PackageVersions_xstdvga: ${{vars.PackageVersions_xstdvga}}.${{github.run_number}}
-          MSI_UPGRADE_CODE_X86: ${{vars.MSI_UPGRADE_CODE_X86}}
-          MSI_UPGRADE_CODE_X64: ${{vars.MSI_UPGRADE_CODE_X64}}
-          # Signer cert must be injected here since unlike the drivers/guestagent,
-          # we can't externally sign the installer package
           SIGNER_PFX_BASE64: ${{secrets.SIGNER_PFX_BASE64}}
+      - name: Download drivers
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: drivers
+          path: ${{env.DRIVER_EXTRACT}}/
+      - name: Download guestagent
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: guestagent
+          path: ${{env.GUESTAGENT_EXTRACT}}/
+      - name: Download timeprovider
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: timeprovider
+          path: ${{env.TIMEPROVIDER_EXTRACT}}/
+      - name: Download xstdvga
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: xstdvga
+          path: ${{env.XSTDVGA_EXTRACT}}/
+      - name: Testsign all sub-artifacts
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . .\branding.ps1
+          . .\scripts\sign.ps1
+          Set-SignerFileSignature (Get-ChildItem .\$Env:DRIVER_EXTRACT -File -Recurse -Include *.sys, *.dll, *.exe, *.cat)
+          Set-SignerFileSignature (Get-ChildItem .\$Env:GUESTAGENT_EXTRACT -File -Recurse -Include *.dll, *.exe)
+          Set-SignerFileSignature (Get-ChildItem .\$Env:TIMEPROVIDER_EXTRACT -File -Recurse -Include *.dll)
+          Set-SignerFileSignature (Get-ChildItem .\$Env:XSTDVGA_EXTRACT -File -Recurse -Include *.sys, *.cat)
       - name: Build installer
         id: build
         # this workflow is always testsigned, so -ExportCertificate is appropriate
@@ -138,23 +106,4 @@ jobs:
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           path: output/
-          name: installer
-      - name: Upload XenClean
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          path: output/${{steps.build.outputs.ReleaseTag}}/package/XenClean/
-          name: XenClean
-    outputs:
-      subject-name: installer
-      subject-digest: sha256:${{steps.upload.outputs.artifact-digest}}
-
-  attest-installer:
-    needs: [build-installer]
-    uses: ./.github/workflows/attest.yml
-    permissions:
-      id-token: write
-      contents: read
-      attestations: write
-    with:
-      subject-name: ${{needs.build-installer.outputs.subject-name}}
-      subject-digest: ${{needs.build-installer.outputs.subject-digest}}
+          name: installer-testsigned
