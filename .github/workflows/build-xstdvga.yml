@@ -18,12 +18,18 @@ jobs:
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
       - name: Add CodeQL
-        id: add_codeql
-        uses: github/codeql-action/init@9e907b5e64f6b83e7804b09294d44122997950d6 # v4.32.3
-        with:
-          build-mode: none
-      - name: Add CodeQL to PATH
-        run: Resolve-Path "${{steps.add_codeql.outputs.codeql-path}}\.." | Add-Content -Path $Env:GITHUB_PATH -Force
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -Type Directory -Path $Env:RUNNER_TEMP/tools/
+          Invoke-WebRequest -Uri $Env:CODEQL_URI -OutFile $Env:RUNNER_TEMP\tools\codeql.zip
+          if ((Get-FileHash $Env:RUNNER_TEMP\tools\codeql.zip -Algorithm SHA256).Hash -ine $Env:CODEQL_SHA256) {
+            throw "codeql failed verification"
+          }
+          Expand-Archive $Env:RUNNER_TEMP\tools\codeql.zip -DestinationPath $Env:RUNNER_TEMP\tools\codeql -Force
+          Add-Content -Path $Env:GITHUB_PATH -Value "$Env:RUNNER_TEMP\tools\codeql\codeql" -Force
+        env:
+          CODEQL_URI: https://github.com/github/codeql-cli-binaries/releases/download/v2.24.1/codeql-win64.zip
+          CODEQL_SHA256: 7608f6c07b077ab142f9768f2b089700129d5871398eef64b7965c99d5d725bd
       - name: Download packs
         run: |
           codeql pack download microsoft/windows-drivers@1.8.2 microsoft/cpp-queries@0.0.4

@@ -12,25 +12,23 @@ jobs:
       WINPV_CATALOG: catalog.csv
       X_CARGO_AUDITABLE_VERSION: 0.7.2
     steps:
-      - name: Restore cargo auditable
-        id: restore-cargo-auditable
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
-        with:
-          path: ~\.cargo\bin\
-          key: ${{runner.os}}-cargo-auditable-${{env.X_CARGO_AUDITABLE_VERSION}}
-      - name: Install cargo auditable
-        if: steps.restore-cargo-auditable.outputs.cache-hit != 'true'
-        run: cargo install cargo-auditable@${{env.X_CARGO_AUDITABLE_VERSION}} --locked
-      - name: Save cargo auditable
-        if: steps.restore-cargo-auditable.outputs.cache-hit != 'true'
-        uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
-        with:
-          path: ~\.cargo\bin\
-          key: ${{steps.restore-cargo-auditable.outputs.cache-primary-key}}
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
+      - name: Add cargo-auditable
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -Type Directory -Path $Env:RUNNER_TEMP/tools/
+          Invoke-WebRequest -Uri $Env:CARGO_AUDITABLE_URI -OutFile $Env:RUNNER_TEMP\tools\cargo-auditable.zip
+          if ((Get-FileHash $Env:RUNNER_TEMP\tools\cargo-auditable.zip -Algorithm SHA256).Hash -ine $Env:CARGO_AUDITABLE_SHA256) {
+            throw "cargo-auditable failed verification"
+          }
+          Expand-Archive $Env:RUNNER_TEMP\tools\cargo-auditable.zip -DestinationPath $Env:RUNNER_TEMP\tools\cargo-auditable -Force
+          Add-Content -Path $Env:GITHUB_PATH -Value "$Env:RUNNER_TEMP\tools\cargo-auditable" -Force
+        env:
+          CARGO_AUDITABLE_URI: https://github.com/rust-secure-code/cargo-auditable/releases/download/v0.7.4/cargo-auditable-x86_64-pc-windows-msvc.zip
+          CARGO_AUDITABLE_SHA256: e2da8d873978982381269c27be8b76cfd4084fbf99c43bd83231ac9c714488bb
       - name: Configure branding
         uses: ./.github/actions/branding
         with:
