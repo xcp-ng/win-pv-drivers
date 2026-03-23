@@ -10,7 +10,6 @@ jobs:
     env:
       WINPV_OUTPUT: xen-guest-agent/target/release
       WINPV_CATALOG: catalog.csv
-      X_CARGO_AUDITABLE_VERSION: 0.7.2
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
