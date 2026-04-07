@@ -78,34 +78,30 @@ namespace XenClean {
             var msiexecPath = Path.Combine(Environment.SystemDirectory, "msiexec.exe");
             var msiLogDir = PathUtils.CreateSecureTempDirectory();
 
-            foreach (var upgradeCode in KnownProducts.Keys) {
-                Logger.LogFormat(LogLevel.Info, "Trying to uninstall products with upgrade code {0}", upgradeCode);
-
-                foreach (var productCode in productCodes) {
-                    Logger.LogFormat(LogLevel.Interactive, "Uninstalling product {0}", productCode);
-                    var logPath = Path.Combine(msiLogDir.FullName, Regex.Replace(productCode, "[^a-z0-9-_]", "", RegexOptions.IgnoreCase) + ".log");
-                    Logger.LogFormat(LogLevel.Info, "Msiexec log path is {0}", logPath);
-                    if (!dryRun) {
-                        using var msiexecProcess = Process.Start(msiexecPath, $"/x \"{productCode}\" /passive /norestart /log \"{logPath}\"");
-                        msiexecProcess.WaitForExit();
-                        Logger.LogFormat(LogLevel.Interactive, "Msiexec exited with code {0}", msiexecProcess.ExitCode);
-                        try {
-                            using var msiLog = File.OpenText(logPath);
-                            while (true) {
-                                var line = msiLog.ReadLine();
-                                if (line == null) {
-                                    break;
-                                }
-                                Logger.Log(LogLevel.Trace, line);
+            foreach (var productCode in productCodes) {
+                Logger.LogFormat(LogLevel.Interactive, "Uninstalling product {0}", productCode);
+                var logPath = Path.Combine(msiLogDir.FullName, Regex.Replace(productCode, "[^a-z0-9-_]", "", RegexOptions.IgnoreCase) + ".log");
+                Logger.LogFormat(LogLevel.Info, "Msiexec log path is {0}", logPath);
+                if (!dryRun) {
+                    using var msiexecProcess = Process.Start(msiexecPath, $"/x \"{productCode}\" /passive /norestart /log \"{logPath}\"");
+                    msiexecProcess.WaitForExit();
+                    Logger.LogFormat(LogLevel.Interactive, "Msiexec exited with code {0}", msiexecProcess.ExitCode);
+                    try {
+                        using var msiLog = File.OpenText(logPath);
+                        while (true) {
+                            var line = msiLog.ReadLine();
+                            if (line == null) {
+                                break;
                             }
-                        } catch (Exception ex) {
-                            Logger.LogFormat(LogLevel.Alert, "Cannot read MSI uninstallation log: {0} {1}", ex.HResult, ex.Message);
+                            Logger.Log(LogLevel.Trace, line);
                         }
-                        if (msiexecProcess.ExitCode != 0 &&
-                            msiexecProcess.ExitCode != (int)WIN32_ERROR.ERROR_SUCCESS_REBOOT_REQUIRED &&
-                            msiexecProcess.ExitCode != (int)WIN32_ERROR.ERROR_UNKNOWN_PRODUCT) {
-                            throw new Win32Exception(msiexecProcess.ExitCode, $"Msiexec failed with code {msiexecProcess.ExitCode}");
-                        }
+                    } catch (Exception ex) {
+                        Logger.LogFormat(LogLevel.Alert, "Cannot read MSI uninstallation log: {0} {1}", ex.HResult, ex.Message);
+                    }
+                    if (msiexecProcess.ExitCode != 0 &&
+                        msiexecProcess.ExitCode != (int)WIN32_ERROR.ERROR_SUCCESS_REBOOT_REQUIRED &&
+                        msiexecProcess.ExitCode != (int)WIN32_ERROR.ERROR_UNKNOWN_PRODUCT) {
+                        throw new Win32Exception(msiexecProcess.ExitCode, $"Msiexec failed with code {msiexecProcess.ExitCode}");
                     }
                 }
             }
