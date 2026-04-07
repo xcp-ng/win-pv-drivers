@@ -22,17 +22,17 @@ namespace XenClean {
 
     static class UninstallProducts {
         // maps from upgrade code to known product
-        static readonly IReadOnlyDictionary<string, KnownProduct> KnownProducts = new Dictionary<string, KnownProduct>() {
+        static readonly IReadOnlyList<KeyValuePair<string, KnownProduct>> KnownProducts = new List<KeyValuePair<string, KnownProduct>>() {
             // x64 drivers version 6.6.557 from XS 6.6.90
             // must be uninstalled in the correct order
             // Citrix XenServer Tools Installer
-            { "{21EF141F-9126-42DA-93CD-B50442047420}", new KnownProduct(new List<string>() { "XenServer" }, false) },
+            new("{21EF141F-9126-42DA-93CD-B50442047420}", new(new List<string>() { "XenServer" }, false)),
             // Citrix XenServer Windows Guest Agent
-            { "{48E5492C-6843-452E-97A2-A5FE2D24B141}", new KnownProduct(new List<string>() { "XenServer" }, false) },
+            new("{48E5492C-6843-452E-97A2-A5FE2D24B141}", new(new List<string>() { "XenServer" }, false)),
             // Citrix XenServer VSS Provider
-            { "{D8709720-65B7-4CD9-9F51-68DB592B604D}", new KnownProduct(new List<string>() { "XenServer" }, false) },
+            new("{D8709720-65B7-4CD9-9F51-68DB592B604D}", new(new List<string>() { "XenServer" }, false)),
             // Citrix Xen Windows x64 PV Drivers
-            { "{53858014-F814-49A1-9D63-CA2578432E73}", new KnownProduct(new List<string>() { "XenServer" }, false) },
+            new("{53858014-F814-49A1-9D63-CA2578432E73}", new(new List<string>() { "XenServer" }, false)),
 
             // Citrix uses the same package code as the Citrix XenServer Windows Guest Agent
             // in their multi-package XS 6.6 drivers for their 7.1 series drivers
@@ -40,16 +40,16 @@ namespace XenClean {
             // XCP-ng 8.2 x64 also uses the same upgrade code.
 
             // Citrix Hypervisor/XS8
-            { "{AF9B2559-3E91-4206-98C2-F560009FF7F1}", new KnownProduct(new List<string>() { "XenServer", "XCP-ng" }, false) },
+            new("{AF9B2559-3E91-4206-98C2-F560009FF7F1}", new(new List<string>() { "XenServer", "XCP-ng" }, false)),
 
             // generic x86 (does not work due to check in Invoke-XenClean)
-            { "{10828840-D8A9-4953-B44A-1F1D3CD7ECB0}", new KnownProduct(new List<string>() { "Unknown" }, true) },
+            new("{10828840-D8A9-4953-B44A-1F1D3CD7ECB0}", new(new List<string>() { "Unknown" }, true)),
             // generic x64
-            { "{D60FED1E-316C-41B0-B7A5-E44951A82618}", new KnownProduct(new List<string>() { "Unknown" }, true) },
+            new("{D60FED1E-316C-41B0-B7A5-E44951A82618}", new(new List<string>() { "Unknown" }, true)),
 
             // ours
-            { VersionInfo.MsiUpgradeCodeX86, new KnownProduct(new List<string>() { VersionInfo.VendorName }, true) },
-            { VersionInfo.MsiUpgradeCodeX64, new KnownProduct(new List<string>() { VersionInfo.VendorName }, true) },
+            new(VersionInfo.MsiUpgradeCodeX86, new(new List<string>() { VersionInfo.VendorName }, true)),
+            new(VersionInfo.MsiUpgradeCodeX64, new(new List<string>() { VersionInfo.VendorName }, true)),
         };
 
         public static List<string> FindProducts(out bool foundHasXenvifOffboard) {
