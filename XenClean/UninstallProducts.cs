@@ -101,7 +101,9 @@ namespace XenClean {
                         } catch (Exception ex) {
                             Logger.LogFormat(LogLevel.Alert, "Cannot read MSI uninstallation log: {0} {1}", ex.HResult, ex.Message);
                         }
-                        if (msiexecProcess.ExitCode != 0 && msiexecProcess.ExitCode != (int)WIN32_ERROR.ERROR_SUCCESS_REBOOT_REQUIRED) {
+                        if (msiexecProcess.ExitCode != 0 &&
+                            msiexecProcess.ExitCode != (int)WIN32_ERROR.ERROR_SUCCESS_REBOOT_REQUIRED &&
+                            msiexecProcess.ExitCode != (int)WIN32_ERROR.ERROR_UNKNOWN_PRODUCT) {
                             throw new Win32Exception(msiexecProcess.ExitCode, $"Msiexec failed with code {msiexecProcess.ExitCode}");
                         }
                     }
