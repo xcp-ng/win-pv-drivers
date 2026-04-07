@@ -1,6 +1,6 @@
 # Build guide
 
-## Requirements
+## Prerequisites
 
 * Visual Studio 2022 with the following features:
     * Desktop development with C++ workload
@@ -12,9 +12,13 @@
 * Windows Driver Kit matching your Windows SDK
 * Git for Windows
 * Rustup and latest Rust stable
+* [cargo auditable](https://github.com/rust-secure-code/cargo-auditable)
+* [CodeQL CLI](https://github.com/github/codeql-cli-binaries) installed into PATH, with the necessary CodeQL packs
 * [Microsoft SBOM Tool](https://github.com/microsoft/sbom-tool) available as `sbom.exe` in PATH (installable via WinGet)
+* [Syft](https://github.com/anchore/syft) available as `syft.exe` in PATH
+* [wix.zip](https://github.com/xcp-ng/wix-builder) extracted into `deps\wix`
 
-Windows SDK and WDK dependencies can be found on [Microsoft Learn](https://learn.microsoft.com/en-us/windows-hardware/drivers/other-wdk-downloads).
+Windows SDK and WDK downloads can be found on [Microsoft Learn](https://learn.microsoft.com/en-us/windows-hardware/drivers/other-wdk-downloads).
 
 ## Branding and configuration
 
@@ -28,10 +32,17 @@ $Env:PRODUCT_NAME = 'Xen'
 $Env:VENDOR_PREFIX = 'XP'
 $Env:COPYRIGHT = 'Copyright (c) Xen Project.'
 
+# These are WinPV driver-specific settings recommended for use with the XCP-ng
+# WinPV tools.
+$Env:FORCE_ACTIVATE = '1'
+$Env:FORCE_UNPLUG = '1'
+
 # These version numbers are used in multiple places.
 # You must have at least 2 version components (major.minor).
-# The third and fourth components will be 0-filled if absent, except in drivers where the revision will be the build time prefixed with "1".
-# For compatibility reasons, it's not recommended to have any version component exceed 255.255.65535.65535.
+# The third and fourth components will be 0-filled if absent, except in drivers
+# where the revision will be the build time prefixed with "1".
+# For compatibility reasons, it's not recommended to have any version component
+# exceed 255.255.65535.65535.
 $PackageVersions = @{
     Product         = '9.0.9000.0'
     xenbus          = '9.0.9001.0'  # defaults to product version
