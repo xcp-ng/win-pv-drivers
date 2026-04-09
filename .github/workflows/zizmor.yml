@@ -5,6 +5,7 @@ on:
     branches:
       - xcp-ng-9.1
   pull_request:
+  workflow_dispatch:
 
 permissions: {}
 
