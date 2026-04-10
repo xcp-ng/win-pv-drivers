@@ -2,11 +2,24 @@ name: build-drivers
 
 on:
   workflow_call:
+    inputs:
+      environment:
+        type: string
   workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options:
+          - Dev
+          - Prod
+        default: Dev
 
 jobs:
   build-drivers:
     runs-on: windows-2022
+    environment:
+      name: ${{inputs.environment}}
+      deployment: false
     env:
       WINPV_OUTPUT: installer/output
       WINPV_CATALOG: catalog.csv

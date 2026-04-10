@@ -2,11 +2,24 @@ name: build-timeprovider
 
 on:
   workflow_call:
+    inputs:
+      environment:
+        type: string
   workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options:
+          - Dev
+          - Prod
+        default: Dev
 
 jobs:
   build-timeprovider:
     runs-on: windows-latest
+    environment:
+      name: ${{inputs.environment}}
+      deployment: false
     env:
       WINPV_OUTPUT: xentimeprovider/x64/Release
       WINPV_CATALOG: catalog.csv

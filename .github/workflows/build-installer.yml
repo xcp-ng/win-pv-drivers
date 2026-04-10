@@ -2,10 +2,19 @@ name: build-installer
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options:
+          - Dev
+          - Prod
+        default: Dev
 
 jobs:
   build-attested:
     uses: ./.github/workflows/build-attested.yml
+    with:
+      environment: ${{inputs.environment}}
     permissions:
       id-token: write
       contents: read
@@ -15,6 +24,9 @@ jobs:
     needs:
       - build-attested
     runs-on: windows-latest
+    environment:
+      name: ${{inputs.environment}}
+      deployment: false
     env:
       # should match up with the WINPV_OUTPUT of each sub-artifact workflow
       DRIVER_EXTRACT: installer/output

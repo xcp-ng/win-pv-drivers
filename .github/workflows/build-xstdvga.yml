@@ -2,11 +2,24 @@ name: build-xstdvga
 
 on:
   workflow_call:
+    inputs:
+      environment:
+        type: string
   workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options:
+          - Dev
+          - Prod
+        default: Dev
 
 jobs:
   build-xstdvga:
     runs-on: windows-2022
+    environment:
+      name: ${{inputs.environment}}
+      deployment: false
     env:
       WINPV_OUTPUT: xstdvga/vs2022/x64/Release/xstdvga
       WINPV_CATALOG: catalog.csv

@@ -2,11 +2,24 @@ name: build-guestagent
 
 on:
   workflow_call:
+    inputs:
+      environment:
+        type: string
   workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options:
+          - Dev
+          - Prod
+        default: Dev
 
 jobs:
   build-guestagent:
     runs-on: windows-latest
+    environment:
+      name: ${{inputs.environment}}
+      deployment: false
     env:
       WINPV_OUTPUT: xen-guest-agent/target/release
       WINPV_CATALOG: catalog.csv
