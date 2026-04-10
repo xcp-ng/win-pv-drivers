@@ -47,43 +47,43 @@ if ($null -eq $PackageVersions) {
     $PackageVersions = @{
     }
 }
-if ($null -eq $PackageVersions['Product']) {
+if (!$PackageVersions['Product']) {
     $PackageVersions['Product'] = '9.1.0.0'
 }
-if ($null -eq $PackageVersions['xenbus']) {
+if (!$PackageVersions['xenbus']) {
     $PackageVersions['xenbus'] = $PackageVersions['Product']
 }
-if ($null -eq $PackageVersions['xencons']) {
+if (!$PackageVersions['xencons']) {
     $PackageVersions['xencons'] = $PackageVersions['Product']
 }
-if ($null -eq $PackageVersions['xenhid']) {
+if (!$PackageVersions['xenhid']) {
     $PackageVersions['xenhid'] = $PackageVersions['Product']
 }
-if ($null -eq $PackageVersions['xeniface']) {
+if (!$PackageVersions['xeniface']) {
     $PackageVersions['xeniface'] = $PackageVersions['Product']
 }
-if ($null -eq $PackageVersions['xennet']) {
+if (!$PackageVersions['xennet']) {
     $PackageVersions['xennet'] = $PackageVersions['Product']
 }
-if ($null -eq $PackageVersions['xenvbd']) {
+if (!$PackageVersions['xenvbd']) {
     $PackageVersions['xenvbd'] = $PackageVersions['Product']
 }
-if ($null -eq $PackageVersions['xenvif']) {
+if (!$PackageVersions['xenvif']) {
     $PackageVersions['xenvif'] = $PackageVersions['Product']
 }
-if ($null -eq $PackageVersions['xenvkbd']) {
+if (!$PackageVersions['xenvkbd']) {
     $PackageVersions['xenvkbd'] = $PackageVersions['Product']
 }
-if ($null -eq $PackageVersions['XenClean']) {
+if (!$PackageVersions['XenClean']) {
     $PackageVersions['XenClean'] = $PackageVersions['Product']
 }
-if ($null -eq $PackageVersions['XenBootFix']) {
+if (!$PackageVersions['XenBootFix']) {
     $PackageVersions['XenBootFix'] = $PackageVersions['Product']
 }
-if ($null -eq $PackageVersions['XenGuestAgent']) {
+if (!$PackageVersions['XenGuestAgent']) {
     $PackageVersions['XenGuestAgent'] = $PackageVersions['Product']
 }
-if ($null -eq $PackageVersions['XenTimeProvider']) {
+if (!$PackageVersions['XenTimeProvider']) {
     $PackageVersions['XenTimeProvider'] = $PackageVersions['Product']
 }
 

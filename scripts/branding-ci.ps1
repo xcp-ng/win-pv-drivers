@@ -26,7 +26,7 @@ function Out-SafeString {
             "Hex",
             "Guid",
             "Base64",
-            "OneOrEmpty",
+            "NumericBoolean",
             "DriverVer"
         )]
         [string]$PatternType
@@ -37,15 +37,15 @@ function Out-SafeString {
 
     # Allow basic punctuations only. All strings must be single-quote safe.
     $AllowedPatterns = @{
-        "Version"      = '^[0-9]+(\.[0-9]+){0,3}$'
-        "VendorPrefix" = '^[a-z][a-z0-9]{0,3}$'
-        "PathSafe"     = '^[a-z0-9.,-_ ]*$'
-        "Freeform"     = '^[a-z0-9().,-_ ]*$'
-        "Hex"          = '^[a-f0-9]*$'
-        "Guid"         = '^\{[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\}$'
-        "Base64"       = '^[a-z0-9+/=\r\n\t ]*$'
-        "OneOrEmpty"   = '^1?$'
-        "DriverVer"    = '^[0-9]{2}/[0-9]{2}/[0-9]{4},[0-9]+(\.[0-9]+){0,3}$'
+        "Version"        = '^([0-9]+(\.[0-9]+){0,3})?$'
+        "VendorPrefix"   = '^([a-z][a-z0-9])?$'
+        "PathSafe"       = '^[a-z0-9.,-_ ]*$'
+        "Freeform"       = '^[a-z0-9().,-_ ]*$'
+        "Hex"            = '^[a-f0-9]*$'
+        "Guid"           = '^(\{[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\})?$'
+        "Base64"         = '^[a-z0-9+/=\r\n\t ]*$'
+        "NumericBoolean" = '^[01]?$'
+        "DriverVer"      = '^([0-9]{2}/[0-9]{2}/[0-9]{4},[0-9]+(\.[0-9]+){0,3})?$'
     }
 
     if ($InputObject -isnot [string]) {
@@ -70,8 +70,8 @@ $content = @"
 `$Env:VENDOR_PREFIX = '$(Out-SafeString -PatternType VendorPrefix -InputObject $Env:VENDOR_PREFIX)'
 `$Env:COPYRIGHT = '$(Out-SafeString -PatternType Freeform -InputObject $Env:COPYRIGHT)'
 
-`$Env:FORCE_ACTIVATE = '$(Out-SafeString -PatternType OneOrEmpty -InputObject $Env:FORCE_ACTIVATE)'
-`$Env:FORCE_UNPLUG = '$(Out-SafeString -PatternType OneOrEmpty -InputObject $Env:FORCE_UNPLUG)'
+`$Env:FORCE_ACTIVATE = '$(Out-SafeString -PatternType NumericBoolean -InputObject $Env:FORCE_ACTIVATE)'
+`$Env:FORCE_UNPLUG = '$(Out-SafeString -PatternType NumericBoolean -InputObject $Env:FORCE_UNPLUG)'
 
 `$PackageVersions = @{
     Product         = '$(Out-SafeString -PatternType Version -InputObject $Env:PackageVersions_Product)'
