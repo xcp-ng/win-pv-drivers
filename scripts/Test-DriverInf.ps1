@@ -9,7 +9,7 @@ param (
     [ValidateSet("x86", "x64")]
     [string]$Platform,
     [Parameter()]
-    [string]$OutputPath = "$PSScriptRoot\..\installer\output",
+    [string]$OutputPath = "$PSScriptRoot\..\installer\driver-bins",
     [Parameter()]
     [string]$DriverRequirementsBuild,
     [Parameter()]

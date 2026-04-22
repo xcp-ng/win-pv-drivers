@@ -29,7 +29,7 @@ jobs:
       deployment: false
     env:
       # should match up with the WINPV_OUTPUT of each sub-artifact workflow
-      DRIVER_EXTRACT: installer/output
+      DRIVER_EXTRACT: installer/driver-bins
       GUESTAGENT_EXTRACT: xen-guest-agent/target/release
       TIMEPROVIDER_EXTRACT: xentimeprovider/x64/Release
       XSTDVGA_EXTRACT: xstdvga/vs2022/x64/Release/xstdvga

@@ -25,8 +25,8 @@
     <BindPath Include="$(ProjectDir)branding">
       <BindName>branding</BindName>
     </BindPath>
-    <BindPath Include="$(ProjectDir)output\$(Platform)\$(Configuration)">
-      <BindName>output</BindName>
+    <BindPath Include="$(ProjectDir)driver-bins\$(Platform)\$(Configuration)">
+      <BindName>driver-bins</BindName>
     </BindPath>
     <BindPath Include="$(SolutionDir)..\xen-guest-agent\target\$(Configuration)">
       <BindName>xenguestagent</BindName>

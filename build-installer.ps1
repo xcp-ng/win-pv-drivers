@@ -83,7 +83,7 @@ if ($Target -ine "Clean") {
 
     if ($Sbom) {
         & "$PSScriptRoot\scripts\Build-DriverSbom.ps1" -Configuration $Configuration -Platform $Platform
-        Get-ChildItem -Directory -Filter _manifest -Recurse $PSScriptRoot\installer\output\ | ForEach-Object {
+        Get-ChildItem -Directory -Filter _manifest -Recurse $PSScriptRoot\installer\driver-bins\ | ForEach-Object {
             $Driver = $($_.Parent.Name)
             $_ | Copy-Item -Destination $VersionDir\sbom\$Driver -Recurse
         }
@@ -223,7 +223,7 @@ if ($Target -ine "Clean") {
         $DriversSymbolDir = "$VersionDir\symbols\drivers"
         New-Item -Path $DriversSymbolDir -ItemType Directory -Force
         Copy-Item `
-            -Path "$PSScriptRoot\installer\output\$Platform\$Configuration\*\*" `
+            -Path "$PSScriptRoot\installer\driver-bins\$Platform\$Configuration\*\*" `
             -Filter *.pdb `
             -Destination $DriversSymbolDir\ `
             -Force

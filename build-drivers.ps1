@@ -28,7 +28,7 @@ param (
 # The "1" is to avoid leading zeroes.
 $DriverTime = "1" + (Get-Date -Format HHmm)
 
-$OutputPath = "$PSScriptRoot\installer\output"
+$OutputPath = "$PSScriptRoot\installer\driver-bins"
 Remove-Item -Path $OutputPath -Force -Recurse -ErrorAction SilentlyContinue
 $ErrorActionPreference = "Stop"
 foreach ($repo in $Drivers) {

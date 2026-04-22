@@ -16,7 +16,7 @@ $ErrorActionPreference = "Stop"
 . $PSScriptRoot\..\scripts\branding-generic.ps1
 . $PSScriptRoot\..\scripts\sign.ps1
 
-$OutputPath = "$PSScriptRoot\..\installer\output"
+$OutputPath = "$PSScriptRoot\..\installer\driver-bins"
 foreach ($repo in $Drivers) {
     Push-Location $PSScriptRoot\..\$repo
     try {

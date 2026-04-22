@@ -21,7 +21,7 @@ jobs:
       name: ${{inputs.environment}}
       deployment: false
     env:
-      WINPV_OUTPUT: installer/output
+      WINPV_OUTPUT: installer/driver-bins
       WINPV_CATALOG: catalog.csv
     steps:
       - name: Checkout

@@ -80,10 +80,10 @@ Using the x64 Native Tools Command Prompt for VS 2022, navigate to this reposito
 .\build-drivers.ps1 -Configuration Release -Platform x64
 ```
 
-Output drivers will be collected in `installer\output`.
+Output drivers will be collected in `installer\driver-bins`.
 
 If you need to sign the drivers externally (e.g. WHQL signatures), you must replace the drivers found here with your own signed binaries.
-These binaries should be located at `installer\output\<platform>\<configuration>\<driver name>` for each driver included in the package.
+These binaries should be located at `installer\driver-bins\<platform>\<configuration>\<driver name>` for each driver included in the package.
 
 ## Building the Rust-based Windows guest agent
 

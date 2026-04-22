@@ -1,6 +1,6 @@
 param (
     [Parameter()]
-    [string]$Path = "installer/output",
+    [string]$Path = "installer/driver-bins",
     [Parameter()]
     $OutPath = "output",
     [Parameter()]
