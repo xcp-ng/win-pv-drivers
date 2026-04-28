@@ -440,6 +440,8 @@ int wmain(int argc, wchar_t **argv) {
     bool force = false;
     wchar_t *backup = nullptr;
 
+    SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32);
+
     for (int i = 1; i < argc; i++) {
         if (CompareStringOrdinal(L"--force", -1, argv[i], -1, TRUE) == CSTR_EQUAL) {
             force = true;

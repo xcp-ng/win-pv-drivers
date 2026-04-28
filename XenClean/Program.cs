@@ -1,10 +1,18 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using XenClean;
 using XenDriverUtils;
 
+[assembly: DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+
 class Program {
+    [DllImport("kernel32.dll")]
+    static extern bool SetDefaultDllDirectories(uint DirectoryFlags);
+
+    const uint LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
+
     static bool IsOnboardCleanupNeeded(string onboardFamily, out ExitCode exitCode) {
         if (XenCleanup.IsSafeMode()) {
             Logger.Log(LogLevel.Alert, "Onboarding denied in Safe Mode");
@@ -78,6 +86,8 @@ class Program {
     }
 
     static int Main(string[] args) {
+        SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32);
+
         var dryRun = false;
         var noReboot = false;
         var confirm = true;
