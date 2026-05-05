@@ -23,6 +23,8 @@ param (
     [Parameter()]
     [switch]$Sbom,
     [Parameter()]
+    [switch]$Zip,
+    [Parameter()]
     [switch]$Iso
 )
 
@@ -267,6 +269,24 @@ if ($Target -ine "Clean") {
             -Include *.pdb `
             -Destination $XstdvgaSymbolDir\ `
             -Force
+    }
+
+    if ($Zip) {
+        # Compress-Archive (and .NET zip support in general) has a bug that causes path separators to be non-compliant:
+        # https://learn.microsoft.com/en-us/dotnet/framework/migration-guide/mitigation-ziparchiveentry-fullname-path-separator
+        # So use 7-Zip instead.
+        Push-Location $OutDir
+        try {
+            7z.exe a `
+                "$OutDir\$ReleaseTag.zip" `
+                $ReleaseTag
+            if ($LASTEXITCODE -ne 0) {
+                throw "7z failed with error $LASTEXITCODE"
+            }
+        }
+        finally {
+            Pop-Location
+        }
     }
 
     if ($Iso) {

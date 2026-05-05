@@ -16,6 +16,7 @@
 * [CodeQL CLI](https://github.com/github/codeql-cli-binaries) installed into PATH, with the necessary CodeQL packs
 * [Microsoft SBOM Tool](https://github.com/microsoft/sbom-tool) available as `sbom.exe` in PATH (installable via WinGet)
 * [Syft](https://github.com/anchore/syft) available as `syft.exe` in PATH
+* [7-Zip](https://www.7-zip.org) available as `7z.exe` in PATH
 * [wix.zip](https://github.com/xcp-ng/wix-builder) extracted into `deps\wix`
 
 Windows SDK and WDK downloads can be found on [Microsoft Learn](https://learn.microsoft.com/en-us/windows-hardware/drivers/other-wdk-downloads).
