@@ -9,7 +9,6 @@
       <File Name="xencons.cat" DefaultVersion="$(XenconsVersion)" DefaultLanguage="1033" />
       <File Name="xencons.inf" Id="Xencons.inf" DefaultVersion="$(XenconsVersion)" DefaultLanguage="1033" />
       <File Name="xencons.sys" />
-      <File Name="xencons_monitor.dll" />
       <File Name="xencons_monitor.exe" />
       <File Name="xencons_tty.exe" />
     </ComponentGroup>

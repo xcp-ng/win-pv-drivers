@@ -11,7 +11,6 @@
       <File Name="xenbus.cat" DefaultVersion="$(XenbusVersion)" DefaultLanguage="1033" />
       <File Name="xenbus.inf" Id="Xenbus.inf" DefaultVersion="$(XenbusVersion)" DefaultLanguage="1033" />
       <File Name="xenbus.sys" />
-      <File Name="xenbus_monitor.dll" />
       <File Name="xenbus_monitor.exe" />
       <File Name="xenfilt.sys" />
     </ComponentGroup>
