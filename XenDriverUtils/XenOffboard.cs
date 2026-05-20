@@ -23,7 +23,7 @@ namespace XenDriverUtils {
             var scriptPath = Path.Combine(tempdir.FullName, "Copy-XenVifSettings.ps1");
 
             var resourceName = nameof(XenDriverUtils) + ".Copy-XenVifSettings.signed.ps1";
-            using var scriptData = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+            using var scriptData = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName) ?? throw new NullReferenceException();
             using var scriptFile = File.Create(scriptPath);
 
             var buffer = new byte[4096];

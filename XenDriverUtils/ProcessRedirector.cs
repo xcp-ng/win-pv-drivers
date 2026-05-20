@@ -68,7 +68,7 @@ namespace XenDriverUtils {
             };
 
             using var _ = new LogSection($"{program} {args}");
-            var process = Process.Start(psi);
+            var process = Process.Start(psi) ?? throw new NullReferenceException();
             process.StandardInput.Close();
 
             LogProcessOutput(process, timeout, level);

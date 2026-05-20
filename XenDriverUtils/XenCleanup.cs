@@ -70,6 +70,9 @@ namespace XenDriverUtils {
                     try {
                         if (classSubkey.GetValueKind(filterValue) == RegistryValueKind.MultiString) {
                             var filters = (string[])classSubkey.GetValue(filterValue);
+                            if (filters == null) {
+                                continue;
+                            }
                             Logger.LogFormat(LogLevel.Info, "Class filters for {0}: {1}", classGuid, string.Join(",", filters));
 
                             var newFilters = filters.Where(x => !FilterNameList
