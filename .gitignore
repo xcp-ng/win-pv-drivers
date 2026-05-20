@@ -374,5 +374,7 @@ Branding.cs
 /XenBootFix/Branding.inc
 /package-*
 output/
+installer/driver-bins/
 deps/
 /XenDriverUtils/Copy-XenVifSettings.signed.ps1
+*.lscache
