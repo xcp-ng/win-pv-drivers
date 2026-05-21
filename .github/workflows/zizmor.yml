@@ -3,7 +3,7 @@ name: GitHub Actions Security Analysis with zizmor 🌈
 on:
   push:
     branches:
-      - xcp-ng-9.1
+      - master
   pull_request:
   workflow_dispatch:
 
