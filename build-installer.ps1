@@ -133,13 +133,13 @@ if ($Target -ine "Clean") {
         # for it otherwise.
         New-Item -Path $VersionDir\sbom\xen-guest-agent -ItemType Directory -Force
         syft.exe scan `
-            $PSScriptRoot\xen-guest-agent\target\release\xen-guest-agent.exe `
+            $PSScriptRoot\xen-guest-agent\target\$Configuration\xen-guest-agent.exe `
             -o "spdx-json@2.2=$VersionDir\sbom\xen-guest-agent\xen-guest-agent.json" `
             --source-supplier $Env:VENDOR_NAME `
             --source-name xen-guest-agent `
             --source-version (Get-PackageVersion XenGuestAgent)
         syft.exe scan `
-            $PSScriptRoot\xen-guest-agent\target\release\xen-win-clipboard.exe `
+            $PSScriptRoot\xen-guest-agent\target\$Configuration\xen-win-clipboard.exe `
             -o "spdx-json@2.2=$VersionDir\sbom\xen-guest-agent\xen-win-clipboard.json" `
             --source-supplier $Env:VENDOR_NAME `
             --source-name xen-win-clipboard `

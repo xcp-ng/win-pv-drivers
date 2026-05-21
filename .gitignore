@@ -378,3 +378,4 @@ installer/driver-bins/
 deps/
 /XenDriverUtils/Copy-XenVifSettings.signed.ps1
 *.lscache
+/input/
