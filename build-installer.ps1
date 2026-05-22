@@ -274,14 +274,13 @@ if ($Target -ine "Clean") {
     if ($Zip) {
         # Compress-Archive (and .NET zip support in general) has a bug that causes path separators to be non-compliant:
         # https://learn.microsoft.com/en-us/dotnet/framework/migration-guide/mitigation-ziparchiveentry-fullname-path-separator
-        # So use 7-Zip instead.
+        # So use Windows's bsdtar instead.
+        $tar = Join-Path ([System.Environment]::SystemDirectory) "tar.exe"
         Push-Location $OutDir
         try {
-            7z.exe a `
-                "$OutDir\$ReleaseTag.zip" `
-                $ReleaseTag
+            & $tar --format zip -cf "$OutDir\$ReleaseTag.zip" $ReleaseTag
             if ($LASTEXITCODE -ne 0) {
-                throw "7z failed with error $LASTEXITCODE"
+                throw "tar failed with error $LASTEXITCODE"
             }
         }
         finally {
