@@ -21,27 +21,20 @@ namespace XenInstCA {
     }
 
     internal class LoggerScope : IDisposable {
-        private bool disposedValue;
+        private bool _disposed = false;
         private Logger _old;
 
         public LoggerScope(Logger logger) {
             _old = Logger.SetLogger(logger);
         }
 
-        protected virtual void Dispose(bool disposing) {
-            if (!disposedValue) {
-                if (disposing) {
-                    Logger.SetLogger(_old);
-                    _old = null;
-                }
-                disposedValue = true;
-            }
-        }
-
         public void Dispose() {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
+            if (_disposed) {
+                return;
+            }
+            Logger.SetLogger(_old);
+            _old = null;
+            _disposed = true;
         }
     }
 }
