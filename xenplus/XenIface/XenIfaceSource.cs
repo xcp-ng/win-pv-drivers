@@ -1,0 +1,296 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Windows.Win32;
+using Windows.Win32.Devices.DeviceAndDriverInstallation;
+using Windows.Win32.Foundation;
+
+using static Windows.Win32.Devices.DeviceAndDriverInstallation.CM_GET_DEVICE_INTERFACE_LIST_FLAGS;
+using static Windows.Win32.Devices.DeviceAndDriverInstallation.CM_NOTIFY_ACTION;
+using static Windows.Win32.Devices.DeviceAndDriverInstallation.CM_NOTIFY_FILTER_TYPE;
+
+namespace XenPlus.XenIface;
+
+sealed partial class XenIfaceSource : IDisposable {
+    static readonly Guid GUID_INTERFACE_XENIFACE = new(
+        0xb2cfb085,
+        0xaa5e,
+        0x47e1,
+        0x8b, 0xf7,
+        0x97, 0x93, 0xf3, 0x15, 0x45, 0x65);
+
+    readonly ILogger _logger;
+
+    CancellationTokenRegistration? _unregister;
+
+    /// <summary>
+    /// unlocked but readonly during lifetime
+    /// </summary>
+    readonly AutoResetEvent _suspend;
+    /// <summary>
+    /// unlocked but readonly during lifetime
+    /// </summary>
+    readonly RegisteredWaitHandle _suspendWait;
+    bool _suspendWaitRegistered = false;
+
+    readonly Thread _worker;
+
+    readonly object _lock = new();
+    /// <summary>
+    /// locked
+    /// </summary>
+    readonly Queue<Request> _requests = new();
+    /// <summary>
+    /// locked
+    /// </summary>
+    XenIfaceDevice? _active = null;
+    /// <summary>
+    /// locked
+    /// </summary>
+    readonly HashSet<XenIfaceWatch> _watches = [];
+
+    bool _disposed = false;
+
+    public XenIfaceSource(ILogger logger, CancellationToken? ct = null) {
+        _logger = logger;
+        try {
+            _unregister = ct?.Register(() => {
+                lock (_lock) {
+                    _requests.Enqueue(new ExitRequest());
+                    Monitor.Pulse(_lock);
+                }
+            });
+
+            _suspend = new(false);
+            _suspendWait = ThreadPool.RegisterWaitForSingleObject(_suspend, (state, _) => {
+                var self = Utils.Unwrap<XenIfaceSource>(state);
+                self.Resumed?.Invoke(self, new XenIfaceResumedEventArgs());
+            }, this, -1, false);
+            _suspendWaitRegistered = true;
+
+            _worker = new Thread(Worker) {
+                IsBackground = true,
+                Name = "XenIfaceSource.Worker",
+            };
+            _worker.Start();
+
+            // fake an arrival for initial scan
+            lock (_lock) {
+                _requests.Enqueue(new WorkerRequest() { Action = CM_NOTIFY_ACTION_DEVICEINTERFACEARRIVAL });
+                Monitor.Pulse(_lock);
+            }
+        } catch {
+            Dispose();
+            throw;
+        }
+    }
+
+    public void Dispose() {
+        if (Interlocked.Exchange(ref _disposed, true)) {
+            return;
+        }
+
+        if (_unregister.HasValue) {
+            _unregister?.Dispose();
+            _unregister = null;
+        }
+
+        if (_worker.IsAlive) {
+            lock (_lock) {
+                _requests.Enqueue(new ExitRequest());
+                Monitor.Pulse(_lock);
+            }
+            _worker.Join();
+        }
+
+        if (_suspendWaitRegistered) {
+            _suspendWait.Unregister(null);
+            _suspendWaitRegistered = false;
+        }
+        _suspend.Dispose();
+    }
+
+    /// <summary>
+    /// Do not copy the resulting lock handle.
+    /// </summary>
+    public XenIfaceHandle Lock() {
+        return new XenIfaceHandle(this);
+    }
+
+    public delegate void XenIfaceResumedEventHandler(object? sender, XenIfaceResumedEventArgs args);
+
+    /// <summary>
+    /// Event handler runs in an arbitrary thread.
+    /// </summary>
+    public event XenIfaceResumedEventHandler? Resumed;
+
+    static IEnumerable<string> FindDevices() {
+        CONFIGRET cr;
+        char[] buf;
+        do {
+            Utils.CheckConfigret(PInvoke.CM_Get_Device_Interface_List_Size(
+                out var len,
+                GUID_INTERFACE_XENIFACE,
+                null,
+                CM_GET_DEVICE_INTERFACE_LIST_PRESENT));
+
+            buf = new char[len];
+            unsafe {
+                fixed (char* p = buf) {
+                    cr = PInvoke.CM_Get_Device_Interface_List(
+                        GUID_INTERFACE_XENIFACE,
+                        null,
+                        p,
+                        (uint)buf.Length,
+                        CM_GET_DEVICE_INTERFACE_LIST_PRESENT);
+                }
+            }
+        } while (cr == CONFIGRET.CR_BUFFER_SMALL);
+        Utils.CheckConfigret(cr);
+
+        foreach (var device in Utils.ParseMultiString(buf)) {
+            yield return device;
+        }
+    }
+
+    /// <summary>
+    /// locked
+    /// </summary>
+    void RefreshDevices(out XenIfaceDevice? lastActive) {
+        lastActive = null;
+        if (_active != null) {
+            if (!_active.Handle.IsInvalid) {
+                return;
+            } else {
+                lastActive = _active;
+                _active = null;
+            }
+        }
+
+        foreach (var device in FindDevices()) {
+            try {
+                _logger.LogDebug("Trying {device}", device);
+                _active = new XenIfaceDevice(this, device);
+                _logger.LogTrace("Opened {device} {}", device, (ulong)_active.Handle.DangerousGetHandle());
+                break;
+            } catch (Exception ex) {
+                _logger.LogDebug(ex, "Failed to open device {device}", device);
+            }
+        }
+
+        if (_active == null) {
+            throw new XenIfaceNotFoundException("No active device");
+        }
+
+        _active.SuspendRegister(_suspend.SafeWaitHandle);
+        foreach (var watch in _watches) {
+            watch.Rearm(_active);
+        }
+        _suspend.Set();
+    }
+
+    internal void OnDeviceCallback(CM_NOTIFY_ACTION action, XenIfaceDevice target) {
+        lock (_lock) {
+            _requests.Enqueue(new DeviceRequest() {
+                Action = action,
+                TargetDevice = target
+            });
+        }
+    }
+
+    internal void WatchUnregister(XenIfaceWatch watch) {
+        lock (_lock) {
+            _watches.Remove(watch);
+        }
+    }
+
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+    static unsafe uint WorkerCmCallback(
+        HCMNOTIFICATION notifyHandle,
+        void* context,
+        CM_NOTIFY_ACTION action,
+        CM_NOTIFY_EVENT_DATA* eventData,
+        uint eventDataSize) {
+        try {
+            var gch = GCHandle.FromIntPtr((nint)context);
+            var self = Utils.Unwrap<XenIfaceSource>(gch.Target);
+            lock (self._lock) {
+                self._requests.Enqueue(new WorkerRequest() { Action = action });
+                Monitor.Pulse(self._lock);
+            }
+        } catch (Exception ex) {
+            Environment.FailFast("Worker CM callback unexpectedly failed", ex);
+        }
+        return (uint)WIN32_ERROR.ERROR_SUCCESS;
+    }
+
+    unsafe void Worker(object? _param) {
+        GCHandle gch = GCHandle.Alloc(this);
+        try {
+            var filter = new CM_NOTIFY_FILTER {
+                cbSize = (uint)sizeof(CM_NOTIFY_FILTER),
+                Flags = 0,
+                FilterType = CM_NOTIFY_FILTER_TYPE_DEVICEINTERFACE,
+                Reserved = 0,
+                u = { DeviceInterface = { ClassGuid = GUID_INTERFACE_XENIFACE } }
+            };
+            Utils.CheckConfigret(PInvoke.CM_Register_Notification(
+                filter,
+                (void*)GCHandle.ToIntPtr(gch),
+                &WorkerCmCallback,
+                out var cmWorker));
+
+            using (cmWorker) {
+                using var tombstones = new DisposeStack();
+
+                while (true) {
+                    // due to the worker thread needing a separate unlocked section, we can't use BlockingCollection or
+                    // similar blocking queues, and have to base the worker thread off of a monitor instead
+                    lock (_lock) {
+                        // pulses can get lost when the worker is in the unlocked section below, so we need to watch the
+                        // predicate
+                        while (_requests.Count == 0) {
+                            Monitor.Wait(_lock);
+                        }
+
+                        while (_requests.TryDequeue(out var request)) {
+                            if (request is WorkerRequest workerRequest &&
+                                workerRequest.Action == CM_NOTIFY_ACTION_DEVICEINTERFACEARRIVAL) {
+                                try {
+                                    RefreshDevices(out var lastActive);
+                                    if (lastActive != null) {
+                                        _logger.LogTrace("killing last active {}", lastActive.DevicePath);
+                                        tombstones.Push(lastActive);
+                                    }
+                                } catch (XenIfaceNotFoundException ex) {
+                                    _logger.LogInformation(ex, "Failed to refresh devices. This is a transient error.");
+                                }
+
+                            } else if (request is DeviceRequest listenerRequest &&
+                                  (listenerRequest.Action == CM_NOTIFY_ACTION_DEVICEREMOVEPENDING ||
+                                  listenerRequest.Action == CM_NOTIFY_ACTION_DEVICEREMOVECOMPLETE)) {
+                                if (ReferenceEquals(listenerRequest.TargetDevice, _active)) {
+                                    _active = null;
+                                }
+                                _logger.LogTrace(
+                                    "{} on {}",
+                                    listenerRequest.Action,
+                                    listenerRequest.TargetDevice.DevicePath);
+                                tombstones.Push(listenerRequest.TargetDevice);
+
+                            } else if (request is ExitRequest) {
+                                _logger.LogTrace("exiting worker");
+                                return;
+                            }
+                        }
+                    }
+
+                    // closing old listeners must be done outside of the lock, since CM_Unregister_Notification will
+                    // wait for callbacks to finish
+                    tombstones.Dispose();
+                }
+            }
+        } finally {
+            gch.Free();
+        }
+    }
+}
