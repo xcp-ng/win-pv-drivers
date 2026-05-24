@@ -26,6 +26,7 @@
   <Target Name="XenGeneratedFiles" BeforeTargets="BeforeBuild">
     <Exec Command="$(SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)" />
     <ItemGroup>
+      <Compile Remove="Branding.cs" />
       <Compile Include="Branding.cs" />
     </ItemGroup>
   </Target>
