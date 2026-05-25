@@ -65,8 +65,8 @@ jobs:
           SBOM_TOOL_SHA256: 9ba208cbec21c93b6d1ba01f50681a47d9d14d302f59b33e505b220b89aa0363
           SYFT_URI: https://github.com/anchore/syft/releases/download/v1.38.0/syft_1.38.0_windows_amd64.zip
           SYFT_SHA256: 11a3de4c82b001dae3b69e336f1b89391b676b3e74cead73790c97ff57445941
-          WIX_ZIP_URI: https://github.com/xcp-ng/wix-builder/releases/download/v6.0.2-xcpng.1/wix.zip
-          WIX_ZIP_SHA256: ccfe8c75f95ea4c4f68a920be827f46c33ce381cc9201a10f565999e3d3b6dd1
+          WIX_ZIP_URI: https://github.com/xcp-ng/wix-builder/releases/download/v7.0.0-xcpng.4/wix.zip
+          WIX_ZIP_SHA256: 08ded9b5c6da4dd8ae269a70f06b31af136e13cca3003825d7fb052b72157ef0
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
       - name: Configure branding

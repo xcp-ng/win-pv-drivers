@@ -1,4 +1,4 @@
-﻿<Project Sdk="WixToolset.Sdk/6.0.2-xcpng.1">
+﻿<Project Sdk="WixToolset.Sdk/7.0.0-xcpng.4">
   <PropertyGroup>
     <Platforms>x86;x64;ARM64</Platforms>
     <OutputName>XenTools-$(Platform)</OutputName>
@@ -10,9 +10,9 @@
     <Content Include="Include.wxi" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="WixToolset.Netfx.wixext" Version="6.0.2-xcpng.1" />
-    <PackageReference Include="WixToolset.UI.wixext" Version="6.0.2-xcpng.1" />
-    <PackageReference Include="WixToolset.Util.wixext" Version="6.0.2-xcpng.1" />
+    <PackageReference Include="WixToolset.Netfx.wixext" Version="7.0.0-xcpng.4" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="7.0.0-xcpng.4" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="7.0.0-xcpng.4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DriverInstallCustomAction\DriverInstallCustomAction.csproj" />
