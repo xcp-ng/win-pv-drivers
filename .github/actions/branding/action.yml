@@ -27,7 +27,7 @@ runs:
         PackageVersions_xenvbd: ${{fromJSON(inputs.branding-data).PackageVersions_xenvbd}}
         PackageVersions_xenvif: ${{fromJSON(inputs.branding-data).PackageVersions_xenvif}}
         PackageVersions_xenvkbd: ${{fromJSON(inputs.branding-data).PackageVersions_xenvkbd}}
-        PackageVersions_XenGuestAgent: ${{fromJSON(inputs.branding-data).PackageVersions_XenGuestAgent}}
+        PackageVersions_xenplus: ${{fromJSON(inputs.branding-data).PackageVersions_xenplus}}
         PackageVersions_XenTimeProvider: ${{fromJSON(inputs.branding-data).PackageVersions_XenTimeProvider}}
         PackageVersions_xstdvga: ${{fromJSON(inputs.branding-data).PackageVersions_xstdvga}}
         MSI_UPGRADE_CODE_X86: ${{fromJSON(inputs.branding-data).MSI_UPGRADE_CODE_X86}}

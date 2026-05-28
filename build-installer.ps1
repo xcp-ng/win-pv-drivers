@@ -37,7 +37,7 @@ $ErrorActionPreference = "Stop"
 if (!$NoBuild) {
     msbuild.exe `
         "$PSScriptRoot\installer\installer.slnx" `
-        /t:$Target `
+        /t:XenDrivers:$Target `
         /restore `
         /p:Configuration=$Configuration `
         /p:Platform=$Platform
@@ -129,21 +129,18 @@ if ($Target -ine "Clean") {
             throw "sbom-tool for XenBootFix failed with error $LASTEXITCODE"
         }
 
-        # Syft is only used for xen-guest-agent (via cargo-auditable), since it's not possible to produce a sane SBOM
-        # for it otherwise.
-        New-Item -Path $VersionDir\sbom\xen-guest-agent -ItemType Directory -Force
-        syft.exe scan `
-            $PSScriptRoot\xen-guest-agent\target\$Configuration\xen-guest-agent.exe `
-            -o "spdx-json@2.2=$VersionDir\sbom\xen-guest-agent\xen-guest-agent.json" `
-            --source-supplier $Env:VENDOR_NAME `
-            --source-name xen-guest-agent `
-            --source-version (Get-PackageVersion XenGuestAgent)
-        syft.exe scan `
-            $PSScriptRoot\xen-guest-agent\target\$Configuration\xen-win-clipboard.exe `
-            -o "spdx-json@2.2=$VersionDir\sbom\xen-guest-agent\xen-win-clipboard.json" `
-            --source-supplier $Env:VENDOR_NAME `
-            --source-name xen-win-clipboard `
-            --source-version (Get-PackageVersion XenGuestAgent)
+        New-Item -Path $VersionDir\sbom\xenplus -ItemType Directory -Force
+        sbom.exe generate `
+            -b $PSScriptRoot\xenplus\publish\$Platform\$Configuration `
+            -bc $PSScriptRoot\xenplus `
+            -m $VersionDir\sbom\xenplus `
+            -D true `
+            -ps $Env:VENDOR_NAME `
+            -pn xenplus `
+            -pv (Get-PackageVersion xenplus)
+        if ($LASTEXITCODE -ne 0) {
+            throw "sbom-tool for xenplus failed with error $LASTEXITCODE"
+        }
 
         New-Item -Path $VersionDir\sbom\xentimeprovider -ItemType Directory -Force
         sbom.exe generate `
@@ -246,12 +243,12 @@ if ($Target -ine "Clean") {
             -Destination $XenBootFixSymbolDir\ `
             -Force
 
-        $XenGuestAgentSymbolDir = "$SymbolDir\xen-guest-agent"
-        New-Item -Path $XenGuestAgentSymbolDir -ItemType Directory -Force
+        $XenplusSymbolDir = "$SymbolDir\xenplus"
+        New-Item -Path $XenplusSymbolDir -ItemType Directory -Force
         Copy-Item `
-            -Path "$PSScriptRoot\xen-guest-agent\target\$Configuration\*" `
+            -Path "$PSScriptRoot\xenplus\publish\$Platform\$Configuration\*" `
             -Include *.pdb `
-            -Destination $XenGuestAgentSymbolDir\ `
+            -Destination $XenplusSymbolDir\ `
             -Force
 
         $XenTimeProviderSymbolDir = "$SymbolDir\xentimeprovider"

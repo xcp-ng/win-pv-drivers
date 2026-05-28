@@ -11,8 +11,6 @@ param (
     [Parameter()]
     [string]$DriversSigned,
     [Parameter()]
-    [string]$GuestAgent = "$PSScriptRoot\..\input\guestagent.zip",
-    [Parameter()]
     [string]$TimeProvider = "$PSScriptRoot\..\input\timeprovider.zip",
     [Parameter()]
     [string]$Xstdvga = "$PSScriptRoot\..\input\xstdvga.zip"
@@ -36,14 +34,6 @@ if ($DriversSigned) {
     if ($LASTEXITCODE -ne 0) {
         throw "extracting DriversSigned failed with error $LASTEXITCODE"
     }
-}
-
-$GuestAgentDir = "$PSScriptRoot\..\xen-guest-agent\target\$Configuration"
-Remove-Item $GuestAgentDir -Recurse -Force -ErrorAction SilentlyContinue
-New-Item -Path $GuestAgentDir -ItemType Directory -Force | Out-Null
-& $tar -xvf $GuestAgent -C $GuestAgentDir
-if ($LASTEXITCODE -ne 0) {
-    throw "extracting GuestAgent failed with error $LASTEXITCODE"
 }
 
 $TimeProviderDir = "$PSScriptRoot\..\xentimeprovider\$Platform\$Configuration"

@@ -2,21 +2,19 @@
 
 ## Prerequisites
 
-* Visual Studio 2022 with the following features:
+* Visual Studio 2026 with the following features:
     * Desktop development with C++ workload
     * .NET desktop development workload
     * .NET Framework 4.6.2 targeting pack
-    * MSVC v143 - VS 2022 C++ x64/x86 Spectre-mitigated libs (Latest)
+    * .NET 10.0 Runtime
+    * C++ Spectre-mitigated libraries for x64/x86 (Latest MSVC)
     * Windows Driver Kit extensions for Visual Studio (listed simply as "Windows Driver Kit" in the Visual Studio Installer)
-* Windows SDK for Windows 10/11 (tested with 10.0.22621 and 10.0.26100)
+* Windows SDK for Windows 11 (tested with 10.0.28000)
 * Windows Driver Kit matching your Windows SDK
 * Git for Windows
-* Rustup and latest Rust stable
-* [cargo auditable](https://github.com/rust-secure-code/cargo-auditable)
 * [CodeQL CLI](https://github.com/github/codeql-cli-binaries) installed into PATH, with the necessary CodeQL packs
 * [Microsoft SBOM Tool](https://github.com/microsoft/sbom-tool) available as `sbom.exe` in PATH (installable via WinGet)
-* [Syft](https://github.com/anchore/syft) available as `syft.exe` in PATH
-* [wix.zip](https://github.com/xcp-ng/wix-builder) extracted into `deps\wix`
+* The correct version of [wix.zip](https://github.com/xcp-ng/wix-builder) extracted into `deps\wix` (see [build-installer.yml](/.github/workflows/build-installer.yml))
 
 Windows SDK and WDK downloads can be found on [Microsoft Learn](https://learn.microsoft.com/en-us/windows-hardware/drivers/other-wdk-downloads).
 
@@ -55,7 +53,7 @@ $PackageVersions = @{
     xenvkbd         = '9.0.9008.0'  # defaults to product version
     XenClean        = '9.0.9009.0'  # defaults to product version
     XenBootFix      = '9.0.9010.0'  # defaults to product version
-    XenGuestAgent   = '9.0.9011.0'  # defaults to product version
+    xenplus         = '9.0.9011.0'  # defaults to product version
     XenTimeProvider = '9.0.9012.0'  # defaults to product version
     xstdvga         = '9.0.9013.0'  # defaults to product version
 }
@@ -74,7 +72,7 @@ Specify `$Env:SIGNER` in `branding.ps1` to choose a specific signing certificate
 
 ## Building drivers
 
-Using the x64 Native Tools Command Prompt for VS 2022, navigate to this repository and build the drivers:
+Using the Developer PowerShell for VS, navigate to this repository and build the drivers:
 
 ```powershell
 .\build-drivers.ps1 -Configuration Release -Platform x64
@@ -84,16 +82,6 @@ Output drivers will be collected in `installer\driver-bins`.
 
 If you need to sign the drivers externally (e.g. WHQL signatures), you must replace the drivers found here with your own signed binaries.
 These binaries should be located at `installer\driver-bins\<platform>\<configuration>\<driver name>` for each driver included in the package.
-
-## Building the Rust-based Windows guest agent
-
-Simply run the command:
-
-```powershell
-.\build-guestagent.ps1 -Configuration release
-```
-
-The binaries are located at `xen-guest-agent\target\<configuration>`.
 
 ## Building the Xen time provider
 
@@ -115,12 +103,20 @@ Run the command:
 
 The binaries are located at `xstdvga\<VS version>\<platform>\<configuration>\xstdvga`.
 
-## Building the installer and release package
+## Building the installer components
 
-Next, build the installer and XenClean packages:
+Run the command:
 
 ```powershell
-.\build-installer.ps1 -Configuration Release -Platform x64 -Target Rebuild
+.\build-components.ps1 -Configuration Release -Platform x64
+```
+
+## Building the installer and release package
+
+Run the command:
+
+```powershell
+.\build-installer.ps1 -Configuration Release -Platform x64
 ```
 
 By default, output files will be dropped in the `output\<version>-<configuration>-<platform>` directory.

@@ -30,7 +30,6 @@ jobs:
     env:
       # should match up with the WINPV_OUTPUT of each sub-artifact workflow
       DRIVER_EXTRACT: installer/driver-bins
-      GUESTAGENT_EXTRACT: xen-guest-agent/target/release
       TIMEPROVIDER_EXTRACT: xentimeprovider/x64/Release
       XSTDVGA_EXTRACT: xstdvga/vs2022/x64/Release/xstdvga
     steps:
@@ -82,11 +81,6 @@ jobs:
         with:
           name: drivers
           path: ${{env.DRIVER_EXTRACT}}/
-      - name: Download guestagent
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: guestagent
-          path: ${{env.GUESTAGENT_EXTRACT}}/
       - name: Download timeprovider
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -103,7 +97,6 @@ jobs:
           . .\branding.ps1
           . .\scripts\sign.ps1
           Set-SignerFileSignature (Get-ChildItem .\$Env:DRIVER_EXTRACT -File -Recurse -Include *.sys, *.dll, *.exe, *.cat)
-          Set-SignerFileSignature (Get-ChildItem .\$Env:GUESTAGENT_EXTRACT -File -Recurse -Include *.dll, *.exe)
           Set-SignerFileSignature (Get-ChildItem .\$Env:TIMEPROVIDER_EXTRACT -File -Recurse -Include *.dll)
           Set-SignerFileSignature (Get-ChildItem .\$Env:XSTDVGA_EXTRACT -File -Recurse -Include *.sys, *.cat)
       - name: Build installer

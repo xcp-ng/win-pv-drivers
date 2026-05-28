@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix
+  xmlns="http://wixtoolset.org/schemas/v4/wxs"
+  xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <?include Include.wxi?>
+
+  <Fragment>
+    <Feature
+      Id="XenplusFeature"
+      AllowAdvertise="no"
+      Display="collapse"
+      Title="!(loc.XenplusFeatureTitle)"
+      Description="!(loc.XenplusFeatureDescription)">
+      <ComponentGroupRef Id="XenplusComponent" />
+    </Feature>
+
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Directory Id="XenplusFolder" Name="xenplus" />
+    </DirectoryRef>
+
+    <ComponentGroup Id="XenplusComponent" Directory="XenplusFolder">
+      <Component>
+        <File Source="!(bindpath.xenplus)\xenplus.exe" />
+        <ServiceInstall
+          Name="xenplus$(VENDOR_PREFIX)"
+          DisplayName="!(loc.XenplusServiceDisplayName)"
+          EraseDescription="yes"
+          Type="ownProcess"
+          Start="auto"
+          Account="NT AUTHORITY\SYSTEM"
+          ErrorControl="ignore">
+          <util:ServiceConfig
+            FirstFailureActionType="restart"
+            SecondFailureActionType="restart"
+            ThirdFailureActionType="restart"
+            RestartServiceDelayInSeconds="300" />
+        </ServiceInstall>
+        <ServiceControl
+          Name="xenplus$(VENDOR_PREFIX)"
+          Start="install"
+          Stop="both"
+          Remove="uninstall" />
+      </Component>
+      <File Source="!(bindpath.xenplus)\appsettings.json" />
+    </ComponentGroup>
+  </Fragment>
+</Wix>

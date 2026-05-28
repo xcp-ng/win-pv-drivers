@@ -8,7 +8,7 @@ With this, even signed binaries benefit from an attested build pipeline.
 
 ### Step 1: Obtain attested catalog
 
-Each release includes an attested catalog (`drivers-catalog.csv`, `guestagent-catalog.csv`).
+Each release includes an attested catalog (`drivers-catalog.csv`, `xstdvga-catalog.csv`).
 You can find them in the Assets section of each release.
 
 ### Step 2: Verify catalog attestation
@@ -58,11 +58,10 @@ Use the [artifact.psm1](/scripts/artifact.psm1) PowerShell module to verify the 
 
 WinPV's build and attestation machinery is provided by [GitHub Actions](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations/using-artifact-attestations-to-establish-provenance-for-builds).
 
-Our build pipeline consists of 3 workflows:
-[build-drivers](/.github/workflows/build-drivers.yml),
-[build-guestagent](/.github/workflows/build-guestagent.yml) and
+The main build pipelines (e.g. [build-drivers](/.github/workflows/build-drivers.yml)) lead to a central
+[build-attested](/.github/workflows/build-attested.yml) and
 [build-installer](/.github/workflows/build-installer.yml).
-The first two provide both unsigned (but attested) and testsigned binaries using a certificate supplied through secrets;
+The first two provide unsigned (but attested) binaries;
 the latter provides a complete installer using testsigned binaries.
 
 Here are the general build steps for each workflow:

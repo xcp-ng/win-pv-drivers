@@ -8,8 +8,8 @@ param (
 . "$ProjectDir\..\scripts\branding-generic.ps1"
 . "$ProjectDir\..\scripts\sign.ps1"
 
-$ver = Get-PackageVersion XenGuestAgent
-$productVer = Get-PackageVersion XenGuestAgent
+$ver = Get-PackageVersion xenplus
+$productVer = Get-PackageVersion xenplus
 
 $BrandingFile = "$ProjectDir\Branding.cs"
 $OldBranding = Get-Content -Raw $BrandingFile -ErrorAction Ignore

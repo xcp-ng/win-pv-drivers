@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="en-us" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+  <?include Include.wxi ?>
+
+  <String Id="XenplusFeatureTitle" Value="Xen Guest Agent" />
+  <String Id="XenplusFeatureDescription" Value="Xen guest agent for Windows. Requires PV interface driver. Version $(XenplusVersion)." />
+  <String Id="XenplusServiceDisplayName" Value="Xen guest agent for Windows" />
+</WixLocalization>

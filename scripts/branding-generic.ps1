@@ -80,8 +80,8 @@ if (!$PackageVersions['XenClean']) {
 if (!$PackageVersions['XenBootFix']) {
     $PackageVersions['XenBootFix'] = $PackageVersions['Product']
 }
-if (!$PackageVersions['XenGuestAgent']) {
-    $PackageVersions['XenGuestAgent'] = $PackageVersions['Product']
+if (!$PackageVersions['xenplus']) {
+    $PackageVersions['xenplus'] = $PackageVersions['Product']
 }
 if (!$PackageVersions['XenTimeProvider']) {
     $PackageVersions['XenTimeProvider'] = $PackageVersions['Product']

@@ -22,12 +22,6 @@
 [submodule "xenvkbd"]
 	path = xenvkbd
 	url = https://github.com/xcp-ng/win-xenvkbd.git
-[submodule "xen-guest-agent"]
-	path = xen-guest-agent
-	url = https://github.com/xcp-ng/xen-guest-agent.git
-[submodule "xenstore-win"]
-	path = xenstore-win
-	url = https://github.com/xcp-ng/xenstore-win.git
 [submodule "xentimeprovider"]
 	path = xentimeprovider
 	url = https://github.com/xcp-ng/win-xentimeprovider.git

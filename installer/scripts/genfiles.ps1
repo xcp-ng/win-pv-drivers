@@ -31,7 +31,7 @@ foreach ($package in @(
         "Xenvkbd",
         "XenClean",
         "XenBootFix",
-        "XenGuestAgent",
+        "Xenplus",
         "XenTimeProvider",
         "Xstdvga")) {
     $NewBranding += @"

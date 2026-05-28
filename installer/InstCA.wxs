@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
-    <Binary Id="xeninst.dll" SourceFile="xeninst.CA.dll" />
+    <Binary Id="xeninst.dll" SourceFile="!(bindpath.xeninstca)xeninst.CA.dll" />
   </Fragment>
 
   <!-- Note that launch conditions here mean "continue if true", and so conditions that block installation must be inverted -->

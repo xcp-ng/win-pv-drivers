@@ -58,10 +58,10 @@
 
     <ComponentGroupRef Id="BrandingComponent" />
     <ComponentGroupRef Id="TweaksComponent" />
-    <ComponentGroupRef Id="TimeProviderImportComponent" />
+    <!--<ComponentGroupRef Id="TimeProviderImportComponent" />-->
 
     <FeatureRef Id="PVBusFeature" />
-    <FeatureRef Id="GuestAgentFeature" />
+    <FeatureRef Id="XenplusFeature" />
     <FeatureRef Id="XstdvgaFeature" />
     <FeatureRef Id="ToolsFeature" />
 
