@@ -27,7 +27,7 @@
     <BindPath Include="$(SolutionDir)..\DriverInstallCustomAction\bin\$(Platform)\$(Configuration)\net462">
       <BindName>xeninstca</BindName>
     </BindPath>
-    <BindPath Include="$(SolutionDir)..\xenplus\publish\$(Platform)\$(Configuration)">
+    <BindPath Include="$(SolutionDir)..\xenplus\bin\publish\$(Platform)\$(Configuration)">
       <BindName>xenplus</BindName>
     </BindPath>
     <BindPath Include="$(SolutionDir)..\XenBootFix\$(Platform)\$(Configuration)">

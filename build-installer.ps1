@@ -131,7 +131,7 @@ if ($Target -ine "Clean") {
 
         New-Item -Path $VersionDir\sbom\xenplus -ItemType Directory -Force
         sbom.exe generate `
-            -b $PSScriptRoot\xenplus\publish\$Platform\$Configuration `
+            -b $PSScriptRoot\xenplus\bin\publish\$Platform\$Configuration `
             -bc $PSScriptRoot\xenplus `
             -m $VersionDir\sbom\xenplus `
             -D true `
@@ -246,7 +246,7 @@ if ($Target -ine "Clean") {
         $XenplusSymbolDir = "$SymbolDir\xenplus"
         New-Item -Path $XenplusSymbolDir -ItemType Directory -Force
         Copy-Item `
-            -Path "$PSScriptRoot\xenplus\publish\$Platform\$Configuration\*" `
+            -Path "$PSScriptRoot\xenplus\bin\publish\$Platform\$Configuration\*" `
             -Include *.pdb `
             -Destination $XenplusSymbolDir\ `
             -Force
