@@ -50,7 +50,7 @@
       <UpgradeVersion Minimum="$(ProductVersion)" IncludeMinimum="no" IncludeMaximum="no" OnlyDetect="yes" Property="DOWNGRADE_DETECTED" />
     </Upgrade>
     <Launch Condition="NOT DOWNGRADE_DETECTED" Message="!(loc.DowngradeError)" />
-    <Launch Condition="NOT UNSUPPORTED_UPGRADE_DETECTED" Message="!(loc.DowngradeError)" />
+    <Launch Condition="NOT UNSUPPORTED_UPGRADE_DETECTED" Message="!(loc.UnsupportedUpgradeError)" />
     <!--
       I wanted to add this but it triggers for any pending moves, even irrelevant ones.
       Maybe there's a better alternative somewhere else.
