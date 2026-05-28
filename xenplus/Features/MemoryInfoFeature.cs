@@ -6,6 +6,7 @@ using Windows.Win32.System.SystemInformation;
 using XenPlus.XenIface;
 
 sealed class MemoryInfoOptions {
+    public bool Enabled { get; set; } = true;
     [Range(5, 999_999_999)]
     public int ReportFrequency { get; set; } = 59;
 }
@@ -34,6 +35,9 @@ sealed class MemoryInfoFeature(
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
+        if (!_options.Value.Enabled) {
+            return;
+        }
         _logger.LogTrace("Starting {}", nameof(MemoryInfoFeature));
         while (true) {
             await Task.Delay(TimeSpan.FromSeconds(_options.Value.ReportFrequency), stoppingToken);

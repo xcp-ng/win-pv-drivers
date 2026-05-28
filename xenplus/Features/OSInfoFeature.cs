@@ -1,5 +1,6 @@
 using System.Net;
 using System.Runtime.InteropServices.Marshalling;
+using Microsoft.Extensions.Options;
 using Windows.Win32;
 using Windows.Win32.System.Wmi;
 using XenPlus.XenIface;
@@ -36,7 +37,12 @@ sealed class WmiOsInfo {
     }
 }
 
+sealed class OSInfoOptions {
+    public bool Enabled { get; set; } = true;
+}
+
 sealed class OSInfoFeature(
+    IOptionsSnapshot<OSInfoOptions> _options,
     XenIfaceSource _xi,
     [FromKeyedServices(ServiceKeys.WmiService_Root_CIMV2)] WmiService _cimv2,
     ILogger<OSInfoFeature> _logger) : BackgroundService {
@@ -86,6 +92,9 @@ sealed class OSInfoFeature(
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
+        if (!_options.Value.Enabled) {
+            return;
+        }
         _logger.LogTrace("Starting {}", nameof(OSInfoFeature));
         _xi.Resumed += OnResume;
         try {

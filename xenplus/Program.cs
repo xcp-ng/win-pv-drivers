@@ -31,6 +31,7 @@ public class Program {
         });
         builder.Services.AddKeyedSingleton(ServiceKeys.WmiService_Root_CIMV2, (_, k) => new WmiService((string)k!));
 
+        builder.Services.Configure<OSInfoOptions>(builder.Configuration.GetSection(nameof(OSInfoFeature)));
         builder.Services.AddHostedService<OSInfoFeature>();
 
         builder.Services.Configure<MemoryInfoOptions>(builder.Configuration.GetSection(nameof(MemoryInfoFeature)));
