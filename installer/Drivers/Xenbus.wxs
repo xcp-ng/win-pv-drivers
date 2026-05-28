@@ -42,7 +42,7 @@
       <Custom
         Action="XenbusUninstall"
         After="XenbusUninstallRollback"
-        Condition="(&amp;XenbusInternalFeature=2) AND (NOT UPGRADINGPRODUCTCODE)" />
+        Condition="&amp;XenbusInternalFeature=2" />
 
       <Custom
         Action="XenbusServiceDelete"

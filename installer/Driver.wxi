@@ -86,7 +86,7 @@
     <Custom
       Action="$(XenDriver)ServiceDelete"
       Before="$(XenDriverDependsOn)ServiceDelete"
-      Condition="(&amp;$(XenDriver)InternalFeature=2) AND ($(XenDriver)ServiceDelete) AND (NOT UPGRADINGPRODUCTCODE)" />
+      Condition="(&amp;$(XenDriver)InternalFeature=2) AND ($(XenDriver)ServiceDelete)" />
   </InstallExecuteSequence>
   <?else ?>
   <InstallExecuteSequence>
@@ -107,7 +107,7 @@
     <Custom
       Action="$(XenDriver)ServiceDelete"
       Before="RemoveFiles"
-      Condition="(&amp;$(XenDriver)InternalFeature=2) AND ($(XenDriver)ServiceDelete) AND (NOT UPGRADINGPRODUCTCODE)" />
+      Condition="(&amp;$(XenDriver)InternalFeature=2) AND ($(XenDriver)ServiceDelete)" />
   </InstallExecuteSequence>
   <?endif ?>
 
