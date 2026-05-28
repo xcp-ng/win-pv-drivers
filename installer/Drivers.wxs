@@ -4,23 +4,23 @@
 
   <Fragment>
     <Feature Id="PVBusFeature" AllowAdvertise="no" Display="expand" Title="!(loc.PVBusFeatureTitle)" Description="!(loc.PVBusFeatureDescription)">
-      <ComponentGroupRef Id="XenbusComponent" />
+      <FeatureRef Id="XenbusInternalFeature" />
       <Feature Id="PVConsoleFeature" AllowAdvertise="no" Title="!(loc.PVConsoleFeatureTitle)" Description="!(loc.PVConsoleFeatureDescription)">
-        <ComponentGroupRef Id="XenconsComponent" />
+        <FeatureRef Id="XenconsInternalFeature" />
       </Feature>
       <Feature Id="PVIfaceFeature" AllowAdvertise="no" Display="expand" Title="!(loc.PVIfaceFeatureTitle)" Description="!(loc.PVIfaceFeatureDescription)">
-        <ComponentGroupRef Id="XenifaceComponent" />
+        <FeatureRef Id="XenifaceInternalFeature" />
       </Feature>
       <Feature Id="PVNetworkFeature" AllowAdvertise="no" Title="!(loc.PVNetworkFeatureTitle)" Description="!(loc.PVNetworkFeatureDescription)">
-        <ComponentGroupRef Id="XenvifComponent" />
-        <ComponentGroupRef Id="XennetComponent" />
+        <FeatureRef Id="XenvifInternalFeature" />
+        <FeatureRef Id="XennetInternalFeature" />
       </Feature>
       <Feature Id="PVDiskFeature" AllowAdvertise="no" Title="!(loc.PVDiskFeatureTitle)" Description="!(loc.PVDiskFeatureDescription)">
-        <ComponentGroupRef Id="XenvbdComponent" />
+        <FeatureRef Id="XenvbdInternalFeature" />
       </Feature>
       <Feature Id="PVHidFeature" AllowAdvertise="no" Title="!(loc.PVHidFeatureTitle)" Description="!(loc.PVHidFeatureDescription)">
-        <ComponentGroupRef Id="XenvkbdComponent" />
-        <ComponentGroupRef Id="XenhidComponent" />
+        <FeatureRef Id="XenvkbdInternalFeature" />
+        <FeatureRef Id="XenhidInternalFeature" />
       </Feature>
     </Feature>
   </Fragment>

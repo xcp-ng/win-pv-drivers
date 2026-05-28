@@ -25,14 +25,33 @@
     <!-- manually lay out Xenbus so that it goes before/after all other drivers during install/uninstall -->
     <InstallExecuteSequence>
       <!-- only do XenfiltReset on new installs -->
-      <Custom Action="XenfiltReset" Before="XenbusInstallRollback" Condition="?Xenbus.inf=2 AND $Xenbus.inf=3" />
-      <Custom Action="XenbusInstallRollback" After="InstallFiles" />
-      <Custom Action="XenbusInstall" After="XenbusInstallRollback" Condition="$Xenbus.inf=3" />
-      <Custom Action="XenbusUninstallRollback" After="DeleteServices" />
-      <Custom Action="XenbusUninstall" After="XenbusUninstallRollback" Condition="$Xenbus.inf=2" />
+      <Custom
+        Action="XenfiltReset"
+        Before="XenbusInstallRollback"
+        Condition="(!XenbusInternalFeature=2) AND (&amp;XenbusInternalFeature=3)" />
+      <Custom
+        Action="XenbusInstallRollback"
+        After="InstallFiles" />
+      <Custom
+        Action="XenbusInstall"
+        After="XenbusInstallRollback"
+        Condition="&amp;XenbusInternalFeature=3" />
+      <Custom
+        Action="XenbusUninstallRollback"
+        After="DeleteServices" />
+      <Custom
+        Action="XenbusUninstall"
+        After="XenbusUninstallRollback"
+        Condition="(&amp;XenbusInternalFeature=2) AND (NOT UPGRADINGPRODUCTCODE)" />
 
-      <Custom Action="XenbusServiceDelete" Before="XenbusCleanup" Condition="$Xenbus.inf=2 AND XenbusServiceDelete" />
-      <Custom Action="XenbusCleanup" Before="RemoveFiles" Condition="$Xenbus.inf=2" />
+      <Custom
+        Action="XenbusServiceDelete"
+        Before="XenbusCleanup"
+        Condition="(&amp;XenbusInternalFeature=2) AND XenbusServiceDelete" />
+      <Custom
+        Action="XenbusCleanup"
+        Before="RemoveFiles"
+        Condition="&amp;XenbusInternalFeature=2" />
     </InstallExecuteSequence>
 
     <UI>
