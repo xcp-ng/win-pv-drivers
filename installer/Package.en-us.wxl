@@ -16,6 +16,7 @@ This file contains the declaration of all the localizable strings.
 You may need to run the XenClean tool." />
   <String Id="CitrixDriversDetectedError" Value="Citrix PV drivers detected. Uninstall them before continuing." />
   <String Id="DowngradeError" Value="A newer version of [ProductName] is already installed." />
+  <String Id="UnsupportedUpgradeError" Value="Cannot upgrade from your current version of [ProductName]. Try upgrading to an older version first." />
 
   <String Id="DriverInstallText" Value="Preparing install" />
   <String Id="DriverUninstallText" Value="Preparing uninstall" />

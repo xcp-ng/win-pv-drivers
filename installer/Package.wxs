@@ -44,9 +44,13 @@
 
     <Upgrade Id="$(var.UpgradeCode)">
       <UpgradeVersion Maximum="$(ProductVersion)" IncludeMinimum="no" IncludeMaximum="no" MigrateFeatures="yes" Property="UPGRADE_DETECTED" />
+      <!-- TODO: enable check if f0e7679cbeca or similar incompatible changes are introduced in the future -->
+      <!-- XCP-ng -->
+      <!--<UpgradeVersion Maximum="9.1.xxx" IncludeMaximum="yes" OnlyDetect="yes" Property="UNSUPPORTED_UPGRADE_DETECTED" />-->
       <UpgradeVersion Minimum="$(ProductVersion)" IncludeMinimum="no" IncludeMaximum="no" OnlyDetect="yes" Property="DOWNGRADE_DETECTED" />
     </Upgrade>
     <Launch Condition="NOT DOWNGRADE_DETECTED" Message="!(loc.DowngradeError)" />
+    <Launch Condition="NOT UNSUPPORTED_UPGRADE_DETECTED" Message="!(loc.DowngradeError)" />
     <!--
       I wanted to add this but it triggers for any pending moves, even irrelevant ones.
       Maybe there's a better alternative somewhere else.
