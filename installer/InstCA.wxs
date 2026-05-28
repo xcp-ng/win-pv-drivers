@@ -37,7 +37,7 @@
     <InstallExecuteSequence>
       <Custom Action="XenCheckReadyForCopyXenvif" Before="LaunchConditions" />
     </InstallExecuteSequence>
-    <Launch Condition="NOT NotReadyForCopyXenvif" Message="!(loc.RebootPendingError)" />
+    <Launch Condition="NOT NotReadyForCopyXenvif" Message="!(loc.NotReadyForCopyXenvifError)" />
   </Fragment>
 
   <Fragment>
