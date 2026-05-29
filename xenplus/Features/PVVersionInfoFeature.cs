@@ -13,10 +13,15 @@ sealed class PVVersionInfoFeature(
     ILogger<PVVersionInfoFeature> _logger) : BackgroundService {
     readonly Version _productVer = Version.Parse(VersionInfo.ProductVersion);
 
-    void OnResume(object? sender, XenIfaceResumedEventArgs args) {
-        _logger.LogTrace("{}.{}", nameof(PVVersionInfoFeature), nameof(OnResume));
+    void Report(object? sender, XenIfaceResumedEventArgs args) {
+        _logger.LogTrace("{}.{}", nameof(PVVersionInfoFeature), nameof(Report));
         try {
             using var h = _xi.Lock();
+
+            try {
+                h.StoreRemove("attr/PVAddons");
+            } catch {
+            }
 
             h.StoreWrite("attr/PVAddons/MajorVersion", Utils.NormalizeVersion(_productVer.Major).ToString());
             h.StoreWrite("attr/PVAddons/MinorVersion", Utils.NormalizeVersion(_productVer.Minor).ToString());
@@ -36,12 +41,12 @@ sealed class PVVersionInfoFeature(
             return;
         }
         _logger.LogDebug("Starting {}", nameof(PVVersionInfoFeature));
-        _xi.Resumed += OnResume;
+        _xi.Resumed += Report;
         try {
-            OnResume(null, new());
+            Report(null, new());
             await Task.Delay(Timeout.Infinite, stoppingToken);
         } finally {
-            _xi.Resumed -= OnResume;
+            _xi.Resumed -= Report;
         }
     }
 }

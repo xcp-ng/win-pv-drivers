@@ -15,12 +15,15 @@ sealed class MemoryInfoFeature(
     IOptionsSnapshot<MemoryInfoOptions> _options,
     XenIfaceSource _xi,
     ILogger<MemoryInfoFeature> _logger) : BackgroundService {
-    unsafe void Report() {
+    void Report() {
         _logger.LogTrace("{}.{}", nameof(MemoryInfoFeature), nameof(Report));
         try {
-            var status = new MEMORYSTATUSEX {
-                dwLength = (uint)sizeof(MEMORYSTATUSEX)
-            };
+            MEMORYSTATUSEX status;
+            unsafe {
+                status = new MEMORYSTATUSEX {
+                    dwLength = (uint)sizeof(MEMORYSTATUSEX)
+                };
+            }
             if (!PInvoke.GlobalMemoryStatusEx(ref status)) {
                 throw new Win32Exception("cannot query memory status");
             }

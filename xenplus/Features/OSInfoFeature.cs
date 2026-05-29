@@ -48,10 +48,15 @@ sealed class OSInfoFeature(
     ILogger<OSInfoFeature> _logger) : BackgroundService {
     readonly WmiOsInfo _osInfo = new(_cimv2, _logger);
 
-    void OnResume(object? sender, XenIfaceResumedEventArgs args) {
-        _logger.LogTrace("{}.{}", nameof(OSInfoFeature), nameof(OnResume));
+    void Report(object? sender, XenIfaceResumedEventArgs args) {
+        _logger.LogTrace("{}.{}", nameof(OSInfoFeature), nameof(Report));
         try {
             using var h = _xi.Lock();
+
+            try {
+                h.StoreRemove("attr/os");
+            } catch {
+            }
 
             h.StoreWrite("attr/os/class", "Windows NT");
 
@@ -86,12 +91,12 @@ sealed class OSInfoFeature(
             return;
         }
         _logger.LogDebug("Starting {}", nameof(OSInfoFeature));
-        _xi.Resumed += OnResume;
+        _xi.Resumed += Report;
         try {
-            OnResume(null, new());
+            Report(null, new());
             await Task.Delay(Timeout.Infinite, stoppingToken);
         } finally {
-            _xi.Resumed -= OnResume;
+            _xi.Resumed -= Report;
         }
     }
 }
