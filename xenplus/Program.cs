@@ -50,6 +50,9 @@ public class Program {
         builder.Services.Configure<MemoryInfoOptions>(builder.Configuration.GetSection(nameof(MemoryInfoFeature)));
         builder.Services.AddHostedService<MemoryInfoFeature>();
 
+        builder.Services.Configure<NetInfoOptions>(builder.Configuration.GetSection(nameof(NetInfoFeature)));
+        builder.Services.AddHostedService<NetInfoFeature>();
+
         var host = builder.Build();
         host.Run();
     }
