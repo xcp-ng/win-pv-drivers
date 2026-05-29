@@ -16,9 +16,11 @@ public class Program {
 
         builder.Configuration.AddJsonFile("appsettings.user.json", true, true);
 
+        builder.Logging.ClearProviders();
+        builder.Logging.AddDebug();
         builder.Logging.AddEventLog(options => {
-            options.Filter = (_, _) => true;
             options.SourceName = nameof(XenPlus);
+            options.Filter = (_, _) => true;
         });
 
         builder.Services.AddWindowsService(options => {

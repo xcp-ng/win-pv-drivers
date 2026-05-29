@@ -168,12 +168,12 @@ sealed partial class XenIfaceSource : IDisposable {
 
         foreach (var device in FindDevices()) {
             try {
-                _logger.LogDebug("Trying {device}", device);
+                _logger.LogTrace("Trying {device}", device);
                 _active = new XenIfaceDevice(this, device);
-                _logger.LogTrace("Opened {device} {}", device, (ulong)_active.Handle.DangerousGetHandle());
+                _logger.LogDebug("Opened {device} {}", device, (ulong)_active.Handle.DangerousGetHandle());
                 break;
             } catch (Exception ex) {
-                _logger.LogDebug(ex, "Failed to open device {device}", device);
+                _logger.LogTrace(ex, "Failed to open device {device}", device);
             }
         }
 
@@ -258,7 +258,7 @@ sealed partial class XenIfaceSource : IDisposable {
                                 try {
                                     RefreshDevices(out var lastActive);
                                     if (lastActive != null) {
-                                        _logger.LogTrace("killing last active {}", lastActive.DevicePath);
+                                        _logger.LogDebug("killing last active {}", lastActive.DevicePath);
                                         tombstones.Push(lastActive);
                                     }
                                 } catch (XenIfaceNotFoundException ex) {
@@ -271,14 +271,14 @@ sealed partial class XenIfaceSource : IDisposable {
                                 if (ReferenceEquals(listenerRequest.TargetDevice, _active)) {
                                     _active = null;
                                 }
-                                _logger.LogTrace(
+                                _logger.LogDebug(
                                     "{} on {}",
                                     listenerRequest.Action,
                                     listenerRequest.TargetDevice.DevicePath);
                                 tombstones.Push(listenerRequest.TargetDevice);
 
                             } else if (request is ExitRequest) {
-                                _logger.LogTrace("exiting worker");
+                                _logger.LogDebug("exiting worker");
                                 return;
                             }
                         }

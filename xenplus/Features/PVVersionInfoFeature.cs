@@ -14,6 +14,7 @@ sealed class PVVersionInfoFeature(
     readonly Version _productVer = Version.Parse(VersionInfo.ProductVersion);
 
     void OnResume(object? sender, XenIfaceResumedEventArgs args) {
+        _logger.LogTrace("{}.{}", nameof(PVVersionInfoFeature), nameof(OnResume));
         try {
             using var h = _xi.Lock();
 
@@ -34,7 +35,7 @@ sealed class PVVersionInfoFeature(
         if (!_options.Value.Enabled) {
             return;
         }
-        _logger.LogTrace("Starting {}", nameof(PVVersionInfoFeature));
+        _logger.LogDebug("Starting {}", nameof(PVVersionInfoFeature));
         _xi.Resumed += OnResume;
         try {
             OnResume(null, new());

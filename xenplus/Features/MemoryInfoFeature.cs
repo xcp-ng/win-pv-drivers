@@ -16,6 +16,7 @@ sealed class MemoryInfoFeature(
     XenIfaceSource _xi,
     ILogger<MemoryInfoFeature> _logger) : BackgroundService {
     unsafe void Report() {
+        _logger.LogTrace("{}.{}", nameof(MemoryInfoFeature), nameof(Report));
         try {
             var status = new MEMORYSTATUSEX {
                 dwLength = (uint)sizeof(MEMORYSTATUSEX)
@@ -40,7 +41,7 @@ sealed class MemoryInfoFeature(
         if (!_options.Value.Enabled) {
             return;
         }
-        _logger.LogTrace("Starting {}", nameof(MemoryInfoFeature));
+        _logger.LogDebug("Starting {}", nameof(MemoryInfoFeature));
         while (true) {
             await Task.Delay(TimeSpan.FromSeconds(_options.Value.ReportFrequency), stoppingToken);
             if (stoppingToken.IsCancellationRequested) {

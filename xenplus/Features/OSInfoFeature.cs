@@ -49,6 +49,7 @@ sealed class OSInfoFeature(
     readonly WmiOsInfo _osInfo = new(_cimv2, _logger);
 
     void OnResume(object? sender, XenIfaceResumedEventArgs args) {
+        _logger.LogTrace("{}.{}", nameof(OSInfoFeature), nameof(OnResume));
         try {
             using var h = _xi.Lock();
 
@@ -84,7 +85,7 @@ sealed class OSInfoFeature(
         if (!_options.Value.Enabled) {
             return;
         }
-        _logger.LogTrace("Starting {}", nameof(OSInfoFeature));
+        _logger.LogDebug("Starting {}", nameof(OSInfoFeature));
         _xi.Resumed += OnResume;
         try {
             OnResume(null, new());
