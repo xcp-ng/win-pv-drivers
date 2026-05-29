@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using System.Text;
 using Microsoft.Win32.SafeHandles;
 using Windows.Win32;
 
@@ -87,15 +88,20 @@ sealed partial class XenIfaceDevice {
         public void* Context;
     }
 
+    static Encoding GetEncoding(bool strict) {
+        return strict ? StrictStoreEncoding.Instance : StoreEncoding.Instance;
+    }
+
     /// <summary>
     /// Put an ASCII string into a byte buffer, while ensuring that it's null-terminated.
     /// </summary>
+    /// <param name="strict">Use strict encoding.</param>
     /// <param name="value">Input string.</param>
     /// <param name="buffer">Output buffer.</param>
     /// <param name="offset">Start offset of buffer to put string into.</param>
     /// <returns>Length of resulting byte string, without null terminator.</returns>
-    static int FormatString(string? value, byte[] buffer, int offset = 0) {
-        var len = value != null ? StoreEncoding.Instance.GetBytes(value, 0, value.Length, buffer, offset) : 0;
+    static int FormatString(string? value, byte[] buffer, int offset, bool strict) {
+        var len = value != null ? GetEncoding(strict).GetBytes(value, 0, value.Length, buffer, offset) : 0;
         if (offset + len >= buffer.Length) {
             throw new ArgumentException("value too long", nameof(value));
         }
@@ -103,9 +109,9 @@ sealed partial class XenIfaceDevice {
         return len;
     }
 
-    internal string StoreRead(string path) {
+    internal string StoreRead(string path, bool strict) {
         var inBuf = new byte[XENSTORE_PAYLOAD_MAX];
-        FormatString(path, inBuf, 0);
+        FormatString(path, inBuf, 0, strict);
         var outBuf = new byte[XENSTORE_PAYLOAD_MAX];
         unsafe {
             if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_READ, inBuf, outBuf)) {
@@ -113,13 +119,13 @@ sealed partial class XenIfaceDevice {
             }
         }
         outBuf[^1] = 0;
-        return StoreEncoding.Instance.GetString(outBuf, 0, outBuf.IndexOf<byte>(0));
+        return GetEncoding(strict).GetString(outBuf, 0, outBuf.IndexOf<byte>(0));
     }
 
-    internal void StoreWrite(string path, string? value) {
+    internal void StoreWrite(string path, string? value, bool strict) {
         var inBuf = new byte[XENSTORE_PAYLOAD_MAX];
-        var pathLen = FormatString(path, inBuf, 0);
-        FormatString(value, inBuf, pathLen + 1);
+        var pathLen = FormatString(path, inBuf, 0, strict);
+        FormatString(value, inBuf, pathLen + 1, strict);
         unsafe {
             if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_WRITE, inBuf)) {
                 throw new Win32Exception();
@@ -127,21 +133,21 @@ sealed partial class XenIfaceDevice {
         }
     }
 
-    internal List<string> StoreDirectory(string path) {
+    internal List<string> StoreDirectory(string path, bool strict) {
         var inBuf = new byte[XENSTORE_PAYLOAD_MAX];
-        FormatString(path, inBuf, 0);
+        FormatString(path, inBuf, 0, strict);
         var outBuf = new byte[XENSTORE_PAYLOAD_MAX];
         unsafe {
             if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_DIRECTORY, inBuf, outBuf)) {
                 throw new Win32Exception();
             }
         }
-        return Utils.ParseMultiString(outBuf, StoreEncoding.Instance.GetString);
+        return Utils.ParseMultiString(outBuf, GetEncoding(strict).GetString);
     }
 
-    internal void StoreRemove(string path) {
+    internal void StoreRemove(string path, bool strict) {
         var inBuf = new byte[XENSTORE_PAYLOAD_MAX];
-        FormatString(path, inBuf, 0);
+        FormatString(path, inBuf, 0, strict);
         unsafe {
             if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_REMOVE, inBuf)) {
                 throw new Win32Exception();
@@ -149,9 +155,9 @@ sealed partial class XenIfaceDevice {
         }
     }
 
-    internal WatchAbiHandle WatchAdd(string path, SafeWaitHandle evt) {
+    internal WatchAbiHandle WatchAdd(string path, SafeWaitHandle evt, bool strict) {
         var inPath = new byte[XENSTORE_PAYLOAD_MAX];
-        var pathLen = FormatString(path, inPath, 0);
+        var pathLen = FormatString(path, inPath, 0, strict);
         unsafe {
             var outBuf = new XENIFACE_STORE_ADD_WATCH_OUT();
             fixed (byte* pathBytes = inPath) {

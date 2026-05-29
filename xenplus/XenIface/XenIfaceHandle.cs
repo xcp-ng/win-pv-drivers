@@ -44,29 +44,29 @@ sealed partial class XenIfaceSource {
             }
         }
 
-        public readonly string StoreRead(string path) {
-            return Active.StoreRead(path);
+        public readonly string StoreRead(string path, bool strict = false) {
+            return Active.StoreRead(path, strict);
         }
 
-        public readonly void StoreWrite(string path, string? value) {
-            Active.StoreWrite(path, value);
+        public readonly void StoreWrite(string path, string? value, bool strict = false) {
+            Active.StoreWrite(path, value, strict);
         }
 
-        public readonly List<string> StoreDirectory(string path) {
-            return Active.StoreDirectory(path);
+        public readonly List<string> StoreDirectory(string path, bool strict = false) {
+            return Active.StoreDirectory(path, strict);
         }
 
-        public readonly void StoreRemove(string path) {
-            Active.StoreRemove(path);
+        public readonly void StoreRemove(string path, bool strict = false) {
+            Active.StoreRemove(path, strict);
         }
 
-        public readonly XenIfaceWatch WatchAdd(string path) {
+        public readonly XenIfaceWatch WatchAdd(string path, bool strict = false) {
             var active = Active;
             AutoResetEvent? evt = null;
             XenIfaceWatchImpl? result = null;
             try {
                 evt = new AutoResetEvent(false);
-                result = new XenIfaceWatchImpl(path, _parent!, evt, active);
+                result = new XenIfaceWatchImpl(path, strict, _parent!, evt, active);
                 evt = null;
                 _parent!._watches.Add(result);
                 return result;

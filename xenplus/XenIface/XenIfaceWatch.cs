@@ -12,6 +12,7 @@ public abstract class XenIfaceWatch : IDisposable {
 
 sealed class XenIfaceWatchImpl : XenIfaceWatch {
     readonly string _path;
+    readonly bool _strict;
     readonly XenIfaceSource _iface;
     readonly EventWaitHandle _event;
     readonly RegisteredWaitHandle _eventWait;
@@ -21,9 +22,10 @@ sealed class XenIfaceWatchImpl : XenIfaceWatch {
 
     public override string Path => _path;
 
-    internal XenIfaceWatchImpl(string path, XenIfaceSource iface, EventWaitHandle evt, XenIfaceDevice device) {
+    internal XenIfaceWatchImpl(string path, bool strict, XenIfaceSource iface, EventWaitHandle evt, XenIfaceDevice device) {
         try {
             _path = path;
+            _strict = strict;
             _iface = iface;
             _event = evt;
             _eventWait = ThreadPool.RegisterWaitForSingleObject(_event, (state, _) => {
@@ -43,7 +45,7 @@ sealed class XenIfaceWatchImpl : XenIfaceWatch {
     internal override void Rearm(XenIfaceDevice device) {
         _watchHandle?.Dispose();
         _watchHandle = null;
-        _watchHandle = device.WatchAdd(_path, _event.SafeWaitHandle);
+        _watchHandle = device.WatchAdd(_path, _event.SafeWaitHandle, _strict);
     }
 
     public override void Dispose() {
