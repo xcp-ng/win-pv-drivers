@@ -46,12 +46,7 @@ sealed class OSInfoFeature(
     XenIfaceSource _xi,
     [FromKeyedServices(ServiceKeys.WmiService_Root_CIMV2)] WmiService _cimv2,
     ILogger<OSInfoFeature> _logger) : BackgroundService {
-    readonly Version _productVer = Version.Parse(VersionInfo.ProductVersion);
     readonly WmiOsInfo _osInfo = new(_cimv2, _logger);
-
-    static int Normalize(int version) {
-        return version >= 0 ? version : 0;
-    }
 
     void OnResume(object? sender, XenIfaceResumedEventArgs args) {
         try {
@@ -60,16 +55,16 @@ sealed class OSInfoFeature(
             h.StoreWrite("attr/os/class", "Windows NT");
 
             // https://learn.microsoft.com/en-us/dotnet/core/compatibility/core-libraries/5.0/environment-osversion-returns-correct-version
-            h.StoreWrite("attr/os/major", Normalize(Environment.OSVersion.Version.Major).ToString());
-            h.StoreWrite("attr/os/minor", Normalize(Environment.OSVersion.Version.Minor).ToString());
-            h.StoreWrite("attr/os/build", Normalize(Environment.OSVersion.Version.Build).ToString());
+            h.StoreWrite("attr/os/major", Utils.NormalizeVersion(Environment.OSVersion.Version.Major).ToString());
+            h.StoreWrite("attr/os/minor", Utils.NormalizeVersion(Environment.OSVersion.Version.Minor).ToString());
+            h.StoreWrite("attr/os/build", Utils.NormalizeVersion(Environment.OSVersion.Version.Build).ToString());
             h.StoreWrite("attr/os/platform", Environment.OSVersion.Platform.ToString());
 
             h.StoreWrite("data/os_distro", "Windows");
 
-            h.StoreWrite("data/os_majorver", Normalize(Environment.OSVersion.Version.Major).ToString());
-            h.StoreWrite("data/os_minorver", Normalize(Environment.OSVersion.Version.Minor).ToString());
-            h.StoreWrite("data/os_buildver", Normalize(Environment.OSVersion.Version.Build).ToString());
+            h.StoreWrite("data/os_majorver", Utils.NormalizeVersion(Environment.OSVersion.Version.Major).ToString());
+            h.StoreWrite("data/os_minorver", Utils.NormalizeVersion(Environment.OSVersion.Version.Minor).ToString());
+            h.StoreWrite("data/os_buildver", Utils.NormalizeVersion(Environment.OSVersion.Version.Build).ToString());
 
             h.StoreWrite("data/os_uname", Environment.OSVersion.Version.ToString());
 
@@ -77,12 +72,6 @@ sealed class OSInfoFeature(
             h.StoreWrite("data/host_name", Environment.MachineName);
             h.StoreWrite("data/host_name_dns", Dns.GetHostName());
             //h.StoreWrite("data/domain", _osInfo.Domain);
-
-            h.StoreWrite("attr/PVAddons/MajorVersion", Normalize(_productVer.Major).ToString());
-            h.StoreWrite("attr/PVAddons/MinorVersion", Normalize(_productVer.Minor).ToString());
-            h.StoreWrite("attr/PVAddons/MicroVersion", Normalize(_productVer.Build).ToString());
-            h.StoreWrite("attr/PVAddons/BuildVersion", Normalize(_productVer.Revision).ToString());
-            h.StoreWrite("attr/PVAddons/Installed", "1");
 
             h.StoreWrite("data/updated", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString());
         } catch (XenIfaceNotFoundException) {

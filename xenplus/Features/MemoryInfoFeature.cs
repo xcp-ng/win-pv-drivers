@@ -28,6 +28,8 @@ sealed class MemoryInfoFeature(
 
             h.StoreWrite("data/meminfo_total", (status.ullTotalPhys >> 10).ToString());
             h.StoreWrite("data/meminfo_free", (status.ullAvailPhys >> 10).ToString());
+
+            h.StoreWrite("data/updated", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString());
         } catch (XenIfaceNotFoundException) {
         } catch (Exception ex) {
             _logger.LogError(ex, "{} report error", nameof(MemoryInfoFeature));

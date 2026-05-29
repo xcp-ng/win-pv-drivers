@@ -68,4 +68,8 @@ static class Utils {
         return castValue!;
     }
 #pragma warning restore IDE0280 // Use 'nameof'
+
+    public static int NormalizeVersion(int version) {
+        return version >= 0 ? version : 0;
+    }
 }

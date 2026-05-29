@@ -31,6 +31,9 @@ public class Program {
         });
         builder.Services.AddKeyedSingleton(ServiceKeys.WmiService_Root_CIMV2, (_, k) => new WmiService((string)k!));
 
+        builder.Services.Configure<PVVersionInfoOptions>(builder.Configuration.GetSection(nameof(PVVersionInfoFeature)));
+        builder.Services.AddHostedService<PVVersionInfoFeature>();
+
         builder.Services.Configure<OSInfoOptions>(builder.Configuration.GetSection(nameof(OSInfoFeature)));
         builder.Services.AddHostedService<OSInfoFeature>();
 
