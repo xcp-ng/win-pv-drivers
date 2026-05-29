@@ -9,12 +9,20 @@ static class ServiceKeys {
 
 public class Program {
     public static void Main(string[] args) {
-        var mitigations = new Mitigations(new EarlyLogger());
+        var earlyLogger = new EarlyLogger();
+        var mitigations = new Mitigations(earlyLogger);
         mitigations.EnableAll();
 
         var builder = Host.CreateApplicationBuilder(args);
 
-        builder.Configuration.AddJsonFile("appsettings.user.json", true, true);
+        builder.Configuration.Sources.Clear();
+        if (Path.GetDirectoryName(Environment.ProcessPath) is string processDir && !string.IsNullOrEmpty(processDir)) {
+            builder.Configuration.SetBasePath(processDir);
+            builder.Configuration.AddJsonFile("appsettings.json", true, true);
+            builder.Configuration.AddJsonFile("appsettings.user.json", true, true);
+        } else {
+            earlyLogger.LogError("Cannot determine settings path, refusing to load configuration");
+        }
 
         builder.Logging.ClearProviders();
         builder.Logging.AddDebug();
