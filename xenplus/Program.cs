@@ -7,8 +7,8 @@ static class ServiceKeys {
     public const string WmiService_Root_CIMV2 = "Root\\CIMV2";
 }
 
-public class Program {
-    public static void Main(string[] args) {
+class Program {
+    static void Main(string[] args) {
         var earlyLogger = new EarlyLogger();
         var mitigations = new Mitigations(earlyLogger);
         mitigations.EnableAll();
@@ -35,22 +35,20 @@ public class Program {
             options.ServiceName = nameof(XenPlus);
         });
 
-        builder.Services.AddSingleton(sp => {
-            var logger = sp.GetRequiredService<ILogger<XenIfaceSource>>();
-            return new XenIfaceSource(logger);
-        });
+        builder.Services.AddSingleton<XenIfaceSource>();
         builder.Services.AddKeyedSingleton(ServiceKeys.WmiService_Root_CIMV2, (_, k) => new WmiService((string)k!));
+        builder.Services.AddSingleton<WmiOsInfoService>();
 
-        builder.Services.Configure<PVVersionInfoOptions>(builder.Configuration.GetSection(nameof(PVVersionInfoFeature)));
+        builder.Services.Configure<PVVersionInfoOptions>(builder.Configuration.GetSection(nameof(PVVersionInfoOptions)));
         builder.Services.AddHostedService<PVVersionInfoFeature>();
 
-        builder.Services.Configure<OSInfoOptions>(builder.Configuration.GetSection(nameof(OSInfoFeature)));
+        builder.Services.Configure<OSInfoOptions>(builder.Configuration.GetSection(nameof(OSInfoOptions)));
         builder.Services.AddHostedService<OSInfoFeature>();
 
-        builder.Services.Configure<MemoryInfoOptions>(builder.Configuration.GetSection(nameof(MemoryInfoFeature)));
+        builder.Services.Configure<MemoryInfoOptions>(builder.Configuration.GetSection(nameof(MemoryInfoOptions)));
         builder.Services.AddHostedService<MemoryInfoFeature>();
 
-        builder.Services.Configure<NetInfoOptions>(builder.Configuration.GetSection(nameof(NetInfoFeature)));
+        builder.Services.Configure<NetInfoOptions>(builder.Configuration.GetSection(nameof(NetInfoOptions)));
         builder.Services.AddHostedService<NetInfoFeature>();
 
         var host = builder.Build();

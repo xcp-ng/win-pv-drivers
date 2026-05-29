@@ -8,38 +8,35 @@ using Windows.Win32.System.Wmi;
 namespace XenPlus;
 
 sealed class WmiService {
-    const int RPC_C_AUTHN_WINNT = 10;
-    const int RPC_C_AUTHZ_NONE = 0;
+    const uint RPC_C_AUTHN_WINNT = 10;
+    const uint RPC_C_AUTHZ_NONE = 0;
 
-    IWbemServices? _services;
+    readonly IWbemServices _services;
 
-    static readonly Lock _init = new();
-    static bool _initialized = false;
+    static readonly Lazy<bool> InitializeSecurity = new(() => {
+        unsafe {
+            PInvoke.CoInitializeSecurity(
+                new(),
+                -1,
+                null,
+                RPC_C_AUTHN_LEVEL.RPC_C_AUTHN_LEVEL_DEFAULT,
+                RPC_C_IMP_LEVEL.RPC_C_IMP_LEVEL_IMPERSONATE,
+                null,
+                EOLE_AUTHENTICATION_CAPABILITIES.EOAC_NONE).ThrowOnFailure();
+        }
+        return true;
+    });
 
     static SysFreeStringSafeHandle StringToBSTR(string value) {
         return new SysFreeStringSafeHandle(Marshal.StringToBSTR(value), true);
     }
 
     public WmiService(string wmiNamespace) {
-        lock (_init) {
-            if (!_initialized) {
-                unsafe {
-                    PInvoke.CoInitializeSecurity(
-                        new(),
-                        -1,
-                        null,
-                        RPC_C_AUTHN_LEVEL.RPC_C_AUTHN_LEVEL_DEFAULT,
-                        RPC_C_IMP_LEVEL.RPC_C_IMP_LEVEL_IMPERSONATE,
-                        null,
-                        EOLE_AUTHENTICATION_CAPABILITIES.EOAC_NONE).ThrowOnFailure();
-                }
-                _initialized = true;
-            }
-        }
+        _ = InitializeSecurity.Value;
 
         IWbemLocator locator = WbemLocator.CreateInstance<IWbemLocator>();
 
-        using var ns = new SysFreeStringSafeHandle(Marshal.StringToBSTR(wmiNamespace), true);
+        using var ns = StringToBSTR(wmiNamespace);
         locator.ConnectServer(
             ns,
             new SysFreeStringSafeHandle(),
@@ -75,17 +72,20 @@ sealed class WmiService {
             out var enumerator);
 
         var obj = new IWbemClassObject?[1];
-        enumerator.Next(
-            PInvoke.WBEM_INFINITE,
-            obj,
-            out var returned).ThrowOnFailure();
-        for (uint i = 0; i < returned; i++) {
-            yield return obj[i]!;
+        while (true) {
+            enumerator.Next(
+                PInvoke.WBEM_INFINITE,
+                obj,
+                out var returned).ThrowOnFailure();
+            for (uint i = 0; i < returned; i++) {
+                yield return obj[i]!;
+            }
+            if (returned == 0) {
+                yield break;
+            }
+            obj[0] = null;
         }
-        if (returned == 0) {
-            yield break;
-        }
-        obj[0] = null;
+
     }
 
     internal IWbemCallResult ExecMethod(IWbemClassObject obj, string methodName) {

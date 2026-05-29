@@ -5,14 +5,16 @@ using Windows.Win32;
 using Windows.Win32.System.SystemInformation;
 using XenPlus.XenIface;
 
+namespace XenPlus.Features;
+
 sealed class MemoryInfoOptions {
     public bool Enabled { get; set; } = true;
     [Range(5, 999_999_999)]
-    public int ReportFrequency { get; set; } = 59;
+    public int ReportIntervalSeconds { get; set; } = 59;
 }
 
 sealed class MemoryInfoFeature(
-    IOptionsSnapshot<MemoryInfoOptions> _options,
+    IOptionsMonitor<MemoryInfoOptions> _options,
     XenIfaceSource _xi,
     ILogger<MemoryInfoFeature> _logger) : BackgroundService {
     void Report() {
@@ -41,12 +43,12 @@ sealed class MemoryInfoFeature(
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
-        if (!_options.Value.Enabled) {
+        if (!_options.CurrentValue.Enabled) {
             return;
         }
         _logger.LogDebug("Starting {}", nameof(MemoryInfoFeature));
         while (true) {
-            await Task.Delay(TimeSpan.FromSeconds(_options.Value.ReportFrequency), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(_options.CurrentValue.ReportIntervalSeconds), stoppingToken);
             if (stoppingToken.IsCancellationRequested) {
                 break;
             }

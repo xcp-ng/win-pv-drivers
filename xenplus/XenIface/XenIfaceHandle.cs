@@ -2,73 +2,79 @@ namespace XenPlus.XenIface;
 
 sealed partial class XenIfaceSource {
     /// <summary>
-    /// Lock handle of a <c>XenIface</c> object.
+    /// Lock handle of a <see cref="XenIfaceSource"/> object.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Both <c>class</c> and <c>ref struct</c> are inappropriate for this sort of handle object, the former because the
-    /// handle can escape its scope/thread (and therefore violate the thread requirements of <c>Monitor</c>), and the
-    /// latter because the handle can be copied. Neither are that optimal... At least <c>ref struct</c> doesn't require
-    /// an allocation.
-    /// </para>
-    /// <para>
-    /// Needless to say, you should never copy this struct.
-    /// </para>
-    /// </remarks>
-    public ref struct XenIfaceHandle {
-        XenIfaceSource? _parent;
+    public readonly ref struct XenIfaceHandle(XenIfaceSource parent) : IDisposable {
+        /// <remarks>
+        /// <para>
+        /// Both <c>class</c> and <c>ref struct</c> are inappropriate for <see cref="XenIfaceHandle"/> alone, the former
+        /// because the handle can escape its scope/thread (and therefore violate the thread requirements of
+        /// <see cref="Monitor"/>), and the latter because the handle can be copied. So we use a <c>class</c> wrapped by
+        /// a <c>ref struct</c> to provide both guarantees.
+        /// </para>
+        /// <para>
+        /// Note that the inner class doesn't make the handle uncopyable, but rather copy-safe.
+        /// </para>
+        /// </remarks>
+        class XenIfaceInternalHandle : IDisposable {
+            public XenIfaceSource? Parent { get; private set; } = null;
 
-        public string? DevicePath { get; }
-        readonly XenIfaceDevice Active {
+            internal XenIfaceInternalHandle(XenIfaceSource parent) {
+                try {
+                    Monitor.Enter(parent._lock);
+                    Parent = parent;
+                } catch {
+                    Dispose();
+                    throw;
+                }
+            }
+
+            public void Dispose() {
+                if (Parent != null) {
+                    Monitor.Exit(Parent._lock);
+                    Parent = null;
+                }
+            }
+        }
+
+        XenIfaceDevice Active {
             get {
-                ObjectDisposedException.ThrowIf(_parent == null, typeof(XenIfaceHandle));
-                return _parent._active ?? throw new XenIfaceNotFoundException("no active device");
+                ObjectDisposedException.ThrowIf(_h.Parent == null, typeof(XenIfaceHandle));
+                return _h.Parent._active ?? throw new XenIfaceNotFoundException("no active device");
             }
         }
 
-        internal XenIfaceHandle(XenIfaceSource parent) {
-            try {
-                Monitor.Enter(parent._lock);
-                _parent = parent;
-                DevicePath = _parent._active?.DevicePath;
-            } catch {
-                Dispose();
-                throw;
-            }
-        }
+        readonly XenIfaceInternalHandle _h = new(parent);
 
         public void Dispose() {
-            if (_parent != null) {
-                Monitor.Exit(_parent._lock);
-                _parent = null;
-            }
+            _h.Dispose();
         }
 
-        public readonly string StoreRead(string path, bool strict = false) {
+        public string StoreRead(string path, bool strict = false) {
             return Active.StoreRead(path, strict);
         }
 
-        public readonly void StoreWrite(string path, string? value, bool strict = false) {
+        public void StoreWrite(string path, string? value, bool strict = false) {
             Active.StoreWrite(path, value, strict);
         }
 
-        public readonly List<string> StoreDirectory(string path, bool strict = false) {
+        public List<string> StoreDirectory(string path, bool strict = false) {
             return Active.StoreDirectory(path, strict);
         }
 
-        public readonly void StoreRemove(string path, bool strict = false) {
+        public void StoreRemove(string path, bool strict = false) {
             Active.StoreRemove(path, strict);
         }
 
-        public readonly XenIfaceWatch WatchAdd(string path, bool strict = false) {
+        public XenIfaceWatch WatchAdd(string path, bool strict = false) {
             var active = Active;
             AutoResetEvent? evt = null;
             XenIfaceWatchImpl? result = null;
             try {
                 evt = new AutoResetEvent(false);
-                result = new XenIfaceWatchImpl(path, strict, _parent!, evt, active);
+                result = new XenIfaceWatchImpl(path, strict, _h.Parent!, evt, active);
                 evt = null;
-                _parent!._watches.Add(result);
+                _h.Parent!._watches.Add(result);
                 return result;
             } catch {
                 result?.Dispose();

@@ -4,7 +4,7 @@ namespace XenPlus.XenIface;
 /// An abstract watch bound to a <see cref="XenIfaceSource"/> (in contrast to <see cref="WatchAbiHandle"/> which is
 /// bound to a specific <see cref="XenIfaceDevice"/>
 /// </summary>
-public abstract class XenIfaceWatch : IDisposable {
+abstract class XenIfaceWatch : IDisposable {
     public abstract void Dispose();
     public abstract string Path { get; }
     internal abstract void Rearm(XenIfaceDevice device);
@@ -60,7 +60,7 @@ sealed class XenIfaceWatchImpl : XenIfaceWatch {
     }
 
     public override async Task<string?> WaitOneAsync(int timeoutMilliseconds, CancellationToken cancellationToken = default) {
-        var source = new TaskCompletionSource(TaskCreationOptions.LongRunning);
+        var source = new TaskCompletionSource();
         void handler(object? sender, XenIfaceWatchEventArgs args) => source.TrySetResult();
         WatchTriggered += handler;
         try {

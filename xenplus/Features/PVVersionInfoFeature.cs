@@ -8,7 +8,7 @@ sealed class PVVersionInfoOptions {
 }
 
 sealed class PVVersionInfoFeature(
-    IOptionsSnapshot<PVVersionInfoOptions> _options,
+    IOptionsMonitor<PVVersionInfoOptions> _options,
     XenIfaceSource _xi,
     ILogger<PVVersionInfoFeature> _logger) : BackgroundService {
     readonly Version _productVer = Version.Parse(VersionInfo.ProductVersion);
@@ -37,7 +37,7 @@ sealed class PVVersionInfoFeature(
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
-        if (!_options.Value.Enabled) {
+        if (!_options.CurrentValue.Enabled) {
             return;
         }
         _logger.LogDebug("Starting {}", nameof(PVVersionInfoFeature));

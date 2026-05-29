@@ -109,9 +109,6 @@ sealed partial class XenIfaceSource : IDisposable {
         _suspend.Dispose();
     }
 
-    /// <summary>
-    /// Do not copy the resulting lock handle.
-    /// </summary>
     public XenIfaceHandle Lock() {
         return new XenIfaceHandle(this);
     }

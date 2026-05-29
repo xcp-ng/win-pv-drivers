@@ -4,6 +4,8 @@ using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.NetworkManagement.IpHelper;
 
+namespace XenPlus;
+
 sealed class MibIfTable2SafeHandle : SafeHandle, IReadOnlyList<MIB_IF_ROW2> {
     unsafe MibIfTable2SafeHandle(MIB_IF_TABLE2* table) : base((nint)table, true) {
     }
@@ -29,7 +31,8 @@ sealed class MibIfTable2SafeHandle : SafeHandle, IReadOnlyList<MIB_IF_ROW2> {
 
     unsafe MIB_IF_TABLE2* Table {
         get {
-            return IsInvalid ? throw new ObjectDisposedException(nameof(MibIfTable2SafeHandle)) : (MIB_IF_TABLE2*)handle;
+            ObjectDisposedException.ThrowIf(IsInvalid, this);
+            return (MIB_IF_TABLE2*)handle;
         }
     }
 

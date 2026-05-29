@@ -1,7 +1,7 @@
 namespace XenPlus.XenIface;
 
-public sealed class XenIfaceWatchEventArgs : EventArgs {
+sealed class XenIfaceWatchEventArgs : EventArgs {
 }
 
-public sealed class XenIfaceResumedEventArgs : EventArgs {
+sealed class XenIfaceResumedEventArgs : EventArgs {
 }

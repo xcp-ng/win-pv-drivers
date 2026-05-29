@@ -23,7 +23,7 @@ sealed class Mitigations(EarlyLogger logger) {
 
     void EnableDllProtection() {
         if (!PInvoke.SetDefaultDllDirectories(LOAD_LIBRARY_FLAGS.LOAD_LIBRARY_SEARCH_SYSTEM32)) {
-            LogMitigationQueryError();
+            LogMitigationEnableError();
         }
     }
 

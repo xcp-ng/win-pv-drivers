@@ -23,7 +23,7 @@ using System.Reflection;
 [assembly:AssemblyCopyright("${Env:COPYRIGHT}")]
 
 namespace XenPlus {
-    public static class VersionInfo {
+    static class VersionInfo {
         public const string ProductVersion = "$productVer";
     }
 }

@@ -45,20 +45,6 @@ static class Utils {
     }
 
 #pragma warning disable IDE0280 // Use 'nameof'
-    [Conditional("DEBUG")]
-    public static void DebugFailFastIf(
-        bool condition,
-        [CallerArgumentExpression("condition")] string? message = null) {
-        Assert(condition, message);
-    }
-
-    [Conditional("TRACE")]
-    public static void TraceFailFastIf(
-        bool condition,
-        [CallerArgumentExpression("condition")] string? message = null) {
-        Assert(condition, message);
-    }
-
     public static T Unwrap<T>(
         object? value,
         [CallerArgumentExpression("value")] string? message = null)
@@ -69,6 +55,9 @@ static class Utils {
     }
 #pragma warning restore IDE0280 // Use 'nameof'
 
+    /// <summary>
+    /// like the cooked version of Get-PackageVersion
+    /// </summary>
     public static int NormalizeVersion(int version) {
         return version >= 0 ? version : 0;
     }

@@ -6,12 +6,14 @@ using Windows.Win32.NetworkManagement.IpHelper;
 using Windows.Win32.NetworkManagement.Ndis;
 using XenPlus.XenIface;
 
+namespace XenPlus.Features;
+
 sealed class NetInfoOptions {
     public bool Enabled { get; set; } = true;
 }
 
 sealed class NetInfoFeature(
-    IOptionsSnapshot<NetInfoOptions> _options,
+    IOptionsMonitor<NetInfoOptions> _options,
     XenIfaceSource _xi,
     ILogger<NetInfoFeature> _logger) : BackgroundService {
     static string MacToString(__byte_32 addr, int len) {
@@ -131,7 +133,7 @@ sealed class NetInfoFeature(
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
-        if (!_options.Value.Enabled) {
+        if (!_options.CurrentValue.Enabled) {
             return;
         }
         _logger.LogDebug("Starting {}", nameof(NetInfoFeature));

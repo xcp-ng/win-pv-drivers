@@ -1,52 +1,18 @@
 using System.Net;
-using System.Runtime.InteropServices.Marshalling;
 using Microsoft.Extensions.Options;
-using Windows.Win32;
-using Windows.Win32.System.Wmi;
 using XenPlus.XenIface;
 
 namespace XenPlus.Features;
-
-sealed class WmiOsInfo {
-    public string Caption { get; }
-
-    static T? Get<T>(IWbemClassObject os, string propName) where T : class {
-        var v = new ComVariant();
-        os.Get(propName, 0, ref v);
-        using (v) {
-            return v.As<T>();
-        }
-    }
-
-    public WmiOsInfo(WmiService cimv2, ILogger logger) {
-        // if you see this, then COM initialization has failed...
-        Caption = "Microsoft Windows (unknown edition)";
-
-        try {
-            if (cimv2.ExecQuery("SELECT * FROM Win32_OperatingSystem").FirstOrDefault() is not IWbemClassObject os) {
-                return;
-            }
-
-            var caption = Get<string>(os, nameof(Caption));
-            if (caption != null) {
-                Caption = caption;
-            }
-        } catch (Exception ex) {
-            logger.LogError(ex, "Cannot query OS info");
-        }
-    }
-}
 
 sealed class OSInfoOptions {
     public bool Enabled { get; set; } = true;
 }
 
 sealed class OSInfoFeature(
-    IOptionsSnapshot<OSInfoOptions> _options,
+    IOptionsMonitor<OSInfoOptions> _options,
     XenIfaceSource _xi,
-    [FromKeyedServices(ServiceKeys.WmiService_Root_CIMV2)] WmiService _cimv2,
+    WmiOsInfoService _osInfo,
     ILogger<OSInfoFeature> _logger) : BackgroundService {
-    readonly WmiOsInfo _osInfo = new(_cimv2, _logger);
 
     void Report(object? sender, XenIfaceResumedEventArgs args) {
         _logger.LogTrace("{}.{}", nameof(OSInfoFeature), nameof(Report));
@@ -87,7 +53,7 @@ sealed class OSInfoFeature(
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
-        if (!_options.Value.Enabled) {
+        if (!_options.CurrentValue.Enabled) {
             return;
         }
         _logger.LogDebug("Starting {}", nameof(OSInfoFeature));
