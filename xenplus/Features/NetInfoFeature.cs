@@ -113,13 +113,13 @@ sealed class NetInfoFeature(
             }
 
             var ifaces = NetworkInterface.GetAllNetworkInterfaces();
-            using var mibTable = MibIfTable2SafeHandle.GetIfTable2();
+            using var mibIfTable = MibIfTable2SafeHandle.GetIfTable2();
 
-            foreach (var mib in mibTable.GetRows()) {
+            foreach (var mibIf in mibIfTable) {
                 try {
-                    TryFindReportVif(h, macs, mib, ifaces);
+                    TryFindReportVif(h, macs, mibIf, ifaces);
                 } catch (Exception ex) {
-                    _logger.LogWarning(ex, "Failed to report vif for luid {}", mib.InterfaceLuid);
+                    _logger.LogWarning(ex, "Failed to report vif for luid {}", mibIf.InterfaceLuid);
                 }
             }
 

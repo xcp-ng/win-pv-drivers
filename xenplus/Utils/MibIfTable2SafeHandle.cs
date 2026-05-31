@@ -1,10 +1,10 @@
+using System.Collections;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.NetworkManagement.IpHelper;
 
-sealed class MibIfTable2SafeHandle : SafeHandle {
-
+sealed class MibIfTable2SafeHandle : SafeHandle, IReadOnlyList<MIB_IF_ROW2> {
     unsafe MibIfTable2SafeHandle(MIB_IF_TABLE2* table) : base((nint)table, true) {
     }
 
@@ -18,28 +18,72 @@ sealed class MibIfTable2SafeHandle : SafeHandle {
         }
     }
 
-    public override bool IsInvalid => DangerousGetHandle() == nint.Zero;
+    public override bool IsInvalid => handle == nint.Zero;
 
     protected override bool ReleaseHandle() {
         unsafe {
-            PInvoke.FreeMibTable((void*)DangerousGetHandle());
+            PInvoke.FreeMibTable((void*)handle);
         }
         return true;
     }
 
-    public List<MIB_IF_ROW2> GetRows() {
-        List<MIB_IF_ROW2> result = [];
-
-        if (IsInvalid) {
-            return result;
+    unsafe MIB_IF_TABLE2* Table {
+        get {
+            return IsInvalid ? throw new ObjectDisposedException(nameof(MibIfTable2SafeHandle)) : (MIB_IF_TABLE2*)handle;
         }
+    }
 
-        unsafe {
-            var table = (MIB_IF_TABLE2*)DangerousGetHandle();
-            foreach (var row in table->Table.AsSpan((int)table->NumEntries)) {
-                result.Add(row);
+    public int Count {
+        get {
+            unsafe {
+                return (int)Table->NumEntries;
             }
         }
-        return result;
+    }
+
+    public MIB_IF_ROW2 this[int index] {
+        get {
+            if (index < 0 || index >= Count) {
+                throw new IndexOutOfRangeException();
+            }
+            unsafe {
+                return Table->Table[index];
+            }
+        }
+    }
+
+    public IEnumerator<MIB_IF_ROW2> GetEnumerator() {
+        unsafe {
+            return new Enumerator(this);
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() {
+        return GetEnumerator();
+    }
+
+    public sealed class Enumerator(MibIfTable2SafeHandle _handle) : IEnumerator<MIB_IF_ROW2> {
+        int _index = -1;
+
+        public object Current => _handle[_index];
+
+        MIB_IF_ROW2 IEnumerator<MIB_IF_ROW2>.Current => _handle[_index];
+
+        public void Dispose() {
+        }
+
+        public bool MoveNext() {
+            var next = _index + 1;
+            if (next < _handle.Count) {
+                _index = next;
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        public void Reset() {
+            _index = -1;
+        }
     }
 }
