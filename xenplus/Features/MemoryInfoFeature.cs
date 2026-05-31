@@ -13,6 +13,10 @@ sealed class MemoryInfoOptions {
     public int ReportIntervalSeconds { get; set; } = 59;
 }
 
+[OptionsValidator]
+partial class ValidateMemoryInfoOptions : IValidateOptions<MemoryInfoOptions> {
+}
+
 sealed class MemoryInfoFeature(
     IOptionsMonitor<MemoryInfoOptions> _options,
     XenIfaceSource _xi,

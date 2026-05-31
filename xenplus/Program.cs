@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using XenPlus.Features;
 using XenPlus.XenIface;
 
@@ -45,6 +46,7 @@ class Program {
         builder.Services.Configure<OSInfoOptions>(builder.Configuration.GetSection(nameof(OSInfoOptions)));
         builder.Services.AddHostedService<OSInfoFeature>();
 
+        builder.Services.AddSingleton<IValidateOptions<MemoryInfoOptions>, ValidateMemoryInfoOptions>();
         builder.Services.Configure<MemoryInfoOptions>(builder.Configuration.GetSection(nameof(MemoryInfoOptions)));
         builder.Services.AddHostedService<MemoryInfoFeature>();
 

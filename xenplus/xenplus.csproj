@@ -14,6 +14,7 @@
     <VerifyReferenceAotCompatibility>true</VerifyReferenceAotCompatibility>
     <CsWin32RunAsBuildTask>true</CsWin32RunAsBuildTask>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+    <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
     <ControlFlowGuard>Guard</ControlFlowGuard>
     <CetCompat>true</CetCompat>
 
