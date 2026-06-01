@@ -9,10 +9,11 @@ sealed class OSInfoOptions {
 }
 
 sealed class OSInfoFeature(
+    IHostLifetime _hostLifetime,
     IOptionsMonitor<OSInfoOptions> _options,
     XenIfaceSource _xi,
     WmiOsInfoService _osInfo,
-    ILogger<OSInfoFeature> _logger) : BackgroundService {
+    ILogger<OSInfoFeature> _logger) : FeatureBase(_hostLifetime, _logger) {
 
     void Report(object? sender, XenIfaceResumedEventArgs args) {
         _logger.LogTrace("{}.{}", nameof(OSInfoFeature), nameof(Report));
@@ -52,26 +53,17 @@ sealed class OSInfoFeature(
         }
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
+    protected override async Task ExecuteFeatureAsync(CancellationToken stoppingToken) {
+        if (!_options.CurrentValue.Enabled) {
+            return;
+        }
+        _logger.LogDebug("Starting {}", nameof(OSInfoFeature));
+        _xi.Resumed += Report;
         try {
-            if (!_options.CurrentValue.Enabled) {
-                return;
-            }
-            _logger.LogDebug("Starting {}", nameof(OSInfoFeature));
-            _xi.Resumed += Report;
-            try {
-                Report(null, new());
-                await Task.Delay(Timeout.Infinite, stoppingToken);
-            } finally {
-                _xi.Resumed -= Report;
-            }
-        } catch (OperationCanceledException) {
-        } catch (Exception ex) {
-            try {
-                _logger.LogError(ex, "{} exited with exception", nameof(OSInfoFeature));
-            } catch {
-            }
-            Environment.Exit(ex.HResult);
+            Report(null, new());
+            await Task.Delay(Timeout.Infinite, stoppingToken);
+        } finally {
+            _xi.Resumed -= Report;
         }
     }
 }

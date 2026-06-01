@@ -13,9 +13,10 @@ sealed class NetInfoOptions {
 }
 
 sealed class NetInfoFeature(
+    IHostLifetime _hostLifetime,
     IOptionsMonitor<NetInfoOptions> _options,
     XenIfaceSource _xi,
-    ILogger<NetInfoFeature> _logger) : BackgroundService {
+    ILogger<NetInfoFeature> _logger) : FeatureBase(_hostLifetime, _logger) {
     static string MacToString(__byte_32 addr, int len) {
         return string.Join(':', addr
             .AsReadOnlySpan()[..len]
@@ -132,28 +133,19 @@ sealed class NetInfoFeature(
         }
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
+    protected override async Task ExecuteFeatureAsync(CancellationToken stoppingToken) {
+        if (!_options.CurrentValue.Enabled) {
+            return;
+        }
+        _logger.LogDebug("Starting {}", nameof(NetInfoFeature));
+        _xi.Resumed += Report;
+        NetworkChange.NetworkAddressChanged += Report;
         try {
-            if (!_options.CurrentValue.Enabled) {
-                return;
-            }
-            _logger.LogDebug("Starting {}", nameof(NetInfoFeature));
-            _xi.Resumed += Report;
-            NetworkChange.NetworkAddressChanged += Report;
-            try {
-                Report(null, new());
-                await Task.Delay(Timeout.Infinite, stoppingToken);
-            } finally {
-                NetworkChange.NetworkAddressChanged -= Report;
-                _xi.Resumed -= Report;
-            }
-        } catch (OperationCanceledException) {
-        } catch (Exception ex) {
-            try {
-                _logger.LogError(ex, "{} exited with exception", nameof(NetInfoFeature));
-            } catch {
-            }
-            Environment.Exit(ex.HResult);
+            Report(null, new());
+            await Task.Delay(Timeout.Infinite, stoppingToken);
+        } finally {
+            NetworkChange.NetworkAddressChanged -= Report;
+            _xi.Resumed -= Report;
         }
     }
 }

@@ -18,9 +18,10 @@ partial class ValidateMemoryInfoOptions : IValidateOptions<MemoryInfoOptions> {
 }
 
 sealed class MemoryInfoFeature(
+    IHostLifetime _hostLifetime,
     IOptionsMonitor<MemoryInfoOptions> _options,
     XenIfaceSource _xi,
-    ILogger<MemoryInfoFeature> _logger) : BackgroundService {
+    ILogger<MemoryInfoFeature> _logger) : FeatureBase(_hostLifetime, _logger) {
     void Report() {
         _logger.LogTrace("{}.{}", nameof(MemoryInfoFeature), nameof(Report));
         try {
@@ -46,23 +47,14 @@ sealed class MemoryInfoFeature(
         }
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
-        try {
-            if (!_options.CurrentValue.Enabled) {
-                return;
-            }
-            _logger.LogDebug("Starting {}", nameof(MemoryInfoFeature));
-            while (!stoppingToken.IsCancellationRequested) {
-                Report();
-                await Task.Delay(TimeSpan.FromSeconds(_options.CurrentValue.ReportIntervalSeconds), stoppingToken);
-            }
-        } catch (OperationCanceledException) {
-        } catch (Exception ex) {
-            try {
-                _logger.LogError(ex, "{} exited with exception", nameof(MemoryInfoFeature));
-            } catch {
-            }
-            Environment.Exit(ex.HResult);
+    protected override async Task ExecuteFeatureAsync(CancellationToken stoppingToken) {
+        if (!_options.CurrentValue.Enabled) {
+            return;
+        }
+        _logger.LogDebug("Starting {}", nameof(MemoryInfoFeature));
+        while (!stoppingToken.IsCancellationRequested) {
+            Report();
+            await Task.Delay(TimeSpan.FromSeconds(_options.CurrentValue.ReportIntervalSeconds), stoppingToken);
         }
     }
 }

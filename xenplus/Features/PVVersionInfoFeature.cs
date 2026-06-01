@@ -8,9 +8,10 @@ sealed class PVVersionInfoOptions {
 }
 
 sealed class PVVersionInfoFeature(
+    IHostLifetime _hostLifetime,
     IOptionsMonitor<PVVersionInfoOptions> _options,
     XenIfaceSource _xi,
-    ILogger<PVVersionInfoFeature> _logger) : BackgroundService {
+    ILogger<PVVersionInfoFeature> _logger) : FeatureBase(_hostLifetime, _logger) {
     readonly Version _productVer = Version.Parse(VersionInfo.ProductVersion);
 
     void Report(object? sender, XenIfaceResumedEventArgs args) {
@@ -36,26 +37,17 @@ sealed class PVVersionInfoFeature(
         }
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
+    protected override async Task ExecuteFeatureAsync(CancellationToken stoppingToken) {
+        if (!_options.CurrentValue.Enabled) {
+            return;
+        }
+        _logger.LogDebug("Starting {}", nameof(PVVersionInfoFeature));
+        _xi.Resumed += Report;
         try {
-            if (!_options.CurrentValue.Enabled) {
-                return;
-            }
-            _logger.LogDebug("Starting {}", nameof(PVVersionInfoFeature));
-            _xi.Resumed += Report;
-            try {
-                Report(null, new());
-                await Task.Delay(Timeout.Infinite, stoppingToken);
-            } finally {
-                _xi.Resumed -= Report;
-            }
-        } catch (OperationCanceledException) {
-        } catch (Exception ex) {
-            try {
-                _logger.LogError(ex, "{} exited with exception", nameof(PVVersionInfoFeature));
-            } catch {
-            }
-            Environment.Exit(ex.HResult);
+            Report(null, new());
+            await Task.Delay(Timeout.Infinite, stoppingToken);
+        } finally {
+            _xi.Resumed -= Report;
         }
     }
 }
