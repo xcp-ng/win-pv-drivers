@@ -20,9 +20,9 @@
     <CustomAction Id="XenvifPrepareRestore" BinaryRef="xeninst.dll" DllEntry="XenvifPrepareRestore" Execute="deferred" Impersonate="no" />
 
     <InstallExecuteSequence>
-      <Custom Action="XenvifPrepareRestore" Before="XennetUninstall" Condition="$Xennet.inf=2" />
-      <Custom Action="XenvifBackup" Before="XenvifPrepareRestore" Condition="$Xennet.inf=2" />
-      <Custom Action="XennetCleanup" Before="XenbusCleanup" Condition="$Xennet.inf=2" />
+      <Custom Action="XenvifPrepareRestore" Before="XennetUninstall" Condition="&amp;XennetInternalFeature=2" />
+      <Custom Action="XenvifBackup" Before="XenvifPrepareRestore" Condition="&amp;XennetInternalFeature=2" />
+      <Custom Action="XennetCleanup" Before="XenbusCleanup" Condition="&amp;XennetInternalFeature=2" />
     </InstallExecuteSequence>
 
     <SetProperty Id="$(XenDriver)ServiceDelete" Value="Services=xennet" After="CostFinalize" Sequence="execute" />
