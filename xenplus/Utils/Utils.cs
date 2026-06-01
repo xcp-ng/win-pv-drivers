@@ -1,10 +1,10 @@
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Windows.Win32;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using Windows.Win32.Foundation;
+using Windows.Win32.System.Diagnostics.Debug;
 
 namespace XenPlus;
 
@@ -36,6 +36,13 @@ static class Utils {
         if (cr != CONFIGRET.CR_SUCCESS) {
             throw new Win32Exception((int)PInvoke.CM_MapCrToWin32Err(cr, (uint)WIN32_ERROR.ERROR_GEN_FAILURE));
         }
+    }
+
+    public static int HresultFromWin32(int x) {
+        return x <= 0 ? (HRESULT)x : (HRESULT)unchecked(
+            ((uint)x & 0x0000FFFF) |
+            ((uint)FACILITY_CODE.FACILITY_WIN32 << 16) |
+            0x80000000u);
     }
 
     static void Assert([DoesNotReturnIf(false)] bool condition, string? message, string prefix = "assertion failed: ") {

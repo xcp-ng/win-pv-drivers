@@ -3,6 +3,7 @@ CM_Get_Device_Interface_List_Size
 CM_MapCrToWin32Err
 CM_Register_Notification
 DeviceIoControl
+FACILITY_CODE
 FILE_ANY_ACCESS
 FILE_DEVICE_UNKNOWN
 FreeMibTable
@@ -23,8 +24,6 @@ SetDefaultDllDirectories
 SetProcessMitigationPolicy
 WIN32_ERROR
 
-CoCreateInstance
-CoInitializeEx
 CoInitializeSecurity
 CoSetProxyBlanket
 IEnumWbemClassObject
@@ -34,4 +33,3 @@ IWbemLocator
 IWbemServices
 WBEM_INFINITE
 WbemLocator
-WBEMSTATUS

@@ -50,7 +50,7 @@ sealed partial class XenIfaceSource : IDisposable {
 
     bool _disposed = false;
 
-    public XenIfaceSource(ILogger logger, CancellationToken? ct = null) {
+    public XenIfaceSource(ILogger<XenIfaceSource> logger, CancellationToken? ct = null) {
         _logger = logger;
         try {
             _unregister = ct?.Register(() => {

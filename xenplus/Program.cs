@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using Windows.Win32.Foundation;
 using XenPlus.Features;
 using XenPlus.XenIface;
 
@@ -9,21 +10,25 @@ static class ServiceKeys {
 }
 
 class Program {
-    static void Main(string[] args) {
+    static void Main() {
         var earlyLogger = new EarlyLogger();
         var mitigations = new Mitigations(earlyLogger);
         mitigations.EnableAll();
 
-        var builder = Host.CreateApplicationBuilder(args);
+        var processDir = Path.GetDirectoryName(Environment.ProcessPath);
+        if (string.IsNullOrEmpty(processDir)) {
+            earlyLogger.LogError("Cannot determine settings path, refusing to load configuration");
+            Environment.Exit(Utils.HresultFromWin32((int)WIN32_ERROR.ERROR_PATH_BUSY));
+        }
+
+        var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings() {
+            ContentRootPath = processDir,
+            DisableDefaults = true
+        });
 
         builder.Configuration.Sources.Clear();
-        if (Path.GetDirectoryName(Environment.ProcessPath) is string processDir && !string.IsNullOrEmpty(processDir)) {
-            builder.Configuration.SetBasePath(processDir);
-            builder.Configuration.AddJsonFile("appsettings.json", true, true);
-            builder.Configuration.AddJsonFile("appsettings.user.json", true, true);
-        } else {
-            earlyLogger.LogError("Cannot determine settings path, refusing to load configuration");
-        }
+        builder.Configuration.AddJsonFile("appsettings.json", true, true);
+        builder.Configuration.AddJsonFile("appsettings.user.json", true, true);
 
         builder.Logging.ClearProviders();
         builder.Logging.AddDebug();
@@ -32,9 +37,7 @@ class Program {
             options.Filter = (_, _) => true;
         });
 
-        builder.Services.AddWindowsService(options => {
-            options.ServiceName = nameof(XenPlus);
-        });
+        builder.Services.AddWindowsService();
 
         builder.Services.AddSingleton<XenIfaceSource>();
         builder.Services.AddKeyedSingleton(ServiceKeys.WmiService_Root_CIMV2, (_, k) => new WmiService((string)k!));
