@@ -11,15 +11,15 @@
       Display="collapse"
       Title="!(loc.XenplusFeatureTitle)"
       Description="!(loc.XenplusFeatureDescription)">
-      <ComponentGroupRef Id="XenplusComponent" />
+      <ComponentGroupRef Id="XenplusComponentGroup" />
     </Feature>
 
     <DirectoryRef Id="INSTALLFOLDER">
       <Directory Id="XenplusFolder" Name="xenplus" />
     </DirectoryRef>
 
-    <ComponentGroup Id="XenplusComponent" Directory="XenplusFolder">
-      <Component>
+    <ComponentGroup Id="XenplusComponentGroup" Directory="XenplusFolder">
+      <Component Id="XenplusComponent">
         <File Source="!(bindpath.xenplus)\xenplus.exe" />
         <ServiceInstall
           Name="xenplus$(VENDOR_PREFIX)"
@@ -43,5 +43,25 @@
       </Component>
       <File Source="!(bindpath.xenplus)\appsettings.json" />
     </ComponentGroup>
+
+    <SetProperty
+      Id="ConfigureXenplusService"
+      Value="Service=xenplus$(VENDOR_PREFIX)"
+      After="CostFinalize"
+      Sequence="execute" />
+
+    <CustomAction
+      Id="ConfigureXenplusService"
+      BinaryRef="xeninst.dll"
+      DllEntry="ConfigureXenplusService"
+      Execute="deferred"
+      Impersonate="no" />
+
+    <InstallExecuteSequence>
+      <Custom
+        Action="ConfigureXenplusService"
+        After="InstallServices"
+        Condition="$XenplusComponent=3" />
+    </InstallExecuteSequence>
   </Fragment>
 </Wix>

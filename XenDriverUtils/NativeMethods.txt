@@ -38,10 +38,12 @@ WAIT_EVENT
 OpenSCManager
 OpenService
 ControlService
+ChangeServiceConfig2
 DeleteService
 SC_MANAGER_ALL_ACCESS
 SERVICE_ALL_ACCESS
 SERVICE_CONTROL_STOP
+SERVICE_FAILURE_ACTIONS_FLAG
 
 ConvertStringSecurityDescriptorToSecurityDescriptor
 CreateDirectory

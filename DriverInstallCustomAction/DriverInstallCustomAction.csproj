@@ -9,6 +9,7 @@
     <Nullable>warnings</Nullable>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AccelerateBuildsInVisualStudio>false</AccelerateBuildsInVisualStudio>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
