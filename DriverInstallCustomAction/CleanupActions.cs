@@ -1,3 +1,4 @@
+using System;
 using Windows.Win32;
 using WixToolset.Dtf.WindowsInstaller;
 using XenDriverUtils;
@@ -44,6 +45,10 @@ namespace XenInstCA {
             var serviceList = services.Split(',');
 
             using var scm = PInvoke.OpenSCManager((string)null, null, PInvoke.SC_MANAGER_ALL_ACCESS);
+            if (scm.IsInvalid) {
+                Logger.Log(LogLevel.Alert, "Cannot open SCM");
+                return ActionResult.Success;
+            }
             foreach (var serviceName in serviceList) {
                 XenCleanup.DeleteService(scm, serviceName, dryRun: false);
             }
