@@ -37,16 +37,25 @@ sealed class PVVersionInfoFeature(
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
-        if (!_options.CurrentValue.Enabled) {
-            return;
-        }
-        _logger.LogDebug("Starting {}", nameof(PVVersionInfoFeature));
-        _xi.Resumed += Report;
         try {
-            Report(null, new());
-            await Task.Delay(Timeout.Infinite, stoppingToken);
-        } finally {
-            _xi.Resumed -= Report;
+            if (!_options.CurrentValue.Enabled) {
+                return;
+            }
+            _logger.LogDebug("Starting {}", nameof(PVVersionInfoFeature));
+            _xi.Resumed += Report;
+            try {
+                Report(null, new());
+                await Task.Delay(Timeout.Infinite, stoppingToken);
+            } finally {
+                _xi.Resumed -= Report;
+            }
+        } catch (OperationCanceledException) {
+        } catch (Exception ex) {
+            try {
+                _logger.LogError(ex, "{} exited with exception", nameof(PVVersionInfoFeature));
+            } catch {
+            }
+            Environment.Exit(ex.HResult);
         }
     }
 }

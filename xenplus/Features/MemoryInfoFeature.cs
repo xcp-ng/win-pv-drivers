@@ -47,16 +47,22 @@ sealed class MemoryInfoFeature(
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
-        if (!_options.CurrentValue.Enabled) {
-            return;
-        }
-        _logger.LogDebug("Starting {}", nameof(MemoryInfoFeature));
-        while (true) {
-            await Task.Delay(TimeSpan.FromSeconds(_options.CurrentValue.ReportIntervalSeconds), stoppingToken);
-            if (stoppingToken.IsCancellationRequested) {
-                break;
+        try {
+            if (!_options.CurrentValue.Enabled) {
+                return;
             }
-            Report();
+            _logger.LogDebug("Starting {}", nameof(MemoryInfoFeature));
+            while (!stoppingToken.IsCancellationRequested) {
+                Report();
+                await Task.Delay(TimeSpan.FromSeconds(_options.CurrentValue.ReportIntervalSeconds), stoppingToken);
+            }
+        } catch (OperationCanceledException) {
+        } catch (Exception ex) {
+            try {
+                _logger.LogError(ex, "{} exited with exception", nameof(MemoryInfoFeature));
+            } catch {
+            }
+            Environment.Exit(ex.HResult);
         }
     }
 }
