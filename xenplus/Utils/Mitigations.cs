@@ -6,6 +6,9 @@ using Windows.Win32.System.LibraryLoader;
 using Windows.Win32.System.SystemServices;
 using Windows.Win32.System.Threading;
 
+// abuse Mitigations.cs as a place for this as it's part of the mitigations
+[assembly: DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+
 namespace XenPlus;
 
 sealed class Mitigations(EarlyLogger logger) {
