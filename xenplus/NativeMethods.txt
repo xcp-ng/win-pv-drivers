@@ -14,6 +14,10 @@ METHOD_BUFFERED
 METHOD_NEITHER
 
 // features
+DSROLE_PRIMARY_DOMAIN_GUID_PRESENT
+DSROLE_PRIMARY_DOMAIN_INFO_BASIC
+DsRoleFreeMemory
+DsRoleGetPrimaryDomainInformation
 FreeMibTable
 GetIfTable2
 GlobalMemoryStatusEx

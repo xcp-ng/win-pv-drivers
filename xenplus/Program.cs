@@ -41,7 +41,7 @@ class Program {
 
         builder.Services.AddSingleton<XenIfaceSource>();
         builder.Services.AddKeyedSingleton(ServiceKeys.WmiService_Root_CIMV2, (_, k) => new WmiService((string)k!));
-        builder.Services.AddSingleton<WmiOsInfoService>();
+        builder.Services.AddSingleton<OSInfoService>();
 
         builder.Services.Configure<PVVersionInfoOptions>(builder.Configuration.GetSection(nameof(PVVersionInfoOptions)));
         builder.Services.AddHostedService<PVVersionInfoFeature>();

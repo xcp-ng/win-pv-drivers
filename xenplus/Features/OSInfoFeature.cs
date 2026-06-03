@@ -12,8 +12,9 @@ sealed class OSInfoFeature(
     IHostLifetime _hostLifetime,
     IOptionsMonitor<OSInfoOptions> _options,
     XenIfaceSource _xi,
-    WmiOsInfoService _osInfo,
+    OSInfoService _osInfoService,
     ILogger<OSInfoFeature> _logger) : FeatureBase(_hostLifetime, _logger) {
+    readonly Lazy<OSInfo> _osInfo = new(_osInfoService.Query);
 
     void Report(object? sender, XenIfaceResumedEventArgs args) {
         _logger.LogTrace("{}.{}", nameof(OSInfoFeature), nameof(Report));
@@ -41,10 +42,17 @@ sealed class OSInfoFeature(
 
             h.StoreWrite("data/os_uname", Environment.OSVersion.Version.ToString());
 
-            h.StoreWrite("data/os_name", _osInfo.Caption);
+            h.StoreWrite("data/os_name", _osInfo.Value.Caption);
             h.StoreWrite("data/host_name", Environment.MachineName);
             h.StoreWrite("data/host_name_dns", Dns.GetHostName());
-            //h.StoreWrite("data/domain", _osInfo.Domain);
+            if (_osInfo.Value.IsDomainJoined) {
+                h.StoreWrite("data/domain", _osInfo.Value.DomainNameDns ?? _osInfo.Value.DomainNameFlat);
+            } else {
+                try {
+                    h.StoreRemove("data/domain");
+                } catch {
+                }
+            }
 
             h.StoreWrite("data/updated", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString());
         } catch (XenIfaceNotFoundException) {
