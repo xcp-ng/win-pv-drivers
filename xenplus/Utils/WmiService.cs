@@ -13,7 +13,7 @@ sealed class WmiService {
 
     readonly IWbemServices _services;
 
-    static readonly Lazy<bool> InitializeSecurity = new(() => {
+    static readonly Lazy<bool> _initializeSecurity = new(() => {
         unsafe {
             PInvoke.CoInitializeSecurity(
                 new(),
@@ -32,7 +32,7 @@ sealed class WmiService {
     }
 
     public WmiService(string wmiNamespace) {
-        _ = InitializeSecurity.Value;
+        _ = _initializeSecurity.Value;
 
         IWbemLocator locator = WbemLocator.CreateInstance<IWbemLocator>();
 

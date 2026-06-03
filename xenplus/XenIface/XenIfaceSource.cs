@@ -64,12 +64,12 @@ sealed partial class XenIfaceSource : IDisposable {
             _suspendWait = ThreadPool.RegisterWaitForSingleObject(_suspend, (state, _) => {
                 var self = Utils.Unwrap<XenIfaceSource>(state);
                 self.Resumed?.Invoke(self, new XenIfaceResumedEventArgs());
-            }, this, -1, false);
+            }, this, Timeout.Infinite, false);
             _suspendWaitRegistered = true;
 
             _worker = new Thread(Worker) {
                 IsBackground = true,
-                Name = "XenIfaceSource.Worker",
+                Name = nameof(XenIfaceSource),
             };
             _worker.Start();
 

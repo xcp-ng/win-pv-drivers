@@ -122,7 +122,7 @@ sealed class NetInfoFeature(
                 try {
                     TryFindReportVif(h, macs, mibIf, ifaces);
                 } catch (Exception ex) {
-                    _logger.LogWarning(ex, "Failed to report vif for luid {}", mibIf.InterfaceLuid);
+                    _logger.LogWarning(ex, "Failed to report vif for interface {}", mibIf.InterfaceGuid);
                 }
             }
 

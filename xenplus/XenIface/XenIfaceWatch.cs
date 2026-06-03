@@ -39,7 +39,7 @@ sealed class XenIfaceWatchImpl : XenIfaceWatch {
                 if (Interlocked.Exchange(ref _watchFiredFirstTime, true)) {
                     WatchTriggered?.Invoke(this, new XenIfaceWatchEventArgs());
                 }
-            }, this, -1, false);
+            }, this, Timeout.Infinite, false);
             _eventWaitRegistered = true;
             Rearm(device);
         } catch {

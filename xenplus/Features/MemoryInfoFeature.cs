@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Options;
 using Windows.Win32;
 using Windows.Win32.System.SystemInformation;
@@ -25,12 +26,9 @@ sealed class MemoryInfoFeature(
     void Report() {
         _logger.LogTrace("{}.{}", nameof(MemoryInfoFeature), nameof(Report));
         try {
-            MEMORYSTATUSEX status;
-            unsafe {
-                status = new MEMORYSTATUSEX {
-                    dwLength = (uint)sizeof(MEMORYSTATUSEX)
-                };
-            }
+            var status = new MEMORYSTATUSEX {
+                dwLength = (uint)Unsafe.SizeOf<MEMORYSTATUSEX>()
+            };
             if (!PInvoke.GlobalMemoryStatusEx(ref status)) {
                 throw new Win32Exception("cannot query memory status");
             }
@@ -39,8 +37,6 @@ sealed class MemoryInfoFeature(
 
             h.StoreWrite("data/meminfo_total", (status.ullTotalPhys >> 10).ToString());
             h.StoreWrite("data/meminfo_free", (status.ullAvailPhys >> 10).ToString());
-
-            h.StoreWrite("data/updated", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString());
         } catch (XenIfaceNotFoundException) {
         } catch (Exception ex) {
             _logger.LogError(ex, "{} report error", nameof(MemoryInfoFeature));

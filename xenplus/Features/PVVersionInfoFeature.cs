@@ -24,10 +24,10 @@ sealed class PVVersionInfoFeature(
             } catch {
             }
 
-            h.StoreWrite("attr/PVAddons/MajorVersion", Utils.NormalizeVersion(_productVer.Major).ToString());
-            h.StoreWrite("attr/PVAddons/MinorVersion", Utils.NormalizeVersion(_productVer.Minor).ToString());
-            h.StoreWrite("attr/PVAddons/MicroVersion", Utils.NormalizeVersion(_productVer.Build).ToString());
-            h.StoreWrite("attr/PVAddons/BuildVersion", Utils.NormalizeVersion(_productVer.Revision).ToString());
+            h.StoreWrite("attr/PVAddons/MajorVersion", Utils.NormalizeVersion(_productVer.Major));
+            h.StoreWrite("attr/PVAddons/MinorVersion", Utils.NormalizeVersion(_productVer.Minor));
+            h.StoreWrite("attr/PVAddons/MicroVersion", Utils.NormalizeVersion(_productVer.Build));
+            h.StoreWrite("attr/PVAddons/BuildVersion", Utils.NormalizeVersion(_productVer.Revision));
             h.StoreWrite("attr/PVAddons/Installed", "1");
 
             h.StoreWrite("data/updated", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString());

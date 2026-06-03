@@ -65,7 +65,7 @@ static class Utils {
     /// <summary>
     /// like the cooked version of Get-PackageVersion
     /// </summary>
-    public static int NormalizeVersion(int version) {
-        return version >= 0 ? version : 0;
+    public static string NormalizeVersion(int version) {
+        return version >= 0 ? version.ToString() : "";
     }
 }
