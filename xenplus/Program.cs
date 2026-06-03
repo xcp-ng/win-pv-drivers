@@ -37,7 +37,7 @@ class Program {
             options.Filter = (_, _) => true;
         });
 
-        builder.Services.AddWindowsService();
+        builder.Services.AddWindowsServiceEx();
 
         builder.Services.AddSingleton<XenIfaceSource>();
         builder.Services.AddKeyedSingleton(ServiceKeys.WmiService_Root_CIMV2, (_, k) => new WmiService((string)k!));
