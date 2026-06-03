@@ -51,7 +51,6 @@ sealed class MemoryInfoFeature(
         if (!_options.CurrentValue.Enabled) {
             return;
         }
-        _logger.LogDebug("Starting {}", nameof(MemoryInfoFeature));
         while (!stoppingToken.IsCancellationRequested) {
             Report();
             await Task.Delay(TimeSpan.FromSeconds(_options.CurrentValue.ReportIntervalSeconds), stoppingToken);

@@ -137,7 +137,6 @@ sealed class NetInfoFeature(
         if (!_options.CurrentValue.Enabled) {
             return;
         }
-        _logger.LogDebug("Starting {}", nameof(NetInfoFeature));
         _xi.Resumed += Report;
         NetworkChange.NetworkAddressChanged += Report;
         try {

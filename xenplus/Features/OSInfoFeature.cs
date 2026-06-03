@@ -65,7 +65,6 @@ sealed class OSInfoFeature(
         if (!_options.CurrentValue.Enabled) {
             return;
         }
-        _logger.LogDebug("Starting {}", nameof(OSInfoFeature));
         _xi.Resumed += Report;
         try {
             Report(null, new());

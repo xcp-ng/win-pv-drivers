@@ -41,7 +41,6 @@ sealed class PVVersionInfoFeature(
         if (!_options.CurrentValue.Enabled) {
             return;
         }
-        _logger.LogDebug("Starting {}", nameof(PVVersionInfoFeature));
         _xi.Resumed += Report;
         try {
             Report(null, new());
