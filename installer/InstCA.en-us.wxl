@@ -8,7 +8,8 @@ You may need to run the XenClean tool." />
 
   <String Id="XenWindowsNotSupportedError" Value="This version of Windows is not supported. Minimum supported version: [XenMinSupportedVersion]. Current version: [XenWindowsNotSupported]." />
 
-  <String Id="NotReadyForCopyXenvifError" Value="Xenvif reconfiguration is pending. Wait a few minutes and try again. Did you reboot after installing/uninstalling Xen drivers?" />
+  <String Id="NotReadyForCopyXenvifError" Value="Network reconfiguration is pending. Wait a few minutes and try again. Did you reboot after uninstalling Xen drivers?
+If problem remains, you may need to delete the Copy-XenVifSettings task from Task Scheduler." />
 
   <String Id="XenWaitDriverInstallText" Value="Finalizing" />
 
