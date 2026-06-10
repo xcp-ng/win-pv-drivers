@@ -259,7 +259,7 @@ sealed partial class XenIfaceSource : IDisposable {
                                         tombstones.Push(lastActive);
                                     }
                                 } catch (XenIfaceNotFoundException ex) {
-                                    _logger.LogInformation(ex, "Failed to refresh devices. This is a transient error.");
+                                    _logger.LogInformation(ex, "Did not find Xen PV interface. This is a transient error.");
                                 }
 
                             } else if (request is DeviceRequest listenerRequest &&

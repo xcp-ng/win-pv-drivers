@@ -36,6 +36,7 @@ sealed class OSInfoFeature(
             h.StoreWrite("attr/os/minor", Utils.NormalizeVersion(Environment.OSVersion.Version.Minor));
             h.StoreWrite("attr/os/build", Utils.NormalizeVersion(Environment.OSVersion.Version.Build));
             h.StoreWrite("attr/os/platform", Environment.OSVersion.Platform.ToString());
+            h.StoreWrite("attr/os/spmajor", Environment.OSVersion.ServicePack);
 
             h.StoreWrite("data/os_distro", "Windows");
 
@@ -48,16 +49,7 @@ sealed class OSInfoFeature(
             h.StoreWrite("data/os_name", osInfo.Caption);
             h.StoreWrite("data/host_name", Environment.MachineName);
             h.StoreWrite("data/host_name_dns", Dns.GetHostName());
-            if (osInfo.IsDomainJoined) {
-                h.StoreWrite("data/domain", osInfo.DomainNameDns ?? osInfo.DomainNameFlat);
-            } else {
-                try {
-                    h.StoreRemove("data/domain");
-                } catch {
-                }
-            }
-
-            h.StoreWrite("data/updated", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString());
+            h.StoreWrite("data/domain", osInfo.DomainNameDns ?? osInfo.DomainNameFlat);
         } catch (XenIfaceNotFoundException) {
         } catch (Exception ex) {
             _logger.LogError(ex, "{} report error", nameof(OSInfoFeature));

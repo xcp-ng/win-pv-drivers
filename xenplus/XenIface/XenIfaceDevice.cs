@@ -11,16 +11,18 @@ using static Windows.Win32.Devices.DeviceAndDriverInstallation.CM_NOTIFY_FILTER_
 namespace XenPlus.XenIface;
 
 sealed partial class XenIfaceDevice : IDisposable {
+    readonly GCHandle _gch;
     readonly XenIfaceSource _parent;
     public string DevicePath { get; }
     public SafeFileHandle Handle { get; }
-    readonly GCHandle _gch;
-    bool _gchValid = false;
+    bool _pinned = false;
     readonly CM_Unregister_NotificationSafeHandle _cmDevice;
     bool _disposed = false;
 
     internal unsafe XenIfaceDevice(XenIfaceSource parent, string devicePath) {
         try {
+            _gch = GCHandle.Alloc(this);
+
             _parent = parent;
             DevicePath = devicePath;
             Handle = File.OpenHandle(
@@ -28,9 +30,6 @@ sealed partial class XenIfaceDevice : IDisposable {
                 FileMode.Open,
                 FileAccess.ReadWrite,
                 FileShare.ReadWrite);
-
-            _gch = GCHandle.Alloc(this);
-            _gchValid = true;
 
             var filter = new CM_NOTIFY_FILTER {
                 cbSize = (uint)sizeof(CM_NOTIFY_FILTER),
@@ -81,9 +80,6 @@ sealed partial class XenIfaceDevice : IDisposable {
         // note the backwards destruction order
         Handle.Dispose();
         _cmDevice.Dispose();
-        if (_gchValid) {
-            _gch.Free();
-            _gchValid = false;
-        }
+        _gch.Free();
     }
 }

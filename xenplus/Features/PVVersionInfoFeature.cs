@@ -29,8 +29,6 @@ sealed class PVVersionInfoFeature(
             h.StoreWrite("attr/PVAddons/MicroVersion", Utils.NormalizeVersion(_productVer.Build));
             h.StoreWrite("attr/PVAddons/BuildVersion", Utils.NormalizeVersion(_productVer.Revision));
             h.StoreWrite("attr/PVAddons/Installed", "1");
-
-            h.StoreWrite("data/updated", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString());
         } catch (XenIfaceNotFoundException) {
         } catch (Exception ex) {
             _logger.LogError(ex, "{} report error", nameof(PVVersionInfoFeature));

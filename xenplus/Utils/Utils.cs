@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Windows.Win32;
@@ -34,7 +35,7 @@ static class Utils {
 
     public static void CheckConfigret(CONFIGRET cr) {
         if (cr != CONFIGRET.CR_SUCCESS) {
-            throw new Win32Exception((int)PInvoke.CM_MapCrToWin32Err(cr, (uint)WIN32_ERROR.ERROR_GEN_FAILURE));
+            throw new Win32Exception(unchecked((int)PInvoke.CM_MapCrToWin32Err(cr, (uint)WIN32_ERROR.ERROR_GEN_FAILURE)));
         }
     }
 
@@ -45,13 +46,30 @@ static class Utils {
             0x80000000u);
     }
 
-    static void Assert([DoesNotReturnIf(false)] bool condition, string? message, string prefix = "assertion failed: ") {
+    public static void Assert(
+        [DoesNotReturnIf(false)] bool condition,
+        string? message,
+        string prefix = "assertion failed: ") {
         if (!condition) {
             Environment.FailFast(prefix + message);
         }
     }
 
 #pragma warning disable IDE0280 // Use 'nameof'
+    [Conditional("DEBUG")]
+    public static void DebugAssert(
+        [DoesNotReturnIf(false)] bool condition,
+        [CallerArgumentExpression("condition")] string? message = null) {
+        Assert(condition, message);
+    }
+
+    [Conditional("TRACE")]
+    public static void TraceAssert(
+        [DoesNotReturnIf(false)] bool condition,
+        [CallerArgumentExpression("condition")] string? message = null) {
+        Assert(condition, message);
+    }
+
     public static T Unwrap<T>(
         object? value,
         [CallerArgumentExpression("value")] string? message = null)

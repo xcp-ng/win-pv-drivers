@@ -11,6 +11,10 @@ abstract class FeatureBase(IHostLifetime _hostLifetime, ILogger _logger) : Backg
             await ExecuteFeatureAsync(stoppingToken);
             _logger.LogDebug("Feature {} exited", GetType().Name);
         } catch (OperationCanceledException) {
+            try {
+                _logger.LogDebug("Feature {} was stopped", GetType().Name);
+            } catch {
+            }
         } catch (Exception ex) {
             try {
                 _logger.LogError(ex, "Feature {} exited with exception", GetType().Name);
