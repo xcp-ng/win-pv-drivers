@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Options;
-using Windows.Win32.Foundation;
 using XenPlus.Features;
 using XenPlus.XenIface;
 
@@ -10,24 +9,28 @@ static class ServiceKeys {
 }
 
 class Program {
+    static string GetConfigDir() {
+        var programData = Environment.GetFolderPath(
+            Environment.SpecialFolder.CommonApplicationData,
+            Environment.SpecialFolderOption.DoNotVerify)
+            ?? throw new DirectoryNotFoundException("Environment.SpecialFolder.CommonApplicationData");
+        return Path.Combine(programData, "XCP-ng", "XenPlus");
+    }
+
     static void Main() {
         var earlyLogger = new EarlyLogger();
         var mitigations = new Mitigations(earlyLogger);
         mitigations.EnableAll();
 
-        var processDir = Path.GetDirectoryName(Environment.ProcessPath);
-        if (string.IsNullOrEmpty(processDir)) {
-            earlyLogger.LogError("Cannot determine settings path, refusing to load configuration");
-            Environment.Exit(Utils.HresultFromWin32((int)WIN32_ERROR.ERROR_PATH_BUSY));
-        }
-
+        var configDir = GetConfigDir();
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings() {
-            ContentRootPath = processDir,
+            ContentRootPath = configDir,
             DisableDefaults = true
         });
 
         builder.Configuration.Sources.Clear();
-        builder.Configuration.AddJsonFile("appsettings.json", true, true);
+        builder.Configuration.AddJsonFile("appsettings.dist.json", true, true);
+        builder.Configuration.AddJsonFile("appsettings.installed.json", true, true);
         builder.Configuration.AddJsonFile("appsettings.user.json", true, true);
 
         builder.Logging.ClearProviders();

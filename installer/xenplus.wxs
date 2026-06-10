@@ -18,8 +18,12 @@
       <Directory Id="XenplusFolder" Name="xenplus" />
     </DirectoryRef>
 
-    <ComponentGroup Id="XenplusComponentGroup" Directory="XenplusFolder">
-      <Component Id="XenplusComponent">
+    <DirectoryRef Id="ManufacturerCADFolder">
+      <Directory Id="XenplusCADFolder" Name="xenplus" />
+    </DirectoryRef>
+
+    <ComponentGroup Id="XenplusComponentGroup">
+      <Component Id="XenplusComponent" Directory="XenplusFolder">
         <File Source="!(bindpath.xenplus)\xenplus.exe" />
         <ServiceInstall
           Name="xenplus$(VENDOR_PREFIX)"
@@ -41,7 +45,9 @@
           Stop="both"
           Remove="uninstall" />
       </Component>
-      <File Source="!(bindpath.xenplus)\appsettings.json" />
+      <File
+        Source="!(bindpath.xenplus)\appsettings.dist.json"
+        Directory="XenplusCADFolder" />
     </ComponentGroup>
 
     <SetProperty

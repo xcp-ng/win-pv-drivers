@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <?include Include.wxi ?>
+  <?include Include.wxi?>
   <Fragment>
     <StandardDirectory Id="ProgramFiles6432Folder">
       <Directory Id="ManufacturerFolder" Name="$(VENDOR_NAME)">
         <Directory Id="INSTALLFOLDER" Name="Windows PV Drivers">
         </Directory>
       </Directory>
+    </StandardDirectory>
+    <StandardDirectory Id="CommonAppDataFolder">
+      <Directory Id="ManufacturerCADFolder" Name="$(VENDOR_NAME)" />
     </StandardDirectory>
   </Fragment>
 </Wix>
