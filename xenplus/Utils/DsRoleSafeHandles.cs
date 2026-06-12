@@ -7,7 +7,7 @@ using Windows.Win32.Networking.ActiveDirectory;
 namespace XenPlus;
 
 sealed class DsRolePrimaryDomainInfoBasicSafeHandle : SafeHandle {
-    unsafe DsRolePrimaryDomainInfoBasicSafeHandle(byte* info) : base((nint)info, true) {
+    unsafe DsRolePrimaryDomainInfoBasicSafeHandle(byte* info, bool ownsHandle) : base((nint)info, ownsHandle) {
     }
 
     public static DsRolePrimaryDomainInfoBasicSafeHandle GetDsRolePrimaryDomainInfoBasic() {
@@ -20,7 +20,7 @@ sealed class DsRolePrimaryDomainInfoBasicSafeHandle : SafeHandle {
             if (err != (uint)WIN32_ERROR.ERROR_SUCCESS) {
                 throw new Win32Exception(unchecked((int)err));
             }
-            return new(info);
+            return new(info, true);
         }
     }
 
@@ -42,40 +42,80 @@ sealed class DsRolePrimaryDomainInfoBasicSafeHandle : SafeHandle {
 
     public DSROLE_MACHINE_ROLE MachineRole {
         get {
-            unsafe {
-                return Info->MachineRole;
+            bool addRef = false;
+            DangerousAddRef(ref addRef);
+            try {
+                unsafe {
+                    return Info->MachineRole;
+                }
+            } finally {
+                if (addRef) {
+                    DangerousRelease();
+                }
             }
         }
     }
 
     public string DomainNameFlat {
         get {
-            unsafe {
-                return Info->DomainNameFlat.ToString();
+            bool addRef = false;
+            DangerousAddRef(ref addRef);
+            try {
+                unsafe {
+                    return Info->DomainNameFlat.ToString();
+                }
+            } finally {
+                if (addRef) {
+                    DangerousRelease();
+                }
             }
         }
     }
 
     public string DomainNameDns {
         get {
-            unsafe {
-                return Info->DomainNameDns.ToString();
+            bool addRef = false;
+            DangerousAddRef(ref addRef);
+            try {
+                unsafe {
+                    return Info->DomainNameDns.ToString();
+                }
+            } finally {
+                if (addRef) {
+                    DangerousRelease();
+                }
             }
         }
     }
 
     public string DomainForestName {
         get {
-            unsafe {
-                return Info->DomainForestName.ToString();
+            bool addRef = false;
+            DangerousAddRef(ref addRef);
+            try {
+                unsafe {
+                    return Info->DomainForestName.ToString();
+                }
+            } finally {
+                if (addRef) {
+                    DangerousRelease();
+                }
             }
         }
     }
 
     public Guid? DomainGuid {
         get {
-            unsafe {
-                return ((Info->Flags & PInvoke.DSROLE_PRIMARY_DOMAIN_GUID_PRESENT) != 0) ? Info->DomainGuid : null;
+            bool addRef = false;
+            DangerousAddRef(ref addRef);
+            try {
+                unsafe {
+                    return ((Info->Flags & PInvoke.DSROLE_PRIMARY_DOMAIN_GUID_PRESENT) != 0) ? Info->DomainGuid : null;
+                }
+            } finally {
+                if (addRef) {
+                    DangerousRelease();
+                }
             }
         }
     }
