@@ -1,5 +1,6 @@
 FACILITY_CODE
 GetCurrentProcess
+INVALID_HANDLE_VALUE
 WIN32_ERROR
 
 // CM/device connection
@@ -13,11 +14,19 @@ FILE_DEVICE_UNKNOWN
 METHOD_BUFFERED
 METHOD_NEITHER
 
-// features
+// ClipboardFeature
+CreateNamedPipe
+GetNamedPipeClientSessionId
+PIPE_UNLIMITED_INSTANCES
+WTSGetActiveConsoleSessionId
+
+// OSInfoService
 DSROLE_PRIMARY_DOMAIN_GUID_PRESENT
 DSROLE_PRIMARY_DOMAIN_INFO_BASIC
 DsRoleFreeMemory
 DsRoleGetPrimaryDomainInformation
+
+// MemoryInfoFeature
 GlobalMemoryStatusEx
 
 // WMI

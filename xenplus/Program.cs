@@ -56,6 +56,9 @@ class Program {
         builder.Services.Configure<MemoryInfoOptions>(builder.Configuration.GetSection(nameof(MemoryInfoOptions)));
         builder.Services.AddHostedService<MemoryInfoFeature>();
 
+        builder.Services.Configure<ClipboardOptions>(builder.Configuration.GetSection(nameof(ClipboardOptions)));
+        builder.Services.AddHostedService<ClipboardFeature>();
+
         var host = builder.Build();
         host.Run();
     }
