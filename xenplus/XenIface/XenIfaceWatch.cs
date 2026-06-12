@@ -8,8 +8,21 @@ abstract class XenIfaceWatch : IDisposable {
     public abstract void Dispose();
     public abstract string Path { get; }
     internal abstract void Rearm(XenIfaceDevice device);
-    /// <returns>the watched path if wait succeeded, or null if timeout/cancelled.</returns>
-    public abstract Task<string?> WaitOneAsync(int timeoutMilliseconds, CancellationToken cancellationToken = default);
+
+    public delegate void XenIfaceWatchEventHandler(object? sender, XenIfaceWatchEventArgs args);
+    public abstract event XenIfaceWatchEventHandler? WatchTriggered;
+
+    /// <summary>
+    /// One-shot wait.
+    /// </summary>
+    /// <param name="timeoutMilliseconds">Timeout, in milliseconds</param>
+    /// <param name="discount">Number of waits to ignore before completing</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>the watched path</returns>
+    public abstract Task<string?> WaitOneAsync(
+        int timeoutMilliseconds,
+        int discount = 0,
+        CancellationToken cancellationToken = default);
 }
 
 sealed class XenIfaceWatchImpl : XenIfaceWatch {
@@ -27,9 +40,17 @@ sealed class XenIfaceWatchImpl : XenIfaceWatch {
     bool _disposed = false;
     readonly TaskCompletionSource _disposedSource = new();
 
+    public override event XenIfaceWatchEventHandler? WatchTriggered;
+
     public override string Path => _path;
 
-    internal XenIfaceWatchImpl(string path, bool strict, XenIfaceSource iface, EventWaitHandle evt, XenIfaceDevice device) {
+    internal XenIfaceWatchImpl(
+        string path,
+        bool strict,
+        XenIfaceSource iface,
+        EventWaitHandle evt,
+        XenIfaceDevice device) {
+
         try {
             _path = path;
             _strict = strict;
@@ -48,9 +69,6 @@ sealed class XenIfaceWatchImpl : XenIfaceWatch {
         }
     }
 
-    public delegate void XenIfaceWatchEventHandler(object? sender, XenIfaceWatchEventArgs args);
-    public event XenIfaceWatchEventHandler? WatchTriggered;
-
     internal override void Rearm(XenIfaceDevice device) {
         _watchHandle?.Dispose();
         // the purpose of this is to be exception-safe wrt. WatchAdd
@@ -59,16 +77,31 @@ sealed class XenIfaceWatchImpl : XenIfaceWatch {
         _watchHandle = device.WatchAdd(_path, _event.SafeWaitHandle, _strict);
     }
 
-    public override async Task<string?> WaitOneAsync(int timeoutMilliseconds, CancellationToken cancellationToken = default) {
+    public override async Task<string?> WaitOneAsync(
+        int timeoutMilliseconds,
+        int discount = 0,
+        CancellationToken cancellationToken = default) {
+
         var source = new TaskCompletionSource();
-        void handler(object? sender, XenIfaceWatchEventArgs args) => source.TrySetResult();
+        var remainingDiscount = discount + 1;
+        void handler(object? sender, XenIfaceWatchEventArgs args) {
+            if (Interlocked.Decrement(ref remainingDiscount) == 0) {
+                source.TrySetResult();
+            }
+        }
         WatchTriggered += handler;
         try {
+            var timeoutTask = Task.Delay(timeoutMilliseconds, cancellationToken);
             var completed = await Task.WhenAny(
                 source.Task,
-                Task.Delay(timeoutMilliseconds, cancellationToken),
+                timeoutTask,
                 _disposedSource.Task);
-            return completed == source.Task ? _path : null;
+            ObjectDisposedException.ThrowIf(completed == _disposedSource.Task, this);
+            if (completed == timeoutTask) {
+                throw new TimeoutException();
+            }
+            Utils.DebugAssert(completed == source.Task);
+            return _path;
         } finally {
             WatchTriggered -= handler;
             source.TrySetCanceled(CancellationToken.None);
