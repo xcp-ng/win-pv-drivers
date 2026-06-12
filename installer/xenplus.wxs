@@ -3,6 +3,7 @@
   xmlns="http://wixtoolset.org/schemas/v4/wxs"
   xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <?include Include.wxi?>
+  <?define ServiceName = "xenplus$(VENDOR_PREFIX)"?>
 
   <Fragment>
     <Feature
@@ -12,6 +13,12 @@
       Title="!(loc.XenplusFeatureTitle)"
       Description="!(loc.XenplusFeatureDescription)">
       <ComponentGroupRef Id="XenplusComponentGroup" />
+      <Feature
+        AllowAdvertise="no"
+        Title="!(loc.XenplusSessionFeatureTitle)"
+        Description="!(loc.XenplusSessionFeatureDescription)">
+        <ComponentGroupRef Id="XenplusSessionComponentGroup" />
+      </Feature>
     </Feature>
 
     <DirectoryRef Id="INSTALLFOLDER">
@@ -26,7 +33,7 @@
       <Component Id="XenplusComponent" Directory="XenplusFolder">
         <File Source="!(bindpath.xenplus)\xenplus.exe" />
         <ServiceInstall
-          Name="xenplus$(VENDOR_PREFIX)"
+          Name="$(ServiceName)"
           DisplayName="!(loc.XenplusServiceDisplayName)"
           EraseDescription="yes"
           Type="ownProcess"
@@ -40,7 +47,7 @@
             RestartServiceDelayInSeconds="300" />
         </ServiceInstall>
         <ServiceControl
-          Name="xenplus$(VENDOR_PREFIX)"
+          Name="$(ServiceName)"
           Start="install"
           Stop="both"
           Remove="uninstall" />
@@ -50,9 +57,21 @@
         Directory="XenplusCADFolder" />
     </ComponentGroup>
 
+    <ComponentGroup Id="XenplusSessionComponentGroup">
+      <Component>
+        <File Source="!(bindpath.xenplus)\xenplus_session.exe" Id="xenplus_session.exe" />
+        <RegistryValue
+          Root="HKLM"
+          Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+          Name="xenplus_session_$(VENDOR_PREFIX)"
+          Type="string"
+          Value='"[#xenplus_session.exe]"' />
+      </Component>
+    </ComponentGroup>
+
     <SetProperty
       Id="ConfigureXenplusService"
-      Value="Service=xenplus$(VENDOR_PREFIX)"
+      Value="Service=$(ServiceName)"
       After="CostFinalize"
       Sequence="execute" />
 
