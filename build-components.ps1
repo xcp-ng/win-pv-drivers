@@ -6,7 +6,7 @@ param (
     [ValidateSet("Debug", "Release")]
     [string]$Configuration,
     [Parameter(Mandatory)]
-    [ValidateSet("x86", "x64")]
+    [ValidateSet("x64")]
     [string]$Platform
 )
 
@@ -29,6 +29,11 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 dotnet.exe publish .\xenplus\xenplus.csproj -c $Configuration -r win-$Platform -o .\xenplus\bin\publish\x64\Release
+if ($LASTEXITCODE -ne 0) {
+    throw "dotnet publish failed with error $LASTEXITCODE"
+}
+
+dotnet.exe publish .\xenplus_session\xenplus.csproj -c $Configuration -r win-$Platform -o .\xenplus\bin\publish\x64\Release
 if ($LASTEXITCODE -ne 0) {
     throw "dotnet publish failed with error $LASTEXITCODE"
 }

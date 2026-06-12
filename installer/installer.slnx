@@ -36,5 +36,6 @@
     <Platform Solution="*|x86" Project="x86" />
   </Project>
   <Project Path="../xenplus/xenplus.csproj" Id="a1844f7e-ea70-4d0f-b144-b197785102b8" />
+  <Project Path="../xenplus_session/xenplus_session.csproj" Id="8e1c4bca-fb9d-45bf-b52e-8e404cae7569" />
   <Project Path="XenDrivers.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0" />
 </Solution>
