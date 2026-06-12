@@ -10,6 +10,7 @@ namespace XenPlus.Features;
 
 sealed class ClipboardOptions {
     public bool Enabled { get; set; } = true;
+    public bool UnsafeAllowAnySessionForTest { get; set; } = true;
 }
 
 sealed class ClipboardClient(NamedPipeServerStream _stream, CancellationToken _ct = default) : IDisposable {
@@ -159,12 +160,15 @@ sealed class ClipboardFeature(
         // regardless of whether we have a listener or not, we want to consume the set_clipboard chunk train anyway
         _setClipboardChunks.Clear();
 
+        var allowTest = _options.CurrentValue.UnsafeAllowAnySessionForTest;
         var sid = PInvoke.WTSGetActiveConsoleSessionId();
-        if (sid == InvalidSessionId) {
-            //return null;
+        if (sid == InvalidSessionId && !allowTest) {
+            return null;
         }
-        if (!_clients.TryGetValue(sid, out var client) || client == null) {
-            //return null;
+        if (!_clients.TryGetValue(sid, out var client)) {
+            if (!allowTest) {
+                return null;
+            }
             client = _clients.Values.FirstOrDefault();
             if (client == null) {
                 return null;
