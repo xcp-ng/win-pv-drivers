@@ -15,7 +15,6 @@ sealed partial class XenIfaceDevice : IDisposable {
     readonly XenIfaceSource _parent;
     public string DevicePath { get; }
     public SafeFileHandle Handle { get; }
-    bool _pinned = false;
     readonly CM_Unregister_NotificationSafeHandle _cmDevice;
     bool _disposed = false;
 
