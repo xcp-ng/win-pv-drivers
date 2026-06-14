@@ -10,7 +10,7 @@ namespace XenPlus.Features;
 
 sealed class ClipboardOptions {
     public bool Enabled { get; set; } = true;
-    public bool UnsafeAllowAnySessionForTest { get; set; } = true;
+    public bool UnsafeAllowAnySessionForTest { get; set; } = false;
 }
 
 sealed class ClipboardClient(NamedPipeServerStream _stream, CancellationToken _ct = default) : IDisposable {
@@ -27,7 +27,7 @@ sealed class ClipboardClient(NamedPipeServerStream _stream, CancellationToken _c
 
 sealed class ClipboardFeature(
     IHostLifetime _hostLifetime,
-    IOptionsMonitor<ClipboardOptions> _options,
+    IOptions<ClipboardOptions> _options,
     XenIfaceSource _xi,
     ILogger<ClipboardFeature> _logger) : FeatureBase(_hostLifetime, _logger) {
     const string SetClipboardPath = "data/set_clipboard";
@@ -169,7 +169,7 @@ sealed class ClipboardFeature(
         // regardless of whether we have a listener or not, we want to consume the set_clipboard chunk train anyway
         _setClipboardChunks.Clear();
 
-        var allowTest = _options.CurrentValue.UnsafeAllowAnySessionForTest;
+        var allowTest = _options.Value.UnsafeAllowAnySessionForTest;
         var sid = PInvoke.WTSGetActiveConsoleSessionId();
         if (sid == InvalidSessionId && !allowTest) {
             return null;
@@ -218,8 +218,14 @@ sealed class ClipboardFeature(
     }
 
     protected override async Task ExecuteFeatureAsync(CancellationToken stoppingToken) {
-        if (!_options.CurrentValue.Enabled) {
+        if (!_options.Value.Enabled) {
             return;
+        }
+        if (_options.Value.UnsafeAllowAnySessionForTest) {
+            _logger.LogWarning("""
+            ClipboardOptions.UnsafeAllowAnySessionForTest mode is enabled, which is insecure.
+            Anyone can access the clipboard.
+            """);
         }
 
         try {
