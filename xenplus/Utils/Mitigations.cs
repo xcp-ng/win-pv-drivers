@@ -11,14 +11,18 @@ using Windows.Win32.System.Threading;
 
 namespace XenPlus;
 
+// #define GET_MITIGATION_POLICY_BEFORE_SETTING
+
 sealed class Mitigations(EarlyLogger logger) {
     readonly SafeHandle CurrentProcess = new CurrentProcessSafeHandle();
 
     // Convenience loggers
 
+#if GET_MITIGATION_POLICY_BEFORE_SETTING
     void LogMitigationQueryError([CallerMemberName] string memberName = "") {
         logger.LogWarning($"Cannot query {memberName} mitigation (error {Marshal.GetLastPInvokeError()})");
     }
+#endif
 
     void LogMitigationEnableError([CallerMemberName] string memberName = "") {
         logger.LogWarning($"Cannot enable {memberName} mitigation (error {Marshal.GetLastPInvokeError()})");
@@ -34,13 +38,15 @@ sealed class Mitigations(EarlyLogger logger) {
         var policy = new PROCESS_MITIGATION_STRICT_HANDLE_CHECK_POLICY();
         var policyBuf = MemoryMarshal.AsBytes(new Span<PROCESS_MITIGATION_STRICT_HANDLE_CHECK_POLICY>(ref policy));
 
-        if (!PInvoke.GetProcessMitigationPolicy(
-            CurrentProcess,
-            PROCESS_MITIGATION_POLICY.ProcessStrictHandleCheckPolicy,
-            policyBuf)) {
-            LogMitigationQueryError();
-            return;
-        }
+#if GET_MITIGATION_POLICY_BEFORE_SETTING
+            if (!PInvoke.GetProcessMitigationPolicy(
+                CurrentProcess,
+                PROCESS_MITIGATION_POLICY.ProcessStrictHandleCheckPolicy,
+                policyBuf)) {
+                LogMitigationQueryError();
+                return;
+            }
+#endif
         policy.Anonymous.Anonymous.RaiseExceptionOnInvalidHandleReference = true;
         policy.Anonymous.Anonymous.HandleExceptionsPermanentlyEnabled = true;
         if (!PInvoke.SetProcessMitigationPolicy(
@@ -55,6 +61,7 @@ sealed class Mitigations(EarlyLogger logger) {
         var policy = new PROCESS_MITIGATION_REDIRECTION_TRUST_POLICY();
         var policyBuf = MemoryMarshal.AsBytes(new Span<PROCESS_MITIGATION_REDIRECTION_TRUST_POLICY>(ref policy));
 
+#if GET_MITIGATION_POLICY_BEFORE_SETTING
         if (!PInvoke.GetProcessMitigationPolicy(
             CurrentProcess,
             PROCESS_MITIGATION_POLICY.ProcessRedirectionTrustPolicy,
@@ -62,6 +69,7 @@ sealed class Mitigations(EarlyLogger logger) {
             LogMitigationQueryError();
             return;
         }
+#endif
         policy.Anonymous.Anonymous.EnforceRedirectionTrust = true;
         if (!PInvoke.SetProcessMitigationPolicy(
             PROCESS_MITIGATION_POLICY.ProcessRedirectionTrustPolicy,
@@ -74,6 +82,7 @@ sealed class Mitigations(EarlyLogger logger) {
         var policy = new PROCESS_MITIGATION_SYSTEM_CALL_DISABLE_POLICY();
         var policyBuf = MemoryMarshal.AsBytes(new Span<PROCESS_MITIGATION_SYSTEM_CALL_DISABLE_POLICY>(ref policy));
 
+#if GET_MITIGATION_POLICY_BEFORE_SETTING
         if (!PInvoke.GetProcessMitigationPolicy(
             CurrentProcess,
             PROCESS_MITIGATION_POLICY.ProcessSystemCallDisablePolicy,
@@ -81,6 +90,7 @@ sealed class Mitigations(EarlyLogger logger) {
             LogMitigationQueryError();
             return;
         }
+#endif
         policy.Anonymous.Anonymous.DisallowWin32kSystemCalls = true;
         policy.Anonymous.Anonymous.AuditDisallowWin32kSystemCalls = true;
         if (!PInvoke.SetProcessMitigationPolicy(
@@ -94,6 +104,7 @@ sealed class Mitigations(EarlyLogger logger) {
         var policy = new PROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY();
         var policyBuf = MemoryMarshal.AsBytes(new Span<PROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY>(ref policy));
 
+#if GET_MITIGATION_POLICY_BEFORE_SETTING
         if (!PInvoke.GetProcessMitigationPolicy(
             CurrentProcess,
             PROCESS_MITIGATION_POLICY.ProcessExtensionPointDisablePolicy,
@@ -101,6 +112,7 @@ sealed class Mitigations(EarlyLogger logger) {
             LogMitigationQueryError();
             return;
         }
+#endif
         policy.Anonymous.Anonymous.DisableExtensionPoints = true;
         if (!PInvoke.SetProcessMitigationPolicy(
             PROCESS_MITIGATION_POLICY.ProcessExtensionPointDisablePolicy,
@@ -114,6 +126,7 @@ sealed class Mitigations(EarlyLogger logger) {
         var policy = new PROCESS_MITIGATION_IMAGE_LOAD_POLICY();
         var policyBuf = MemoryMarshal.AsBytes(new Span<PROCESS_MITIGATION_IMAGE_LOAD_POLICY>(ref policy));
 
+#if GET_MITIGATION_POLICY_BEFORE_SETTING
         if (!PInvoke.GetProcessMitigationPolicy(
             CurrentProcess,
             PROCESS_MITIGATION_POLICY.ProcessImageLoadPolicy,
@@ -121,6 +134,7 @@ sealed class Mitigations(EarlyLogger logger) {
             LogMitigationQueryError();
             return;
         }
+#endif
         policy.Anonymous.Anonymous.NoRemoteImages = true;
         policy.Anonymous.Anonymous.NoLowMandatoryLabelImages = true;
         policy.Anonymous.Anonymous.PreferSystem32Images = true;
@@ -161,6 +175,7 @@ sealed class Mitigations(EarlyLogger logger) {
         var policy = new PROCESS_MITIGATION_DYNAMIC_CODE_POLICY();
         var policyBuf = MemoryMarshal.AsBytes(new Span<PROCESS_MITIGATION_DYNAMIC_CODE_POLICY>(ref policy));
 
+#if GET_MITIGATION_POLICY_BEFORE_SETTING
         if (!PInvoke.GetProcessMitigationPolicy(
             CurrentProcess,
             PROCESS_MITIGATION_POLICY.ProcessDynamicCodePolicy,
@@ -168,6 +183,7 @@ sealed class Mitigations(EarlyLogger logger) {
             LogMitigationQueryError();
             return;
         }
+#endif
         policy.Anonymous.Anonymous.ProhibitDynamicCode = false;
         policy.Anonymous.Anonymous.AuditProhibitDynamicCode = true;
         if (!PInvoke.SetProcessMitigationPolicy(
