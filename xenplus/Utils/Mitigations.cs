@@ -14,11 +14,9 @@ namespace XenPlus;
 // #define GET_MITIGATION_POLICY_BEFORE_SETTING
 
 sealed class Mitigations(EarlyLogger logger) {
+#if GET_MITIGATION_POLICY_BEFORE_SETTING
     readonly SafeHandle CurrentProcess = new CurrentProcessSafeHandle();
 
-    // Convenience loggers
-
-#if GET_MITIGATION_POLICY_BEFORE_SETTING
     void LogMitigationQueryError([CallerMemberName] string memberName = "") {
         logger.LogWarning($"Cannot query {memberName} mitigation (error {Marshal.GetLastPInvokeError()})");
     }
@@ -34,7 +32,7 @@ sealed class Mitigations(EarlyLogger logger) {
         }
     }
 
-    void EnableStrictHandleChecks() {
+    void EnableStrictHandleCheck() {
         var policy = new PROCESS_MITIGATION_STRICT_HANDLE_CHECK_POLICY();
         var policyBuf = MemoryMarshal.AsBytes(new Span<PROCESS_MITIGATION_STRICT_HANDLE_CHECK_POLICY>(ref policy));
 
@@ -122,7 +120,7 @@ sealed class Mitigations(EarlyLogger logger) {
     }
 
     [SupportedOSPlatform("windows10.0.14393")]
-    void EnableImageLoadPolicies() {
+    void EnableImageLoadPolicy() {
         var policy = new PROCESS_MITIGATION_IMAGE_LOAD_POLICY();
         var policyBuf = MemoryMarshal.AsBytes(new Span<PROCESS_MITIGATION_IMAGE_LOAD_POLICY>(ref policy));
 
@@ -146,7 +144,7 @@ sealed class Mitigations(EarlyLogger logger) {
     }
 
     [SupportedOSPlatform("windows10.0.14393")]
-    void EnableDynamicCodePolicies() {
+    void EnableDynamicCodePolicy() {
         /*
          * Known issue:
          * Application: xenplus.exe
@@ -216,12 +214,12 @@ sealed class Mitigations(EarlyLogger logger) {
 
     public void EnableAll() {
         EnableDllProtection();
-        EnableStrictHandleChecks();
+        EnableStrictHandleCheck();
         EnableRedirectionGuard();
         //DisableSystemCalls();
         DisableExtensionPoints();
-        EnableImageLoadPolicies();
-        //EnableDynamicCodePolicies();
+        EnableImageLoadPolicy();
+        //EnableDynamicCodePolicy();
         EnableSignaturePolicy();
     }
 }
