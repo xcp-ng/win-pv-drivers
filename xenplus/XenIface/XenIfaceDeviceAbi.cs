@@ -188,7 +188,7 @@ sealed partial class XenIfaceDevice {
 
     internal void WatchRemove(nint context) {
         // guard against stale watch handles
-        if (Handle.IsInvalid) {
+        if (Handle.IsInvalid || Handle.IsClosed) {
             return;
         }
         unsafe {
@@ -231,7 +231,7 @@ sealed partial class XenIfaceDevice {
 
     internal void SuspendDeregister(nint context) {
         // guard against stale suspend handles
-        if (Handle.IsInvalid) {
+        if (Handle.IsInvalid || Handle.IsClosed) {
             return;
         }
         unsafe {
