@@ -14,7 +14,7 @@ sealed class ClipboardOptions {
 }
 
 sealed class ClipboardClient(NamedPipeServerStream _stream, CancellationToken _ct = default) : IDisposable {
-    public NamedPipeServerStream Stream { get; } = _stream;
+    public NamedPipeServerStream Stream => _stream;
     public SemaphoreSlim Lock { get; } = new(1, 1);
     public CancellationTokenSource CancellationTokenSource { get; } = CancellationTokenSource.CreateLinkedTokenSource(_ct);
 
@@ -65,6 +65,11 @@ sealed class ClipboardFeature(
     /// </summary>
     readonly ReferenceCount _active = new();
 
+    /// <summary>
+    /// for the current reporter
+    /// </summary>
+    readonly SemaphoreSlim _reportClipboardLock = new(1, 1);
+
     readonly SemaphoreSlim _lock = new(1, 1);
     /// <summary>
     /// locked
@@ -75,7 +80,7 @@ sealed class ClipboardFeature(
     /// </summary>
     readonly Queue<string> _setClipboardChunks = [];
 
-    async Task ServeClientLoop(ClipboardClient client, CancellationToken ct = default) {
+    async Task ServeClientLoop(uint sid, ClipboardClient client, CancellationToken ct = default) {
         try {
             while (!ct.IsCancellationRequested) {
                 using var clientScope = await client.Lock.EnterScopeAsync(ct);
@@ -85,8 +90,16 @@ sealed class ClipboardFeature(
                     ClipboardMessageContext.Default.ClientMessage,
                     ct);
                 if (msg is ReportClipboardMessage reportClipboard) {
-                    _logger.LogDebug("ReportClipboard '{}'", reportClipboard.Text);
-                    foreach (var chunk in (reportClipboard.Text ?? "").Chunk(ClientChunkSize).Append([])) {
+                    using var reportScope = await _reportClipboardLock.EnterScopeAsync(ct);
+
+                    var consoleSid = PInvoke.WTSGetActiveConsoleSessionId();
+                    if (consoleSid == InvalidSessionId || sid != consoleSid) {
+                        continue;
+                    }
+
+                    _logger.LogDebug("ReportClipboard length {}", reportClipboard?.Text?.Length ?? 0);
+
+                    foreach (var chunk in (reportClipboard?.Text ?? "").Chunk(ClientChunkSize).Append([])) {
                         var wait = _reportClipboard!.WaitOneAsync(5000, 1, ct);
                         using (var h = _xi.Lock()) {
                             h.StoreWrite(ReportClipboardPath, new(chunk), false);
@@ -121,7 +134,7 @@ sealed class ClipboardFeature(
         }
 
         try {
-            await ServeClientLoop(client, client.CancellationTokenSource.Token);
+            await ServeClientLoop(sid, client, client.CancellationTokenSource.Token);
         } catch (Exception ex) {
             _logger.LogWarning(ex, "Failed to serve client {}", sid);
         } finally {
