@@ -68,19 +68,7 @@ sealed partial class XenIfaceSource {
 
         public XenIfaceWatch WatchAdd(string path, bool strict = false) {
             var active = Active;
-            AutoResetEvent? evt = null;
-            XenIfaceWatchImpl? result = null;
-            try {
-                evt = new AutoResetEvent(false);
-                result = new XenIfaceWatchImpl(path, strict, _h.Parent!, evt, active);
-                evt = null;
-                _h.Parent!._watches.Add(result);
-                return result;
-            } catch {
-                result?.Dispose();
-                evt?.Dispose();
-                throw;
-            }
+            return _h.Parent!.WatchAddLocked(active, path, strict);
         }
     }
 }

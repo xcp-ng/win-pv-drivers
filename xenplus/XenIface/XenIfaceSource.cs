@@ -194,6 +194,31 @@ sealed partial class XenIfaceSource : IDisposable {
         }
     }
 
+    internal XenIfaceWatch WatchAddLocked(XenIfaceDevice? device, string path, bool strict = false) {
+        AutoResetEvent? evt = null;
+        XenIfaceWatchImpl? result = null;
+        try {
+            evt = new AutoResetEvent(false);
+            result = new XenIfaceWatchImpl(path, strict, this, evt, device);
+            evt = null;
+            _watches.Add(result);
+            return result;
+        } catch {
+            result?.Dispose();
+            evt?.Dispose();
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Add a watch even without a valid handle. The watch will be rearmed when a device appears.
+    /// </summary>
+    public XenIfaceWatch WatchAdd(string path, bool strict = false) {
+        lock (_lock) {
+            return WatchAddLocked(null, path, strict);
+        }
+    }
+
     internal void WatchUnregister(XenIfaceWatch watch) {
         lock (_lock) {
             _watches.Remove(watch);

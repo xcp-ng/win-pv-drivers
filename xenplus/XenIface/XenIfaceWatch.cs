@@ -49,7 +49,7 @@ sealed class XenIfaceWatchImpl : XenIfaceWatch {
         bool strict,
         XenIfaceSource iface,
         EventWaitHandle evt,
-        XenIfaceDevice device) {
+        XenIfaceDevice? device) {
 
         try {
             _path = path;
@@ -69,11 +69,14 @@ sealed class XenIfaceWatchImpl : XenIfaceWatch {
         }
     }
 
-    internal override void Rearm(XenIfaceDevice device) {
+    internal override void Rearm(XenIfaceDevice? device) {
         _watchHandle?.Dispose();
         // the purpose of this is to be exception-safe wrt. WatchAdd
         _watchHandle = null;
         Interlocked.Exchange(ref _watchFiredFirstTime, false);
+        if (device == null) {
+            return;
+        }
         _watchHandle = device.WatchAdd(_path, _event.SafeWaitHandle, _strict);
     }
 
