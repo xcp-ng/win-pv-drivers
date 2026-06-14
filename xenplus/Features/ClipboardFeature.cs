@@ -54,12 +54,16 @@ sealed class ClipboardFeature(
     /// from the host
     /// </summary>
     XenIfaceWatch? _setClipboard = null;
-    bool _setClipboardWatched = false;
 
     /// <summary>
     /// from the guest
     /// </summary>
     XenIfaceWatch? _reportClipboard = null;
+
+    /// <summary>
+    /// For active clients
+    /// </summary>
+    readonly ReferenceCount _active = new();
 
     readonly SemaphoreSlim _lock = new(1, 1);
     /// <summary>
@@ -72,27 +76,32 @@ sealed class ClipboardFeature(
     readonly Queue<string> _setClipboardChunks = [];
 
     async Task ServeClientLoop(ClipboardClient client, CancellationToken ct = default) {
-        while (!ct.IsCancellationRequested) {
-            using var clientScope = await client.Lock.EnterScopeAsync(ct);
-            var limiter = new StreamReadLimiter(client.Stream, MaxIncomingMessageSize, true);
-            var msg = await JsonSerializer.DeserializeAsync(
-                limiter,
-                ClipboardMessageContext.Default.ClientMessage,
-                ct);
-            if (msg is ReportClipboardMessage reportClipboard) {
-                _logger.LogDebug("ReportClipboard '{}'", reportClipboard.Text);
-                foreach (var chunk in (reportClipboard.Text ?? "").Chunk(ClientChunkSize).Append([])) {
-                    var wait = _reportClipboard!.WaitOneAsync(5000, 1, ct);
-                    using (var h = _xi.Lock()) {
-                        h.StoreWrite(ReportClipboardPath, new(chunk), false);
+        try {
+            while (!ct.IsCancellationRequested) {
+                using var clientScope = await client.Lock.EnterScopeAsync(ct);
+                var limiter = new StreamReadLimiter(client.Stream, MaxIncomingMessageSize, true);
+                var msg = await JsonSerializer.DeserializeAsync(
+                    limiter,
+                    ClipboardMessageContext.Default.ClientMessage,
+                    ct);
+                if (msg is ReportClipboardMessage reportClipboard) {
+                    _logger.LogDebug("ReportClipboard '{}'", reportClipboard.Text);
+                    foreach (var chunk in (reportClipboard.Text ?? "").Chunk(ClientChunkSize).Append([])) {
+                        var wait = _reportClipboard!.WaitOneAsync(5000, 1, ct);
+                        using (var h = _xi.Lock()) {
+                            h.StoreWrite(ReportClipboardPath, new(chunk), false);
+                        }
+                        await wait;
                     }
-                    await wait;
                 }
             }
+        } catch (Exception ex) {
+            _logger.LogDebug(ex, "ServeClientLoop failed");
         }
     }
 
     async Task ServeClient(NamedPipeServerStream pipe, CancellationToken ct = default) {
+        using var lifetime = _active.EnterScope();
         using var client = new ClipboardClient(pipe, ct);
         uint sid;
 
@@ -213,11 +222,11 @@ sealed class ClipboardFeature(
             return;
         }
 
-        using (var h = _xi.Lock()) {
+        try {
+            using var h = _xi.Lock();
             h.StoreRemove(SetClipboardPath);
             h.StoreRemove(ReportClipboardPath);
-            _setClipboard = h.WatchAdd(SetClipboardPath);
-            _reportClipboard = h.WatchAdd(ReportClipboardPath);
+        } catch (XenIfaceNotFoundException) {
         }
 
         async void onSetClipboard(object? sender, XenIfaceWatchEventArgs args) {
@@ -230,9 +239,12 @@ sealed class ClipboardFeature(
             }
         }
 
+        bool watched = false;
         try {
+            Interlocked.Exchange(ref _setClipboard, _xi.WatchAdd(SetClipboardPath));
+            Interlocked.Exchange(ref _reportClipboard, _xi.WatchAdd(ReportClipboardPath));
             _setClipboard.WatchTriggered += onSetClipboard;
-            _setClipboardWatched = true;
+            watched = true;
             while (!stoppingToken.IsCancellationRequested) {
                 var pipe = SecureNamedPipes.Listen(
                     ClipboardPipePath,
@@ -254,12 +266,12 @@ sealed class ClipboardFeature(
                 _ = ServeClient(pipe, stoppingToken);
             }
         } finally {
-            _reportClipboard.Dispose();
-
-            if (_setClipboardWatched) {
-                _setClipboard.WatchTriggered -= onSetClipboard;
+            if (watched) {
+                _setClipboard!.WatchTriggered -= onSetClipboard;
             }
-            _setClipboard.Dispose();
+            await _active.WaitAsync(Timeout.InfiniteTimeSpan, CancellationToken.None);
+            Interlocked.Exchange(ref _reportClipboard, null)?.Dispose();
+            Interlocked.Exchange(ref _setClipboard, null)?.Dispose();
         }
     }
 }
