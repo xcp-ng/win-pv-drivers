@@ -10,7 +10,7 @@ sealed class StreamReadLimiter(Stream s, int limit, bool fatal = false) : Stream
 
     public override bool CanSeek => false;
 
-    public override bool CanWrite => s.CanWrite;
+    public override bool CanWrite => false;
 
     public override long Length => throw new NotSupportedException();
 
@@ -23,7 +23,10 @@ sealed class StreamReadLimiter(Stream s, int limit, bool fatal = false) : Stream
         s.Flush();
     }
 
-    public override int Read(byte[] buffer, int offset, int count) {
+    int ApplyLimit(int count) {
+        if (count == 0) {
+            return 0;
+        }
         if (limit <= 0) {
             if (fatal) {
                 throw new InvalidOperationException("read limit reached");
@@ -31,8 +34,11 @@ sealed class StreamReadLimiter(Stream s, int limit, bool fatal = false) : Stream
                 throw new EndOfStreamException("read limit reached");
             }
         }
+        return Math.Min(count, limit);
+    }
 
-        var max = Math.Min(count, limit);
+    public override int Read(byte[] buffer, int offset, int count) {
+        var max = ApplyLimit(count);
         var bytesRead = s.Read(buffer, offset, max);
         limit -= bytesRead;
         return bytesRead;
@@ -47,6 +53,17 @@ sealed class StreamReadLimiter(Stream s, int limit, bool fatal = false) : Stream
     }
 
     public override void Write(byte[] buffer, int offset, int count) {
-        s.Write(buffer, offset, count);
+        throw new NotSupportedException();
+    }
+
+    public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state) {
+        var max = ApplyLimit(count);
+        return s.BeginRead(buffer, offset, max, callback, state);
+    }
+
+    public override int EndRead(IAsyncResult asyncResult) {
+        var bytesRead = s.EndRead(asyncResult);
+        limit -= bytesRead;
+        return bytesRead;
     }
 }
