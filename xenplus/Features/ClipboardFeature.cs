@@ -98,9 +98,16 @@ sealed class ClipboardFeature(
                     ct);
 
                 if (msg is ReportClipboardMessage reportClipboard) {
+                    // avoid taking _reportClipboardLock if client is not accepted
+                    var consoleSid = PInvoke.WTSGetActiveConsoleSessionId();
+                    if (consoleSid == InvalidSessionId || sid != consoleSid) {
+                        continue;
+                    }
+
                     using var reportScope = await _reportClipboardLock.EnterScopeAsync(ct);
 
-                    var consoleSid = PInvoke.WTSGetActiveConsoleSessionId();
+                    // _reportClipboardLock.EnterScopeAsync could have waited
+                    consoleSid = PInvoke.WTSGetActiveConsoleSessionId();
                     if (consoleSid == InvalidSessionId || sid != consoleSid) {
                         continue;
                     }
@@ -228,8 +235,8 @@ sealed class ClipboardFeature(
                     msg,
                     ClipboardMessageContext.Default.ServerMessage);
                 var lengthBytes = BitConverter.GetBytes(json.Length);
-                await client.Stream.WriteAsync(lengthBytes, ct);
-                await client.Stream.WriteAsync(json, ct);
+                await client.Stream.WriteAsync(lengthBytes, client.CancellationTokenSource.Token);
+                await client.Stream.WriteAsync(json, client.CancellationTokenSource.Token);
             }
         } catch (OperationCanceledException) {
         } catch (Exception ex) {
