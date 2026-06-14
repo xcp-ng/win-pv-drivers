@@ -15,9 +15,12 @@ METHOD_BUFFERED
 METHOD_NEITHER
 
 // ClipboardFeature
+ConvertStringSecurityDescriptorToSecurityDescriptor
 CreateNamedPipe
 GetNamedPipeClientSessionId
+LocalFree
 PIPE_UNLIMITED_INSTANCES
+SDDL_REVISION_1
 WTSGetActiveConsoleSessionId
 
 // OSInfoService

@@ -38,17 +38,24 @@ sealed class ClipboardFeature(
     /// <para>NT AUTHORITY\INTERACTIVE Allow WriteData, Read, Synchronize</para>
     /// <para>NT AUTHORITY\SYSTEM Allow FILE_GENERIC_ALL</para>
     /// <para>BUILTIN\Administrators Allow FILE_GENERIC_ALL</para>
+    /// <para>Mandatory Label\Medium Mandatory Level No Write Up, No Read Up</para>
     /// </remarks>
-    const string ClipboardPipeSddl = @"D:(A;;0x12008b;;;IU)(A;;FA;;;SY)(A;;FA;;;BA)";
+    const string ClipboardPipeSddl = @"D:(A;;0x12008b;;;IU)(A;;FA;;;SY)(A;;FA;;;BA)S:(ML;;NWNR;;;ME)";
     const uint InvalidSessionId = 0xffffffff;
     const int MaxClipboardChunks = 100;
     const int ClientChunkSize = 1024;
     const int MaxIncomingMessageSize = ClientChunkSize * MaxClipboardChunks;
 
-    static readonly Lazy<PipeSecurity> _secure = new(static () => {
-        var secure = new PipeSecurity();
-        secure.SetSecurityDescriptorSddlForm(ClipboardPipeSddl);
-        return secure;
+    static readonly Lazy<LocalFreeSafeHandle> _secure = new(static () => {
+        if (!PInvoke.ConvertStringSecurityDescriptorToSecurityDescriptor(
+            ClipboardPipeSddl,
+            PInvoke.SDDL_REVISION_1,
+            out var sd)) {
+            throw new Win32Exception(nameof(PInvoke.ConvertStringSecurityDescriptorToSecurityDescriptor));
+        }
+        unsafe {
+            return new LocalFreeSafeHandle((nint)sd.Value, true);
+        }
     });
 
     /// <summary>
@@ -280,25 +287,35 @@ sealed class ClipboardFeature(
             Interlocked.Exchange(ref _reportClipboard, _xi.WatchAdd(ReportClipboardPath));
             _setClipboard.WatchTriggered += onSetClipboard;
             watched = true;
-            while (!stoppingToken.IsCancellationRequested) {
-                var pipe = SecureNamedPipes.Listen(
-                    ClipboardPipePath,
-                    PipeDirection.InOut,
-                    NamedPipeServerStream.MaxAllowedServerInstances,
-                    PipeTransmissionMode.Byte,
-                    PipeOptions.Asynchronous,
-                    0,
-                    0,
-                    HandleInheritability.None,
-                    true,
-                    _secure.Value);
-                try {
-                    await pipe.WaitForConnectionAsync(stoppingToken);
-                } catch {
-                    pipe.Dispose();
-                    throw;
+
+            bool addRef = false;
+            var secure = _secure.Value;
+            secure.DangerousAddRef(ref addRef);
+            try {
+                while (!stoppingToken.IsCancellationRequested) {
+                    var pipe = SecureNamedPipes.Listen(
+                        ClipboardPipePath,
+                        PipeDirection.InOut,
+                        NamedPipeServerStream.MaxAllowedServerInstances,
+                        PipeTransmissionMode.Byte,
+                        PipeOptions.Asynchronous,
+                        0,
+                        0,
+                        HandleInheritability.None,
+                        true,
+                        secure.DangerousGetHandle());
+                    try {
+                        await pipe.WaitForConnectionAsync(stoppingToken);
+                    } catch {
+                        pipe.Dispose();
+                        throw;
+                    }
+                    _ = ServeClient(pipe, stoppingToken);
                 }
-                _ = ServeClient(pipe, stoppingToken);
+            } finally {
+                if (addRef) {
+                    secure.DangerousRelease();
+                }
             }
         } finally {
             if (watched) {

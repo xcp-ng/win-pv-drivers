@@ -21,7 +21,7 @@ static class SecureNamedPipes {
         int outBufferSize,
         HandleInheritability inheritability,
         bool rejectRemoteClients,
-        PipeSecurity? pipeSecurity) {
+        nint securityDescriptor) {
 
         var openMode = direction switch {
             PipeDirection.In => FILE_FLAGS_AND_ATTRIBUTES.PIPE_ACCESS_INBOUND,
@@ -63,33 +63,27 @@ static class SecureNamedPipes {
             pipeMode |= NAMED_PIPE_MODE.PIPE_REJECT_REMOTE_CLIENTS;
         }
 
-        var sa = new SECURITY_ATTRIBUTES() {
-            nLength = (uint)Unsafe.SizeOf<SECURITY_ATTRIBUTES>(),
-            lpSecurityDescriptor = null,
-            bInheritHandle = inheritability == HandleInheritability.Inheritable,
-        };
-        var sd = pipeSecurity?.GetSecurityDescriptorBinaryForm();
-
         HANDLE h;
         string pipeFullPath = @"\\.\pipe\" + pipePath;
         unsafe {
-            fixed (byte* psd = sd) {
-                fixed (char* pipePathPtr = @"\\.\pipe\" + pipePath) {
-                    // this is safe thanks to https://github.com/dotnet/roslyn/issues/6707 which led to
-                    // https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/unsafe-code#247-the-fixed-statement
-                    sa.lpSecurityDescriptor = psd;
-                    h = PInvoke.CreateNamedPipe(
-                        pipePathPtr,
-                        openMode,
-                        pipeMode,
-                        maxInstances,
-                        (uint)outBufferSize,
-                        (uint)inBufferSize,
-                        0,
-                        &sa);
-                    if (h == HANDLE.INVALID_HANDLE_VALUE) {
-                        throw new Win32Exception(nameof(PInvoke.CreateNamedPipe));
-                    }
+            var sa = new SECURITY_ATTRIBUTES() {
+                nLength = (uint)Unsafe.SizeOf<SECURITY_ATTRIBUTES>(),
+                lpSecurityDescriptor = (void*)securityDescriptor,
+                bInheritHandle = inheritability == HandleInheritability.Inheritable,
+            };
+
+            fixed (char* pipePathPtr = @"\\.\pipe\" + pipePath) {
+                h = PInvoke.CreateNamedPipe(
+                    pipePathPtr,
+                    openMode,
+                    pipeMode,
+                    maxInstances,
+                    (uint)outBufferSize,
+                    (uint)inBufferSize,
+                    0,
+                    &sa);
+                if (h == HANDLE.INVALID_HANDLE_VALUE) {
+                    throw new Win32Exception(nameof(PInvoke.CreateNamedPipe));
                 }
             }
         }
