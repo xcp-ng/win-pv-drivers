@@ -40,10 +40,18 @@ sealed class ClipboardPipe : IDisposable {
             } else {
                 string? text = null;
                 try {
+                    var lengthBytes = new byte[sizeof(int)];
+                    await _pipe.ReadExactlyAsync(lengthBytes, ct);
+                    var length = BitConverter.ToInt32(lengthBytes);
+                    if (length <= 0) {
+                        throw new InvalidDataException("server sent invalid length");
+                    }
+
+                    var limiter = new StreamReadLimiter(_pipe, length);
                     var msg = await JsonSerializer.DeserializeAsync(
-                    _pipe,
-                    ClipboardMessageContext.Default.ServerMessage,
-                    ct);
+                        limiter,
+                        ClipboardMessageContext.Default.ServerMessage,
+                        ct);
                     if (msg is SetClipboardMessage setClipboard) {
                         text = setClipboard.Text;
                     }
@@ -64,7 +72,10 @@ sealed class ClipboardPipe : IDisposable {
             throw new IOException("cannot connect to pipe");
         }
         var msg = new ReportClipboardMessage() { Text = data };
-        await JsonSerializer.SerializeAsync(_pipe, msg, ClipboardMessageContext.Default.ClientMessage, ct);
+        var json = JsonSerializer.SerializeToUtf8Bytes(msg, ClipboardMessageContext.Default.ClientMessage);
+        var lengthBytes = BitConverter.GetBytes(json.Length);
+        await _pipe.WriteAsync(lengthBytes, ct);
+        await _pipe.WriteAsync(json, ct);
     }
 
     public void Dispose() {

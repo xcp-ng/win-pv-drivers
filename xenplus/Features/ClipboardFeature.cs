@@ -15,12 +15,13 @@ sealed class ClipboardOptions {
 
 sealed class ClipboardClient(NamedPipeServerStream _stream, CancellationToken _ct = default) : IDisposable {
     public NamedPipeServerStream Stream => _stream;
-    public SemaphoreSlim Lock { get; } = new(1, 1);
-    public CancellationTokenSource CancellationTokenSource { get; } = CancellationTokenSource.CreateLinkedTokenSource(_ct);
+    public SemaphoreSlim WriteLock { get; } = new(1, 1);
+    public CancellationTokenSource CancellationTokenSource { get; }
+        = CancellationTokenSource.CreateLinkedTokenSource(_ct);
 
     public void Dispose() {
         Stream.Dispose();
-        Lock.Dispose();
+        WriteLock.Dispose();
         CancellationTokenSource.Dispose();
     }
 }
@@ -83,12 +84,19 @@ sealed class ClipboardFeature(
     async Task ServeClientLoop(uint sid, ClipboardClient client, CancellationToken ct = default) {
         try {
             while (!ct.IsCancellationRequested) {
-                using var clientScope = await client.Lock.EnterScopeAsync(ct);
-                var limiter = new StreamReadLimiter(client.Stream, MaxIncomingMessageSize, true);
+                var lengthBytes = new byte[sizeof(int)];
+                await client.Stream.ReadExactlyAsync(lengthBytes, ct);
+                var length = BitConverter.ToInt32(lengthBytes);
+                if (length <= 0 || length > MaxIncomingMessageSize) {
+                    throw new InvalidDataException("client went over the line");
+                }
+
+                var limiter = new StreamReadLimiter(client.Stream, length);
                 var msg = await JsonSerializer.DeserializeAsync(
                     limiter,
                     ClipboardMessageContext.Default.ClientMessage,
                     ct);
+
                 if (msg is ReportClipboardMessage reportClipboard) {
                     using var reportScope = await _reportClipboardLock.EnterScopeAsync(ct);
 
@@ -146,7 +154,7 @@ sealed class ClipboardFeature(
                 _clients.Remove(sid);
             }
             // drain OnSetClipboard too
-            using var clientScope = await client.Lock.EnterScopeAsync(CancellationToken.None);
+            using var clientScope = await client.WriteLock.EnterScopeAsync(CancellationToken.None);
         }
     }
 
@@ -201,7 +209,7 @@ sealed class ClipboardFeature(
         // at the same time, we want to make sure that OnSetClipboard cannot use a dying client after ServeClient has
         // begun to tear it down
         // so we make the client lock partially overlap the global lock while respecting the lock order
-        return (client, msg, await client.Lock.EnterScopeAsync(client.CancellationTokenSource.Token));
+        return (client, msg, await client.WriteLock.EnterScopeAsync(client.CancellationTokenSource.Token));
     }
 
     /// <summary>
@@ -216,11 +224,12 @@ sealed class ClipboardFeature(
 
         try {
             using (clientScope) {
-                await JsonSerializer.SerializeAsync(
-                    client.Stream,
+                var json = JsonSerializer.SerializeToUtf8Bytes(
                     msg,
-                    ClipboardMessageContext.Default.ServerMessage,
-                    client.CancellationTokenSource.Token);
+                    ClipboardMessageContext.Default.ServerMessage);
+                var lengthBytes = BitConverter.GetBytes(json.Length);
+                await client.Stream.WriteAsync(lengthBytes, ct);
+                await client.Stream.WriteAsync(json, ct);
             }
         } catch (OperationCanceledException) {
         } catch (Exception ex) {
