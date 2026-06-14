@@ -193,6 +193,27 @@ sealed class Mitigations(EarlyLogger logger) {
         }
     }
 
+    void EnableSignaturePolicy() {
+        var policy = new PROCESS_MITIGATION_BINARY_SIGNATURE_POLICY();
+        var policyBuf = MemoryMarshal.AsBytes(new Span<PROCESS_MITIGATION_BINARY_SIGNATURE_POLICY>(ref policy));
+
+#if GET_MITIGATION_POLICY_BEFORE_SETTING
+        if (!PInvoke.GetProcessMitigationPolicy(
+            CurrentProcess,
+            PROCESS_MITIGATION_POLICY.ProcessSignaturePolicy,
+            policyBuf)) {
+            LogMitigationQueryError();
+            return;
+        }
+#endif
+        policy.Anonymous.Anonymous.MicrosoftSignedOnly = true;
+        if (!PInvoke.SetProcessMitigationPolicy(
+            PROCESS_MITIGATION_POLICY.ProcessSignaturePolicy,
+            policyBuf)) {
+            LogMitigationEnableError();
+        }
+    }
+
     public void EnableAll() {
         EnableDllProtection();
         EnableStrictHandleChecks();
@@ -201,5 +222,6 @@ sealed class Mitigations(EarlyLogger logger) {
         DisableExtensionPoints();
         EnableImageLoadPolicies();
         //EnableDynamicCodePolicies();
+        EnableSignaturePolicy();
     }
 }
