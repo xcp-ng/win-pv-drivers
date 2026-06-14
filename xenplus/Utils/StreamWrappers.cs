@@ -1,9 +1,6 @@
 namespace XenPlus;
 
-/// <param name="fatal">
-/// If false, throws <see cref="EndOfStreamException"/> when limit reached; if true, throws
-/// something else
-/// </param>
+/// <param name="fatal">If false, returns no data when limit reached; if true, throws an exception</param>
 /// <remarks><see cref="StreamReadLimiter"/> does not close the underlying stream.</remarks>
 sealed class StreamReadLimiter(Stream s, int limit, bool fatal = false) : Stream {
     public override bool CanRead => s.CanRead;
@@ -31,7 +28,7 @@ sealed class StreamReadLimiter(Stream s, int limit, bool fatal = false) : Stream
             if (fatal) {
                 throw new InvalidOperationException("read limit reached");
             } else {
-                throw new EndOfStreamException("read limit reached");
+                return 0;
             }
         }
         return Math.Min(count, limit);
