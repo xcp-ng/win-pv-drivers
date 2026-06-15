@@ -30,7 +30,7 @@ sealed partial class XenIfaceDevice : IDisposable {
                 FileAccess.ReadWrite,
                 FileShare.ReadWrite);
 
-            using var shref = Handle.Refer();
+            using var shref = Handle.Borrow();
             var filter = new CM_NOTIFY_FILTER {
                 cbSize = (uint)sizeof(CM_NOTIFY_FILTER),
                 Flags = 0,

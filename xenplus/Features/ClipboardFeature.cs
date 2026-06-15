@@ -291,7 +291,7 @@ sealed class ClipboardFeature(
             while (!stoppingToken.IsCancellationRequested) {
                 NamedPipeServerStream pipe;
                 var secure = _secure.Value;
-                using (var shref = secure.Refer()) {
+                using (var shref = secure.Borrow()) {
                     pipe = SecureNamedPipes.Listen(
                         ClipboardPipePath,
                         PipeDirection.InOut,

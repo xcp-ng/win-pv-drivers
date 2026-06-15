@@ -41,7 +41,7 @@ public ref struct SafeHandleReferenceScope : IDisposable {
 }
 
 public static class SafeHandleExtensions {
-    public static SafeHandleReferenceScope Refer(this SafeHandle h) {
+    public static SafeHandleReferenceScope Borrow(this SafeHandle h) {
         return new(h);
     }
 }

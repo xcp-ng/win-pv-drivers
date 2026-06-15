@@ -21,6 +21,7 @@ public sealed class StreamReadLimiter(Stream s, int limit, bool fatal = false) :
     }
 
     int ApplyLimit(int count) {
+        ArgumentOutOfRangeException.ThrowIfLessThan(count, 0, nameof(count));
         if (count == 0) {
             return 0;
         }

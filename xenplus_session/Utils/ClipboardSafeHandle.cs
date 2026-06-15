@@ -7,7 +7,9 @@ using Windows.Win32.System.Ole;
 namespace XenPlus;
 
 sealed class ClipboardSafeHandle(HGLOBAL h, CLIPBOARD_FORMAT format, bool ownsHandle)
+#pragma warning disable CS9107
     : GlobalFreeSafeHandle(h, ownsHandle) {
+#pragma warning restore CS9107
     public string GetString(int maxLength = int.MaxValue) {
         ObjectDisposedException.ThrowIf(IsInvalid, this);
         if (format != CLIPBOARD_FORMAT.CF_UNICODETEXT) {
@@ -88,10 +90,17 @@ sealed class ClipboardSafeHandle(HGLOBAL h, CLIPBOARD_FORMAT format, bool ownsHa
         }
     }
 
+    /// <summary>
+    /// Consumes the handle.
+    /// </summary>
     public void SetClipboard() {
-        using var shref = this.Refer();
+        using var shref = this.Borrow();
+        Check.Assert(ownsHandle && !IsClosed && !IsInvalid);
         if (PInvoke.SetClipboardData((uint)format, (HANDLE)shref.DangerousHandle) == HANDLE.Null) {
             throw new Win32Exception(nameof(PInvoke.SetClipboardData));
         }
+        // SetClipboardData gives ownership of the handle over to Windows.
+        SetHandleAsInvalid();
+        // as we've borrowed, we must release the reference even if we've called SetHandleAsInvalid
     }
 }

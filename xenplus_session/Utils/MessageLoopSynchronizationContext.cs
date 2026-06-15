@@ -81,7 +81,7 @@ class MessageLoopSynchronizationContext : SynchronizationContext, IDisposable {
         try {
             while (true) {
                 WAIT_EVENT result;
-                using (var shref = context._pending.SafeWaitHandle.Refer()) {
+                using (var shref = context._pending.SafeWaitHandle.Borrow()) {
                     waiting[0] = (HANDLE)shref.DangerousHandle;
                     result = PInvoke.MsgWaitForMultipleObjects(
                        waiting,
@@ -90,19 +90,19 @@ class MessageLoopSynchronizationContext : SynchronizationContext, IDisposable {
                        QUEUE_STATUS_FLAGS.QS_ALLINPUT);
                 }
 
-                switch ((uint)result) {
-                    case (uint)WAIT_EVENT.WAIT_OBJECT_0:
-                    case (uint)WAIT_EVENT.WAIT_OBJECT_0 + 1:
+                switch (result) {
+                    case WAIT_EVENT.WAIT_OBJECT_0:
+                    case WAIT_EVENT.WAIT_OBJECT_0 + 1:
                         if (context.DoWorkOne() is int exitCode) {
                             return exitCode;
                         }
                         break;
-                    case (uint)WAIT_EVENT.WAIT_TIMEOUT:
+                    case WAIT_EVENT.WAIT_TIMEOUT:
                         throw new TimeoutException();
-                    case (uint)WAIT_EVENT.WAIT_FAILED:
+                    case WAIT_EVENT.WAIT_FAILED:
                         throw new Win32Exception(nameof(PInvoke.MsgWaitForMultipleObjects));
                     default:
-                        throw new Exception($"Unexpected wait result {(uint)result}");
+                        throw new Exception($"Unexpected wait result {result}");
                 }
             }
         } finally {

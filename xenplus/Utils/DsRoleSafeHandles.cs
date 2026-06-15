@@ -42,7 +42,7 @@ sealed class DsRolePrimaryDomainInfoBasicSafeHandle : SafeHandle {
 
     public DSROLE_MACHINE_ROLE MachineRole {
         get {
-            using var shref = this.Refer();
+            using var shref = this.Borrow();
             unsafe {
                 return Info->MachineRole;
             }
@@ -51,7 +51,7 @@ sealed class DsRolePrimaryDomainInfoBasicSafeHandle : SafeHandle {
 
     public string DomainNameFlat {
         get {
-            using var shref = this.Refer();
+            using var shref = this.Borrow();
             unsafe {
                 return Info->DomainNameFlat.ToString();
             }
@@ -60,7 +60,7 @@ sealed class DsRolePrimaryDomainInfoBasicSafeHandle : SafeHandle {
 
     public string DomainNameDns {
         get {
-            using var shref = this.Refer();
+            using var shref = this.Borrow();
             unsafe {
                 return Info->DomainNameDns.ToString();
             }
@@ -69,7 +69,7 @@ sealed class DsRolePrimaryDomainInfoBasicSafeHandle : SafeHandle {
 
     public string DomainForestName {
         get {
-            using var shref = this.Refer();
+            using var shref = this.Borrow();
             unsafe {
                 return Info->DomainForestName.ToString();
             }
@@ -78,7 +78,7 @@ sealed class DsRolePrimaryDomainInfoBasicSafeHandle : SafeHandle {
 
     public Guid? DomainGuid {
         get {
-            using var shref = this.Refer();
+            using var shref = this.Borrow();
             unsafe {
                 return ((Info->Flags & PInvoke.DSROLE_PRIMARY_DOMAIN_GUID_PRESENT) != 0) ? Info->DomainGuid : null;
             }

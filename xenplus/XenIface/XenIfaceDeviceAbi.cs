@@ -161,7 +161,7 @@ sealed partial class XenIfaceDevice {
         unsafe {
             var outBuf = new XENIFACE_STORE_ADD_WATCH_OUT();
             fixed (byte* pathBytes = inPath) {
-                using var shref = evt.Refer();
+                using var shref = evt.Borrow();
                 var inBuf = new XENIFACE_STORE_ADD_WATCH_IN() {
                     Path = pathBytes,
                     PathLength = (uint)(pathLen + 1),
@@ -199,7 +199,7 @@ sealed partial class XenIfaceDevice {
 
     internal SuspendAbiHandle SuspendRegister(SafeWaitHandle evt) {
         unsafe {
-            using var shref = evt.Refer();
+            using var shref = evt.Borrow();
             var outBuf = new XENIFACE_SUSPEND_REGISTER_OUT();
             var inBuf = new XENIFACE_SUSPEND_REGISTER_IN() {
                 Event = (void*)shref.DangerousHandle
