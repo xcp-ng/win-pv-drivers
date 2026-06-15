@@ -42,80 +42,45 @@ sealed class DsRolePrimaryDomainInfoBasicSafeHandle : SafeHandle {
 
     public DSROLE_MACHINE_ROLE MachineRole {
         get {
-            bool addRef = false;
-            DangerousAddRef(ref addRef);
-            try {
-                unsafe {
-                    return Info->MachineRole;
-                }
-            } finally {
-                if (addRef) {
-                    DangerousRelease();
-                }
+            using var shref = this.Refer();
+            unsafe {
+                return Info->MachineRole;
             }
         }
     }
 
     public string DomainNameFlat {
         get {
-            bool addRef = false;
-            DangerousAddRef(ref addRef);
-            try {
-                unsafe {
-                    return Info->DomainNameFlat.ToString();
-                }
-            } finally {
-                if (addRef) {
-                    DangerousRelease();
-                }
+            using var shref = this.Refer();
+            unsafe {
+                return Info->DomainNameFlat.ToString();
             }
         }
     }
 
     public string DomainNameDns {
         get {
-            bool addRef = false;
-            DangerousAddRef(ref addRef);
-            try {
-                unsafe {
-                    return Info->DomainNameDns.ToString();
-                }
-            } finally {
-                if (addRef) {
-                    DangerousRelease();
-                }
+            using var shref = this.Refer();
+            unsafe {
+                return Info->DomainNameDns.ToString();
             }
         }
     }
 
     public string DomainForestName {
         get {
-            bool addRef = false;
-            DangerousAddRef(ref addRef);
-            try {
-                unsafe {
-                    return Info->DomainForestName.ToString();
-                }
-            } finally {
-                if (addRef) {
-                    DangerousRelease();
-                }
+            using var shref = this.Refer();
+            unsafe {
+                return Info->DomainForestName.ToString();
             }
         }
     }
 
     public Guid? DomainGuid {
         get {
-            bool addRef = false;
-            DangerousAddRef(ref addRef);
-            try {
-                unsafe {
-                    return ((Info->Flags & PInvoke.DSROLE_PRIMARY_DOMAIN_GUID_PRESENT) != 0) ? Info->DomainGuid : null;
-                }
-            } finally {
-                if (addRef) {
-                    DangerousRelease();
-                }
+            using var shref = this.Refer();
+            unsafe {
+                return ((Info->Flags & PInvoke.DSROLE_PRIMARY_DOMAIN_GUID_PRESENT) != 0) ? Info->DomainGuid : null;
             }
         }
     }

@@ -89,16 +89,9 @@ sealed class ClipboardSafeHandle(HGLOBAL h, CLIPBOARD_FORMAT format, bool ownsHa
     }
 
     public void SetClipboard() {
-        bool addRef = false;
-        DangerousAddRef(ref addRef);
-        try {
-            if (PInvoke.SetClipboardData((uint)format, (HANDLE)DangerousGetHandle()) == HANDLE.Null) {
-                throw new Win32Exception(nameof(PInvoke.SetClipboardData));
-            }
-        } finally {
-            if (addRef) {
-                DangerousRelease();
-            }
+        using var shref = this.Refer();
+        if (PInvoke.SetClipboardData((uint)format, (HANDLE)shref.DangerousHandle) == HANDLE.Null) {
+            throw new Win32Exception(nameof(PInvoke.SetClipboardData));
         }
     }
 }

@@ -30,26 +30,19 @@ sealed partial class XenIfaceDevice : IDisposable {
                 FileAccess.ReadWrite,
                 FileShare.ReadWrite);
 
-            bool addRef = false;
-            Handle.DangerousAddRef(ref addRef);
-            try {
-                var filter = new CM_NOTIFY_FILTER {
-                    cbSize = (uint)sizeof(CM_NOTIFY_FILTER),
-                    Flags = 0,
-                    FilterType = CM_NOTIFY_FILTER_TYPE_DEVICEHANDLE,
-                    Reserved = 0,
-                    u = { DeviceHandle = { hTarget = (HANDLE)Handle.DangerousGetHandle() } }
-                };
-                Utils.CheckConfigret(PInvoke.CM_Register_Notification(
-                    filter,
-                    (void*)GCHandle.ToIntPtr(_gch),
-                    &DeviceCmCallback,
-                    out _cmDevice));
-            } finally {
-                if (addRef) {
-                    Handle.DangerousRelease();
-                }
-            }
+            using var shref = Handle.Refer();
+            var filter = new CM_NOTIFY_FILTER {
+                cbSize = (uint)sizeof(CM_NOTIFY_FILTER),
+                Flags = 0,
+                FilterType = CM_NOTIFY_FILTER_TYPE_DEVICEHANDLE,
+                Reserved = 0,
+                u = { DeviceHandle = { hTarget = (HANDLE)shref.DangerousHandle } }
+            };
+            Utils.CheckConfigret(PInvoke.CM_Register_Notification(
+                filter,
+                (void*)GCHandle.ToIntPtr(_gch),
+                &DeviceCmCallback,
+                out _cmDevice));
         } catch {
             Dispose();
             throw;

@@ -288,12 +288,11 @@ sealed class ClipboardFeature(
             _setClipboard.WatchTriggered += onSetClipboard;
             watched = true;
 
-            bool addRef = false;
-            var secure = _secure.Value;
-            secure.DangerousAddRef(ref addRef);
-            try {
-                while (!stoppingToken.IsCancellationRequested) {
-                    var pipe = SecureNamedPipes.Listen(
+            while (!stoppingToken.IsCancellationRequested) {
+                NamedPipeServerStream pipe;
+                var secure = _secure.Value;
+                using (var shref = secure.Refer()) {
+                    pipe = SecureNamedPipes.Listen(
                         ClipboardPipePath,
                         PipeDirection.InOut,
                         NamedPipeServerStream.MaxAllowedServerInstances,
@@ -303,19 +302,15 @@ sealed class ClipboardFeature(
                         0,
                         HandleInheritability.None,
                         true,
-                        secure.DangerousGetHandle());
-                    try {
-                        await pipe.WaitForConnectionAsync(stoppingToken);
-                    } catch {
-                        pipe.Dispose();
-                        throw;
-                    }
-                    _ = ServeClient(pipe, stoppingToken);
+                        shref.DangerousHandle);
                 }
-            } finally {
-                if (addRef) {
-                    secure.DangerousRelease();
+                try {
+                    await pipe.WaitForConnectionAsync(stoppingToken);
+                } catch {
+                    pipe.Dispose();
+                    throw;
                 }
+                _ = ServeClient(pipe, stoppingToken);
             }
         } finally {
             if (watched) {

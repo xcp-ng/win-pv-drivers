@@ -161,25 +161,18 @@ sealed partial class XenIfaceDevice {
         unsafe {
             var outBuf = new XENIFACE_STORE_ADD_WATCH_OUT();
             fixed (byte* pathBytes = inPath) {
-                bool addRef = false;
-                evt.DangerousAddRef(ref addRef);
-                try {
-                    var inBuf = new XENIFACE_STORE_ADD_WATCH_IN() {
-                        Path = pathBytes,
-                        PathLength = (uint)(pathLen + 1),
-                        Event = (void*)evt.DangerousGetHandle()
-                    };
-                    if (!PInvoke.DeviceIoControl(
-                        Handle,
-                        IOCTL_XENIFACE_STORE_ADD_WATCH,
-                        MemoryMarshal.AsBytes(new ReadOnlySpan<XENIFACE_STORE_ADD_WATCH_IN>(ref inBuf)),
-                        MemoryMarshal.AsBytes(new Span<XENIFACE_STORE_ADD_WATCH_OUT>(ref outBuf)))) {
-                        throw new Win32Exception();
-                    }
-                } finally {
-                    if (addRef) {
-                        evt.DangerousRelease();
-                    }
+                using var shref = evt.Refer();
+                var inBuf = new XENIFACE_STORE_ADD_WATCH_IN() {
+                    Path = pathBytes,
+                    PathLength = (uint)(pathLen + 1),
+                    Event = (void*)shref.DangerousHandle
+                };
+                if (!PInvoke.DeviceIoControl(
+                    Handle,
+                    IOCTL_XENIFACE_STORE_ADD_WATCH,
+                    MemoryMarshal.AsBytes(new ReadOnlySpan<XENIFACE_STORE_ADD_WATCH_IN>(ref inBuf)),
+                    MemoryMarshal.AsBytes(new Span<XENIFACE_STORE_ADD_WATCH_OUT>(ref outBuf)))) {
+                    throw new Win32Exception();
                 }
             }
             return new WatchAbiHandle(this, (nint)outBuf.Context);
@@ -206,26 +199,19 @@ sealed partial class XenIfaceDevice {
 
     internal SuspendAbiHandle SuspendRegister(SafeWaitHandle evt) {
         unsafe {
-            bool addRef = false;
-            evt.DangerousAddRef(ref addRef);
-            try {
-                var outBuf = new XENIFACE_SUSPEND_REGISTER_OUT();
-                var inBuf = new XENIFACE_SUSPEND_REGISTER_IN() {
-                    Event = (void*)evt.DangerousGetHandle()
-                };
-                if (!PInvoke.DeviceIoControl(
-                    Handle,
-                    IOCTL_XENIFACE_SUSPEND_REGISTER,
-                    MemoryMarshal.AsBytes(new ReadOnlySpan<XENIFACE_SUSPEND_REGISTER_IN>(ref inBuf)),
-                    MemoryMarshal.AsBytes(new Span<XENIFACE_SUSPEND_REGISTER_OUT>(ref outBuf)))) {
-                    throw new Win32Exception();
-                }
-                return new SuspendAbiHandle(this, (nint)outBuf.Context);
-            } finally {
-                if (addRef) {
-                    evt.DangerousRelease();
-                }
+            using var shref = evt.Refer();
+            var outBuf = new XENIFACE_SUSPEND_REGISTER_OUT();
+            var inBuf = new XENIFACE_SUSPEND_REGISTER_IN() {
+                Event = (void*)shref.DangerousHandle
+            };
+            if (!PInvoke.DeviceIoControl(
+                Handle,
+                IOCTL_XENIFACE_SUSPEND_REGISTER,
+                MemoryMarshal.AsBytes(new ReadOnlySpan<XENIFACE_SUSPEND_REGISTER_IN>(ref inBuf)),
+                MemoryMarshal.AsBytes(new Span<XENIFACE_SUSPEND_REGISTER_OUT>(ref outBuf)))) {
+                throw new Win32Exception();
             }
+            return new SuspendAbiHandle(this, (nint)outBuf.Context);
         }
     }
 

@@ -75,16 +75,20 @@ class MessageLoopSynchronizationContext : SynchronizationContext, IDisposable {
 
     public static int Run() {
         using var context = new MessageLoopSynchronizationContext();
-        HANDLE[] waiting = [(HANDLE)context._pending.SafeWaitHandle.DangerousGetHandle()];
+        var waiting = new HANDLE[1];
 
         SetSynchronizationContext(context);
         try {
             while (true) {
-                var result = PInvoke.MsgWaitForMultipleObjects(
-                    waiting,
-                    false,
-                    PInvoke.INFINITE,
-                    QUEUE_STATUS_FLAGS.QS_ALLINPUT);
+                WAIT_EVENT result;
+                using (var shref = context._pending.SafeWaitHandle.Refer()) {
+                    waiting[0] = (HANDLE)shref.DangerousHandle;
+                    result = PInvoke.MsgWaitForMultipleObjects(
+                       waiting,
+                       false,
+                       PInvoke.INFINITE,
+                       QUEUE_STATUS_FLAGS.QS_ALLINPUT);
+                }
 
                 switch ((uint)result) {
                     case (uint)WAIT_EVENT.WAIT_OBJECT_0:
