@@ -32,17 +32,17 @@ sealed class OSInfoFeature(
             h.StoreWrite("attr/os/class", "Windows NT");
 
             // https://learn.microsoft.com/en-us/dotnet/core/compatibility/core-libraries/5.0/environment-osversion-returns-correct-version
-            h.StoreWrite("attr/os/major", Utils.NormalizeVersion(Environment.OSVersion.Version.Major));
-            h.StoreWrite("attr/os/minor", Utils.NormalizeVersion(Environment.OSVersion.Version.Minor));
-            h.StoreWrite("attr/os/build", Utils.NormalizeVersion(Environment.OSVersion.Version.Build));
+            h.StoreWrite("attr/os/major", ServerUtils.NormalizeVersion(Environment.OSVersion.Version.Major));
+            h.StoreWrite("attr/os/minor", ServerUtils.NormalizeVersion(Environment.OSVersion.Version.Minor));
+            h.StoreWrite("attr/os/build", ServerUtils.NormalizeVersion(Environment.OSVersion.Version.Build));
             h.StoreWrite("attr/os/platform", Environment.OSVersion.Platform.ToString());
             h.StoreWrite("attr/os/spmajor", Environment.OSVersion.ServicePack);
 
             h.StoreWrite("data/os_distro", "Windows");
 
-            h.StoreWrite("data/os_majorver", Utils.NormalizeVersion(Environment.OSVersion.Version.Major));
-            h.StoreWrite("data/os_minorver", Utils.NormalizeVersion(Environment.OSVersion.Version.Minor));
-            h.StoreWrite("data/os_buildver", Utils.NormalizeVersion(Environment.OSVersion.Version.Build));
+            h.StoreWrite("data/os_majorver", ServerUtils.NormalizeVersion(Environment.OSVersion.Version.Major));
+            h.StoreWrite("data/os_minorver", ServerUtils.NormalizeVersion(Environment.OSVersion.Version.Minor));
+            h.StoreWrite("data/os_buildver", ServerUtils.NormalizeVersion(Environment.OSVersion.Version.Build));
 
             h.StoreWrite("data/os_uname", Environment.OSVersion.Version.ToString());
 

@@ -103,7 +103,7 @@ sealed class XenIfaceWatchImpl : XenIfaceWatch {
             if (completed == timeoutTask) {
                 throw new TimeoutException();
             }
-            Utils.DebugAssert(completed == source.Task);
+            Check.DebugAssert(completed == source.Task);
             return _path;
         } finally {
             WatchTriggered -= handler;

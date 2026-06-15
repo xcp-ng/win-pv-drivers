@@ -45,4 +45,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\xenplus_lib\xenplus_lib.csproj" />
+  </ItemGroup>
+
 </Project>

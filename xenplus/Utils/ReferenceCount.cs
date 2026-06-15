@@ -21,7 +21,7 @@ sealed class ReferenceCount {
 
     public void Release() {
         lock (_lock) {
-            Utils.Assert(_count > 0, "reference count underflowed");
+            Check.Assert(_count > 0, "reference count underflowed");
             if (--_count == 0) {
                 _tcs.TrySetResult();
             }

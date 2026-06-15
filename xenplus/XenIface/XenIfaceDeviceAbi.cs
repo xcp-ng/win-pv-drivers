@@ -142,7 +142,7 @@ sealed partial class XenIfaceDevice {
                 throw new Win32Exception();
             }
         }
-        return Utils.ParseMultiString(outBuf, GetEncoding(strict).GetString);
+        return ServerUtils.ParseMultiString(outBuf, GetEncoding(strict).GetString);
     }
 
     internal void StoreRemove(string path, bool strict) {

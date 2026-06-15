@@ -38,7 +38,7 @@ sealed partial class XenIfaceDevice : IDisposable {
                 Reserved = 0,
                 u = { DeviceHandle = { hTarget = (HANDLE)shref.DangerousHandle } }
             };
-            Utils.CheckConfigret(PInvoke.CM_Register_Notification(
+            ServerUtils.CheckConfigret(PInvoke.CM_Register_Notification(
                 filter,
                 (void*)GCHandle.ToIntPtr(_gch),
                 &DeviceCmCallback,
@@ -58,7 +58,7 @@ sealed partial class XenIfaceDevice : IDisposable {
         uint eventDataSize) {
         try {
             var gch = GCHandle.FromIntPtr((nint)context);
-            var self = Utils.Unwrap<XenIfaceDevice>(gch.Target);
+            var self = Check.Unwrap<XenIfaceDevice>(gch.Target);
 
             if (action == CM_NOTIFY_ACTION_DEVICEQUERYREMOVE ||
                 action == CM_NOTIFY_ACTION_DEVICEQUERYREMOVEFAILED) {

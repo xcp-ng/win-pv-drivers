@@ -55,6 +55,10 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\xenplus_lib\xenplus_lib.csproj" />
+  </ItemGroup>
+
   <Target Name="XenGeneratedFiles" BeforeTargets="BeforeBuild">
     <Exec Command="$(SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)" />
     <ItemGroup>

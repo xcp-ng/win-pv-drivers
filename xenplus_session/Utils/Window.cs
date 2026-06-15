@@ -141,7 +141,7 @@ abstract class Window : IDisposable {
             var target = GetSelf(hwnd);
 
             if (msg == PInvoke.WM_DESTROY) {
-                return Utils.Unwrap<Window>(target).OnDestroyNative(hwnd, msg, wparam, lparam);
+                return Check.Unwrap<Window>(target).OnDestroyNative(hwnd, msg, wparam, lparam);
             } else {
                 if (target == null) {
                     Trace.TraceInformation(

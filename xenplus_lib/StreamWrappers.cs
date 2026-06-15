@@ -2,7 +2,7 @@ namespace XenPlus;
 
 /// <param name="fatal">If false, returns no data when limit reached; if true, throws an exception</param>
 /// <remarks><see cref="StreamReadLimiter"/> does not close the underlying stream.</remarks>
-sealed class StreamReadLimiter(Stream s, int limit, bool fatal = false) : Stream {
+public sealed class StreamReadLimiter(Stream s, int limit, bool fatal = false) : Stream {
     public override bool CanRead => s.CanRead;
 
     public override bool CanSeek => false;

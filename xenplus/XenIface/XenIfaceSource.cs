@@ -62,7 +62,7 @@ sealed partial class XenIfaceSource : IDisposable {
 
             _suspend = new(false);
             _suspendWait = ThreadPool.RegisterWaitForSingleObject(_suspend, (state, _) => {
-                var self = Utils.Unwrap<XenIfaceSource>(state);
+                var self = Check.Unwrap<XenIfaceSource>(state);
                 self.Resumed?.Invoke(self, new XenIfaceResumedEventArgs());
             }, this, Timeout.Infinite, false);
             _suspendWaitRegistered = true;
@@ -124,7 +124,7 @@ sealed partial class XenIfaceSource : IDisposable {
         CONFIGRET cr;
         char[] buf;
         do {
-            Utils.CheckConfigret(PInvoke.CM_Get_Device_Interface_List_Size(
+            ServerUtils.CheckConfigret(PInvoke.CM_Get_Device_Interface_List_Size(
                 out var len,
                 GUID_INTERFACE_XENIFACE,
                 null,
@@ -142,9 +142,9 @@ sealed partial class XenIfaceSource : IDisposable {
                 }
             }
         } while (cr == CONFIGRET.CR_BUFFER_SMALL);
-        Utils.CheckConfigret(cr);
+        ServerUtils.CheckConfigret(cr);
 
-        foreach (var device in Utils.ParseMultiString(buf)) {
+        foreach (var device in ServerUtils.ParseMultiString(buf)) {
             yield return device;
         }
     }
@@ -234,7 +234,7 @@ sealed partial class XenIfaceSource : IDisposable {
         uint eventDataSize) {
         try {
             var gch = GCHandle.FromIntPtr((nint)context);
-            var self = Utils.Unwrap<XenIfaceSource>(gch.Target);
+            var self = Check.Unwrap<XenIfaceSource>(gch.Target);
             lock (self._lock) {
                 self._requests.Enqueue(new WorkerRequest() { Action = action });
                 Monitor.Pulse(self._lock);
@@ -255,7 +255,7 @@ sealed partial class XenIfaceSource : IDisposable {
                 Reserved = 0,
                 u = { DeviceInterface = { ClassGuid = GUID_INTERFACE_XENIFACE } }
             };
-            Utils.CheckConfigret(PInvoke.CM_Register_Notification(
+            ServerUtils.CheckConfigret(PInvoke.CM_Register_Notification(
                 filter,
                 (void*)GCHandle.ToIntPtr(gch),
                 &WorkerCmCallback,

@@ -24,10 +24,10 @@ sealed class PVVersionInfoFeature(
             } catch {
             }
 
-            h.StoreWrite("attr/PVAddons/MajorVersion", Utils.NormalizeVersion(_productVer.Major));
-            h.StoreWrite("attr/PVAddons/MinorVersion", Utils.NormalizeVersion(_productVer.Minor));
-            h.StoreWrite("attr/PVAddons/MicroVersion", Utils.NormalizeVersion(_productVer.Build));
-            h.StoreWrite("attr/PVAddons/BuildVersion", Utils.NormalizeVersion(_productVer.Revision));
+            h.StoreWrite("attr/PVAddons/MajorVersion", ServerUtils.NormalizeVersion(_productVer.Major));
+            h.StoreWrite("attr/PVAddons/MinorVersion", ServerUtils.NormalizeVersion(_productVer.Minor));
+            h.StoreWrite("attr/PVAddons/MicroVersion", ServerUtils.NormalizeVersion(_productVer.Build));
+            h.StoreWrite("attr/PVAddons/BuildVersion", ServerUtils.NormalizeVersion(_productVer.Revision));
             h.StoreWrite("attr/PVAddons/Installed", "1");
         } catch (XenIfaceNotFoundException) {
         } catch (Exception ex) {
