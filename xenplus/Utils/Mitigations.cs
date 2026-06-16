@@ -45,8 +45,8 @@ sealed class Mitigations(EarlyLogger logger) {
                 return;
             }
 #endif
-        policy.Anonymous.Anonymous.RaiseExceptionOnInvalidHandleReference = true;
-        policy.Anonymous.Anonymous.HandleExceptionsPermanentlyEnabled = true;
+        policy.RaiseExceptionOnInvalidHandleReference = true;
+        policy.HandleExceptionsPermanentlyEnabled = true;
         if (!PInvoke.SetProcessMitigationPolicy(
             PROCESS_MITIGATION_POLICY.ProcessStrictHandleCheckPolicy,
             policyBuf)) {
@@ -68,7 +68,7 @@ sealed class Mitigations(EarlyLogger logger) {
             return;
         }
 #endif
-        policy.Anonymous.Anonymous.EnforceRedirectionTrust = true;
+        policy.EnforceRedirectionTrust = true;
         if (!PInvoke.SetProcessMitigationPolicy(
             PROCESS_MITIGATION_POLICY.ProcessRedirectionTrustPolicy,
             policyBuf)) {
@@ -89,8 +89,8 @@ sealed class Mitigations(EarlyLogger logger) {
             return;
         }
 #endif
-        policy.Anonymous.Anonymous.DisallowWin32kSystemCalls = true;
-        policy.Anonymous.Anonymous.AuditDisallowWin32kSystemCalls = true;
+        policy.DisallowWin32kSystemCalls = true;
+        policy.AuditDisallowWin32kSystemCalls = true;
         if (!PInvoke.SetProcessMitigationPolicy(
             PROCESS_MITIGATION_POLICY.ProcessSystemCallDisablePolicy,
             policyBuf)) {
@@ -111,7 +111,7 @@ sealed class Mitigations(EarlyLogger logger) {
             return;
         }
 #endif
-        policy.Anonymous.Anonymous.DisableExtensionPoints = true;
+        policy.DisableExtensionPoints = true;
         if (!PInvoke.SetProcessMitigationPolicy(
             PROCESS_MITIGATION_POLICY.ProcessExtensionPointDisablePolicy,
             policyBuf)) {
@@ -133,9 +133,9 @@ sealed class Mitigations(EarlyLogger logger) {
             return;
         }
 #endif
-        policy.Anonymous.Anonymous.NoRemoteImages = true;
-        policy.Anonymous.Anonymous.NoLowMandatoryLabelImages = true;
-        policy.Anonymous.Anonymous.PreferSystem32Images = true;
+        policy.NoRemoteImages = true;
+        policy.NoLowMandatoryLabelImages = true;
+        policy.PreferSystem32Images = true;
         if (!PInvoke.SetProcessMitigationPolicy(
             PROCESS_MITIGATION_POLICY.ProcessImageLoadPolicy,
             policyBuf)) {
@@ -182,8 +182,8 @@ sealed class Mitigations(EarlyLogger logger) {
             return;
         }
 #endif
-        policy.Anonymous.Anonymous.ProhibitDynamicCode = false;
-        policy.Anonymous.Anonymous.AuditProhibitDynamicCode = true;
+        policy.ProhibitDynamicCode = false;
+        policy.AuditProhibitDynamicCode = true;
         if (!PInvoke.SetProcessMitigationPolicy(
             PROCESS_MITIGATION_POLICY.ProcessDynamicCodePolicy,
             policyBuf)) {
@@ -204,7 +204,7 @@ sealed class Mitigations(EarlyLogger logger) {
             return;
         }
 #endif
-        policy.Anonymous.Anonymous.MicrosoftSignedOnly = true;
+        policy.MicrosoftSignedOnly = true;
         if (!PInvoke.SetProcessMitigationPolicy(
             PROCESS_MITIGATION_POLICY.ProcessSignaturePolicy,
             policyBuf)) {
