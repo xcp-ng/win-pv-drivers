@@ -17,13 +17,10 @@ sealed class WindowLockException : Exception {
 
 abstract class Window : IDisposable {
     readonly GCHandle _gch;
-    readonly HWND _handle;
     bool _disposed = false;
 
     static readonly Lock _registeredClassesLock = new();
     static readonly Dictionary<string, ushort> _registeredClasses = [];
-
-    public HWND Handle => _handle;
 
     static unsafe ushort RegisterClass(string className) {
         lock (_registeredClassesLock) {
@@ -54,8 +51,8 @@ abstract class Window : IDisposable {
             _ = RegisterClass(className);
 
             var createParam = (void*)GCHandle.ToIntPtr(_gch);
-            Trace.TraceInformation("CreateWindowEx createParam={0:x}", (nint)createParam);
-            _handle = PInvoke.CreateWindowEx(
+            Debug.WriteLine("CreateWindowEx createParam={0:x}", (nint)createParam);
+            var handle = PInvoke.CreateWindowEx(
                 0,
                 className,
                 windowName,
@@ -68,7 +65,7 @@ abstract class Window : IDisposable {
                 null,
                 PInvoke.GetModuleHandle(null),
                 createParam);
-            if (_handle == HWND.Null) {
+            if (handle == HWND.Null) {
                 throw new Win32Exception(nameof(PInvoke.CreateWindowEx));
             }
         }
@@ -76,7 +73,7 @@ abstract class Window : IDisposable {
 
     static Window? GetSelf(HWND hwnd) {
         var selfHandle = PInvoke.GetWindowLongPtr(hwnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA);
-        Trace.TraceInformation("GetSelf selfHandle={0}", selfHandle);
+        Debug.WriteLine("GetSelf selfHandle={0}", selfHandle);
         if (selfHandle == nint.Zero) {
             return null;
         }
@@ -87,7 +84,7 @@ abstract class Window : IDisposable {
 
     static LRESULT OnCreateNative(HWND hwnd, uint msg, WPARAM wparam, LPARAM lparam) {
         try {
-            Trace.TraceInformation("OnCreateNative lparam={0}", lparam);
+            Debug.WriteLine("OnCreateNative lparam={0}", lparam);
             ArgumentOutOfRangeException.ThrowIfZero(lparam.Value);
 
             nint createParam;
@@ -95,12 +92,11 @@ abstract class Window : IDisposable {
                 var createStruct = (CREATESTRUCTW*)lparam.Value;
                 createParam = (nint)createStruct->lpCreateParams;
             }
-            Trace.TraceInformation("OnCreateNative createParam={0:x}", createParam);
+            Debug.WriteLine("OnCreateNative createParam={0:x}", createParam);
             ArgumentOutOfRangeException.ThrowIfZero(createParam);
 
             var gch = GCHandle.FromIntPtr(createParam);
             var target = gch.Target as Window ?? throw new WindowLockException();
-            /// <see cref="Handle"/> is not yet usable at this point because CreateWindow has not finished
 
             Marshal.SetLastPInvokeError(0);
             if (PInvoke.SetWindowLongPtr(hwnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA, createParam) == 0) {
@@ -129,7 +125,7 @@ abstract class Window : IDisposable {
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
     static LRESULT WndProcNative(HWND hwnd, uint msg, WPARAM wparam, LPARAM lparam) {
-        Trace.TraceInformation(
+        Debug.WriteLine(
             "WndProcNative: {0} {1} {2} {3}",
             hwnd,
             msg,

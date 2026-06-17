@@ -67,15 +67,20 @@ sealed class ClipboardPipe : IDisposable {
     }
 
     public async Task SendAsync(string data, CancellationToken ct = default) {
-        await EnsureOpened(ct);
-        if (_pipe == null) {
-            throw new IOException("cannot connect to pipe");
+        try {
+            await EnsureOpened(ct);
+            if (_pipe == null) {
+                throw new IOException("cannot connect to pipe");
+            }
+            var msg = new ReportClipboardMessage() { Text = data };
+            var json = JsonSerializer.SerializeToUtf8Bytes(msg, ClipboardMessageContext.Default.ClientMessage);
+            var lengthBytes = BitConverter.GetBytes(json.Length);
+            await _pipe.WriteAsync(lengthBytes, ct);
+            await _pipe.WriteAsync(json, ct);
+        } catch (Exception ex) {
+            Trace.TraceInformation("pipe communication error: {0}", ex.ToString());
+            Dispose();
         }
-        var msg = new ReportClipboardMessage() { Text = data };
-        var json = JsonSerializer.SerializeToUtf8Bytes(msg, ClipboardMessageContext.Default.ClientMessage);
-        var lengthBytes = BitConverter.GetBytes(json.Length);
-        await _pipe.WriteAsync(lengthBytes, ct);
-        await _pipe.WriteAsync(json, ct);
     }
 
     public void Dispose() {

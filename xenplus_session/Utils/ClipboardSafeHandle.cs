@@ -95,7 +95,10 @@ sealed class ClipboardSafeHandle(HGLOBAL h, CLIPBOARD_FORMAT format, bool ownsHa
     /// </summary>
     public void SetClipboard() {
         using var shref = this.Borrow();
-        Check.Assert(ownsHandle && !IsClosed && !IsInvalid);
+        ObjectDisposedException.ThrowIf(IsClosed || IsInvalid, this);
+        if (!ownsHandle) {
+            throw new InvalidOperationException("cannot set clipboard with unowned handle");
+        }
         if (PInvoke.SetClipboardData((uint)format, (HANDLE)shref.DangerousHandle) == HANDLE.Null) {
             throw new Win32Exception(nameof(PInvoke.SetClipboardData));
         }
