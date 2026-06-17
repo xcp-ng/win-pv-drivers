@@ -28,10 +28,6 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
     <OptimizationPreference>Size</OptimizationPreference>
-
-    <!-- versioning -->
-    <AssemblyTitle>Xen session agent for Windows</AssemblyTitle>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
@@ -49,4 +45,15 @@
     <ProjectReference Include="..\xenplus_lib\xenplus_lib.csproj" />
   </ItemGroup>
 
+  <Target Name="XenCompileResources" BeforeTargets="BeforeBuild">
+    <PropertyGroup>
+      <XenRcExe Condition=" '$(XenRcExe)' == '' ">"$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots@KitsRoot10)bin\$(TargetPlatformVersion)\$(PlatformTarget)\rc.exe"</XenRcExe>
+      <Win32Resource>$(IntermediateOutputPath)Resource.res</Win32Resource>
+    </PropertyGroup>
+    <Exec Command="$(XenRcExe) /fo &quot;$(IntermediateOutputPath)Resource.res&quot; &quot;$(ProjectDir)Resource.rc&quot;" />
+  </Target>
+
+  <Target Name="XenGeneratedFiles" BeforeTargets="XenCompileResources">
+    <Exec Command="$(SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -noninteractive -executionpolicy bypass $(ProjectDir)scripts\genfiles.ps1 -ProjectDir $(ProjectDir)" />
+  </Target>
 </Project>

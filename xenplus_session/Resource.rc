@@ -1,0 +1,9 @@
+LANGUAGE    0x09, 0x01
+#pragma code_page(1252)
+
+#include "Branding.inc"
+
+// 24 = RT_MANIFEST
+2           24          app.manifest
+
+101         ICON        "xen.ico"
