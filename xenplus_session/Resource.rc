@@ -10,4 +10,12 @@ LANGUAGE    0x09, 0x01
 
 101     ICON    "xen.ico"
 
-101         ICON        "xen.ico"
+200     MENU
+{
+    POPUP   ""
+    {
+        MENUITEM    "&Hide", 201
+        MENUITEM    SEPARATOR
+        MENUITEM    "E&xit", 209
+    }
+}
