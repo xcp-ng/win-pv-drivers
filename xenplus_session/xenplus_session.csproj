@@ -8,6 +8,7 @@
     <RootNamespace>XenPlus</RootNamespace>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SupportedOSPlatformVersion>10.0.14393.0</SupportedOSPlatformVersion>
+    <Platforms>x64</Platforms>
 
     <!-- Native AOT -->
     <PublishAot>true</PublishAot>
