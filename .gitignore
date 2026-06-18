@@ -370,8 +370,8 @@ FodyWeavers.xsd
 /branding.ps1
 Branding.wxi
 Branding.cs
+Branding.inc
 /package/
-/XenBootFix/Branding.inc
 /package-*
 output/
 installer/driver-bins/
