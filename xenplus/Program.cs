@@ -14,7 +14,7 @@ class Program {
             Environment.SpecialFolder.CommonApplicationData,
             Environment.SpecialFolderOption.DoNotVerify)
             ?? throw new DirectoryNotFoundException("Environment.SpecialFolder.CommonApplicationData");
-        return Path.Combine(programData, "XCP-ng", "XenPlus");
+        return Path.Combine(programData, VersionInfo.VendorName, "XenPlus");
     }
 
     static void Main() {
