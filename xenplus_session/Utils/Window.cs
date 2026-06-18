@@ -73,7 +73,6 @@ abstract class Window : IDisposable {
 
     static Window? GetSelf(HWND hwnd) {
         var selfHandle = PInvoke.GetWindowLongPtr(hwnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA);
-        Debug.WriteLine("GetSelf selfHandle={0}", selfHandle);
         if (selfHandle == nint.Zero) {
             return null;
         }
@@ -125,12 +124,6 @@ abstract class Window : IDisposable {
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
     static LRESULT WndProcNative(HWND hwnd, uint msg, WPARAM wparam, LPARAM lparam) {
-        Debug.WriteLine(
-            "WndProcNative: {0} {1} {2} {3}",
-            hwnd,
-            msg,
-            wparam,
-            lparam);
         if (msg == PInvoke.WM_CREATE) {
             return OnCreateNative(hwnd, msg, wparam, lparam);
         } else {
