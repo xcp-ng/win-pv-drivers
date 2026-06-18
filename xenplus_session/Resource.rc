@@ -4,6 +4,10 @@ LANGUAGE    0x09, 0x01
 #include "Branding.inc"
 
 // 24 = RT_MANIFEST
-2           24          app.manifest
+// the manifest resource must also have an ID of CREATEPROCESS_MANIFEST_RESOURCE_ID (1)
+// this applies even if the VERSION resource also has an ID of 1
+1       24      app.manifest
+
+101     ICON    "xen.ico"
 
 101         ICON        "xen.ico"
