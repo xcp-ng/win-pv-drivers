@@ -2,6 +2,7 @@ INFINITE
 
 CreateWindowEx
 DefWindowProc
+DestroyWindow
 DispatchMessage
 GetModuleHandle
 GetWindowLongPtr

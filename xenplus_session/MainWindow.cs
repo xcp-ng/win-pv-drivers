@@ -17,17 +17,23 @@ sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main win
 
     readonly Lazy<AppConfig> _config = new();
 
-    bool _listened = false;
     readonly ClipboardPipe _pipe = new();
     readonly CancellationTokenSource _cts = new();
+
+    bool _listened = false;
     Task? _receiver = null;
+
     /// <summary>
     /// Was the last clipboard sequence number due to our own setting?
     /// </summary>
     uint _lastSeq = 0;
+
     bool _hasTrayIcon = false;
     readonly Lazy<DestroyMenuSafeHandle> _trayMenu = new(() => Resources.LoadMenu(Resources.TrayMenu));
+
     bool _showingAbout = false;
+
+    bool _closing = false;
 
     HMENU GetTrayMenu() {
         using var menuScope = _trayMenu.Value.Borrow();
@@ -72,6 +78,9 @@ sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main win
     }
 
     async void OnClipboardUpdate(HWND hwnd) {
+        if (!_listened) {
+            return;
+        }
         var seq = PInvoke.GetClipboardSequenceNumber();
         if (seq == _lastSeq) {
             return;
@@ -160,7 +169,10 @@ sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main win
         return (LRESULT)0;
     }
 
-    LRESULT OnDestroy(HWND hwnd) {
+    async void OnClose(HWND hwnd) {
+        if (Interlocked.Exchange(ref _closing, true)) {
+            return;
+        }
         _cts.Cancel();
         if (_trayMenu.IsValueCreated) {
             _trayMenu.Value.Dispose();
@@ -172,12 +184,13 @@ sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main win
             PInvoke.RemoveClipboardFormatListener(hwnd);
             _listened = false;
         }
-        try {
-            _receiver?.GetAwaiter().GetResult();
-        } catch {
+        if (Interlocked.Exchange(ref _receiver, null) is Task receiver) {
+            try {
+                await receiver;
+            } catch {
+            }
         }
-        PInvoke.PostQuitMessage(0);
-        return (LRESULT)0;
+        PInvoke.DestroyWindow(hwnd);
     }
 
     LRESULT OnContextMenu(HWND hwnd, uint msg, WPARAM wparam, LPARAM lparam) {
@@ -308,8 +321,12 @@ Package version: {HttpUtility.HtmlEncode(VersionInfo.ProductName)} {VersionInfo.
             case PInvoke.WM_QUERYENDSESSION:
                 PInvoke.SendMessage(hwnd, PInvoke.WM_CLOSE, 0, 0);
                 return (LRESULT)1;
+            case PInvoke.WM_CLOSE:
+                OnClose(hwnd);
+                return (LRESULT)0;
             case PInvoke.WM_DESTROY:
-                return OnDestroy(hwnd);
+                PInvoke.PostQuitMessage(0);
+                return (LRESULT)0;
             default:
                 return base.WndProc(hwnd, msg, wparam, lparam);
         }
