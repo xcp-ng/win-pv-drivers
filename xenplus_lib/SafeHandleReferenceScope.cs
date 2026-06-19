@@ -2,13 +2,13 @@ using System.Runtime.InteropServices;
 
 namespace XenPlus;
 
-public ref struct SafeHandleReferenceScope : IDisposable {
+public sealed class SafeHandleReferenceScope : IDisposable {
     readonly SafeHandle _h;
     bool _ref = false;
 #if DEBUG
     bool _disposed = false;
 
-    readonly void Validate() {
+    void Validate() {
         Check.DebugAssert(!_disposed);
     }
 #endif
@@ -18,7 +18,7 @@ public ref struct SafeHandleReferenceScope : IDisposable {
         _h.DangerousAddRef(ref _ref);
     }
 
-    public readonly nint DangerousHandle {
+    public nint DangerousHandle {
         get {
 #if DEBUG
             Validate();
