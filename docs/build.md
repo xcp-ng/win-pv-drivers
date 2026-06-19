@@ -65,6 +65,8 @@ $Env:MSI_UPGRADE_CODE_X86 = '{GUIDHERE-GUID-HERE-GUID-HEREGUIDHERE}'
 $Env:MSI_UPGRADE_CODE_X64 = '{GUIDHERE-GUID-HERE-GUID-HEREGUIDHERE}'
 
 $Env:SIGNER = "<signer certificate thumbprint or PFX path>"
+
+$Env:PRODUCT_URL = "<put your branding URL here>"
 ```
 
 Specify `$Env:SIGNER` in `branding.ps1` to choose a specific signing certificate thumbprint or PFX path if necessary.

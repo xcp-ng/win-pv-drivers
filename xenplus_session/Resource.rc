@@ -16,6 +16,7 @@ LANGUAGE    0x09, 0x01
     {
         MENUITEM    "&Hide", 201
         MENUITEM    SEPARATOR
+        MENUITEM    "A&bout", 208
         MENUITEM    "E&xit", 209
     }
 }

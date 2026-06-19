@@ -77,6 +77,7 @@ namespace XenPlus {
         public const string VendorName = "${Env:VENDOR_NAME}";
         public const string ProductName = "${Env:PRODUCT_NAME}";
         public const string Copyright = "${Env:COPYRIGHT}";
+        public const string ProductUrl = "${Env:PRODUCT_URL}";
     }
 }
 "@

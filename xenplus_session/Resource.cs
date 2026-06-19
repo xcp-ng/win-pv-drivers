@@ -11,6 +11,7 @@ static class Resources {
 
     public const ushort TrayMenu = 200;
     public const ushort TrayMenu_Hide = 201;
+    public const ushort TrayMenu_About = 208;
     public const ushort TrayMenu_Exit = 209;
 
     public static unsafe PCWSTR MAKEINTRESOURCE(ushort id) {

@@ -27,7 +27,8 @@ function Out-SafeString {
             "Guid",
             "Base64",
             "NumericBoolean",
-            "DriverVer"
+            "DriverVer",
+            "Uri"
         )]
         [string]$PatternType
     )
@@ -46,16 +47,27 @@ function Out-SafeString {
         "Base64"         = '^[a-z0-9+/=\r\n\t ]*$'
         "NumericBoolean" = '^[01]?$'
         "DriverVer"      = '^([0-9]{2}/[0-9]{2}/[0-9]{4},[0-9]+(\.[0-9]+){0,3})?$'
+        "Uri"            = '^[a-z0-9\-._~:/?#=@&+%]?$'
     }
 
     if ($InputObject -isnot [string]) {
         throw "Invalid input"
     }
-    $Pattern = $AllowedPatterns[$PatternType]
     if (!$PatternType) {
         throw "Invalid pattern type $PatternType"
     }
+    if ($PatternType -eq "Uri") {
+        $uri = $null;
+        if (![uri]::TryCreate($InputObject, [System.UriKind]::Absolute, [ref]$uri)) {
+            throw "Invalid input for pattern type $PatternType"
+        }
+        if ($uri.Scheme -notin @("http", "https")) {
+            throw "Invalid URI scheme $($uri.Scheme)"
+        }
+        return $uri.ToString();
+    }
 
+    $Pattern = $AllowedPatterns[$PatternType]
     if (!($InputObject -imatch $Pattern)) {
         throw "Invalid input for pattern type $PatternType"
     }

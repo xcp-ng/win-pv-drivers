@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Web;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.Ole;
@@ -26,6 +27,7 @@ sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main win
     uint _lastSeq = 0;
     bool _hasTrayIcon = false;
     readonly Lazy<DestroyMenuSafeHandle> _trayMenu = new(() => Resources.LoadMenu(Resources.TrayMenu));
+    bool _showingAbout = false;
 
     HMENU GetTrayMenu() {
         using var menuScope = _trayMenu.Value.Borrow();
@@ -159,6 +161,7 @@ sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main win
     }
 
     LRESULT OnDestroy(HWND hwnd) {
+        _cts.Cancel();
         if (_trayMenu.IsValueCreated) {
             _trayMenu.Value.Dispose();
         }
@@ -168,6 +171,10 @@ sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main win
         if (_listened) {
             PInvoke.RemoveClipboardFormatListener(hwnd);
             _listened = false;
+        }
+        try {
+            _receiver?.GetAwaiter().GetResult();
+        } catch {
         }
         PInvoke.PostQuitMessage(0);
         return (LRESULT)0;
@@ -208,6 +215,59 @@ sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main win
         }
     }
 
+    LRESULT OnAbout(HWND hwnd) {
+        if (_showingAbout) {
+            return (LRESULT)0;
+        }
+        _showingAbout = true;
+        try {
+            using var td = new TaskDialog();
+            using var hinst = PInvoke.GetModuleHandle(null);
+            using var hinstScope = hinst.Borrow();
+
+            td.Instance = (HINSTANCE)hinstScope.DangerousHandle;
+            td.EnableHyperlinks = true;
+            td.AllowDialogCancellation = true;
+            td.PositionRelativeToWindow = true;
+            td.CloseButton = true;
+
+            td.WindowTitle = "About";
+            td.MainInstruction = HttpUtility.HtmlEncode(VersionInfo.VendorName)
+                + " "
+                + HttpUtility.HtmlEncode(VersionInfo.Description);
+            td.Content = $@"Version: {VersionInfo.FileVersion}
+Package version: {HttpUtility.HtmlEncode(VersionInfo.ProductName)} {VersionInfo.ProductVersion}
+{HttpUtility.HtmlEncode(VersionInfo.Copyright)}";
+            unsafe {
+                td.MainIconResource = Resources.MAKEINTRESOURCE(Resources.Icon);
+            }
+
+            if (!string.IsNullOrEmpty(VersionInfo.ProductUrl)) {
+                td.Footer = $@"<a href=""{HttpUtility.HtmlAttributeEncode(VersionInfo.ProductUrl)}"">"
+                + HttpUtility.HtmlEncode(VersionInfo.ProductUrl)
+                + "</a>";
+            }
+
+            td.HyperlinkClicked += (sender, args) => {
+                try {
+                    if (Uri.TryCreate(args.Uri, UriKind.Absolute, out var uri)) {
+                        var psi = new ProcessStartInfo() {
+                            FileName = uri.ToString(),
+                            UseShellExecute = true,
+                        };
+                        Process.Start(psi)?.Dispose();
+                    }
+                } catch {
+                }
+            };
+
+            td.Show(false, _cts.Token);
+            return (LRESULT)0;
+        } finally {
+            _showingAbout = false;
+        }
+    }
+
     LRESULT OnCommand(HWND hwnd, uint msg, WPARAM wparam, LPARAM lparam) {
         if (HIWORD(wparam) != 0) {
             return base.WndProc(hwnd, msg, wparam, lparam);
@@ -221,6 +281,8 @@ sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main win
                 }
                 DestroyTrayIcon(hwnd);
                 return (LRESULT)0;
+            case Resources.TrayMenu_About:
+                return OnAbout(hwnd);
             case Resources.TrayMenu_Exit:
                 PInvoke.SendMessage(hwnd, PInvoke.WM_CLOSE, 0, 0);
                 return (LRESULT)0;
@@ -247,11 +309,6 @@ sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main win
                 PInvoke.SendMessage(hwnd, PInvoke.WM_CLOSE, 0, 0);
                 return (LRESULT)1;
             case PInvoke.WM_DESTROY:
-                _cts.Cancel();
-                try {
-                    _receiver?.GetAwaiter().GetResult();
-                } catch {
-                }
                 return OnDestroy(hwnd);
             default:
                 return base.WndProc(hwnd, msg, wparam, lparam);
