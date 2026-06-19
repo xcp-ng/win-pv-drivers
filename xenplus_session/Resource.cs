@@ -13,6 +13,10 @@ static class Resources {
     public const ushort TrayMenu_Hide = 201;
     public const ushort TrayMenu_Exit = 209;
 
+    public static unsafe PCWSTR MAKEINTRESOURCE(ushort id) {
+        return (PCWSTR)(char*)(nint)id;
+    }
+
     public static DestroyIconSafeHandle LoadIcon(ushort resourceId, bool large) {
         using var hinst = PInvoke.GetModuleHandle(null);
         using var hinstScope = hinst.Borrow();
@@ -20,7 +24,7 @@ static class Resources {
         unsafe {
             PInvoke.LoadIconMetric(
                 (HINSTANCE)hinstScope.DangerousHandle,
-                (PCWSTR)(char*)(nint)resourceId,
+                MAKEINTRESOURCE(resourceId),
                 large ? _LI_METRIC.LIM_LARGE : _LI_METRIC.LIM_SMALL,
                 &phicon).ThrowOnFailure();
         }
@@ -33,7 +37,7 @@ static class Resources {
         unsafe {
             var hmenu = PInvoke.LoadMenu(
                 (HINSTANCE)hinstScope.DangerousHandle,
-                (PCWSTR)(char*)(nint)resourceId);
+                MAKEINTRESOURCE(resourceId));
             if (hmenu == HMENU.Null) {
                 throw new Win32Exception(nameof(PInvoke.LoadMenu));
             }
