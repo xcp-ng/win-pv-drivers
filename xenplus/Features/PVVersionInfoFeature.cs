@@ -12,6 +12,7 @@ sealed class PVVersionInfoFeature(
     IOptionsMonitor<PVVersionInfoOptions> _options,
     XenIfaceSource _xi,
     ILogger<PVVersionInfoFeature> _logger) : FeatureBase(_hostLifetime, _logger) {
+    const uint _assert_ProductVersion = VersionInfo.ProductVersion == "" ? -1 : 0;
     readonly Version _productVer = Version.Parse(VersionInfo.ProductVersion);
 
     void Report(object? sender, XenIfaceResumedEventArgs args) {

@@ -9,6 +9,8 @@ static class ServiceKeys {
 }
 
 class Program {
+    const uint _assert_VendorName = VersionInfo.VendorName == "" ? -1 : 0;
+
     static string GetConfigDir() {
         var programData = Environment.GetFolderPath(
             Environment.SpecialFolder.CommonApplicationData,
