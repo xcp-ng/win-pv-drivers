@@ -44,11 +44,11 @@ sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main win
         return result;
     }
 
-    static ushort LOWORD(WPARAM value) => (ushort)(value.Value & 0xffff);
+    static ushort LOWORD(WPARAM value) => (ushort)(value & 0xffff);
     static ushort HIWORD(WPARAM value) => (ushort)((value >> 16) & 0xffff);
 
-    static short LOWORD(LPARAM value) => (short)(value.Value & 0xffff);
-    static short HIWORD(LPARAM value) => (short)((value >> 16) & 0xffff);
+    static ushort LOWORD(LPARAM value) => (ushort)(value & 0xffff);
+    static ushort HIWORD(LPARAM value) => (ushort)((value >> 16) & 0xffff);
 
     async Task ReceiveClipboard(HWND hwnd) {
         await foreach (var data in _pipe.ReceiveAsync(_cts.Token)) {
