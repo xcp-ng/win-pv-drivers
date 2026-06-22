@@ -57,7 +57,11 @@ sealed class OSInfoFeature(
             h.StoreWrite("data/os_name", osInfo.Caption);
             h.StoreWrite("data/host_name", Environment.MachineName);
             h.StoreWrite("data/host_name_dns", Dns.GetHostName());
-            h.StoreWrite("data/domain", osInfo.DomainNameDns ?? osInfo.DomainNameFlat);
+            if (!string.IsNullOrEmpty(osInfo.DomainNameDns)) {
+                h.StoreWrite("data/domain", osInfo.DomainNameDns);
+            } else {
+                h.StoreRemove("data/domain");
+            }
         } catch (XenIfaceNotFoundException) {
         } catch (Exception ex) {
             _logger.LogError(ex, "{} report error", nameof(OSInfoFeature));
