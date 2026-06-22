@@ -52,6 +52,7 @@ sealed class ClipboardFeature(
     const int ClientChunkSize = 1024;
     const int MaxIncomingMessageSize = ClientChunkSize * MaxClipboardChunks;
     const int ClientTimeoutMilliseconds = 5000;
+    const int ReportTimeoutMilliseconds = 5000;
 
     static readonly Lazy<LocalFreeSafeHandle> _secure = new(static () => {
         if (!PInvoke.ConvertStringSecurityDescriptorToSecurityDescriptor(
@@ -129,7 +130,7 @@ sealed class ClipboardFeature(
                     _logger.LogDebug("ReportClipboard length {}", reportClipboard?.Text?.Length ?? 0);
 
                     foreach (var chunk in (reportClipboard?.Text ?? "").Chunk(ClientChunkSize).Append([])) {
-                        var wait = _reportClipboard!.WaitOneAsync(ClientTimeoutMilliseconds, 1, ct);
+                        var wait = _reportClipboard!.WaitOneAsync(ReportTimeoutMilliseconds, 1, ct);
                         using (var h = _xi.Lock()) {
                             h.StoreWrite(ReportClipboardPath, new(chunk), false);
                         }
