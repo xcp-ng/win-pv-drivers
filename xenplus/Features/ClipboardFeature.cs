@@ -69,7 +69,7 @@ sealed class ClipboardFeature(
     XenIfaceWatch? _reportClipboard = null;
 
     /// <summary>
-    /// For active clients
+    /// count of active clients
     /// </summary>
     readonly ReferenceCount _active = new();
 
@@ -88,7 +88,7 @@ sealed class ClipboardFeature(
     /// </summary>
     readonly Queue<string> _setClipboardChunks = [];
 
-    async Task ServeClientLoop(uint sid, ClipboardClient client, CancellationToken ct = default) {
+    async Task ServeClientLoopAsync(uint sid, ClipboardClient client, CancellationToken ct = default) {
         try {
             while (!ct.IsCancellationRequested) {
                 var lengthBytes = new byte[sizeof(int)];
@@ -135,7 +135,7 @@ sealed class ClipboardFeature(
         }
     }
 
-    async Task ServeClient(NamedPipeServerStream pipe, CancellationToken ct = default) {
+    async Task ServeClientAsync(NamedPipeServerStream pipe, CancellationToken ct = default) {
         using var lifetime = _active.EnterScope();
         using var client = new ClipboardClient(pipe, ct);
         uint sid;
@@ -156,7 +156,7 @@ sealed class ClipboardFeature(
         }
 
         try {
-            await ServeClientLoop(sid, client, client.CancellationTokenSource.Token);
+            await ServeClientLoopAsync(sid, client, client.CancellationTokenSource.Token);
         } catch (Exception ex) {
             _logger.LogWarning(ex, "Failed to serve client {}", sid);
         } finally {
@@ -172,8 +172,9 @@ sealed class ClipboardFeature(
         }
     }
 
-    async Task<(ClipboardClient, SetClipboardMessage, SemaphoreScope)?> GetClientOnSetClipboard(CancellationToken ct) {
-        // ensure that the collection runs serialized
+    async Task<(ClipboardClient, SetClipboardMessage, SemaphoreScope)?> LockClientOnSetClipboardAsync(
+        CancellationToken ct) {
+        // we don't want two consecutive SetClipboard handlers to overlap
         using var scope = await _lock.EnterScopeAsync(ct);
 
         using (var h = _xi.Lock()) {
@@ -229,8 +230,8 @@ sealed class ClipboardFeature(
     /// <summary>
     /// attention: runs in off-thread
     /// </summary>
-    async Task OnSetClipboard(object? sender, XenIfaceWatchEventArgs args, CancellationToken ct = default) {
-        var found = await GetClientOnSetClipboard(ct);
+    async Task OnSetClipboardAsync(object? sender, XenIfaceWatchEventArgs args, CancellationToken ct = default) {
+        var found = await LockClientOnSetClipboardAsync(ct);
         if (found == null) {
             return;
         }
@@ -273,18 +274,18 @@ sealed class ClipboardFeature(
 
         async void onSetClipboard(object? sender, XenIfaceWatchEventArgs args) {
             try {
-                await OnSetClipboard(sender, args, stoppingToken);
+                await OnSetClipboardAsync(sender, args, stoppingToken);
             } catch (OperationCanceledException) {
             } catch (Exception ex) {
                 // GetClientOnSetClipboard exploding can't be good news
-                Environment.FailFast(nameof(OnSetClipboard), ex);
+                Environment.FailFast(nameof(OnSetClipboardAsync), ex);
             }
         }
 
         bool watched = false;
         try {
-            Interlocked.Exchange(ref _setClipboard, _xi.WatchAdd(SetClipboardPath));
-            Interlocked.Exchange(ref _reportClipboard, _xi.WatchAdd(ReportClipboardPath));
+            _setClipboard = _xi.WatchAdd(SetClipboardPath);
+            _reportClipboard = _xi.WatchAdd(ReportClipboardPath);
             _setClipboard.WatchTriggered += onSetClipboard;
             watched = true;
 
@@ -310,15 +311,17 @@ sealed class ClipboardFeature(
                     pipe.Dispose();
                     throw;
                 }
-                _ = ServeClient(pipe, stoppingToken);
+                _ = ServeClientAsync(pipe, stoppingToken);
             }
         } finally {
             if (watched) {
                 _setClipboard!.WatchTriggered -= onSetClipboard;
             }
             await _active.WaitAsync(Timeout.InfiniteTimeSpan, CancellationToken.None);
-            Interlocked.Exchange(ref _reportClipboard, null)?.Dispose();
-            Interlocked.Exchange(ref _setClipboard, null)?.Dispose();
+            _reportClipboard?.Dispose();
+            _reportClipboard = null;
+            _setClipboard?.Dispose();
+            _setClipboard = null;
         }
     }
 }

@@ -10,7 +10,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace XenPlus;
 
-sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main window") {
+sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_session main window") {
     const int MaxClipboardSize = 100000;
     const int NotifyIconId = 1;
     const uint TrayMenuMessage = PInvoke.WM_APP;
@@ -50,7 +50,7 @@ sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main win
     static ushort LOWORD(LPARAM value) => (ushort)(value & 0xffff);
     static ushort HIWORD(LPARAM value) => (ushort)((value >> 16) & 0xffff);
 
-    async Task ReceiveClipboard(HWND hwnd) {
+    async Task ReceiveClipboardAsync(HWND hwnd) {
         await foreach (var data in _pipe.ReceiveAsync(_cts.Token)) {
             bool opened = false;
             try {
@@ -77,7 +77,7 @@ sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main win
         }
     }
 
-    async void OnClipboardUpdate(HWND hwnd) {
+    async void OnClipboardUpdateAsync(HWND hwnd) {
         if (!_listened) {
             return;
         }
@@ -112,6 +112,7 @@ sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main win
     void CreateTrayIcon(HWND hwnd) {
         using var hicon = Resources.LoadIcon(Resources.Icon, false);
         using var hiconScope = hicon.Borrow();
+
         var notifyData = new NOTIFYICONDATAW() {
             cbSize = (uint)Unsafe.SizeOf<NOTIFYICONDATAW>(),
             hWnd = hwnd,
@@ -129,6 +130,7 @@ sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main win
             throw new Exception("cannot create tray icon");
         }
         _hasTrayIcon = true;
+
         try {
             if (!PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_SETVERSION, notifyData)) {
                 throw new Exception("cannot set tray icon version");
@@ -157,7 +159,7 @@ sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main win
             throw new Win32Exception(nameof(PInvoke.AddClipboardFormatListener));
         }
         _listened = true;
-        _receiver = ReceiveClipboard(hwnd);
+        _receiver = ReceiveClipboardAsync(hwnd);
 
         if (_config.Value.ShowTrayIcon) {
             try {
@@ -169,7 +171,7 @@ sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main win
         return (LRESULT)0;
     }
 
-    async void OnClose(HWND hwnd) {
+    async void OnCloseAsync(HWND hwnd) {
         if (Interlocked.Exchange(ref _closing, true)) {
             return;
         }
@@ -244,21 +246,26 @@ sealed class MainWindow() : Window(nameof(MainWindow), "xenplus_session main win
             td.PositionRelativeToWindow = true;
             td.CloseButton = true;
 
-            td.WindowTitle = "About";
-            td.MainInstruction = HttpUtility.HtmlEncode(VersionInfo.VendorName)
-                + " "
-                + HttpUtility.HtmlEncode(VersionInfo.Description);
-            td.Content = $@"Version: {VersionInfo.FileVersion}
-Package version: {HttpUtility.HtmlEncode(VersionInfo.ProductName)} {VersionInfo.ProductVersion}
-{HttpUtility.HtmlEncode(VersionInfo.Copyright)}";
+            td.WindowTitle = $"About {VersionInfo.ProductName}";
+
+            td.MainInstruction = HttpUtility.HtmlEncode(VersionInfo.VendorName) +
+                " " +
+                HttpUtility.HtmlEncode(VersionInfo.Description);
+
+            td.Content = $"""
+            Version: {VersionInfo.FileVersion}
+            Package version: {HttpUtility.HtmlEncode(VersionInfo.ProductName)} {VersionInfo.ProductVersion}
+            {HttpUtility.HtmlEncode(VersionInfo.Copyright)}
+            """;
+
             unsafe {
                 td.MainIconResource = Resources.MAKEINTRESOURCE(Resources.Icon);
             }
 
             if (!string.IsNullOrEmpty(VersionInfo.ProductUrl)) {
-                td.Footer = $@"<a href=""{HttpUtility.HtmlAttributeEncode(VersionInfo.ProductUrl)}"">"
-                + HttpUtility.HtmlEncode(VersionInfo.ProductUrl)
-                + "</a>";
+                td.Footer = $@"<a href=""{HttpUtility.HtmlAttributeEncode(VersionInfo.ProductUrl)}"">" +
+                    HttpUtility.HtmlEncode(VersionInfo.ProductUrl) +
+                    "</a>";
             }
 
             td.HyperlinkClicked += (sender, args) => {
@@ -309,7 +316,7 @@ Package version: {HttpUtility.HtmlEncode(VersionInfo.ProductName)} {VersionInfo.
             case PInvoke.WM_CREATE:
                 return OnCreate(hwnd, msg, wparam, lparam);
             case PInvoke.WM_CLIPBOARDUPDATE:
-                OnClipboardUpdate(hwnd);
+                OnClipboardUpdateAsync(hwnd);
                 return (LRESULT)0;
             case TrayMenuMessage:
                 return (uint)LOWORD(lparam) switch {
@@ -322,7 +329,7 @@ Package version: {HttpUtility.HtmlEncode(VersionInfo.ProductName)} {VersionInfo.
                 PInvoke.SendMessage(hwnd, PInvoke.WM_CLOSE, 0, 0);
                 return (LRESULT)1;
             case PInvoke.WM_CLOSE:
-                OnClose(hwnd);
+                OnCloseAsync(hwnd);
                 return (LRESULT)0;
             case PInvoke.WM_DESTROY:
                 PInvoke.PostQuitMessage(0);

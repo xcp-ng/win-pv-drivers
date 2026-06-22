@@ -37,7 +37,9 @@ class TaskDialog : IDisposable {
 
     public bool IsBusy => _busy;
 
-    public delegate void TaskDialogHyperlinkClickedEventHandler(object? sender, TaskDialogHyperlinkClickedEventArgs args);
+    public delegate void TaskDialogHyperlinkClickedEventHandler(
+        object? sender,
+        TaskDialogHyperlinkClickedEventArgs args);
     public event TaskDialogHyperlinkClickedEventHandler? HyperlinkClicked;
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
