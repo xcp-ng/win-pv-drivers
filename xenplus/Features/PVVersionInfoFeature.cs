@@ -36,16 +36,30 @@ sealed class PVVersionInfoFeature(
         }
     }
 
-    protected override async Task ExecuteFeatureAsync(CancellationToken stoppingToken) {
-        if (!_options.CurrentValue.Enabled) {
-            return;
-        }
-        _xi.Resumed += Report;
+    void Cleanup() {
         try {
-            Report(null, new());
-            await Task.Delay(Timeout.Infinite, stoppingToken);
+            using var h = _xi.Lock();
+
+            h.StoreRemove("attr/PVAddons");
+        } catch (Exception ex) {
+            _logger.LogDebug(ex, "{} cleanup error", nameof(PVVersionInfoFeature));
+        }
+    }
+
+    protected override async Task ExecuteFeatureAsync(CancellationToken stoppingToken) {
+        try {
+            if (!_options.CurrentValue.Enabled) {
+                return;
+            }
+            _xi.Resumed += Report;
+            try {
+                Report(null, new());
+                await Task.Delay(Timeout.Infinite, stoppingToken);
+            } finally {
+                _xi.Resumed -= Report;
+            }
         } finally {
-            _xi.Resumed -= Report;
+            Cleanup();
         }
     }
 }

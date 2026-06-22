@@ -43,13 +43,28 @@ sealed class MemoryInfoFeature(
         }
     }
 
-    protected override async Task ExecuteFeatureAsync(CancellationToken stoppingToken) {
-        if (!_options.CurrentValue.Enabled) {
-            return;
+    void Cleanup() {
+        try {
+            using var h = _xi.Lock();
+
+            h.StoreRemove("data/meminfo_total");
+            h.StoreRemove("data/meminfo_free");
+        } catch (Exception ex) {
+            _logger.LogDebug(ex, "{} cleanup error", nameof(MemoryInfoFeature));
         }
-        while (!stoppingToken.IsCancellationRequested) {
-            Report();
-            await Task.Delay(TimeSpan.FromSeconds(_options.CurrentValue.ReportIntervalSeconds), stoppingToken);
+    }
+
+    protected override async Task ExecuteFeatureAsync(CancellationToken stoppingToken) {
+        try {
+            if (!_options.CurrentValue.Enabled) {
+                return;
+            }
+            while (!stoppingToken.IsCancellationRequested) {
+                Report();
+                await Task.Delay(TimeSpan.FromSeconds(_options.CurrentValue.ReportIntervalSeconds), stoppingToken);
+            }
+        } finally {
+            Cleanup();
         }
     }
 }
