@@ -16,6 +16,7 @@ sealed class ClipboardOptions {
 sealed class ClipboardClient(NamedPipeServerStream _stream, CancellationToken _ct = default) : IDisposable {
     public NamedPipeServerStream Stream => _stream;
     public SemaphoreSlim WriteLock { get; } = new(1, 1);
+    public ReferenceCount References { get; } = new();
     public CancellationTokenSource CancellationTokenSource { get; }
         = CancellationTokenSource.CreateLinkedTokenSource(_ct);
 
@@ -136,7 +137,10 @@ sealed class ClipboardFeature(
     }
 
     async Task ServeClientAsync(NamedPipeServerStream pipe, CancellationToken ct = default) {
-        using var lifetime = _active.EnterScope();
+        using var lifetime = _active.TryEnterScope();
+        if (lifetime == null) {
+            return;
+        }
         using var client = new ClipboardClient(pipe, ct);
         uint sid;
 
@@ -162,17 +166,24 @@ sealed class ClipboardFeature(
         } finally {
             // the main loop doesn't need to be inside the main lock, only the final destruction does, because
             // ServeClient holds ownership of the client object
-            client.CancellationTokenSource.Cancel();
-            using var scope = await _lock.EnterScopeAsync(CancellationToken.None);
-            if (_clients.TryGetValue(sid, out var existing) && ReferenceEquals(existing, client)) {
-                _clients.Remove(sid);
+            using (var scope = await _lock.EnterScopeAsync(CancellationToken.None)) {
+                if (_clients.TryGetValue(sid, out var existing) && ReferenceEquals(existing, client)) {
+                    _clients.Remove(sid);
+                }
+                // Make the client undiscoverable and reject new OnSetClipboard users before cancellation. Canceling
+                // first would leave a window where a set_clipboard handler can select a canceled client and consume the
+                // message. BeginRundown must stay under _lock so lookup and reference acquisition are atomic with
+                // teardown.
+                client.References.BeginRundown();
             }
-            // drain OnSetClipboard too
-            using var clientScope = await client.WriteLock.EnterScopeAsync(CancellationToken.None);
+            // Cancel outside _lock: cancellation can synchronously run callbacks or wake continuations. Existing
+            // OnSetClipboard users hold rundown references and are drained below before the client is disposed.
+            client.CancellationTokenSource.Cancel();
+            await client.References.WaitAsync(Timeout.InfiniteTimeSpan, CancellationToken.None);
         }
     }
 
-    async Task<(ClipboardClient, SetClipboardMessage, SemaphoreScope)?> LockClientOnSetClipboardAsync(
+    async Task<(ClipboardClient, SetClipboardMessage, CountedReference)?> LockClientOnSetClipboardAsync(
         CancellationToken ct) {
         // we don't want two consecutive SetClipboard handlers to overlap
         using var scope = await _lock.EnterScopeAsync(ct);
@@ -220,11 +231,13 @@ sealed class ClipboardFeature(
             }
         }
 
-        // we want to avoid holding the global lock when using the client pipe
-        // at the same time, we want to make sure that OnSetClipboard cannot use a dying client after ServeClient has
-        // begun to tear it down
-        // so we make the client lock partially overlap the global lock while respecting the lock order
-        return (client, msg, await client.WriteLock.EnterScopeAsync(client.CancellationTokenSource.Token));
+        // We want to avoid holding the global lock when using the client pipe. Take a rundown reference while still
+        // under the global lock so ServeClient cannot dispose the client after we release it.
+        var clientReference = client.References.TryEnterScope();
+        if (clientReference == null) {
+            return null;
+        }
+        return (client, msg, clientReference);
     }
 
     /// <summary>
@@ -235,10 +248,11 @@ sealed class ClipboardFeature(
         if (found == null) {
             return;
         }
-        var (client, msg, clientScope) = found.Value;
+        var (client, msg, clientReference) = found.Value;
 
         try {
-            using (clientScope) {
+            using (clientReference) {
+                using var clientScope = await client.WriteLock.EnterScopeAsync(client.CancellationTokenSource.Token);
                 var json = JsonSerializer.SerializeToUtf8Bytes(
                     msg,
                     ClipboardMessageContext.Default.ServerMessage);

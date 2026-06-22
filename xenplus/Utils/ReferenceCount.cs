@@ -4,18 +4,23 @@ sealed class ReferenceCount {
     readonly Lock _lock = new();
     TaskCompletionSource _tcs;
     int _count = 0;
+    bool _rundown = false;
 
     public ReferenceCount() {
         _tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
         _tcs.SetResult();
     }
 
-    public void Acquire() {
+    public bool TryAcquire() {
         lock (_lock) {
+            if (_rundown) {
+                return false;
+            }
             if (_count == 0) {
                 _tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
             }
             _count++;
+            return true;
         }
     }
 
@@ -36,8 +41,22 @@ sealed class ReferenceCount {
         await task.WaitAsync(timeout, cancellationToken);
     }
 
-    public CountedReference EnterScope() {
-        return new(this);
+    public void BeginRundown() {
+        lock (_lock) {
+            _rundown = true;
+            if (_count == 0) {
+                _tcs.TrySetResult();
+            }
+        }
+    }
+
+    public async Task RundownAsync(TimeSpan timeout, CancellationToken cancellationToken) {
+        BeginRundown();
+        await WaitAsync(timeout, cancellationToken);
+    }
+
+    public CountedReference? TryEnterScope() {
+        return TryAcquire() ? new(this, true) : null;
     }
 }
 
@@ -45,9 +64,9 @@ sealed class CountedReference : IDisposable {
     readonly ReferenceCount _parent;
     bool _acquired = false;
 
-    public CountedReference(ReferenceCount parent) {
+    internal CountedReference(ReferenceCount parent, bool acquired) {
+        Check.Assert(acquired, "CountedReference can only adopt an acquired reference");
         _parent = parent;
-        _parent.Acquire();
         _acquired = true;
     }
 
