@@ -81,7 +81,7 @@ sealed class ClipboardFeature(
     XenIfaceWatch? _reportClipboard = null;
 
     /// <summary>
-    /// count of active <see cref="ServeClientAsync"/> tasks
+    /// count of active async tasks
     /// </summary>
     readonly ReferenceCount _active = new();
 
@@ -153,6 +153,7 @@ sealed class ClipboardFeature(
     async Task ServeClientAsync(NamedPipeServerStream pipe, CancellationToken ct = default) {
         using var lifetime = _active.TryEnterScope();
         if (lifetime == null) {
+            pipe.Dispose();
             return;
         }
         using var client = new ClipboardClient(pipe, ct);
@@ -258,6 +259,11 @@ sealed class ClipboardFeature(
     /// attention: runs in off-thread
     /// </summary>
     async Task OnSetClipboardAsync(object? sender, XenIfaceWatchEventArgs args, CancellationToken ct = default) {
+        using var lifetime = _active.TryEnterScope();
+        if (lifetime == null) {
+            return;
+        }
+
         var found = await LockClientOnSetClipboardAsync(ct);
         if (found == null) {
             return;
@@ -273,7 +279,7 @@ sealed class ClipboardFeature(
                 var lengthBytes = BitConverter.GetBytes(json.Length);
 
                 using var timeout = CancellationTokenSource.CreateLinkedTokenSource(
-                    client.CancellationTokenSource.Token);
+                    client.CancellationTokenSource.Token, ct);
                 timeout.CancelAfter(ClientTimeoutMilliseconds);
 
                 using var clientScope = await client.WriteLock.EnterScopeAsync(timeout.Token);
@@ -352,7 +358,7 @@ sealed class ClipboardFeature(
             if (watched) {
                 _setClipboard!.WatchTriggered -= onSetClipboard;
             }
-            await _active.WaitAsync(Timeout.InfiniteTimeSpan, CancellationToken.None);
+            await _active.RundownAsync(Timeout.InfiniteTimeSpan, CancellationToken.None);
             _reportClipboard?.Dispose();
             _reportClipboard = null;
             _setClipboard?.Dispose();
