@@ -60,16 +60,7 @@ sealed class ReferenceCount {
     }
 }
 
-sealed class CountedReference : IDisposable {
-    readonly ReferenceCount _parent;
-    bool _acquired = false;
-
-    internal CountedReference(ReferenceCount parent, bool acquired) {
-        Check.Assert(acquired, "CountedReference can only adopt an acquired reference");
-        _parent = parent;
-        _acquired = true;
-    }
-
+sealed class CountedReference(ReferenceCount _parent, bool _acquired) : IDisposable {
     public void Dispose() {
         if (Interlocked.Exchange(ref _acquired, false) == false) {
             return;
