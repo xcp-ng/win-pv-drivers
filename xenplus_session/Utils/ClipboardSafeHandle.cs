@@ -39,7 +39,7 @@ sealed class ClipboardSafeHandle(HGLOBAL h, CLIPBOARD_FORMAT format, bool ownsHa
                     }
 
                     var chars = new Span<char>(locked, (int)size / sizeof(char));
-                    var zero = chars.IndexOf('0');
+                    var zero = chars.IndexOf('\0');
                     if (zero >= 0) {
                         chars = chars[..zero];
                     }
