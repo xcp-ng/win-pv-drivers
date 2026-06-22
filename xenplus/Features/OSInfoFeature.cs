@@ -49,8 +49,8 @@ sealed class OSInfoFeature(
                 ServerUtils.NormalizeVersion(Environment.OSVersion.Version.Minor) +
                 "." +
                 ServerUtils.NormalizeVersion(Environment.OSVersion.Version.Build);
-            if (osInfo.LCUVer.HasValue) {
-                uname += "." + osInfo.LCUVer.ToString();
+            if (osInfo.WindowsRevision.HasValue) {
+                uname += "." + osInfo.WindowsRevision.ToString();
             }
             h.StoreWrite("data/os_uname", uname);
 

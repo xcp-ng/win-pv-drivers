@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices.Marshalling;
-using System.Text.RegularExpressions;
 using Microsoft.Win32;
 using Windows.Win32;
 using Windows.Win32.Networking.ActiveDirectory;
@@ -13,7 +12,7 @@ sealed class OSInfo {
     public required string DomainNameFlat { get; init; }
     public string? DomainNameDns { get; init; } = null;
     public string? DomainForestName { get; init; } = null;
-    public int? LCUVer { get; init; } = null;
+    public int? WindowsRevision { get; init; } = null;
 }
 
 /// <summary>
@@ -30,27 +29,15 @@ sealed partial class OSInfoService(
         }
     }
 
-    [GeneratedRegex(@"^[0-9]+\.[0-9]+\.[0-9]+\.([0-9]+)")]
-    private static partial Regex LCUVerRegex { get; }
-
-    static int? GetLCUVer() {
-        // According to a MS guy, registry is the most reliable way to get the CurrentBuildNumber and LCUVer.
-        // Not sure if RtlGetVersion reports the right build number that we want, but we'll see.
+    static int? GetWindowsRevision() {
         using var versionKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion");
         if (versionKey == null) {
             return null;
         }
-        if (versionKey.GetValue("LCUVer") is not string lcuVer) {
+        if (versionKey.GetValue("UBR") is not int ubr || ubr < 0) {
             return null;
         }
-        var match = LCUVerRegex.Match(lcuVer);
-        if (!match.Success) {
-            return null;
-        }
-        if (!int.TryParse(match.Groups[1].ValueSpan, out var buildNumber)) {
-            return null;
-        }
-        return buildNumber;
+        return ubr;
     }
 
     public OSInfo Query() {
@@ -60,7 +47,7 @@ sealed partial class OSInfoService(
         var DomainNameFlat = "";
         string? DomainNameDns = null;
         string? DomainForestName = null;
-        int? LCUVer = null;
+        int? WindowsRevision = null;
 
         try {
             if (_cimv2.ExecQuery("SELECT * FROM Win32_OperatingSystem").FirstOrDefault() is IWbemClassObject os) {
@@ -82,9 +69,9 @@ sealed partial class OSInfoService(
         }
 
         try {
-            LCUVer = GetLCUVer();
+            WindowsRevision = GetWindowsRevision();
         } catch (Exception ex) {
-            _logger.LogError(ex, "Cannot query build number info");
+            _logger.LogError(ex, "Cannot query Windows revision info");
         }
 
         return new OSInfo() {
@@ -93,7 +80,7 @@ sealed partial class OSInfoService(
             DomainNameFlat = DomainNameFlat,
             DomainNameDns = DomainNameDns,
             DomainForestName = DomainForestName,
-            LCUVer = LCUVer,
+            WindowsRevision = WindowsRevision,
         };
     }
 }
