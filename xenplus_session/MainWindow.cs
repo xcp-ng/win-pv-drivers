@@ -333,6 +333,13 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
                 };
             case PInvoke.WM_COMMAND:
                 return OnCommand(hwnd, msg, wparam, lparam);
+            case PInvoke.WM_WINDOWPOSCHANGING:
+                unsafe {
+                    if (lparam != 0) {
+                        ((WINDOWPOS*)lparam.Value)->flags &= ~SET_WINDOW_POS_FLAGS.SWP_SHOWWINDOW;
+                    }
+                }
+                return base.WndProc(hwnd, msg, wparam, lparam);
             case PInvoke.WM_QUERYENDSESSION:
                 PInvoke.SendMessage(hwnd, PInvoke.WM_CLOSE, 0, 0);
                 return (LRESULT)1;
