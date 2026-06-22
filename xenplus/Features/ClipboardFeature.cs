@@ -20,6 +20,11 @@ sealed class ClipboardClient(NamedPipeServerStream _stream, CancellationToken _c
     public CancellationTokenSource CancellationTokenSource { get; }
         = CancellationTokenSource.CreateLinkedTokenSource(_ct);
 
+    public void Kill() {
+        CancellationTokenSource.Cancel();
+        Stream.Dispose();
+    }
+
     public void Dispose() {
         Stream.Dispose();
         WriteLock.Dispose();
@@ -46,6 +51,7 @@ sealed class ClipboardFeature(
     const int MaxClipboardChunks = 100;
     const int ClientChunkSize = 1024;
     const int MaxIncomingMessageSize = ClientChunkSize * MaxClipboardChunks;
+    const int ClientTimeoutMilliseconds = 5000;
 
     static readonly Lazy<LocalFreeSafeHandle> _secure = new(static () => {
         if (!PInvoke.ConvertStringSecurityDescriptorToSecurityDescriptor(
@@ -123,7 +129,7 @@ sealed class ClipboardFeature(
                     _logger.LogDebug("ReportClipboard length {}", reportClipboard?.Text?.Length ?? 0);
 
                     foreach (var chunk in (reportClipboard?.Text ?? "").Chunk(ClientChunkSize).Append([])) {
-                        var wait = _reportClipboard!.WaitOneAsync(5000, 1, ct);
+                        var wait = _reportClipboard!.WaitOneAsync(ClientTimeoutMilliseconds, 1, ct);
                         using (var h = _xi.Lock()) {
                             h.StoreWrite(ReportClipboardPath, new(chunk), false);
                         }
@@ -178,7 +184,7 @@ sealed class ClipboardFeature(
             }
             // Cancel outside _lock: cancellation can synchronously run callbacks or wake continuations. Existing
             // OnSetClipboard users hold rundown references and are drained below before the client is disposed.
-            client.CancellationTokenSource.Cancel();
+            client.Kill();
             await client.References.WaitAsync(Timeout.InfiniteTimeSpan, CancellationToken.None);
         }
     }
@@ -250,21 +256,27 @@ sealed class ClipboardFeature(
         }
         var (client, msg, clientReference) = found.Value;
 
-        try {
-            using (clientReference) {
-                using var clientScope = await client.WriteLock.EnterScopeAsync(client.CancellationTokenSource.Token);
+        using (clientReference) {
+            try {
                 var json = JsonSerializer.SerializeToUtf8Bytes(
                     msg,
                     ClipboardMessageContext.Default.ServerMessage);
                 var lengthBytes = BitConverter.GetBytes(json.Length);
-                await client.Stream.WriteAsync(lengthBytes, client.CancellationTokenSource.Token);
-                await client.Stream.WriteAsync(json, client.CancellationTokenSource.Token);
+
+                using var timeout = CancellationTokenSource.CreateLinkedTokenSource(
+                    client.CancellationTokenSource.Token);
+                timeout.CancelAfter(ClientTimeoutMilliseconds);
+
+                using var clientScope = await client.WriteLock.EnterScopeAsync(timeout.Token);
+                await client.Stream.WriteAsync(lengthBytes, timeout.Token);
+                await client.Stream.WriteAsync(json, timeout.Token);
+            } catch (OperationCanceledException) {
+                client.Kill();
+            } catch (Exception ex) {
+                _logger.LogDebug(ex, "Client threw exception");
+                // let the main task handle removing the client
+                client.Kill();
             }
-        } catch (OperationCanceledException) {
-        } catch (Exception ex) {
-            _logger.LogDebug(ex, "Client threw exception");
-            // let the main task handle removing the client
-            client.CancellationTokenSource.Cancel();
         }
     }
 
