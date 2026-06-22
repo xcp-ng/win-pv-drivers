@@ -44,7 +44,15 @@ sealed class OSInfoFeature(
             h.StoreWrite("data/os_minorver", ServerUtils.NormalizeVersion(Environment.OSVersion.Version.Minor));
             h.StoreWrite("data/os_buildver", ServerUtils.NormalizeVersion(Environment.OSVersion.Version.Build));
 
-            h.StoreWrite("data/os_uname", Environment.OSVersion.Version.ToString());
+            var uname = ServerUtils.NormalizeVersion(Environment.OSVersion.Version.Major) +
+                "." +
+                ServerUtils.NormalizeVersion(Environment.OSVersion.Version.Minor) +
+                "." +
+                ServerUtils.NormalizeVersion(Environment.OSVersion.Version.Build);
+            if (osInfo.LCUVer.HasValue) {
+                uname += "." + osInfo.LCUVer.ToString();
+            }
+            h.StoreWrite("data/os_uname", uname);
 
             h.StoreWrite("data/os_name", osInfo.Caption);
             h.StoreWrite("data/host_name", Environment.MachineName);
