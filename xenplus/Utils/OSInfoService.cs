@@ -1,17 +1,14 @@
 using System.Runtime.InteropServices.Marshalling;
 using Microsoft.Win32;
 using Windows.Win32;
-using Windows.Win32.Networking.ActiveDirectory;
 using Windows.Win32.System.Wmi;
 
 namespace XenPlus;
 
 sealed class OSInfo {
     public required string Caption { get; init; }
-    public required bool IsDomainJoined { get; init; }
     public required string DomainNameFlat { get; init; }
     public string? DomainNameDns { get; init; } = null;
-    public string? DomainForestName { get; init; } = null;
     public int? WindowsRevision { get; init; } = null;
 }
 
@@ -43,10 +40,8 @@ sealed partial class OSInfoService(
     public OSInfo Query() {
         // if you see this, then WMI initialization has failed...
         var Caption = "Microsoft Windows (unknown edition)";
-        var IsDomainJoined = false;
         var DomainNameFlat = "";
         string? DomainNameDns = null;
-        string? DomainForestName = null;
         int? WindowsRevision = null;
 
         try {
@@ -59,11 +54,8 @@ sealed partial class OSInfoService(
 
         try {
             using var domainInfo = DsRolePrimaryDomainInfoBasicSafeHandle.GetDsRolePrimaryDomainInfoBasic();
-            IsDomainJoined = domainInfo.MachineRole == DSROLE_MACHINE_ROLE.DsRole_RoleStandaloneWorkstation ||
-                domainInfo.MachineRole == DSROLE_MACHINE_ROLE.DsRole_RoleStandaloneServer;
             DomainNameFlat = domainInfo.DomainNameFlat;
             DomainNameDns = domainInfo.DomainNameDns;
-            DomainForestName = domainInfo.DomainForestName;
         } catch (Exception ex) {
             _logger.LogError(ex, "Cannot query domain info");
         }
@@ -76,10 +68,8 @@ sealed partial class OSInfoService(
 
         return new OSInfo() {
             Caption = Caption,
-            IsDomainJoined = IsDomainJoined,
             DomainNameFlat = DomainNameFlat,
             DomainNameDns = DomainNameDns,
-            DomainForestName = DomainForestName,
             WindowsRevision = WindowsRevision,
         };
     }
