@@ -19,6 +19,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
 
     readonly ClipboardPipe _pipe = new();
     readonly CancellationTokenSource _cts = new();
+    readonly SemaphoreSlim _clipboardUpdateLock = new(1, 1);
 
     bool _listened = false;
     Task? _receiver = null;
@@ -78,34 +79,39 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
     }
 
     async void OnClipboardUpdateAsync(HWND hwnd) {
-        if (!_listened) {
-            return;
-        }
-        var seq = PInvoke.GetClipboardSequenceNumber();
-        if (seq == _lastSeq) {
-            return;
-        }
-        _lastSeq = seq;
-
-        bool opened = false;
         try {
-            if (!PInvoke.OpenClipboard(hwnd)) {
-                throw new Win32Exception(nameof(PInvoke.OpenClipboard));
-            }
-            opened = true;
+            // both the clipboard read and pipe write must not overlap
+            using var updateScope = await _clipboardUpdateLock.EnterScopeAsync(_cts.Token);
 
+            if (!_listened) {
+                return;
+            }
+            var seq = PInvoke.GetClipboardSequenceNumber();
+            if (seq == _lastSeq) {
+                return;
+            }
+            _lastSeq = seq;
+
+            bool opened = false;
             string s;
-            using (var cb = ClipboardSafeHandle.GetClipboard(CLIPBOARD_FORMAT.CF_UNICODETEXT)) {
+            try {
+                if (!PInvoke.OpenClipboard(hwnd)) {
+                    throw new Win32Exception(nameof(PInvoke.OpenClipboard));
+                }
+                opened = true;
+
+                using var cb = ClipboardSafeHandle.GetClipboard(CLIPBOARD_FORMAT.CF_UNICODETEXT);
                 s = cb.GetString();
+            } finally {
+                if (opened) {
+                    PInvoke.CloseClipboard();
+                    opened = false;
+                }
             }
 
             await _pipe.SendAsync(s, _cts.Token);
         } catch (Exception ex) {
             Trace.TraceInformation("writing client message failed: {0}", ex.ToString());
-        } finally {
-            if (opened) {
-                PInvoke.CloseClipboard();
-            }
         }
     }
 

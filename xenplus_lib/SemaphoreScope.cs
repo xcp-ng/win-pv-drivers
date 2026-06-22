@@ -1,7 +1,8 @@
 namespace XenPlus;
 
-sealed class SemaphoreScope(SemaphoreSlim _sem) : IDisposable {
+public sealed class SemaphoreScope(SemaphoreSlim _sem) : IDisposable {
     bool _disposed = false;
+
     public void Dispose() {
         if (Interlocked.Exchange(ref _disposed, true)) {
             return;
@@ -14,13 +15,15 @@ sealed class SemaphoreScope(SemaphoreSlim _sem) : IDisposable {
     }
 }
 
-static class SemaphoreExtensions {
+public static class SemaphoreExtensions {
     public static SemaphoreScope EnterScope(this SemaphoreSlim sem) {
         sem.Wait();
         return new(sem);
     }
 
-    public static async Task<SemaphoreScope> EnterScopeAsync(this SemaphoreSlim sem, CancellationToken cancellationToken = default) {
+    public static async Task<SemaphoreScope> EnterScopeAsync(
+        this SemaphoreSlim sem,
+        CancellationToken cancellationToken = default) {
         await sem.WaitAsync(cancellationToken);
         return new(sem);
     }
