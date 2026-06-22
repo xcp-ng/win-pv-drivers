@@ -25,14 +25,19 @@ class TaskDialog : IDisposable {
     public TaskDialog() {
         _gch = GCHandle.Alloc(this);
 
-        _config = new() {
-            cbSize = (uint)Unsafe.SizeOf<TASKDIALOGCONFIG>(),
-            dwFlags = TASKDIALOG_FLAGS.TDF_USE_HICON_MAIN |
+        try {
+            _config = new() {
+                cbSize = (uint)Unsafe.SizeOf<TASKDIALOGCONFIG>(),
+                dwFlags = TASKDIALOG_FLAGS.TDF_USE_HICON_MAIN |
                 TASKDIALOG_FLAGS.TDF_USE_HICON_FOOTER |
                 TASKDIALOG_FLAGS.TDF_CALLBACK_TIMER,
-            pfCallback = &TaskDialogCallback,
-            lpCallbackData = GCHandle.ToIntPtr(_gch),
-        };
+                pfCallback = &TaskDialogCallback,
+                lpCallbackData = GCHandle.ToIntPtr(_gch),
+            };
+        } catch {
+            Dispose();
+            throw;
+        }
     }
 
     public bool IsBusy => _busy;

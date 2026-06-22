@@ -70,17 +70,22 @@ sealed class ClipboardSafeHandle(HGLOBAL h, CLIPBOARD_FORMAT format, bool ownsHa
 
             var result = new ClipboardSafeHandle(hglobal, CLIPBOARD_FORMAT.CF_UNICODETEXT, true);
 
-            var locked = PInvoke.GlobalLock(result);
-            if (locked == null) {
-                throw new Win32Exception(nameof(PInvoke.GlobalLock));
-            }
             try {
-                int v = value.Length * sizeof(char);
-                fixed (char* p = value) {
-                    Buffer.MemoryCopy(p, locked, bufferByteCount, valueByteCount);
+                var locked = PInvoke.GlobalLock(result);
+                if (locked == null) {
+                    throw new Win32Exception(nameof(PInvoke.GlobalLock));
                 }
-            } finally {
-                PInvoke.GlobalUnlock(result);
+                try {
+                    int v = value.Length * sizeof(char);
+                    fixed (char* p = value) {
+                        Buffer.MemoryCopy(p, locked, bufferByteCount, valueByteCount);
+                    }
+                } finally {
+                    PInvoke.GlobalUnlock(result);
+                }
+            } catch {
+                result.Dispose();
+                throw;
             }
 
             return result;

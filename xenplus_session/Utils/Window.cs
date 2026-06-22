@@ -47,27 +47,32 @@ abstract class Window : IDisposable {
     public Window(string className, string windowName) {
         _gch = GCHandle.Alloc(this);
 
-        unsafe {
-            _ = RegisterClass(className);
+        try {
+            unsafe {
+                _ = RegisterClass(className);
 
-            var createParam = (void*)GCHandle.ToIntPtr(_gch);
-            Debug.WriteLine("CreateWindowEx createParam={0:x}", (nint)createParam);
-            var handle = PInvoke.CreateWindowEx(
-                0,
-                className,
-                windowName,
-                WINDOW_STYLE.WS_OVERLAPPED,
-                0,
-                0,
-                0,
-                0,
-                HWND.Null,
-                null,
-                PInvoke.GetModuleHandle(null),
-                createParam);
-            if (handle == HWND.Null) {
-                throw new Win32Exception(nameof(PInvoke.CreateWindowEx));
+                var createParam = (void*)GCHandle.ToIntPtr(_gch);
+                Debug.WriteLine("CreateWindowEx createParam={0:x}", (nint)createParam);
+                var handle = PInvoke.CreateWindowEx(
+                    0,
+                    className,
+                    windowName,
+                    WINDOW_STYLE.WS_OVERLAPPED,
+                    0,
+                    0,
+                    0,
+                    0,
+                    HWND.Null,
+                    null,
+                    PInvoke.GetModuleHandle(null),
+                    createParam);
+                if (handle == HWND.Null) {
+                    throw new Win32Exception(nameof(PInvoke.CreateWindowEx));
+                }
             }
+        } catch {
+            Dispose();
+            throw;
         }
     }
 
