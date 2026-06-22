@@ -151,7 +151,8 @@ abstract class Window : IDisposable {
     }
 
     /// <summary>
-    /// <see cref="Dispose"/> will be called automatically during <see cref="PInvoke.WM_DESTROY"/>.
+    /// <see cref="Dispose"/> will be called automatically during <see cref="PInvoke.WM_DESTROY"/>. Re-disposing is OK,
+    /// but Dispose mustn't be called before the window dies.
     /// </summary>
     public virtual void Dispose() {
         if (Interlocked.Exchange(ref _disposed, true)) {

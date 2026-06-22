@@ -77,7 +77,8 @@ sealed partial class XenIfaceDevice : IDisposable {
         if (Interlocked.Exchange(ref _disposed, true)) {
             return;
         }
-        // note the backwards destruction order
+        // close Handle first so Dispose follows the same order as DeviceCmCallback, which closes Handle during a query
+        // remove before the CM notification is unregistered
         Handle.Dispose();
         _cmDevice.Dispose();
         _gch.Free();

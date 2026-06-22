@@ -6,6 +6,9 @@ using Windows.Win32.System.Ole;
 
 namespace XenPlus;
 
+/// <summary>
+/// Must only be used when clipboard is open.
+/// </summary>
 sealed class ClipboardSafeHandle(HGLOBAL h, CLIPBOARD_FORMAT format, bool ownsHandle)
 #pragma warning disable CS9107
     : GlobalFreeSafeHandle(h, ownsHandle) {

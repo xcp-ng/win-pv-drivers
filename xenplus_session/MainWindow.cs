@@ -248,6 +248,8 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
 
             td.WindowTitle = $"About {VersionInfo.ProductName}";
 
+            // TaskDialog in hyperlink mode uses a weird text flavor that's not simply HTML. But HTML encode anyway,
+            // just to be sure.
             td.MainInstruction = HttpUtility.HtmlEncode(VersionInfo.VendorName) +
                 " " +
                 HttpUtility.HtmlEncode(VersionInfo.Description);

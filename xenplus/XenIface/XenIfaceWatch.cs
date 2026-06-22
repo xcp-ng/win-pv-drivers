@@ -2,7 +2,7 @@ namespace XenPlus.XenIface;
 
 /// <summary>
 /// An abstract watch bound to a <see cref="XenIfaceSource"/> (in contrast to <see cref="WatchAbiHandle"/> which is
-/// bound to a specific <see cref="XenIfaceDevice"/>
+/// bound to a specific <see cref="XenIfaceDevice"/>).
 /// </summary>
 abstract class XenIfaceWatch : IDisposable {
     public abstract void Dispose();
@@ -10,6 +10,9 @@ abstract class XenIfaceWatch : IDisposable {
     internal abstract void Rearm(XenIfaceDevice device);
 
     public delegate void XenIfaceWatchEventHandler(object? sender, XenIfaceWatchEventArgs args);
+    /// <summary>
+    /// Event handler runs in an arbitrary thread. Event triggers may overlap.
+    /// </summary>
     public abstract event XenIfaceWatchEventHandler? WatchTriggered;
 
     /// <summary>
@@ -86,9 +89,9 @@ sealed class XenIfaceWatchImpl : XenIfaceWatch {
         CancellationToken cancellationToken = default) {
 
         var source = new TaskCompletionSource();
-        var remainingDiscount = discount + 1;
+        var remainingTriggers = discount + 1;
         void handler(object? sender, XenIfaceWatchEventArgs args) {
-            if (Interlocked.Decrement(ref remainingDiscount) == 0) {
+            if (Interlocked.Decrement(ref remainingTriggers) == 0) {
                 source.TrySetResult();
             }
         }

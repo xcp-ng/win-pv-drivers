@@ -20,8 +20,12 @@ sealed class ClipboardClient(NamedPipeServerStream _stream, CancellationToken _c
     public CancellationTokenSource CancellationTokenSource { get; }
         = CancellationTokenSource.CreateLinkedTokenSource(_ct);
 
+    /// <summary>
+    /// Must be called while holding ownership or a live reference.
+    /// </summary>
     public void Kill() {
         CancellationTokenSource.Cancel();
+        // defensively force stop pending I/O to kill pending tasks that weren't touched by CTS
         Stream.Dispose();
     }
 
@@ -77,15 +81,18 @@ sealed class ClipboardFeature(
     XenIfaceWatch? _reportClipboard = null;
 
     /// <summary>
-    /// count of active clients
+    /// count of active <see cref="ServeClientAsync"/> tasks
     /// </summary>
     readonly ReferenceCount _active = new();
 
     /// <summary>
-    /// for the current reporter
+    /// for the current reporter's one-shot communication
     /// </summary>
     readonly SemaphoreSlim _reportClipboardLock = new(1, 1);
 
+    /// <summary>
+    /// for client list lock only, be careful to not use this lock across client I/O
+    /// </summary>
     readonly SemaphoreSlim _lock = new(1, 1);
     /// <summary>
     /// locked
@@ -257,6 +264,7 @@ sealed class ClipboardFeature(
         }
         var (client, msg, clientReference) = found.Value;
 
+        // reference must be held even during client kill, or else the owner may prematurely exit rundown
         using (clientReference) {
             try {
                 var json = JsonSerializer.SerializeToUtf8Bytes(

@@ -83,6 +83,9 @@ sealed class ClipboardPipe : IDisposable {
         }
     }
 
+    /// <summary>
+    /// <see cref="ClipboardPipe"/> is still reusable even after disposing.
+    /// </summary>
     public void Dispose() {
         _pipe?.Dispose();
         _pipe = null;

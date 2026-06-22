@@ -116,7 +116,7 @@ sealed partial class XenIfaceSource : IDisposable {
     public delegate void XenIfaceResumedEventHandler(object? sender, XenIfaceResumedEventArgs args);
 
     /// <summary>
-    /// Event handler runs in an arbitrary thread.
+    /// Event handler runs in an arbitrary thread. Event triggers may overlap.
     /// </summary>
     public event XenIfaceResumedEventHandler? Resumed;
 
