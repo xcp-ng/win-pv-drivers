@@ -203,31 +203,29 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
 
     LRESULT OnContextMenu(HWND hwnd, uint msg, WPARAM wparam, LPARAM lparam) {
         try {
-            if (!PInvoke.GetCursorPos(out var pt)) {
-                throw new Win32Exception(nameof(PInvoke.GetCursorPos));
-            }
+            var x = unchecked((int)(short)LOWORD(wparam));
+            var y = unchecked((int)(short)HIWORD(wparam));
+
             PInvoke.SetForegroundWindow(hwnd);
 
-            var align = PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_MENUDROPALIGNMENT);
-            var flags = TRACK_POPUP_MENU_FLAGS.TPM_RIGHTBUTTON | TRACK_POPUP_MENU_FLAGS.TPM_BOTTOMALIGN;
-            if (align != 0) {
+            TRACK_POPUP_MENU_FLAGS flags = 0;
+            if (PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_MENUDROPALIGNMENT) != 0) {
                 flags |= TRACK_POPUP_MENU_FLAGS.TPM_RIGHTALIGN;
             } else {
                 flags |= TRACK_POPUP_MENU_FLAGS.TPM_LEFTALIGN;
             }
+
             unsafe {
                 if (!PInvoke.TrackPopupMenuEx(
                     GetTrayMenu(),
                     (uint)flags,
-                    pt.X,
-                    pt.Y,
+                    x,
+                    y,
                     hwnd,
                     null)) {
                     throw new Win32Exception(nameof(PInvoke.TrackPopupMenuEx));
                 }
             }
-            // cargo culted
-            PInvoke.PostMessage(hwnd, PInvoke.WM_NULL, 0, 0);
 
             return (LRESULT)0;
         } catch (Exception ex) {

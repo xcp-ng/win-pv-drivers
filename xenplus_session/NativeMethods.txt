@@ -37,7 +37,6 @@ OpenClipboard
 SetClipboardData
 
 _LI_METRIC
-GetCursorPos
 GetSubMenu
 GetSystemMetrics
 LoadIconMetric
@@ -54,7 +53,6 @@ WINDOWPOS
 WM_APP
 WM_COMMAND
 WM_CONTEXTMENU
-WM_NULL
 WM_WINDOWPOSCHANGING
 
 S_OK
