@@ -20,7 +20,7 @@ sealed class StoreEncoding : Encoding {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(byteIndex, bytes.Length);
         for (int i = 0; i < charCount; i++) {
             char c = chars[charIndex + i];
-            if ((c >= '\x20' && c <= '\x7f') || c == '\r' || c == '\n') {
+            if ((c >= '\x20' && c <= '\x7f') || c == '\n') {
                 bytes[byteIndex + i] = (byte)c;
             } else {
                 bytes[byteIndex + i] = (byte)'?';
@@ -44,7 +44,7 @@ sealed class StoreEncoding : Encoding {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(charIndex, chars.Length);
         for (int i = 0; i < byteCount; i++) {
             byte b = bytes[byteIndex + i];
-            if ((b >= 0x20 && b <= 0x7f) || b == 13 || b == 10) {
+            if ((b >= 0x20 && b <= 0x7f) || b == 10) {
                 chars[charIndex + i] = (char)b;
             } else {
                 chars[charIndex + i] = '?';

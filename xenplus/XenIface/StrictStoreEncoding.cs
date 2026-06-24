@@ -18,7 +18,7 @@ sealed class StrictStoreEncoding : Encoding {
         ArgumentOutOfRangeException.ThrowIfNegative(count);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(index + count, chars.Length);
         foreach (var c in chars.AsSpan()[index..(index + count)]) {
-            if (!((c >= '\x20' && c <= '\x7f') || c == '\r' || c == '\n')) {
+            if (!((c >= '\x20' && c <= '\x7f') || c == '\n')) {
                 throw new EncoderFallbackException("found out-of-range char");
             }
         }
@@ -32,7 +32,7 @@ sealed class StrictStoreEncoding : Encoding {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(index + count, bytes.Length);
         for (var i = index; i < index + count; i++) {
             byte b = bytes[i];
-            if (!((b >= 0x20 && b <= 0x7f) || b == 13 || b == 10)) {
+            if (!((b >= 0x20 && b <= 0x7f) || b == 10)) {
                 throw new DecoderFallbackException("found out-of-range byte", bytes, i);
             }
         }
