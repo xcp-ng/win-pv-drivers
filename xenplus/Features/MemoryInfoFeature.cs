@@ -23,7 +23,7 @@ sealed class MemoryInfoFeature(
     IOptionsMonitor<MemoryInfoOptions> _options,
     XenIfaceSource _xi,
     ILogger<MemoryInfoFeature> _logger) : FeatureBase(_hostLifetime, _logger) {
-    void Report() {
+    void Report(object? sender, XenIfaceResumedEventArgs args) {
         _logger.LogTrace("{}.{}", nameof(MemoryInfoFeature), nameof(Report));
         try {
             var status = new MEMORYSTATUSEX {
@@ -55,15 +55,21 @@ sealed class MemoryInfoFeature(
     }
 
     protected override async Task ExecuteFeatureAsync(CancellationToken stoppingToken) {
+        bool registered = false;
         try {
             if (!_options.CurrentValue.Enabled) {
                 return;
             }
+            _xi.Resumed += Report;
+            registered = true;
             while (!stoppingToken.IsCancellationRequested) {
-                Report();
+                Report(null, new());
                 await Task.Delay(TimeSpan.FromSeconds(_options.CurrentValue.ReportIntervalSeconds), stoppingToken);
             }
         } finally {
+            if (registered) {
+                _xi.Resumed -= Report;
+            }
             Cleanup();
         }
     }

@@ -295,6 +295,17 @@ sealed class ClipboardFeature(
         }
     }
 
+    void Cleanup() {
+        try {
+            using var h = _xi.Lock();
+
+            h.StoreRemove(SetClipboardPath);
+            h.StoreRemove(ReportClipboardPath);
+        } catch (Exception ex) {
+            _logger.LogDebug(ex, "{} cleanup error", nameof(ClipboardFeature));
+        }
+    }
+
     protected override async Task ExecuteFeatureAsync(CancellationToken stoppingToken) {
         if (!_options.Value.Enabled) {
             return;
@@ -363,6 +374,7 @@ sealed class ClipboardFeature(
             _reportClipboard = null;
             _setClipboard?.Dispose();
             _setClipboard = null;
+            Cleanup();
         }
     }
 }
