@@ -12,16 +12,24 @@ sealed class StrictStoreEncoding : Encoding {
         new DecoderExceptionFallback());
 
     static void CheckChars(char[] chars, int charIndex, int charCount) {
-        var invalid = chars.AsSpan()[charIndex..(charIndex + charCount)].IndexOfAnyExceptInRange('\x20', '\x7f');
-        if (invalid != -1) {
-            throw new EncoderFallbackException("found out-of-range char");
+        foreach (var c in chars.AsSpan()[charIndex..(charIndex + charCount)]) {
+            if (!((c >= '\x20' && c <= '\x7f') || c == '\r' || c == '\n')) {
+                throw new EncoderFallbackException("found out-of-range char");
+            }
         }
     }
 
     static void CheckBytes(byte[] bytes, int byteIndex, int byteCount) {
-        var invalid = bytes.AsSpan()[byteIndex..(byteIndex + byteCount)].IndexOfAnyExceptInRange<byte>(0x20, 0x7f);
-        if (invalid != -1) {
-            throw new DecoderFallbackException("found out-of-range byte", bytes, invalid);
+        if (byteIndex < 0 ||
+            byteCount < 0 ||
+            byteIndex + byteCount > bytes.Length) {
+            throw new IndexOutOfRangeException();
+        }
+        for (var i = byteIndex; i < byteIndex + byteCount; i++) {
+            byte b = bytes[i];
+            if (!((b >= 0x20 && b <= 0x7f) || b == 13 || b == 10)) {
+                throw new DecoderFallbackException("found out-of-range byte", bytes, i);
+            }
         }
     }
 

@@ -12,7 +12,7 @@ sealed class StoreEncoding : Encoding {
     public override int GetBytes(char[] chars, int charIndex, int charCount, byte[] bytes, int byteIndex) {
         for (int i = 0; i < charCount; i++) {
             char c = chars[charIndex + i];
-            if (c >= '\x20' && c <= '\x7f') {
+            if ((c >= '\x20' && c <= '\x7f') || c == '\r' || c == '\n') {
                 bytes[byteIndex + i] = (byte)c;
             } else {
                 bytes[byteIndex + i] = (byte)'?';
@@ -28,7 +28,7 @@ sealed class StoreEncoding : Encoding {
     public override int GetChars(byte[] bytes, int byteIndex, int byteCount, char[] chars, int charIndex) {
         for (int i = 0; i < byteCount; i++) {
             byte b = bytes[byteIndex + i];
-            if (b >= 0x20 && b <= 0x7f) {
+            if ((b >= 0x20 && b <= 0x7f) || b == 13 || b == 10) {
                 chars[charIndex + i] = (char)b;
             } else {
                 chars[charIndex + i] = '?';
