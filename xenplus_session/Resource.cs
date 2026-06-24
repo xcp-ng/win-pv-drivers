@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.Controls;
@@ -14,6 +15,7 @@ static class Resources {
     public const ushort TrayMenu_About = 208;
     public const ushort TrayMenu_Exit = 209;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe PCWSTR MAKEINTRESOURCE(ushort id) {
         return (PCWSTR)(char*)(nint)id;
     }

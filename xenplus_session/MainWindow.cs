@@ -45,10 +45,14 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
         return result;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     static ushort LOWORD(WPARAM value) => (ushort)(value & 0xffff);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     static ushort HIWORD(WPARAM value) => (ushort)((value >> 16) & 0xffff);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     static ushort LOWORD(LPARAM value) => (ushort)(value & 0xffff);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     static ushort HIWORD(LPARAM value) => (ushort)((value >> 16) & 0xffff);
 
     async Task ReceiveClipboardAsync(HWND hwnd) {
