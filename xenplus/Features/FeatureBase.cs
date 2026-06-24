@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Hosting.WindowsServices;
 
 namespace XenPlus.Features;
@@ -26,5 +28,29 @@ abstract class FeatureBase(IHostLifetime _hostLifetime, ILogger _logger) : Backg
             }
             throw;
         }
+    }
+
+    [Conditional("DEBUG")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DebugLogTrace(string? message, params object?[] args) {
+        _logger.LogTrace(message, args);
+    }
+
+    [Conditional("DEBUG")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DebugLogTrace(Exception? exception, string? message, params object?[] args) {
+        _logger.LogTrace(exception, message, args);
+    }
+
+    [Conditional("DEBUG")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DebugLogDebug(string? message, params object?[] args) {
+        _logger.LogDebug(message, args);
+    }
+
+    [Conditional("DEBUG")]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DebugLogDebug(Exception? exception, string? message, params object?[] args) {
+        _logger.LogDebug(exception, message, args);
     }
 }

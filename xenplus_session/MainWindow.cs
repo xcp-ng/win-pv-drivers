@@ -88,6 +88,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
             }
             var seq = PInvoke.GetClipboardSequenceNumber();
             if (seq == _lastSeq) {
+                Debug.WriteLine("bailing because {0}=={1}", seq, _lastSeq);
                 return;
             }
             _lastSeq = seq;
@@ -102,6 +103,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
 
                 using var cb = ClipboardSafeHandle.GetClipboard(CLIPBOARD_FORMAT.CF_UNICODETEXT);
                 s = cb.GetString();
+                Debug.WriteLine("got clipboard of length {0}", s.Length);
             } finally {
                 if (opened) {
                     PInvoke.CloseClipboard();

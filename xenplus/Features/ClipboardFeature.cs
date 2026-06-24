@@ -120,6 +120,11 @@ sealed class ClipboardFeature(
                     ct);
 
                 if (msg is ReportClipboardMessage reportClipboard) {
+                    DebugLogTrace(
+                        "client {0} got ReportClipboardMessage length {1}",
+                        sid,
+                        reportClipboard?.Text?.Length ?? -1);
+
                     // avoid taking _reportClipboardLock if client is not accepted
                     var consoleSid = PInvoke.WTSGetActiveConsoleSessionId();
                     if (consoleSid == InvalidSessionId || sid != consoleSid) {
@@ -134,12 +139,18 @@ sealed class ClipboardFeature(
                         continue;
                     }
 
-                    _logger.LogDebug("ReportClipboard length {}", reportClipboard?.Text?.Length ?? 0);
+                    DebugLogTrace("ReportClipboard length {}", reportClipboard?.Text?.Length ?? 0);
 
                     foreach (var chunk in (reportClipboard?.Text ?? "").Chunk(ClientChunkSize).Append([])) {
                         var wait = _reportClipboard!.WaitOneAsync(ReportTimeoutMilliseconds, 1, ct);
                         using (var h = _xi.Lock()) {
-                            h.StoreWrite(ReportClipboardPath, new(chunk), false);
+                            try {
+                                h.StoreWrite(ReportClipboardPath, new(chunk), false);
+                            } catch (Exception ex) {
+                                DebugLogTrace(ex, "cannot write report_clipboard");
+                                h.StoreRemove(ReportClipboardPath);
+                                throw;
+                            }
                         }
                         await wait;
                     }
@@ -163,6 +174,7 @@ sealed class ClipboardFeature(
             if (!PInvoke.GetNamedPipeClientSessionId(client.Stream.SafePipeHandle, out sid)) {
                 throw new Win32Exception();
             }
+            DebugLogTrace("client sid is {0}", sid);
             // to prevent flipflopping between different user clipboard agents, if the session is already connected,
             // drop the new connection instead
             using var scope = await _lock.EnterScopeAsync(ct);
@@ -174,11 +186,14 @@ sealed class ClipboardFeature(
             return;
         }
 
+        DebugLogTrace("admitted new client {0}", sid);
+
         try {
             await ServeClientLoopAsync(sid, client, client.CancellationTokenSource.Token);
         } catch (Exception ex) {
             _logger.LogWarning(ex, "Failed to serve client {}", sid);
         } finally {
+            DebugLogTrace("tearing down client {0}", sid);
             // the main loop doesn't need to be inside the main lock, only the final destruction does, because
             // ServeClient holds ownership of the client object
             using (var scope = await _lock.EnterScopeAsync(CancellationToken.None)) {
@@ -195,6 +210,7 @@ sealed class ClipboardFeature(
             // OnSetClipboard users hold rundown references and are drained below before the client is disposed.
             client.Kill();
             await client.References.WaitAsync(Timeout.InfiniteTimeSpan, CancellationToken.None);
+            DebugLogTrace("client {0} has been torn down", sid);
         }
     }
 
@@ -211,9 +227,11 @@ sealed class ClipboardFeature(
                 // watches triggered by store removes
                 return null;
             }
+            DebugLogTrace("got chunk of length {}; current depth is {}", chunk.Length, _setClipboardChunks.Count);
             try {
                 h.StoreRemove(SetClipboardPath);
-            } catch {
+            } catch (Exception ex) {
+                DebugLogTrace(ex, "cannot remove set_clipboard");
             }
             if (chunk.Length != 0) {
                 if (_setClipboardChunks.Count < MaxClipboardChunks) {
@@ -224,6 +242,7 @@ sealed class ClipboardFeature(
         }
 
         // from this point on, we got the entire content from the host and are going to give it to the active client
+        DebugLogTrace("lifting chunk train");
 
         var msg = new SetClipboardMessage() {
             Text = string.Join("", _setClipboardChunks)
@@ -245,6 +264,7 @@ sealed class ClipboardFeature(
                 return null;
             }
         }
+        DebugLogTrace("looking for sid {}", sid);
 
         // We want to avoid holding the global lock when using the client pipe. Take a rundown reference while still
         // under the global lock so ServeClient cannot dispose the client after we release it.
@@ -252,6 +272,7 @@ sealed class ClipboardFeature(
         if (clientReference == null) {
             return null;
         }
+        DebugLogTrace("grabbed sid {}", sid);
         return (client, msg, clientReference);
     }
 
@@ -276,6 +297,7 @@ sealed class ClipboardFeature(
                 var json = JsonSerializer.SerializeToUtf8Bytes(
                     msg,
                     ClipboardMessageContext.Default.ServerMessage);
+                DebugLogTrace("chunk train is {} bytes", json.Length);
                 var lengthBytes = BitConverter.GetBytes(json.Length);
 
                 using var timeout = CancellationTokenSource.CreateLinkedTokenSource(
@@ -326,6 +348,7 @@ sealed class ClipboardFeature(
 
         async void onSetClipboard(object? sender, XenIfaceWatchEventArgs args) {
             try {
+                DebugLogTrace(nameof(onSetClipboard));
                 await OnSetClipboardAsync(sender, args, stoppingToken);
             } catch (OperationCanceledException) {
             } catch (Exception ex) {

@@ -26,6 +26,8 @@ sealed class ClipboardPipe : IDisposable {
                 TokenImpersonationLevel.Identification,
                 HandleInheritability.None);
             await _pipe.ConnectAsync(100, ct);
+        } catch (TimeoutException) {
+            Dispose();
         } catch (Exception ex) {
             Trace.TraceInformation("cannot open pipe: {0}", ex.ToString());
             Dispose();
@@ -55,6 +57,8 @@ sealed class ClipboardPipe : IDisposable {
                     if (msg is SetClipboardMessage setClipboard) {
                         text = setClipboard.Text;
                     }
+                } catch (OperationCanceledException) {
+                    Dispose();
                 } catch (Exception ex) {
                     Trace.TraceInformation("reading server message failed: {0}", ex.ToString());
                     Dispose();

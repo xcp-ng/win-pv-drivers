@@ -167,7 +167,7 @@ sealed partial class XenIfaceSource : IDisposable {
             try {
                 _logger.LogTrace("Trying {device}", device);
                 _active = new XenIfaceDevice(this, device);
-                _logger.LogDebug("Opened {device} {}", device, (ulong)_active.Handle.DangerousGetHandle());
+                _logger.LogDebug("Opened {device}", device);
                 break;
             } catch (Exception ex) {
                 _logger.LogTrace(ex, "Failed to open device {device}", device);

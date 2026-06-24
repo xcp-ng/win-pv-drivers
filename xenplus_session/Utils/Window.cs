@@ -138,7 +138,7 @@ abstract class Window : IDisposable {
                 return Check.Unwrap<Window>(target).OnDestroyNative(hwnd, msg, wparam, lparam);
             } else {
                 if (target == null) {
-                    Trace.TraceInformation(
+                    Debug.WriteLine(
                         "instance not found: {0} {1} {2} {3}",
                         hwnd,
                         msg,
