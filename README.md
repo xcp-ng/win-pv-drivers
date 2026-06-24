@@ -19,7 +19,7 @@ The relevant source code may be found at these locations:
     * [Custom WiX actions](DriverInstallCustomAction/)
 * [XenClean](XenClean/)
 * [XenBootFix](XenBootFix/)
-* [XenPlus guest agent](xenplus/)
+* [XenPlus guest agent](xenplus/), [session agent](xenplus_session/) and [support library](xenplus_lib/)
 * [Xen Time Provider](https://github.com/xcp-ng/win-xentimeprovider)
 * [Assorted installer tests](InstallerTests/)
 * [Developer support scripts](scripts/)
