@@ -36,6 +36,7 @@ class Program {
         builder.Configuration.AddJsonFile("appsettings.user.json", true, true);
 
         builder.Logging.ClearProviders();
+        builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
         builder.Logging.AddDebug();
         builder.Logging.AddEventLog(options => {
             options.SourceName = nameof(XenPlus);
