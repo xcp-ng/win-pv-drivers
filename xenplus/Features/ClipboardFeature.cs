@@ -120,6 +120,8 @@ sealed class ClipboardFeature(
                     ct);
 
                 if (msg is ReportClipboardMessage reportClipboard) {
+                    var allowTest = _options.Value.UnsafeAllowAnySessionForTest;
+
                     DebugLogTrace(
                         "client {0} got ReportClipboardMessage length {1}",
                         sid,
@@ -127,7 +129,7 @@ sealed class ClipboardFeature(
 
                     // avoid taking _reportClipboardLock if client is not accepted
                     var consoleSid = PInvoke.WTSGetActiveConsoleSessionId();
-                    if (consoleSid == InvalidSessionId || sid != consoleSid) {
+                    if ((consoleSid == InvalidSessionId || sid != consoleSid) && !allowTest) {
                         continue;
                     }
 
@@ -135,7 +137,7 @@ sealed class ClipboardFeature(
 
                     // _reportClipboardLock.EnterScopeAsync could have waited
                     consoleSid = PInvoke.WTSGetActiveConsoleSessionId();
-                    if (consoleSid == InvalidSessionId || sid != consoleSid) {
+                    if ((consoleSid == InvalidSessionId || sid != consoleSid) && !allowTest) {
                         continue;
                     }
 
