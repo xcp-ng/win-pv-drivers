@@ -215,7 +215,7 @@ sealed partial class XenIfaceSource : IDisposable {
     /// </summary>
     public XenIfaceWatch WatchAdd(string path, bool strict = false) {
         lock (_lock) {
-            return WatchAddLocked(null, path, strict);
+            return WatchAddLocked(_active, path, strict);
         }
     }
 
