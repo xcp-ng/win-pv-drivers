@@ -109,9 +109,31 @@ sealed partial class XenIfaceDevice {
         return len;
     }
 
+    static int FormatPath(string? value, byte[] buffer, int offset) {
+        if (value != null) {
+            for (var i = 0; i < value.Length; i++) {
+                char c = value[i];
+                if (!((c >= 'A' && c <= 'Z') ||
+                    (c >= 'a' && c <= 'z') ||
+                    (c >= '0' && c <= '9') ||
+                    c == '-' || c == '/' || c == '_')) {
+                    throw new ArgumentException($"detected invalid XenStore path character at offset {i}");
+                }
+            }
+            if (value.EndsWith('/')) {
+                throw new ArgumentException($"trailing path slash is not allowed");
+            }
+            var doubleSlash = value.IndexOf("//");
+            if (doubleSlash >= 0) {
+                throw new ArgumentException($"found unacceptable double slash at offset {doubleSlash}");
+            }
+        }
+        return FormatString(value, buffer, offset, true);
+    }
+
     internal string StoreRead(string path, bool strict) {
         var inBuf = new byte[XENSTORE_PAYLOAD_MAX];
-        FormatString(path, inBuf, 0, strict);
+        FormatPath(path, inBuf, 0);
         var outBuf = new byte[XENSTORE_PAYLOAD_MAX];
         unsafe {
             if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_READ, inBuf, outBuf)) {
@@ -124,7 +146,7 @@ sealed partial class XenIfaceDevice {
 
     internal void StoreWrite(string path, string? value, bool strict) {
         var inBuf = new byte[XENSTORE_PAYLOAD_MAX];
-        var pathLen = FormatString(path, inBuf, 0, strict);
+        var pathLen = FormatPath(path, inBuf, 0);
         FormatString(value, inBuf, pathLen + 1, strict);
         unsafe {
             if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_WRITE, inBuf)) {
@@ -135,7 +157,7 @@ sealed partial class XenIfaceDevice {
 
     internal List<string> StoreDirectory(string path, bool strict) {
         var inBuf = new byte[XENSTORE_PAYLOAD_MAX];
-        FormatString(path, inBuf, 0, strict);
+        FormatPath(path, inBuf, 0);
         var outBuf = new byte[XENSTORE_PAYLOAD_MAX];
         unsafe {
             if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_DIRECTORY, inBuf, outBuf)) {
@@ -147,7 +169,7 @@ sealed partial class XenIfaceDevice {
 
     internal void StoreRemove(string path, bool strict) {
         var inBuf = new byte[XENSTORE_PAYLOAD_MAX];
-        FormatString(path, inBuf, 0, strict);
+        FormatPath(path, inBuf, 0);
         unsafe {
             if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_REMOVE, inBuf)) {
                 throw new Win32Exception();
@@ -157,7 +179,7 @@ sealed partial class XenIfaceDevice {
 
     internal WatchAbiHandle WatchAdd(string path, SafeWaitHandle evt, bool strict) {
         var inPath = new byte[XENSTORE_PAYLOAD_MAX];
-        var pathLen = FormatString(path, inPath, 0, strict);
+        var pathLen = FormatPath(path, inPath, 0);
         unsafe {
             var outBuf = new XENIFACE_STORE_ADD_WATCH_OUT();
             fixed (byte* pathBytes = inPath) {
