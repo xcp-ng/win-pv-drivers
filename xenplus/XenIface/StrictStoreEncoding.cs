@@ -11,21 +11,26 @@ sealed class StrictStoreEncoding : Encoding {
         new EncoderExceptionFallback(),
         new DecoderExceptionFallback());
 
-    static void CheckChars(char[] chars, int charIndex, int charCount) {
-        foreach (var c in chars.AsSpan()[charIndex..(charIndex + charCount)]) {
+    static void CheckChars(char[] chars, int index, int count) {
+        ArgumentNullException.ThrowIfNull(chars);
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(index, chars.Length);
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(index + count, chars.Length);
+        foreach (var c in chars.AsSpan()[index..(index + count)]) {
             if (!((c >= '\x20' && c <= '\x7f') || c == '\r' || c == '\n')) {
                 throw new EncoderFallbackException("found out-of-range char");
             }
         }
     }
 
-    static void CheckBytes(byte[] bytes, int byteIndex, int byteCount) {
-        if (byteIndex < 0 ||
-            byteCount < 0 ||
-            byteIndex + byteCount > bytes.Length) {
-            throw new IndexOutOfRangeException();
-        }
-        for (var i = byteIndex; i < byteIndex + byteCount; i++) {
+    static void CheckBytes(byte[] bytes, int index, int count) {
+        ArgumentNullException.ThrowIfNull(bytes);
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(index, bytes.Length);
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(index + count, bytes.Length);
+        for (var i = index; i < index + count; i++) {
             byte b = bytes[i];
             if (!((b >= 0x20 && b <= 0x7f) || b == 13 || b == 10)) {
                 throw new DecoderFallbackException("found out-of-range byte", bytes, i);
@@ -54,10 +59,12 @@ sealed class StrictStoreEncoding : Encoding {
     }
 
     public override int GetMaxByteCount(int charCount) {
+        ArgumentOutOfRangeException.ThrowIfNegative(charCount);
         return _safeASCIIEncoding.GetMaxByteCount(charCount);
     }
 
     public override int GetMaxCharCount(int byteCount) {
+        ArgumentOutOfRangeException.ThrowIfNegative(byteCount);
         return _safeASCIIEncoding.GetMaxCharCount(byteCount);
     }
 }
