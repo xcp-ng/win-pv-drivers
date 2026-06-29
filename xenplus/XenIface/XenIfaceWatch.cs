@@ -16,7 +16,7 @@ abstract class XenIfaceWatch : IDisposable {
     public abstract event XenIfaceWatchEventHandler? WatchTriggered;
 
     /// <summary>
-    /// One-shot wait.
+    /// One-shot wait. Unreliable due to watch events being uncounted.
     /// </summary>
     /// <param name="timeoutMilliseconds">Timeout, in milliseconds</param>
     /// <param name="discount">Number of waits to ignore before completing</param>
