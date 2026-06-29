@@ -64,7 +64,8 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
                 }
                 opened = true;
 
-                var span = data.AsSpan();
+                var translated = data.ReplaceLineEndings();
+                var span = translated.AsSpan();
                 if (span.Length > MaxClipboardSize) {
                     span = span[..MaxClipboardSize];
                 }
@@ -106,7 +107,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
                 opened = true;
 
                 using var cb = ClipboardSafeHandle.GetClipboard(CLIPBOARD_FORMAT.CF_UNICODETEXT);
-                s = cb.GetString();
+                s = cb.GetString().ReplaceLineEndings("\n");
                 Debug.WriteLine("got clipboard of length {0}", s.Length);
             } finally {
                 if (opened) {
