@@ -124,7 +124,7 @@ sealed class ClipboardFeature(
                     using var h = _xi.Lock();
                     h.StoreRead(ReportClipboardPath);
                     exists = true;
-                } catch (Win32Exception ex) when (ex.NativeErrorCode == (int)WIN32_ERROR.ERROR_FILE_NOT_FOUND) {
+                } catch (Win32Exception ex) when (StoreUtils.ExceptionIsStoreNotFound(ex)) {
                 }
                 if (!exists) {
                     break;
