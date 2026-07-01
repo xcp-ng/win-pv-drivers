@@ -35,7 +35,6 @@ sealed class DsRolePrimaryDomainInfoBasicSafeHandle : SafeHandle {
 
     unsafe DSROLE_PRIMARY_DOMAIN_INFO_BASIC* Info {
         get {
-            ObjectDisposedException.ThrowIf(IsInvalid, this);
             return (DSROLE_PRIMARY_DOMAIN_INFO_BASIC*)handle;
         }
     }
