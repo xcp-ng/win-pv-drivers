@@ -50,6 +50,15 @@ sealed partial class XenIfaceSource : IDisposable {
 
     bool _disposed = false;
 
+    /// <summary>
+    /// For internal XenIface consumption only.
+    /// </summary>
+    internal object SyncRoot => _lock;
+    /// <summary>
+    /// For internal XenIface consumption only.
+    /// </summary>
+    internal XenIfaceDevice? Active => _active;
+
     public XenIfaceSource(ILogger<XenIfaceSource> logger, CancellationToken? ct = null) {
         _logger = logger;
         try {
