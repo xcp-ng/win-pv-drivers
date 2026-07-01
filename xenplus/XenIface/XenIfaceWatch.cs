@@ -30,7 +30,6 @@ abstract class XenIfaceWatch : IDisposable {
 
 sealed class XenIfaceWatchImpl : XenIfaceWatch {
     readonly string _path;
-    readonly bool _strict;
     readonly XenIfaceSource _iface;
     readonly EventWaitHandle _event;
     readonly RegisteredWaitHandle _eventWait;
@@ -49,14 +48,12 @@ sealed class XenIfaceWatchImpl : XenIfaceWatch {
 
     internal XenIfaceWatchImpl(
         string path,
-        bool strict,
         XenIfaceSource iface,
         EventWaitHandle evt,
         XenIfaceDevice? device) {
 
         try {
             _path = path;
-            _strict = strict;
             _iface = iface;
             _event = evt;
             _eventWait = ThreadPool.RegisterWaitForSingleObject(_event, (state, _) => {
@@ -80,7 +77,7 @@ sealed class XenIfaceWatchImpl : XenIfaceWatch {
         if (device == null) {
             return;
         }
-        _watchHandle = device.WatchAdd(_path, _event.SafeWaitHandle, _strict);
+        _watchHandle = device.WatchAdd(_path, _event.SafeWaitHandle);
     }
 
     public override async Task<string?> WaitOneAsync(

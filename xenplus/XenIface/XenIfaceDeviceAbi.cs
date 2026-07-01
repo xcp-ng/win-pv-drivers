@@ -109,24 +109,31 @@ sealed partial class XenIfaceDevice {
         return len;
     }
 
+    static void ValidatePath(string? value) {
+        if (value == null) {
+            return;
+        }
+        for (var i = 0; i < value.Length; i++) {
+            char c = value[i];
+            if (!((c >= 'A' && c <= 'Z') ||
+                (c >= 'a' && c <= 'z') ||
+                (c >= '0' && c <= '9') ||
+                c == '-' || c == '/' || c == '_')) {
+                throw new ArgumentException($"detected invalid XenStore path character at offset {i}");
+            }
+        }
+        if (value.EndsWith('/')) {
+            throw new ArgumentException($"trailing path slash is not allowed");
+        }
+        var doubleSlash = value.IndexOf("//");
+        if (doubleSlash >= 0) {
+            throw new ArgumentException($"found unacceptable double slash at offset {doubleSlash}");
+        }
+    }
+
     static int FormatPath(string? value, byte[] buffer, int offset) {
         if (value != null) {
-            for (var i = 0; i < value.Length; i++) {
-                char c = value[i];
-                if (!((c >= 'A' && c <= 'Z') ||
-                    (c >= 'a' && c <= 'z') ||
-                    (c >= '0' && c <= '9') ||
-                    c == '-' || c == '/' || c == '_')) {
-                    throw new ArgumentException($"detected invalid XenStore path character at offset {i}");
-                }
-            }
-            if (value.EndsWith('/')) {
-                throw new ArgumentException($"trailing path slash is not allowed");
-            }
-            var doubleSlash = value.IndexOf("//");
-            if (doubleSlash >= 0) {
-                throw new ArgumentException($"found unacceptable double slash at offset {doubleSlash}");
-            }
+            ValidatePath(value);
         }
         return FormatString(value, buffer, offset, true);
     }
@@ -155,7 +162,10 @@ sealed partial class XenIfaceDevice {
         }
     }
 
-    internal List<string> StoreDirectory(string path, bool strict) {
+    /// <summary>
+    /// Values from StoreDirectory are always taken as paths and are strictly checked.
+    /// </summary>
+    internal List<string> StoreDirectory(string path) {
         var inBuf = new byte[XENSTORE_PAYLOAD_MAX];
         FormatPath(path, inBuf, 0);
         var outBuf = new byte[XENSTORE_PAYLOAD_MAX];
@@ -164,10 +174,12 @@ sealed partial class XenIfaceDevice {
                 throw new Win32Exception();
             }
         }
-        return ServerUtils.ParseMultiString(outBuf, GetEncoding(strict).GetString);
+        return ServerUtils.ParseMultiString(outBuf, GetEncoding(true).GetString)
+            .Select(x => { ValidatePath(x); return x; })
+            .ToList();
     }
 
-    internal void StoreRemove(string path, bool strict) {
+    internal void StoreRemove(string path) {
         var inBuf = new byte[XENSTORE_PAYLOAD_MAX];
         FormatPath(path, inBuf, 0);
         unsafe {
@@ -177,7 +189,7 @@ sealed partial class XenIfaceDevice {
         }
     }
 
-    internal WatchAbiHandle WatchAdd(string path, SafeWaitHandle evt, bool strict) {
+    internal WatchAbiHandle WatchAdd(string path, SafeWaitHandle evt) {
         var inPath = new byte[XENSTORE_PAYLOAD_MAX];
         var pathLen = FormatPath(path, inPath, 0);
         unsafe {

@@ -53,20 +53,28 @@ internal readonly ref struct XenIfaceHandle(XenIfaceSource parent) : IDisposable
         return Active.StoreRead(path, strict);
     }
 
+    public string StoreReadStrict(string path) {
+        return Active.StoreRead(path, true);
+    }
+
     public void StoreWrite(string path, string? value, bool strict = false) {
         Active.StoreWrite(path, value, strict);
     }
 
-    public List<string> StoreDirectory(string path, bool strict = false) {
-        return Active.StoreDirectory(path, strict);
+    public void StoreWriteStrict(string path, string? value) {
+        Active.StoreWrite(path, value, true);
     }
 
-    public void StoreRemove(string path, bool strict = false) {
-        Active.StoreRemove(path, strict);
+    public List<string> StoreDirectory(string path) {
+        return Active.StoreDirectory(path);
     }
 
-    public XenIfaceWatch WatchAdd(string path, bool strict = false) {
+    public void StoreRemove(string path) {
+        Active.StoreRemove(path);
+    }
+
+    public XenIfaceWatch WatchAdd(string path) {
         var active = Active;
-        return _h.Parent!.WatchAddLocked(active, path, strict);
+        return _h.Parent!.WatchAddLocked(active, path);
     }
 }
