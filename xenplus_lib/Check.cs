@@ -36,4 +36,12 @@ public static class Check {
         Assert(castValue != null, message, "value is null: ");
         return castValue!;
     }
+
+    public static T Unwrap<T>(
+        T? value,
+        [CallerArgumentExpression(nameof(value))] string? message = null)
+        where T : class {
+        Assert(value != null, message, "value is null: ");
+        return value;
+    }
 }
