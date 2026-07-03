@@ -32,6 +32,13 @@ DsRoleGetPrimaryDomainInformation
 // MemoryInfoFeature
 GlobalMemoryStatusEx
 
+// VifConfigureFeature
+FreeMibTable
+GetIfTable2
+GetIpForwardTable2
+GetUnicastIpAddressTable
+IF_TYPE_ETHERNET_CSMACD
+
 // WMI
 CoInitializeSecurity
 CoSetProxyBlanket

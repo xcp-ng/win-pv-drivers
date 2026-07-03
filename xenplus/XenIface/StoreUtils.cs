@@ -4,15 +4,21 @@ using Windows.Win32.Foundation;
 namespace XenPlus.XenIface;
 
 static class StoreUtils {
-    public static string PathJoin(string? a, string b) {
-        ArgumentNullException.ThrowIfNull(b);
-        if (b.StartsWith('/')) {
-            throw new ArgumentException("Path suffix cannot be absolute");
+    public static string PathJoin(string? a, params string[] bs) {
+        string result = a ?? "";
+        ArgumentNullException.ThrowIfNull(bs);
+        foreach (var b in bs) {
+            ArgumentNullException.ThrowIfNull(b);
+            if (b.StartsWith('/')) {
+                throw new ArgumentException("Path suffix cannot be absolute");
+            }
+            if (result.EndsWith('/')) {
+                result += b;
+            } else {
+                result += "/" + b;
+            }
         }
-        if (a?.EndsWith('/') ?? false) {
-            return a + b;
-        }
-        return a + '/' + b;
+        return result;
     }
 
     public static bool ExceptionIsStoreNotFound(Exception ex) {
