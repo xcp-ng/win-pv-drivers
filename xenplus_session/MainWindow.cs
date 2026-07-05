@@ -13,7 +13,7 @@ namespace XenPlus;
 sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_session main window") {
     const int MaxClipboardSize = 100000;
     const int NotifyIconId = 1;
-    const uint TrayMenuMessage = PInvoke.WM_APP;
+    const uint TrayMenuMessage = PInvoke.WM_APP + NotifyIconId;
 
     readonly Lazy<AppConfig> _config = new();
 
@@ -36,9 +36,8 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
 
     bool _closing = false;
 
-    HMENU GetTrayMenu() {
-        using var menuScope = _trayMenu.Value.Borrow();
-        var result = PInvoke.GetSubMenu((HMENU)menuScope.DangerousHandle, 0);
+    HMENU GetSubMenu(SafeHandleReferenceScope menuScope, int index) {
+        var result = PInvoke.GetSubMenu((HMENU)menuScope.DangerousHandle, index);
         if (result == HMENU.Null) {
             throw new Win32Exception(nameof(PInvoke.GetSubMenu));
         }
@@ -167,7 +166,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
         _hasTrayIcon = false;
     }
 
-    LRESULT OnCreate(HWND hwnd, uint msg, WPARAM wparam, LPARAM lparam) {
+    LRESULT OnCreate(HWND hwnd) {
         if (!PInvoke.AddClipboardFormatListener(hwnd)) {
             throw new Win32Exception(nameof(PInvoke.AddClipboardFormatListener));
         }
@@ -189,9 +188,6 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
             return;
         }
         _cts.Cancel();
-        if (_trayMenu.IsValueCreated) {
-            _trayMenu.Value.Dispose();
-        }
         if (_hasTrayIcon) {
             DestroyTrayIcon(hwnd);
         }
@@ -222,9 +218,10 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
                 flags |= TRACK_POPUP_MENU_FLAGS.TPM_LEFTALIGN;
             }
 
+            using var menuScope = _trayMenu.Value.Borrow();
             unsafe {
                 if (!PInvoke.TrackPopupMenuEx(
-                    GetTrayMenu(),
+                    GetSubMenu(menuScope, 0),
                     (uint)flags,
                     x,
                     y,
@@ -327,7 +324,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
     protected override LRESULT WndProc(HWND hwnd, uint msg, WPARAM wparam, LPARAM lparam) {
         switch (msg) {
             case PInvoke.WM_CREATE:
-                return OnCreate(hwnd, msg, wparam, lparam);
+                return OnCreate(hwnd);
             case PInvoke.WM_CLIPBOARDUPDATE:
                 OnClipboardUpdateAsync(hwnd);
                 return (LRESULT)0;

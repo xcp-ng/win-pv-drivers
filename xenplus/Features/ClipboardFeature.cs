@@ -3,7 +3,6 @@ using System.IO.Pipes;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using Windows.Win32;
-using Windows.Win32.Foundation;
 using XenPlus.Clipboard;
 using XenPlus.XenIface;
 
@@ -431,16 +430,16 @@ sealed class ClipboardFeature(
                 var secure = _secure.Value;
                 using (var shref = secure.Borrow()) {
                     pipe = SecureNamedPipes.Listen(
-                        ClipboardPipePath,
-                        PipeDirection.InOut,
-                        NamedPipeServerStream.MaxAllowedServerInstances,
-                        PipeTransmissionMode.Byte,
-                        PipeOptions.Asynchronous,
-                        0,
-                        0,
-                        HandleInheritability.None,
-                        true,
-                        shref.DangerousHandle);
+                        pipePath: ClipboardPipePath,
+                        direction: PipeDirection.InOut,
+                        maxNumberOfServerInstances: NamedPipeServerStream.MaxAllowedServerInstances,
+                        transmissionMode: PipeTransmissionMode.Byte,
+                        options: PipeOptions.Asynchronous,
+                        inBufferSize: 0,
+                        outBufferSize: 0,
+                        inheritability: HandleInheritability.None,
+                        rejectRemoteClients: true,
+                        securityDescriptor: shref.DangerousHandle);
                 }
                 try {
                     await pipe.WaitForConnectionAsync(stoppingToken);

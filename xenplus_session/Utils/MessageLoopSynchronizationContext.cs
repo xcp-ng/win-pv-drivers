@@ -63,7 +63,7 @@ class MessageLoopSynchronizationContext : SynchronizationContext, IDisposable {
 
         while (PInvoke.PeekMessage(out var msg, HWND.Null, 0, 0, PEEK_MESSAGE_REMOVE_TYPE.PM_REMOVE)) {
             if (msg.message == PInvoke.WM_QUIT) {
-                Interlocked.Exchange(ref _exited, true);
+                _exited = true;
                 return (int)msg.wParam.Value;
             }
             PInvoke.TranslateMessage(msg);
