@@ -69,6 +69,7 @@ class Program {
         builder.Services.Configure<ClipboardOptions>(builder.Configuration.GetSection(nameof(ClipboardOptions)));
         builder.Services.AddHostedService<ClipboardFeature>();
 
+        builder.Services.AddSingleton<IValidateOptions<VifConfigureOptions>, ValidateVifConfigureOptions>();
         builder.Services.Configure<VifConfigureOptions>(builder.Configuration.GetSection(nameof(VifConfigureOptions)));
         builder.Services.AddHostedService<VifConfigureFeature>();
 

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Net;
 using Microsoft.Extensions.Options;
@@ -11,6 +12,12 @@ using XenPlus.XenIface;
 sealed class VifConfigureOptions {
     public bool Enabled { get; set; } = true;
     public bool AllowConfigureNonVifs { get; set; } = true;
+    [Range(100, 3_600_000)]
+    public int CommandTimeoutMilliseconds { get; set; } = 5000;
+}
+
+[OptionsValidator]
+partial class ValidateVifConfigureOptions : IValidateOptions<VifConfigureOptions> {
 }
 
 sealed class VifConfigureFeature(
@@ -20,7 +27,6 @@ sealed class VifConfigureFeature(
     ILogger<VifConfigureFeature> _logger) : FeatureBase(_hostLifetime, _logger) {
     const string FeatureKey = "control/feature-static-ip-setting";
     const string VifConfigRoot = "xenserver/device/vif";
-    const int CommandTimeoutMilliseconds = 5000;
     static readonly string NetshPath = Path.Combine(Environment.SystemDirectory, "netsh.exe");
     readonly ReferenceCount _active = new();
     readonly SemaphoreSlim _lock = new(1, 1);
@@ -229,9 +235,14 @@ sealed class VifConfigureFeature(
                 var stderrTask = process.StandardError.ReadToEndAsync(ct);
 
                 using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
-                timeout.CancelAfter(CommandTimeoutMilliseconds);
+                timeout.CancelAfter(_options.CurrentValue.CommandTimeoutMilliseconds);
 
-                await process.WaitForExitAsync(timeout.Token);
+                try {
+                    await process.WaitForExitAsync(timeout.Token);
+                } catch (OperationCanceledException) {
+                    process.Kill();
+                    process.WaitForExit();
+                }
                 await ThrowIfCommandFailed(process, fileName, arguments, stdoutTask, stderrTask, ct);
             }
         }
