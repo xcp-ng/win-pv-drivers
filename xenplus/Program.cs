@@ -1,3 +1,4 @@
+using System.Text.Json.Schema;
 using Microsoft.Extensions.Options;
 using XenPlus.Features;
 using XenPlus.XenIface;
@@ -19,7 +20,12 @@ class Program {
         return Path.Combine(programData, VersionInfo.VendorName, "XenPlus");
     }
 
-    static void Main() {
+    static void Main(string[] args) {
+        if (args.Length == 1 && args[0].Equals("-writeOptionsSchema", StringComparison.OrdinalIgnoreCase)) {
+            Console.WriteLine(AllOptionsContext.Default.Options.GetJsonSchemaAsNode(typeof(AllOptions)).ToJsonString());
+            return;
+        }
+
         var earlyLogger = new EarlyLogger();
         var mitigations = new Mitigations(earlyLogger);
         mitigations.EnableAll();
