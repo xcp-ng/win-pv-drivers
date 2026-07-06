@@ -14,12 +14,13 @@ sealed class OSInfoFeature(
     XenIfaceSource _xi,
     OSInfoService _osInfoService,
     ILogger<OSInfoFeature> _logger) : FeatureBase(_hostLifetime, _logger) {
+    readonly Lazy<OSInfo> _osInfo = new(_osInfoService.Query);
+
     void Report(object? sender, XenIfaceResumedEventArgs args) {
         _logger.LogTrace("{}.{}", nameof(OSInfoFeature), nameof(Report));
         try {
+            var osInfo = _osInfo.Value;
             using var h = _xi.Lock();
-            // requery OS info every report to ensure freshness
-            var osInfo = _osInfoService.Query();
 
             // Schema partially inherited from XenServer:
             // https://github.com/xenserver/win-xenguestagent/blob/master/src/xenguestlib/PVInstallation.cs
