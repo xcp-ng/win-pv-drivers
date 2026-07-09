@@ -3,18 +3,6 @@
   <?include Include.wxi?>
 
   <Fragment>
-    <!-- empty ComponentGroup just for reference -->
-    <ComponentGroup Id="TweaksComponent" />
-    <FeatureRef Id="PVIfaceFeature">
-      <Feature
-        Id="DisableTimeSyncFeature"
-        AllowAdvertise="no"
-        Title="!(loc.DisableTimeSyncFeatureTitle)"
-        Description="!(loc.DisableTimeSyncFeatureDescription)">
-        <ComponentGroupRef Id="DisableTimeSyncComponent" />
-      </Feature>
-    </FeatureRef>
-
     <ComponentGroup Id="DisableTimeSyncComponent">
       <Component>
         <RegistryValue

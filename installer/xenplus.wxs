@@ -13,6 +13,7 @@
       Title="!(loc.XenplusFeatureTitle)"
       Description="!(loc.XenplusFeatureDescription)">
       <ComponentGroupRef Id="XenplusComponentGroup" />
+      <ComponentGroupRef Id="DisableTimeSyncComponent" />
       <Feature
         Id="XenplusSessionFeature"
         AllowAdvertise="no"
