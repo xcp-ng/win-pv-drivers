@@ -9,6 +9,7 @@ sealed class AllOptions {
     public OSInfoOptions? OSInfoOptions { get; set; }
     public PVVersionInfoOptions? PVVersionInfoOptions { get; set; }
     public VifConfigureOptions? VifConfigureOptions { get; set; }
+    public TimeResyncOptions? TimeResyncOptions { get; set; }
 }
 
 [JsonSourceGenerationOptions(JsonSerializerDefaults.General)]
