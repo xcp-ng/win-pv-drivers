@@ -59,6 +59,19 @@ sealed partial class XenIfaceSource : IDisposable {
     /// </summary>
     internal XenIfaceDevice? Active => _active;
 
+    void SuspendCallback() {
+        lock (_lock) {
+            if (_active == null) {
+                return;
+            }
+            foreach (var watch in _watches) {
+                _logger.LogTrace("Rearming from suspend callback: '{}'", watch.Path);
+                watch.Rearm(_active);
+            }
+        }
+        Resumed?.Invoke(this, new XenIfaceResumedEventArgs());
+    }
+
     public XenIfaceSource(ILogger<XenIfaceSource> logger, CancellationToken? ct = null) {
         _logger = logger;
         try {
@@ -71,8 +84,7 @@ sealed partial class XenIfaceSource : IDisposable {
 
             _suspend = new(false);
             _suspendWait = ThreadPool.RegisterWaitForSingleObject(_suspend, (state, _) => {
-                var self = Check.Unwrap<XenIfaceSource>(state);
-                self.Resumed?.Invoke(self, new XenIfaceResumedEventArgs());
+                Check.Unwrap<XenIfaceSource>(state).SuspendCallback();
             }, this, Timeout.Infinite, false);
             _suspendWaitRegistered = true;
 
@@ -189,6 +201,7 @@ sealed partial class XenIfaceSource : IDisposable {
 
         _active.SuspendRegister(_suspend.SafeWaitHandle);
         foreach (var watch in _watches) {
+            _logger.LogTrace("Rearming from device arrival: '{}'", watch.Path);
             watch.Rearm(_active);
         }
         _suspend.Set();
