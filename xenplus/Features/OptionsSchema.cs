@@ -10,6 +10,7 @@ sealed class AllOptions {
     public PVVersionInfoOptions? PVVersionInfoOptions { get; set; }
     public VifConfigureOptions? VifConfigureOptions { get; set; }
     public TimeResyncOptions? TimeResyncOptions { get; set; }
+    public GarbageCollectOptions? GarbageCollectOptions { get; set; }
 }
 
 [JsonSourceGenerationOptions(JsonSerializerDefaults.General)]

@@ -77,6 +77,9 @@ class Program {
         builder.Services.Configure<VifConfigureOptions>(builder.Configuration.GetSection(nameof(VifConfigureOptions)));
         builder.Services.AddHostedService<VifConfigureFeature>();
 
+        builder.Services.Configure<GarbageCollectOptions>(builder.Configuration.GetSection(nameof(GarbageCollectOptions)));
+        builder.Services.AddHostedService<GarbageCollectFeature>();
+
         var host = builder.Build();
         host.Run();
     }
