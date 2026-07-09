@@ -65,7 +65,7 @@ sealed partial class XenIfaceSource : IDisposable {
                 return;
             }
             foreach (var watch in _watches) {
-                _logger.LogTrace("Rearming from suspend callback: '{}'", watch.Path);
+                _logger.LogTrace("Rearming watch: '{}'", watch.Path);
                 watch.Rearm(_active);
             }
         }
@@ -200,10 +200,6 @@ sealed partial class XenIfaceSource : IDisposable {
         }
 
         _active.SuspendRegister(_suspend.SafeWaitHandle);
-        foreach (var watch in _watches) {
-            _logger.LogTrace("Rearming from device arrival: '{}'", watch.Path);
-            watch.Rearm(_active);
-        }
         _suspend.Set();
     }
 
