@@ -4,10 +4,10 @@ using System.Net;
 using Microsoft.Extensions.Options;
 using Windows.Win32.Networking.WinSock;
 using Windows.Win32.NetworkManagement.IpHelper;
-using XenPlus;
-using XenPlus.Features;
 using XenPlus.VifConfigure;
 using XenPlus.XenIface;
+
+namespace XenPlus.Features;
 
 sealed class VifConfigureOptions {
     public bool Enabled { get; set; } = true;
