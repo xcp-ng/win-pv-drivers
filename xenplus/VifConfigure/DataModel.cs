@@ -26,15 +26,21 @@ abstract class VifConfiguration {
     /// </summary>
     public required string StorePath { get; set; }
     public required string Mac { get; set; }
+    /// <summary>
+    /// For display purposes only.
+    /// </summary>
+    public virtual string Category => "unknown";
 }
 
 class VifConfigurationIPv4 : VifConfiguration {
+    public override string Category => "noop IPv4";
 }
 
 sealed class VifConfigurationIPv4None : VifConfigurationIPv4 {
 }
 
 sealed class VifConfigurationIPv4Static : VifConfigurationIPv4 {
+    public override string Category => "static IPv4";
     /// <summary>
     /// CIDRs
     /// </summary>
@@ -43,15 +49,18 @@ sealed class VifConfigurationIPv4Static : VifConfigurationIPv4 {
 }
 
 sealed class VifConfigurationIPv4Dhcp : VifConfigurationIPv4 {
+    public override string Category => "DHCP IPv4";
 }
 
 class VifConfigurationIPv6 : VifConfiguration {
+    public override string Category => "noop IPv6";
 }
 
 sealed class VifConfigurationIPv6None : VifConfigurationIPv6 {
 }
 
 sealed class VifConfigurationIPv6Static : VifConfigurationIPv6 {
+    public override string Category => "static IPv6";
     /// <summary>
     /// CIDRs
     /// </summary>
@@ -60,6 +69,7 @@ sealed class VifConfigurationIPv6Static : VifConfigurationIPv6 {
 }
 
 sealed class VifConfigurationIPv6Autoconf : VifConfigurationIPv6 {
+    public override string Category => "autoconf IPv4";
 }
 
 class VifConfigurationEqualityComparer : IEqualityComparer<VifConfiguration> {

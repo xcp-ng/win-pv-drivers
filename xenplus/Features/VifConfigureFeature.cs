@@ -122,13 +122,15 @@ sealed class VifConfigureFeature(
         CancellationToken ct) {
         if (mibIfTable.FindIfaceRow(config.Mac) is not MIB_IF_ROW2 mibIf) {
             _logger.LogWarning(
-                "Cannot find matching network interface for '{}' (MAC '{}')",
+                "Cannot find matching network interface for {} config '{}' (MAC '{}')",
+                config.Category,
                 config.StorePath,
                 config.Mac);
             return;
         }
         _logger.LogDebug(
-            "Identified config target iface '{}' (LUID {}, index {}, guid {})",
+            "Identified {} config target iface '{}' (LUID {}, index {}, guid {})",
+            config.Category,
             mibIf.Alias.ToString(),
             mibIf.InterfaceLuid.Value,
             mibIf.InterfaceIndex,
@@ -286,13 +288,18 @@ sealed class VifConfigureFeature(
                 using var mibRouteTable = MibIpForwardTable2SafeHandle.GetIpForwardTable2(ADDRESS_FAMILY.AF_UNSPEC);
 
                 foreach (var config in ParseVifConfigurations()) {
-                    _logger.LogDebug("Applying config update for '{}' (MAC '{}')", config.StorePath, config.Mac);
+                    _logger.LogDebug(
+                        "Applying {} config update for '{}' (MAC '{}')",
+                        config.Category,
+                        config.StorePath,
+                        config.Mac);
                     try {
                         await ApplyVifConfiguration(mibIfTable, mibIPTable, mibRouteTable, config, stoppingToken);
                     } catch (Exception ex) {
                         _logger.LogWarning(
                             ex,
-                            "Cannot apply VIF config update for '{}' (MAC '{}')",
+                            "Cannot apply {} config update for '{}' (MAC '{}')",
+                            config.Category,
                             config.StorePath,
                             config.Mac);
                     }
