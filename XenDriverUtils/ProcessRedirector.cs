@@ -11,6 +11,7 @@ namespace XenDriverUtils {
         readonly Task _task;
         readonly LogLevel _level;
 
+        /// <remarks>This class takes ownership of <paramref name="source"/>.</remarks>
         public ProcessRedirector(StreamReader source, LogLevel level, CancellationToken ct = default) {
             _source = source;
             _ct = ct;
@@ -23,6 +24,7 @@ namespace XenDriverUtils {
             if (!_task.IsCompleted) {
                 Logger.Log(LogLevel.Alert, "ProcessRedirector task stuck");
             }
+            _source.Dispose();
         }
 
         void Redirect() {
@@ -39,7 +41,7 @@ namespace XenDriverUtils {
             }
         }
 
-        public static void LogProcessOutput(Process process, TimeSpan? timeout, LogLevel level) {
+        public static void LogProcessOutputs(Process process, TimeSpan? timeout, LogLevel level) {
             var cts = new CancellationTokenSource();
             using var outputRedir = new ProcessRedirector(process.StandardOutput, level, cts.Token);
             using var errorRedir = new ProcessRedirector(process.StandardError, level, cts.Token);
@@ -71,7 +73,7 @@ namespace XenDriverUtils {
             var process = Process.Start(psi) ?? throw new NullReferenceException();
             process.StandardInput.Close();
 
-            LogProcessOutput(process, timeout, level);
+            LogProcessOutputs(process, timeout, level);
             return process;
         }
     }

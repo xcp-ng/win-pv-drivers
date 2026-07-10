@@ -233,8 +233,11 @@ sealed class VifConfigureFeature(
                 using var process = Process.Start(psi) ??
                     throw new NullReferenceException("command process not started");
                 process.StandardInput.Close();
-                var stdoutTask = process.StandardOutput.ReadToEndAsync(ct);
-                var stderrTask = process.StandardError.ReadToEndAsync(ct);
+
+                using var stdout = process.StandardOutput;
+                using var stderr = process.StandardError;
+                var stdoutTask = stdout.ReadToEndAsync(ct);
+                var stderrTask = stderr.ReadToEndAsync(ct);
 
                 using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
                 timeout.CancelAfter(_options.CurrentValue.CommandTimeoutMilliseconds);

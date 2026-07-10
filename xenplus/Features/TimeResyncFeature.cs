@@ -61,8 +61,11 @@ sealed class TimeResyncFeature(
 
             using var process = Process.Start(psi) ?? throw new NullReferenceException("w32tm process not started");
             process.StandardInput.Close();
-            _ = process.StandardOutput.BaseStream.CopyToAsync(Stream.Null, _cts!.Token);
-            _ = process.StandardError.BaseStream.CopyToAsync(Stream.Null, _cts!.Token);
+
+            using var stdout = process.StandardOutput;
+            using var stderr = process.StandardError;
+            _ = stdout.BaseStream.CopyToAsync(Stream.Null, _cts!.Token);
+            _ = stderr.BaseStream.CopyToAsync(Stream.Null, _cts!.Token);
 
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(_cts!.Token);
             timeout.CancelAfter(_options.CurrentValue.CommandTimeoutMilliseconds);
