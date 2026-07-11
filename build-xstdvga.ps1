@@ -18,7 +18,7 @@ param (
 $ErrorActionPreference = "Stop"
 
 $Now = [datetime]::UtcNow
-$DriverTime = "1" + $Now.ToString("HHmm")
+$DriverTime = $Now.ToString("Hmm")
 
 Push-Location $PSScriptRoot\xstdvga
 try {

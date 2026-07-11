@@ -24,9 +24,8 @@ param (
 . $PSScriptRoot\scripts\branding-generic.ps1
 . $PSScriptRoot\scripts\sign.ps1
 
-# Drivers are ordered by build date first so the HHmm gives you a more granular revision number (down to the minute).
-# The "1" is to avoid leading zeroes.
-$DriverTime = "1" + (Get-Date -Format HHmm)
+# Drivers are ordered by build date first so the Hmm gives you a more granular revision number (down to the minute).
+$DriverTime = (Get-Date -Format Hmm)
 
 $OutputPath = "$PSScriptRoot\installer\driver-bins"
 Remove-Item -Path $OutputPath -Force -Recurse -ErrorAction SilentlyContinue
