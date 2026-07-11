@@ -56,6 +56,7 @@ foreach ($repo in $Drivers) {
             "/p:Configuration=$DriverConfiguration",
             "/p:Platform=$Platform",
             "/p:SignMode=Off",
+            "/p:_NT_TARGET_VERSION=0xA000002",
             "/t:$Target"
         )
         if ($Kasan) {
