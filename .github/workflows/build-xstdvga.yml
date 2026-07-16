@@ -41,11 +41,11 @@ jobs:
           Expand-Archive $Env:RUNNER_TEMP\tools\codeql.zip -DestinationPath $Env:RUNNER_TEMP\tools\codeql -Force
           Add-Content -Path $Env:GITHUB_PATH -Value "$Env:RUNNER_TEMP\tools\codeql\codeql" -Force
         env:
-          CODEQL_URI: https://github.com/github/codeql-cli-binaries/releases/download/v2.24.1/codeql-win64.zip
-          CODEQL_SHA256: 7608f6c07b077ab142f9768f2b089700129d5871398eef64b7965c99d5d725bd
+          CODEQL_URI: https://github.com/github/codeql-cli-binaries/releases/download/v2.25.5/codeql-win64.zip
+          CODEQL_SHA256: db470e09a5f94e9d262f0e1a67af1ff1c72571d567898d3a44c4b09c581afc6e
       - name: Download packs
         run: |
-          codeql pack download microsoft/windows-drivers@1.8.2 microsoft/cpp-queries@0.0.4
+          codeql pack download microsoft/windows-drivers@1.10.0 microsoft/cpp-queries@0.0.5
           if ($LASTEXITCODE -ne 0) {
             throw "CodeQL download failed with error $LASTEXITCODE"
           }
