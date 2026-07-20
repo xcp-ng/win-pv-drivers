@@ -80,6 +80,10 @@ class Program {
         builder.Services.Configure<GarbageCollectOptions>(builder.Configuration.GetSection(nameof(GarbageCollectOptions)));
         builder.Services.AddHostedService<GarbageCollectFeature>();
 
+        builder.Services.AddSingleton<IValidateOptions<VolumeInfoOptions>, ValidateVolumeInfoOptions>();
+        builder.Services.Configure<VolumeInfoOptions>(builder.Configuration.GetSection(nameof(VolumeInfoOptions)));
+        builder.Services.AddHostedService<VolumeInfoFeature>();
+
         var host = builder.Build();
         host.Run();
     }

@@ -11,6 +11,7 @@ sealed class AllOptions {
     public VifConfigureOptions? VifConfigureOptions { get; set; }
     public TimeResyncOptions? TimeResyncOptions { get; set; }
     public GarbageCollectOptions? GarbageCollectOptions { get; set; }
+    public VolumeInfoOptions? VolumeInfoOptions { get; set; }
 }
 
 [JsonSourceGenerationOptions(JsonSerializerDefaults.General)]

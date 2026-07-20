@@ -1,6 +1,7 @@
 FACILITY_CODE
 GetCurrentProcess
 INVALID_HANDLE_VALUE
+MAX_PATH
 WIN32_ERROR
 
 // CM/device connection
@@ -26,6 +27,7 @@ CM_Register_Notification
 DeviceIoControl
 DEVPKEY_Device_Children
 FILE_ANY_ACCESS
+FILE_DEVICE_TYPE
 FILE_DEVICE_UNKNOWN
 METHOD_BUFFERED
 METHOD_NEITHER
@@ -54,6 +56,23 @@ GetIfTable2
 GetIpForwardTable2
 GetUnicastIpAddressTable
 IF_TYPE_ETHERNET_CSMACD
+
+// VolumeInfoFeature
+DRIVE_FIXED
+FindFirstVolume
+FindNextVolume
+FindVolumeClose
+GetDiskFreeSpaceEx
+GetDriveType
+GetVolumeInformation
+GetVolumePathNamesForVolumeName
+GUID_DEVINTERFACE_DISK
+IOCTL_SCSI_GET_ADDRESS
+IOCTL_STORAGE_GET_DEVICE_NUMBER
+IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS
+SCSI_ADDRESS
+STORAGE_DEVICE_NUMBER
+VOLUME_DISK_EXTENTS
 
 // WMI
 CoInitializeSecurity
