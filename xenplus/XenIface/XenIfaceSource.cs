@@ -4,7 +4,6 @@ using Windows.Win32;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using Windows.Win32.Foundation;
 
-using static Windows.Win32.Devices.DeviceAndDriverInstallation.CM_GET_DEVICE_INTERFACE_LIST_FLAGS;
 using static Windows.Win32.Devices.DeviceAndDriverInstallation.CM_NOTIFY_ACTION;
 using static Windows.Win32.Devices.DeviceAndDriverInstallation.CM_NOTIFY_FILTER_TYPE;
 
@@ -141,35 +140,6 @@ sealed partial class XenIfaceSource : IDisposable {
     /// </summary>
     public event XenIfaceResumedEventHandler? Resumed;
 
-    static IEnumerable<string> FindDevices() {
-        CONFIGRET cr;
-        char[] buf;
-        do {
-            ServerUtils.CheckConfigret(PInvoke.CM_Get_Device_Interface_List_Size(
-                out var len,
-                GUID_INTERFACE_XENIFACE,
-                null,
-                CM_GET_DEVICE_INTERFACE_LIST_PRESENT));
-
-            buf = new char[len];
-            unsafe {
-                fixed (char* p = buf) {
-                    cr = PInvoke.CM_Get_Device_Interface_List(
-                        GUID_INTERFACE_XENIFACE,
-                        null,
-                        p,
-                        (uint)buf.Length,
-                        CM_GET_DEVICE_INTERFACE_LIST_PRESENT);
-                }
-            }
-        } while (cr == CONFIGRET.CR_BUFFER_SMALL);
-        ServerUtils.CheckConfigret(cr);
-
-        foreach (var device in ServerUtils.ParseMultiString(buf)) {
-            yield return device;
-        }
-    }
-
     /// <summary>
     /// locked
     /// </summary>
@@ -184,7 +154,7 @@ sealed partial class XenIfaceSource : IDisposable {
             }
         }
 
-        foreach (var device in FindDevices()) {
+        foreach (var device in Cfgmgr32.GetDeviceInterfaces(GUID_INTERFACE_XENIFACE)) {
             try {
                 _logger.LogTrace("Trying {device}", device);
                 _active = new XenIfaceDevice(this, device);
