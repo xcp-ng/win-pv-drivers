@@ -7,10 +7,10 @@ using Windows.Win32.System.Diagnostics.Debug;
 namespace XenPlus;
 
 static class ServerUtils {
-    public static List<string> ParseMultiString<T>(T[] buf, Func<T[], int, int, string> ctor)
+    public static List<string> ParseMultiString<T>(ReadOnlySpan<T> buf, Func<ReadOnlySpan<T>, string> ctor)
     where T : struct, IEquatable<T> {
         var strings = new List<string>();
-        if (buf == null || buf.Length == 0) {
+        if (buf.Length == 0) {
             return strings;
         }
         for (int i = 0; i < buf.Length; i++) {
@@ -21,13 +21,13 @@ static class ServerUtils {
             while (i < buf.Length && !default(T).Equals(buf[i])) {
                 i++;
             }
-            strings.Add(ctor(buf, start, i - start));
+            strings.Add(ctor(buf[start..i]));
         }
         return strings;
     }
 
-    public static List<string> ParseMultiString(char[] buf) {
-        return ParseMultiString(buf, static (x, y, z) => new string(x, y, z));
+    public static List<string> ParseMultiString(ReadOnlySpan<char> buf) {
+        return ParseMultiString(buf, static x => new string(x));
     }
 
     public static void CheckConfigret(CONFIGRET cr) {
