@@ -18,7 +18,7 @@ sealed class DsRolePrimaryDomainInfoBasicSafeHandle : SafeHandle {
                 DSROLE_PRIMARY_DOMAIN_INFO_LEVEL.DsRolePrimaryDomainInfoBasic,
                 ref info);
             if (err != (uint)WIN32_ERROR.ERROR_SUCCESS) {
-                throw new Win32Exception(unchecked((int)err));
+                throw new Win32Exception(unchecked((int)err), nameof(PInvoke.DsRoleGetPrimaryDomainInformation));
             }
             return new(info, true);
         }

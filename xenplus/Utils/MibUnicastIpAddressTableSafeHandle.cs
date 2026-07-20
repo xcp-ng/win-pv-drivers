@@ -2,6 +2,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Windows.Win32;
+using Windows.Win32.Foundation;
 using Windows.Win32.Networking.WinSock;
 using Windows.Win32.NetworkManagement.IpHelper;
 
@@ -14,8 +15,8 @@ sealed class MibUnicastIpAddressTableSafeHandle : SafeHandle, IReadOnlyList<MIB_
     public static MibUnicastIpAddressTableSafeHandle GetUnicastIpAddressTable(ADDRESS_FAMILY family) {
         unsafe {
             var err = PInvoke.GetUnicastIpAddressTable(family, out var table);
-            if (err != Windows.Win32.Foundation.WIN32_ERROR.NO_ERROR) {
-                throw new Win32Exception((int)err);
+            if (err != WIN32_ERROR.NO_ERROR) {
+                throw new Win32Exception(unchecked((int)err), nameof(PInvoke.GetUnicastIpAddressTable));
             }
             return new MibUnicastIpAddressTableSafeHandle(table);
         }

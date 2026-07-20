@@ -219,7 +219,7 @@ sealed class ClipboardFeature(
 
         try {
             if (!PInvoke.GetNamedPipeClientSessionId(client.Stream.SafePipeHandle, out sid)) {
-                throw new Win32Exception();
+                throw new Win32Exception(nameof(PInvoke.GetNamedPipeClientSessionId));
             }
             DebugLogTrace("client sid is {0}", sid);
             // to prevent flipflopping between different user clipboard agents, if the session is already connected,

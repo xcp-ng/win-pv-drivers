@@ -144,7 +144,7 @@ sealed partial class XenIfaceDevice {
         var outBuf = new byte[XENSTORE_PAYLOAD_MAX];
         unsafe {
             if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_READ, inBuf, outBuf)) {
-                throw new Win32Exception();
+                throw new Win32Exception(nameof(IOCTL_XENIFACE_STORE_READ));
             }
         }
         outBuf[^1] = 0;
@@ -157,7 +157,7 @@ sealed partial class XenIfaceDevice {
         FormatString(value, inBuf, pathLen + 1, strict);
         unsafe {
             if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_WRITE, inBuf)) {
-                throw new Win32Exception();
+                throw new Win32Exception(nameof(IOCTL_XENIFACE_STORE_WRITE));
             }
         }
     }
@@ -171,7 +171,7 @@ sealed partial class XenIfaceDevice {
         var outBuf = new byte[XENSTORE_PAYLOAD_MAX];
         unsafe {
             if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_DIRECTORY, inBuf, outBuf)) {
-                throw new Win32Exception();
+                throw new Win32Exception(nameof(IOCTL_XENIFACE_STORE_DIRECTORY));
             }
         }
         return ServerUtils.ParseMultiString(outBuf, GetEncoding(true).GetString)
@@ -184,7 +184,7 @@ sealed partial class XenIfaceDevice {
         FormatPath(path, inBuf, 0);
         unsafe {
             if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_REMOVE, inBuf)) {
-                throw new Win32Exception();
+                throw new Win32Exception(nameof(IOCTL_XENIFACE_STORE_REMOVE));
             }
         }
     }
@@ -206,7 +206,7 @@ sealed partial class XenIfaceDevice {
                     IOCTL_XENIFACE_STORE_ADD_WATCH,
                     MemoryMarshal.AsBytes(new ReadOnlySpan<XENIFACE_STORE_ADD_WATCH_IN>(ref inBuf)),
                     MemoryMarshal.AsBytes(new Span<XENIFACE_STORE_ADD_WATCH_OUT>(ref outBuf)))) {
-                    throw new Win32Exception();
+                    throw new Win32Exception(nameof(IOCTL_XENIFACE_STORE_ADD_WATCH));
                 }
             }
             return new WatchAbiHandle(this, (nint)outBuf.Context);
@@ -226,7 +226,7 @@ sealed partial class XenIfaceDevice {
                 Handle,
                 IOCTL_XENIFACE_STORE_REMOVE_WATCH,
                 MemoryMarshal.AsBytes(new ReadOnlySpan<XENIFACE_STORE_ADD_WATCH_OUT>(ref inBuf)))) {
-                throw new Win32Exception();
+                throw new Win32Exception(nameof(IOCTL_XENIFACE_STORE_REMOVE_WATCH));
             }
         }
     }
@@ -243,7 +243,7 @@ sealed partial class XenIfaceDevice {
                 IOCTL_XENIFACE_SUSPEND_REGISTER,
                 MemoryMarshal.AsBytes(new ReadOnlySpan<XENIFACE_SUSPEND_REGISTER_IN>(ref inBuf)),
                 MemoryMarshal.AsBytes(new Span<XENIFACE_SUSPEND_REGISTER_OUT>(ref outBuf)))) {
-                throw new Win32Exception();
+                throw new Win32Exception(nameof(IOCTL_XENIFACE_SUSPEND_REGISTER));
             }
             return new SuspendAbiHandle(this, (nint)outBuf.Context);
         }
@@ -262,7 +262,7 @@ sealed partial class XenIfaceDevice {
                 Handle,
                 IOCTL_XENIFACE_SUSPEND_DEREGISTER,
                 MemoryMarshal.AsBytes(new ReadOnlySpan<XENIFACE_SUSPEND_REGISTER_OUT>(ref inBuf)))) {
-                throw new Win32Exception();
+                throw new Win32Exception(nameof(IOCTL_XENIFACE_SUSPEND_DEREGISTER));
             }
         }
     }

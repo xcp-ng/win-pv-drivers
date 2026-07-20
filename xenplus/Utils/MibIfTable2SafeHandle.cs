@@ -2,6 +2,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Windows.Win32;
+using Windows.Win32.Foundation;
 using Windows.Win32.NetworkManagement.IpHelper;
 
 namespace XenPlus;
@@ -13,8 +14,8 @@ sealed class MibIfTable2SafeHandle : SafeHandle, IReadOnlyList<MIB_IF_ROW2> {
     public static MibIfTable2SafeHandle GetIfTable2() {
         unsafe {
             var err = PInvoke.GetIfTable2(out var table);
-            if (err != Windows.Win32.Foundation.WIN32_ERROR.NO_ERROR) {
-                throw new Win32Exception((int)err);
+            if (err != WIN32_ERROR.NO_ERROR) {
+                throw new Win32Exception(unchecked((int)err), nameof(PInvoke.GetIfTable2));
             }
             return new MibIfTable2SafeHandle(table);
         }
