@@ -243,7 +243,7 @@ sealed partial class XenIfaceSource : IDisposable {
                 Reserved = 0,
                 u = { DeviceInterface = { ClassGuid = GUID_INTERFACE_XENIFACE } }
             };
-            ServerUtils.CheckConfigret(PInvoke.CM_Register_Notification(
+            Cfgmgr32.CheckConfigret(PInvoke.CM_Register_Notification(
                 filter,
                 (void*)GCHandle.ToIntPtr(gch),
                 &WorkerCmCallback,

@@ -1,6 +1,3 @@
-using System.ComponentModel;
-using Windows.Win32;
-using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.Diagnostics.Debug;
 
@@ -28,12 +25,6 @@ static class ServerUtils {
 
     public static List<string> ParseMultiString(ReadOnlySpan<char> buf) {
         return ParseMultiString(buf, static x => new string(x));
-    }
-
-    public static void CheckConfigret(CONFIGRET cr) {
-        if (cr != CONFIGRET.CR_SUCCESS) {
-            throw new Win32Exception(unchecked((int)PInvoke.CM_MapCrToWin32Err(cr, (uint)WIN32_ERROR.ERROR_GEN_FAILURE)));
-        }
     }
 
     public static int HresultFromWin32(int x) {

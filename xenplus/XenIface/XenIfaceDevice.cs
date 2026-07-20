@@ -38,7 +38,7 @@ sealed partial class XenIfaceDevice : IDisposable {
                 Reserved = 0,
                 u = { DeviceHandle = { hTarget = (HANDLE)shref.DangerousHandle } }
             };
-            ServerUtils.CheckConfigret(PInvoke.CM_Register_Notification(
+            Cfgmgr32.CheckConfigret(PInvoke.CM_Register_Notification(
                 filter,
                 (void*)GCHandle.ToIntPtr(_gch),
                 &DeviceCmCallback,
