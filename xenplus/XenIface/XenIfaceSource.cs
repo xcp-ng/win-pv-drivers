@@ -179,6 +179,7 @@ sealed partial class XenIfaceSource : IDisposable {
                 Action = action,
                 TargetDevice = target
             });
+            Monitor.Pulse(_lock);
         }
     }
 
