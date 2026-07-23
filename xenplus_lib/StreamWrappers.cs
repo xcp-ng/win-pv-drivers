@@ -3,6 +3,8 @@ namespace XenPlus;
 /// <param name="fatal">If false, returns no data when limit reached; if true, throws an exception</param>
 /// <remarks><see cref="StreamReadLimiter"/> does not close the underlying stream.</remarks>
 public sealed class StreamReadLimiter(Stream s, int limit, bool fatal = false) : Stream {
+    readonly SemaphoreSlim _lock = new(1, 1);
+
     public override bool CanRead => s.CanRead;
 
     public override bool CanSeek => false;
@@ -36,6 +38,7 @@ public sealed class StreamReadLimiter(Stream s, int limit, bool fatal = false) :
     }
 
     public override int Read(byte[] buffer, int offset, int count) {
+        using var scope = _lock.EnterScope();
         var max = ApplyLimit(count);
         var bytesRead = s.Read(buffer, offset, max);
         limit -= bytesRead;
@@ -55,12 +58,38 @@ public sealed class StreamReadLimiter(Stream s, int limit, bool fatal = false) :
     }
 
     public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state) {
-        var max = ApplyLimit(count);
-        return s.BeginRead(buffer, offset, max, callback, state);
+        _lock.Wait();
+        try {
+            var max = ApplyLimit(count);
+            return s.BeginRead(buffer, offset, max, callback, state);
+        } catch {
+            _lock.Release();
+            throw;
+        }
     }
 
     public override int EndRead(IAsyncResult asyncResult) {
-        var bytesRead = s.EndRead(asyncResult);
+        try {
+            var bytesRead = s.EndRead(asyncResult);
+            limit -= bytesRead;
+            return bytesRead;
+        } finally {
+            _lock.Release();
+        }
+    }
+
+    public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
+        using var scope = await _lock.EnterScopeAsync(cancellationToken);
+        var max = ApplyLimit(count);
+        var bytesRead = await s.ReadAsync(buffer, offset, max, cancellationToken);
+        limit -= bytesRead;
+        return bytesRead;
+    }
+
+    public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) {
+        using var scope = await _lock.EnterScopeAsync(cancellationToken);
+        var max = ApplyLimit(buffer.Length);
+        var bytesRead = await s.ReadAsync(buffer[..max], cancellationToken);
         limit -= bytesRead;
         return bytesRead;
     }
