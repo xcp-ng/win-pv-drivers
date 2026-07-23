@@ -98,11 +98,26 @@ static class VifStore {
     }
 
     internal static void RespondVifConfiguration(XenIfaceHandle h, string vc, Exception? ex = null) {
-        h.StoreRemove(StoreUtils.PathJoin(vc, StaticIpSetting, "enabled"));
-        h.StoreRemove(StoreUtils.PathJoin(vc, StaticIpSetting, "enabled6"));
-        if (ex == null) {
-            h.StoreWrite(StoreUtils.PathJoin(vc, StaticIpSetting, "error-code"), "0");
-            h.StoreWrite(StoreUtils.PathJoin(vc, StaticIpSetting, "error-msg"), "");
+        try {
+            h.StoreRemove(StoreUtils.PathJoin(vc, StaticIpSetting, "enabled"));
+        } catch {
+        }
+        try {
+            h.StoreRemove(StoreUtils.PathJoin(vc, StaticIpSetting, "enabled6"));
+        } catch {
+        }
+        if (ex != null) {
+            try {
+                h.StoreWrite(StoreUtils.PathJoin(vc, StaticIpSetting, "error-code"), ex.HResult.ToString());
+                h.StoreWrite(StoreUtils.PathJoin(vc, StaticIpSetting, "error-msg"), ex.Message);
+            } catch {
+            }
+        } else {
+            try {
+                h.StoreWrite(StoreUtils.PathJoin(vc, StaticIpSetting, "error-code"), "0");
+                h.StoreWrite(StoreUtils.PathJoin(vc, StaticIpSetting, "error-msg"), "");
+            } catch {
+            }
         }
     }
 }

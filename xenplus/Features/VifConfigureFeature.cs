@@ -298,6 +298,9 @@ sealed class VifConfigureFeature(
                         config.Mac);
                     try {
                         await ApplyVifConfiguration(mibIfTable, mibIPTable, mibRouteTable, config, stoppingToken);
+
+                        using var h = _xi.Lock();
+                        VifStore.RespondVifConfiguration(h, config.StorePath);
                     } catch (Exception ex) {
                         _logger.LogWarning(
                             ex,
@@ -305,6 +308,9 @@ sealed class VifConfigureFeature(
                             config.Category,
                             config.StorePath,
                             config.Mac);
+
+                        using var h = _xi.Lock();
+                        VifStore.RespondVifConfiguration(h, config.StorePath, ex);
                     }
                 }
             } catch (OperationCanceledException) {
