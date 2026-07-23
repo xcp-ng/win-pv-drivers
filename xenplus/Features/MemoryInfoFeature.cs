@@ -24,7 +24,7 @@ sealed class MemoryInfoFeature(
     XenIfaceSource _xi,
     ILogger<MemoryInfoFeature> _logger) : FeatureBase(_hostLifetime, _logger) {
     void Report(object? sender, XenIfaceResumedEventArgs args) {
-        DebugLogTrace("{}.{}", nameof(MemoryInfoFeature), nameof(Report));
+        //DebugLogTrace("{}.{}", nameof(MemoryInfoFeature), nameof(Report));
         try {
             var status = new MEMORYSTATUSEX {
                 dwLength = (uint)Unsafe.SizeOf<MEMORYSTATUSEX>()
