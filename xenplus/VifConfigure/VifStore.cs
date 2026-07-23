@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Net;
 using System.Net.Sockets;
 using XenPlus.XenIface;
@@ -23,7 +24,11 @@ static class VifStore {
             throw new ArgumentException($"IPv4 address '{rawAddress}' is not acceptable");
         }
 
-        var rawGateway = h.StoreReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "gateway"));
+        string? rawGateway = null;
+        try {
+            rawGateway = h.StoreReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "gateway"));
+        } catch (Win32Exception ex) when (StoreUtils.ExceptionIsStoreNotFound(ex)) {
+        }
         var gateway = rawGateway != null ? IPAddress.Parse(rawGateway) : null;
         if (gateway != null && gateway.AddressFamily != AddressFamily.InterNetwork) {
             throw new ArgumentException($"IPv4 gateway '{rawGateway}' is not acceptable");
@@ -49,7 +54,11 @@ static class VifStore {
             throw new ArgumentException($"IPv6 address '{rawAddress}' is not acceptable");
         }
 
-        var rawGateway = h.StoreReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "gateway6"));
+        string? rawGateway = null;
+        try {
+            rawGateway = h.StoreReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "gateway6"));
+        } catch (Win32Exception ex) when (StoreUtils.ExceptionIsStoreNotFound(ex)) {
+        }
         var gateway = rawGateway != null ? IPAddress.Parse(rawGateway) : null;
         if (gateway != null && gateway.AddressFamily != AddressFamily.InterNetworkV6) {
             throw new ArgumentException($"IPv6 gateway '{rawGateway}' is not acceptable");
