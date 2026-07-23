@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Net;
 using System.Net.Sockets;
 using XenPlus.XenIface;
@@ -98,27 +97,20 @@ static class VifStore {
         };
     }
 
-    internal static void RespondVifConfiguration(XenIfaceHandle h, string vc, Exception? ex = null) {
+    internal static void RespondVifConfiguration(XenIfaceHandle h, string vc, string suffix, Exception? ex = null) {
         try {
-            h.StoreRemove(StoreUtils.PathJoin(vc, StaticIpSetting, "enabled"));
+            h.StoreRemove(StoreUtils.PathJoin(vc, StaticIpSetting, "enabled" + suffix));
         } catch {
         }
+        var (errorCode, msg) = ex switch {
+            null => (0, ""),
+            VifConfigureException vex => (vex.ErrorCode, vex.Message),
+            _ => (ex.HResult, ex.Message),
+        };
         try {
-            h.StoreRemove(StoreUtils.PathJoin(vc, StaticIpSetting, "enabled6"));
+            h.StoreWrite(StoreUtils.PathJoin(vc, StaticIpSetting, "error-code" + suffix), errorCode.ToString());
+            h.StoreWrite(StoreUtils.PathJoin(vc, StaticIpSetting, "error-msg" + suffix), msg);
         } catch {
-        }
-        if (ex != null) {
-            try {
-                h.StoreWrite(StoreUtils.PathJoin(vc, StaticIpSetting, "error-code"), ex.HResult.ToString());
-                h.StoreWrite(StoreUtils.PathJoin(vc, StaticIpSetting, "error-msg"), ex.Message);
-            } catch {
-            }
-        } else {
-            try {
-                h.StoreWrite(StoreUtils.PathJoin(vc, StaticIpSetting, "error-code"), "0");
-                h.StoreWrite(StoreUtils.PathJoin(vc, StaticIpSetting, "error-msg"), "");
-            } catch {
-            }
         }
     }
 }

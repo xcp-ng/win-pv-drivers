@@ -107,10 +107,7 @@ sealed class VifConfigureFeature(
                 stderr = await stderrTask.WaitAsync(ct);
             } catch {
             }
-            var output = $"{stdout}{stderr}";
-            throw !string.IsNullOrEmpty(output)
-                ? new Exception($"Command '{command}' failed with exit code {process.ExitCode}:\n\n{output}")
-                : new Exception($"Command '{command}' failed with exit code {process.ExitCode}");
+            throw new VifConfigureException(process.ExitCode, command, $"{stdout}{stderr}");
         }
     }
 
@@ -296,11 +293,13 @@ sealed class VifConfigureFeature(
                         config.Category,
                         config.StorePath,
                         config.Mac);
+
+                    var suffix = config is VifConfigurationIPv6 ? "6" : "";
                     try {
                         await ApplyVifConfiguration(mibIfTable, mibIPTable, mibRouteTable, config, stoppingToken);
 
                         using var h = _xi.Lock();
-                        VifStore.RespondVifConfiguration(h, config.StorePath);
+                        VifStore.RespondVifConfiguration(h, config.StorePath, suffix);
                     } catch (Exception ex) {
                         _logger.LogWarning(
                             ex,
@@ -310,7 +309,7 @@ sealed class VifConfigureFeature(
                             config.Mac);
 
                         using var h = _xi.Lock();
-                        VifStore.RespondVifConfiguration(h, config.StorePath, ex);
+                        VifStore.RespondVifConfiguration(h, config.StorePath, suffix, ex);
                     }
                 }
             } catch (OperationCanceledException) {
