@@ -10,7 +10,12 @@ namespace XenPlus.Features;
 
 sealed class ClipboardOptions {
     public bool Enabled { get; set; } = true;
+#if DEBUG
     public bool UnsafeAllowAnySessionForTest { get; set; } = false;
+#else
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool UnsafeAllowAnySessionForTest => false;
+#endif
 }
 
 sealed class ClipboardClient(NamedPipeServerStream _stream, CancellationToken _ct = default) : IDisposable {
