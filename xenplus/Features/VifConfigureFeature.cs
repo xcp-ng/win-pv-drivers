@@ -152,7 +152,7 @@ sealed class VifConfigureFeature(
                 "address",
                 interfaceIndex,
                 "source=static",
-                $"address={address.Address}/{address.Prefix}",
+                $"address={address.Address.ToStringWithoutScopeId()}/{address.Prefix}",
                 $"gateway={staticv4.Gateway?.ToString() ?? "none"}",
             ]));
         } else if (config is VifConfigurationIPv6Autoconf) {
@@ -165,7 +165,7 @@ sealed class VifConfigureFeature(
                     "delete",
                     "address",
                     interfaceIndex,
-                    address.Address.ToString()
+                    address.Address.ToStringWithoutScopeId(),
                 ]));
             }
         } else if (config is VifConfigurationIPv6Static staticv6) {
@@ -173,7 +173,7 @@ sealed class VifConfigureFeature(
             foreach (var existing in mibIPTable.GetManualUnicastAddresses(
                 mibIf.InterfaceIndex,
                 ADDRESS_FAMILY.AF_INET6)) {
-                if (existing.Address.Equals(address.Address) && existing.Prefix == address.Prefix) {
+                if (existing.Address.EqualsWithoutScopeId(address.Address) && existing.Prefix == address.Prefix) {
                     continue;
                 }
                 commands.Add((NetshPath, [
@@ -182,7 +182,7 @@ sealed class VifConfigureFeature(
                     "delete",
                     "address",
                     interfaceIndex,
-                    existing.Address.ToString()
+                    existing.Address.ToStringWithoutScopeId(),
                 ]));
             }
             if (!mibIPTable.HasUnicastAddress(mibIf.InterfaceIndex, address)) {
@@ -192,7 +192,7 @@ sealed class VifConfigureFeature(
                     "add",
                     "address",
                     interfaceIndex,
-                    $"{address.Address}/{address.Prefix}",
+                    $"{address.Address.ToStringWithoutScopeId()}/{address.Prefix}",
                 ]));
             }
             if (staticv6.Gateway is IPAddress gateway &&
@@ -204,7 +204,7 @@ sealed class VifConfigureFeature(
                     "route",
                     "::/0",
                     interfaceIndex,
-                    gateway.ToString(),
+                    gateway.ToStringWithoutScopeId(),
                 ]));
             }
         }

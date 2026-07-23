@@ -125,4 +125,12 @@ static class IPHelperExtensions {
             Prefix = row.OnLinkPrefixLength,
         }).ToList();
     }
+
+    internal static bool EqualsWithoutScopeId(this IPAddress ip, IPAddress other) {
+        return ip.AddressFamily == other.AddressFamily && ip.GetAddressBytes().SequenceEqual(other.GetAddressBytes());
+    }
+
+    internal static string ToStringWithoutScopeId(this IPAddress ip) {
+        return new IPAddress(ip.GetAddressBytes()).ToString();
+    }
 }
