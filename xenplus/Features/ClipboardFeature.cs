@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.ComponentModel;
 using System.IO.Pipes;
 using System.Text.Json;
@@ -156,11 +157,16 @@ sealed class ClipboardFeature(
                     throw new InvalidDataException("client went over the line");
                 }
 
-                var limiter = new StreamReadLimiter(client.Stream, length);
-                var msg = await JsonSerializer.DeserializeAsync(
-                    limiter,
-                    ClipboardMessageContext.Default.ClientMessage,
-                    ct);
+                ClientMessage? msg;
+                var frame = ArrayPool<byte>.Shared.Rent(length);
+                try {
+                    await client.Stream.ReadExactlyAsync(frame.AsMemory(0, length), ct);
+                    msg = JsonSerializer.Deserialize(
+                        frame.AsSpan(0, length),
+                        ClipboardMessageContext.Default.ClientMessage);
+                } finally {
+                    ArrayPool<byte>.Shared.Return(frame, clearArray: true);
+                }
 
                 if (msg is ReportClipboardMessage reportClipboard) {
                     var allowTest = _options.Value.UnsafeAllowAnySessionForTest;

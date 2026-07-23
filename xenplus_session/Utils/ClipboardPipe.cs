@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Runtime.CompilerServices;
@@ -9,6 +10,7 @@ namespace XenPlus;
 
 sealed class ClipboardPipe : IDisposable {
     const string ClipboardPipePath = @"ProtectedPrefix\Administrators\XenplusClipboardFeature";
+    const int MaxIncomingMessageSize = 1024 * 1024;
     static readonly TimeSpan PipeRetryDelayMilliseconds = TimeSpan.FromMilliseconds(10000);
 
     NamedPipeClientStream? _pipe = null;
@@ -45,15 +47,20 @@ sealed class ClipboardPipe : IDisposable {
                     var lengthBytes = new byte[sizeof(int)];
                     await _pipe.ReadExactlyAsync(lengthBytes, ct);
                     var length = BitConverter.ToInt32(lengthBytes);
-                    if (length <= 0) {
+                    if (length <= 0 || length > MaxIncomingMessageSize) {
                         throw new InvalidDataException("server sent invalid length");
                     }
 
-                    var limiter = new StreamReadLimiter(_pipe, length);
-                    var msg = await JsonSerializer.DeserializeAsync(
-                        limiter,
-                        ClipboardMessageContext.Default.ServerMessage,
-                        ct);
+                    ServerMessage? msg;
+                    var frame = ArrayPool<byte>.Shared.Rent(length);
+                    try {
+                        await _pipe.ReadExactlyAsync(frame.AsMemory(0, length), ct);
+                        msg = JsonSerializer.Deserialize(
+                            frame.AsSpan(0, length),
+                            ClipboardMessageContext.Default.ServerMessage);
+                    } finally {
+                        ArrayPool<byte>.Shared.Return(frame, clearArray: true);
+                    }
                     if (msg is SetClipboardMessage setClipboard) {
                         text = setClipboard.Text;
                     }
