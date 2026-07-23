@@ -1,6 +1,3 @@
-using System.ComponentModel;
-using Windows.Win32.Foundation;
-
 namespace XenPlus.XenIface;
 
 static class StoreUtils {
@@ -19,9 +16,5 @@ static class StoreUtils {
             }
         }
         return result;
-    }
-
-    public static bool ExceptionIsStoreNotFound(Exception ex) {
-        return ex is Win32Exception wex && wex.NativeErrorCode == (int)WIN32_ERROR.ERROR_FILE_NOT_FOUND;
     }
 }

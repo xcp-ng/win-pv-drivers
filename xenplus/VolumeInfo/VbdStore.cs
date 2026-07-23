@@ -6,17 +6,14 @@ namespace XenPlus.VolumeInfo;
 static class VbdStore {
     internal static List<(string vbdKey, uint vbdNumber)> GetVbds(XenIfaceHandle h) {
         var result = new List<(string vbdKey, uint vbdNumber)>();
-        List<string> vbdKeys;
-        try {
-            vbdKeys = h.StoreDirectory("device/vbd");
-        } catch (Win32Exception ex) when (StoreUtils.ExceptionIsStoreNotFound(ex)) {
+        var vbdKeys = h.StoreTryDirectory("device/vbd");
+        if (vbdKeys == null) {
             return result;
         }
         foreach (var vbdKey in vbdKeys) {
-            try {
-                var vbdNumber = h.StoreReadStrict(StoreUtils.PathJoin("device/vbd", vbdKey, "virtual-device"));
-                result.Add((vbdKey, uint.Parse(vbdNumber)));
-            } catch (Win32Exception ex) when (StoreUtils.ExceptionIsStoreNotFound(ex)) {
+            var vbdNumber = h.StoreTryReadStrict(StoreUtils.PathJoin("device/vbd", vbdKey, "virtual-device"));
+            if (uint.TryParse(vbdNumber, out var parsed)) {
+                result.Add((vbdKey, parsed));
             }
         }
         return result;

@@ -50,12 +50,16 @@ internal readonly ref struct XenIfaceHandle(XenIfaceSource parent) : IDisposable
         _h.Dispose();
     }
 
-    public string StoreRead(string path, bool strict = false) {
-        return Active.StoreRead(path, strict);
+    public string StoreReadStrict(string path) {
+        return Active.StoreTryRead(path, true) ?? throw new FileNotFoundException("XenStore path not found", path);
     }
 
-    public string StoreReadStrict(string path) {
-        return Active.StoreRead(path, true);
+    public string? StoreTryRead(string path, bool strict = false) {
+        return Active.StoreTryRead(path, strict);
+    }
+
+    public string? StoreTryReadStrict(string path) {
+        return Active.StoreTryRead(path, true);
     }
 
     public void StoreWrite(string path, string? value, bool strict = false) {
@@ -67,7 +71,11 @@ internal readonly ref struct XenIfaceHandle(XenIfaceSource parent) : IDisposable
     }
 
     public List<string> StoreDirectory(string path) {
-        return Active.StoreDirectory(path);
+        return Active.StoreTryDirectory(path) ?? throw new FileNotFoundException("XenStore path not found", path);
+    }
+
+    public List<string>? StoreTryDirectory(string path) {
+        return Active.StoreTryDirectory(path);
     }
 
     public void StoreRemove(string path) {

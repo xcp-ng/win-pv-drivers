@@ -32,12 +32,7 @@ sealed class VolumeInfoFeature(IHostLifetime _hostLifetime,
 
             // HACK: For some reason, XAPI device names are always "xvd*" regardless of target number.
             // We need to detect XAPI to show a device name that matches what it does.
-            bool xapiMode = false;
-            try {
-                h.StoreRead("xenserver");
-                xapiMode = true;
-            } catch (Win32Exception ex) when (StoreUtils.ExceptionIsStoreNotFound(ex)) {
-            }
+            var xapiMode = h.StoreTryRead("xenserver") != null;
 
             var vbds = VbdStore.GetVbds(h);
             var targetToName = new Dictionary<uint, string>();

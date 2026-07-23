@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
 using Windows.Win32;
+using Windows.Win32.Foundation;
 
 namespace XenPlus.XenIface;
 
@@ -138,13 +139,17 @@ sealed partial class XenIfaceDevice {
         return FormatString(value, buffer, offset, true);
     }
 
-    internal string StoreRead(string path, bool strict) {
+    internal string? StoreTryRead(string path, bool strict) {
         var inBuf = new byte[XENSTORE_PAYLOAD_MAX];
         FormatPath(path, inBuf, 0);
         var outBuf = new byte[XENSTORE_PAYLOAD_MAX];
         unsafe {
             if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_READ, inBuf, outBuf)) {
-                throw new Win32Exception(nameof(IOCTL_XENIFACE_STORE_READ));
+                var err = Marshal.GetLastPInvokeError();
+                if (err == (int)WIN32_ERROR.ERROR_FILE_NOT_FOUND) {
+                    return null;
+                }
+                throw new Win32Exception(err, nameof(IOCTL_XENIFACE_STORE_READ));
             }
         }
         outBuf[^1] = 0;
@@ -165,12 +170,21 @@ sealed partial class XenIfaceDevice {
     /// <summary>
     /// Values from StoreDirectory are always taken as paths and are strictly checked.
     /// </summary>
-    internal List<string> StoreDirectory(string path) {
+    internal List<string>? StoreTryDirectory(string path) {
         var inBuf = new byte[XENSTORE_PAYLOAD_MAX];
         FormatPath(path, inBuf, 0);
         var outBuf = new byte[XENSTORE_PAYLOAD_MAX];
         unsafe {
             if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_DIRECTORY, inBuf, outBuf)) {
+                var err = Marshal.GetLastPInvokeError();
+                if (err == (int)WIN32_ERROR.ERROR_FILE_NOT_FOUND) {
+                    return null;
+                }
+                if (err == (int)WIN32_ERROR.ERROR_PATH_NOT_FOUND) {
+                    // This is the error code for "this is a leaf value".
+                    // FWIW, xenstore doesn't formally distinguish leaves and nodes. So just return an empty list.
+                    return [];
+                }
                 throw new Win32Exception(nameof(IOCTL_XENIFACE_STORE_DIRECTORY));
             }
         }

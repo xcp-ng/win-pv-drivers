@@ -118,15 +118,10 @@ sealed class ClipboardFeature(
             // now wait for it to disappear
             using var scope = await _reportMonitor.EnterScopeAsync(ct);
             while (true) {
-                var exists = false;
-                try {
-                    using var h = _xi.Lock();
-                    h.StoreRead(ReportClipboardPath);
-                    exists = true;
-                } catch (Win32Exception ex) when (StoreUtils.ExceptionIsStoreNotFound(ex)) {
-                }
-                if (!exists) {
-                    break;
+                using (var h = _xi.Lock()) {
+                    if (h.StoreTryRead(ReportClipboardPath) == null) {
+                        break;
+                    }
                 }
                 await scope.WaitAsync(TimeSpan.FromMilliseconds(ReportChunkPollMilliseconds), ct);
             }
@@ -267,10 +262,8 @@ sealed class ClipboardFeature(
         using var scope = await _lock.EnterScopeAsync(ct);
 
         using (var h = _xi.Lock()) {
-            string chunk;
-            try {
-                chunk = h.StoreRead(SetClipboardPath);
-            } catch {
+            var chunk = h.StoreTryRead(SetClipboardPath);
+            if (chunk == null) {
                 // watches triggered by store removes
                 return null;
             }

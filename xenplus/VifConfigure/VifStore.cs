@@ -24,11 +24,7 @@ static class VifStore {
             throw new ArgumentException($"IPv4 address '{rawAddress}' is not acceptable");
         }
 
-        string? rawGateway = null;
-        try {
-            rawGateway = h.StoreReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "gateway"));
-        } catch (Win32Exception ex) when (StoreUtils.ExceptionIsStoreNotFound(ex)) {
-        }
+        var rawGateway = h.StoreTryReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "gateway"));
         var gateway = rawGateway != null ? IPAddress.Parse(rawGateway) : null;
         if (gateway != null && gateway.AddressFamily != AddressFamily.InterNetwork) {
             throw new ArgumentException($"IPv4 gateway '{rawGateway}' is not acceptable");
@@ -54,11 +50,7 @@ static class VifStore {
             throw new ArgumentException($"IPv6 address '{rawAddress}' is not acceptable");
         }
 
-        string? rawGateway = null;
-        try {
-            rawGateway = h.StoreReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "gateway6"));
-        } catch (Win32Exception ex) when (StoreUtils.ExceptionIsStoreNotFound(ex)) {
-        }
+        var rawGateway = h.StoreTryReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "gateway6"));
         var gateway = rawGateway != null ? IPAddress.Parse(rawGateway) : null;
         if (gateway != null && gateway.AddressFamily != AddressFamily.InterNetworkV6) {
             throw new ArgumentException($"IPv6 gateway '{rawGateway}' is not acceptable");
@@ -73,7 +65,7 @@ static class VifStore {
     }
 
     internal static VifConfigurationIPv4? ParseVifConfigurationIPv4(XenIfaceHandle h, string vc, string mac) {
-        var enabled = h.StoreReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "enabled"));
+        var enabled = h.StoreTryReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "enabled"));
         return enabled switch {
             "0" => new VifConfigurationIPv4None() {
                 StorePath = vc,
@@ -90,7 +82,7 @@ static class VifStore {
     }
 
     internal static VifConfigurationIPv6? ParseVifConfigurationIPv6(XenIfaceHandle h, string vc, string mac) {
-        var enabled = h.StoreReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "enabled6"));
+        var enabled = h.StoreTryReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "enabled6"));
         return enabled switch {
             "0" => new VifConfigurationIPv6None() {
                 StorePath = vc,

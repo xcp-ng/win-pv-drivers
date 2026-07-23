@@ -41,7 +41,7 @@ sealed class GarbageCollectFeature(
         async void onWatch(object? sender, XenIfaceWatchEventArgs args) {
             try {
                 using (var h = _xi.Lock()) {
-                    if (string.IsNullOrEmpty(h.StoreRead(FeatureKey))) {
+                    if (string.IsNullOrEmpty(h.StoreTryRead(FeatureKey))) {
                         return;
                     }
                 }
@@ -50,7 +50,6 @@ sealed class GarbageCollectFeature(
 
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
-            } catch (Win32Exception ex) when (StoreUtils.ExceptionIsStoreNotFound(ex)) {
             } catch (Exception ex) {
                 _logger.LogDebug(ex, "{} report error", nameof(GarbageCollectFeature));
             }
