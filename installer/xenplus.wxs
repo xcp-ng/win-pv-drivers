@@ -27,10 +27,6 @@
       <Directory Id="XenplusFolder" Name="xenplus" />
     </DirectoryRef>
 
-    <DirectoryRef Id="ManufacturerCADFolder">
-      <Directory Id="XenplusCADFolder" Name="xenplus" />
-    </DirectoryRef>
-
     <ComponentGroup Id="XenplusComponentGroup">
       <Component Id="XenplusComponent" Directory="XenplusFolder">
         <File Source="!(bindpath.xenplus)\xenplus.exe" />
@@ -56,7 +52,7 @@
       </Component>
       <File
         Source="!(bindpath.xenplus)\appsettings.dist.json"
-        Directory="XenplusCADFolder" />
+        Directory="XenplusFolder" />
     </ComponentGroup>
 
     <ComponentGroup Id="XenplusSessionComponentGroup">

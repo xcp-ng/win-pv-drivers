@@ -8,8 +8,5 @@
         </Directory>
       </Directory>
     </StandardDirectory>
-    <StandardDirectory Id="CommonAppDataFolder">
-      <Directory Id="ManufacturerCADFolder" Name="$(VENDOR_NAME)" />
-    </StandardDirectory>
   </Fragment>
 </Wix>

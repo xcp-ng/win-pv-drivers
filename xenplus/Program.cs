@@ -10,14 +10,10 @@ static class ServiceKeys {
 }
 
 class Program {
-    const uint _assert_VendorName = VersionInfo.VendorName == "" ? -1 : 0;
-
     static string GetConfigDir() {
-        var programData = Environment.GetFolderPath(
-            Environment.SpecialFolder.CommonApplicationData,
-            Environment.SpecialFolderOption.DoNotVerify)
-            ?? throw new DirectoryNotFoundException("Environment.SpecialFolder.CommonApplicationData");
-        return Path.Combine(programData, VersionInfo.VendorName, "XenPlus");
+        var processPath = Environment.ProcessPath ?? throw new InvalidOperationException("Environment.ProcessPath");
+        return Path.GetDirectoryName(processPath)
+            ?? throw new InvalidOperationException("Cannot determine the process directory");
     }
 
     static void Main(string[] args) {
