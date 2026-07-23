@@ -19,6 +19,9 @@ sealed partial class XenIfaceDevice : IDisposable {
     bool _disposed = false;
 
     internal unsafe XenIfaceDevice(XenIfaceSource parent, string devicePath) {
+        if (Environment.Is64BitProcess != Environment.Is64BitOperatingSystem) {
+            throw new PlatformNotSupportedException("running under WOW64 is not supported");
+        }
         try {
             _gch = GCHandle.Alloc(this);
 
