@@ -1,4 +1,3 @@
-using System.Buffers;
 using System.ComponentModel;
 using System.IO.Pipes;
 using System.Text.Json;
@@ -158,14 +157,11 @@ sealed class ClipboardFeature(
                 }
 
                 ClientMessage? msg;
-                var frame = ArrayPool<byte>.Shared.Rent(length);
-                try {
-                    await client.Stream.ReadExactlyAsync(frame.AsMemory(0, length), ct);
+                using (var frame = ArrayPoolLease<byte>.Rent(length, clearArray: true)) {
+                    await client.Stream.ReadExactlyAsync(frame.Memory[..length], ct);
                     msg = JsonSerializer.Deserialize(
-                        frame.AsSpan(0, length),
+                        frame.Span[..length],
                         ClipboardMessageContext.Default.ClientMessage);
-                } finally {
-                    ArrayPool<byte>.Shared.Return(frame, clearArray: true);
                 }
 
                 if (msg is ReportClipboardMessage reportClipboard) {

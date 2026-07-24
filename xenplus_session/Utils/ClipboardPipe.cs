@@ -1,4 +1,3 @@
-using System.Buffers;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Runtime.CompilerServices;
@@ -52,14 +51,11 @@ sealed class ClipboardPipe : IDisposable {
                     }
 
                     ServerMessage? msg;
-                    var frame = ArrayPool<byte>.Shared.Rent(length);
-                    try {
-                        await _pipe.ReadExactlyAsync(frame.AsMemory(0, length), ct);
+                    using (var frame = ArrayPoolLease<byte>.Rent(length, clearArray: true)) {
+                        await _pipe.ReadExactlyAsync(frame.Memory[..length], ct);
                         msg = JsonSerializer.Deserialize(
-                            frame.AsSpan(0, length),
+                            frame.Span[..length],
                             ClipboardMessageContext.Default.ServerMessage);
-                    } finally {
-                        ArrayPool<byte>.Shared.Return(frame, clearArray: true);
                     }
                     if (msg is SetClipboardMessage setClipboard) {
                         text = setClipboard.Text;
