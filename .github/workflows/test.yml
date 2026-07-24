@@ -27,9 +27,15 @@ jobs:
         run: |
           foreach ($Configuration in @("Debug", "Release")) {
             dotnet test -p Configuration=$Configuration -p Platform=x64 InstallerTests\InstallerTests.csproj
+            if ($LASTEXITCODE -ne 0) {
+              throw "dotnet test failed with error $LASTEXITCODE"
+            }
           }
       - name: xenplus_tests
         run: |
           foreach ($Configuration in @("Debug", "Release")) {
             dotnet test -p Configuration=$Configuration -p Platform=x64 xenplus_tests\xenplus_tests.csproj
+            if ($LASTEXITCODE -ne 0) {
+              throw "dotnet test failed with error $LASTEXITCODE"
+            }
           }
