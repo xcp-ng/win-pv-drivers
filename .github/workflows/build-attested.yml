@@ -14,6 +14,9 @@ on:
           - Prod
         default: Dev
 
+permissions:
+  contents: read
+
 jobs:
   build-drivers:
     uses: ./.github/workflows/build-drivers.yml

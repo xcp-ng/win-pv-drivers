@@ -10,6 +10,9 @@ on:
           - Prod
         default: Dev
 
+permissions:
+  contents: read
+
 jobs:
   build-attested:
     uses: ./.github/workflows/build-attested.yml
@@ -19,7 +22,6 @@ jobs:
       id-token: write
       contents: read
       attestations: write
-    secrets: inherit
   build-installer:
     needs:
       - build-attested
@@ -35,6 +37,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
       - name: Download build deps
         run: |
           $ErrorActionPreference = 'Stop'

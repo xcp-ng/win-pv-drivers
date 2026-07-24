@@ -14,6 +14,9 @@ on:
           - Prod
         default: Dev
 
+permissions:
+  contents: read
+
 jobs:
   build-timeprovider:
     runs-on: windows-latest
@@ -28,6 +31,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           submodules: true
+          persist-credentials: false
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
       - name: Configure branding
