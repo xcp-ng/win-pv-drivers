@@ -67,7 +67,7 @@ if ($Xstdvga) {
     $XstdvgaDir = "$PSScriptRoot\..\xstdvga\vs2022\$Platform\$Configuration\xstdvga"
     Remove-Item $XstdvgaDir -Recurse -Force -ErrorAction SilentlyContinue
     New-Item -Path $XstdvgaDir -ItemType Directory -Force | Out-Null
-    & $tar -xvf $Xstdvga -C $XstdvgaDir --strip-components 1
+    & $tar -xvf $Xstdvga -C $XstdvgaDir
     if ($LASTEXITCODE -ne 0) {
         throw "extracting Xstdvga failed with error $LASTEXITCODE"
     }
