@@ -11,21 +11,25 @@ permissions: {}
 
 jobs:
   test:
-    strategy:
-      matrix:
-        configuration:
-          - Debug
-          - Release
-        platform:
-          - x64
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          submodules: true
+          submodules: false
           persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: "10.0.x"
+      - name: Add branding
+        run: New-Item -Type File -Path branding.ps1 -Value '$Env:VENDOR_PREFIX = "XN"'
       - name: InstallerTests
-        run: dotnet test -p Configuration=${{matrix.configuration}} -p Platform=${{matrix.platform}} .\InstallerTests\InstallerTests.csproj
+        run: |
+          foreach ($Configuration in @("Debug", "Release")) {
+            dotnet test -p Configuration=$Configuration -p Platform=x64 InstallerTests\InstallerTests.csproj
+          }
       - name: xenplus_tests
-        run: dotnet test -p Configuration=${{matrix.configuration}} -p Platform=${{matrix.platform}} .\xenplus_tests\xenplus_tests.csproj
+        run: |
+          foreach ($Configuration in @("Debug", "Release")) {
+            dotnet test -p Configuration=$Configuration -p Platform=x64 xenplus_tests\xenplus_tests.csproj
+          }
