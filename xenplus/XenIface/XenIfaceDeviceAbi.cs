@@ -93,20 +93,29 @@ sealed partial class XenIfaceDevice {
         return strict ? StrictStoreEncoding.Instance : StoreEncoding.Instance;
     }
 
+    static ArrayPoolLease<byte> RentStoreBuffer() {
+        var buffer = ArrayPoolLease<byte>.RentExact(XENSTORE_PAYLOAD_MAX, clearArray: true);
+        buffer.Span.Clear();
+        return buffer;
+    }
+
     /// <summary>
     /// Put an ASCII string into a byte buffer, while ensuring that it's null-terminated.
     /// </summary>
-    /// <param name="strict">Use strict encoding.</param>
     /// <param name="value">Input string.</param>
     /// <param name="buffer">Output buffer.</param>
-    /// <param name="offset">Start offset of buffer to put string into.</param>
+    /// <param name="strict">Use strict encoding.</param>
     /// <returns>Length of resulting byte string, without null terminator.</returns>
-    static int FormatString(string? value, byte[] buffer, int offset, bool strict) {
-        var len = value != null ? GetEncoding(strict).GetBytes(value, 0, value.Length, buffer, offset) : 0;
-        if (offset + len >= buffer.Length) {
+    static int FormatString(string? value, Span<byte> buffer, bool strict) {
+        var encoding = GetEncoding(strict);
+        var len = value?.Length ?? 0;
+        if (len >= buffer.Length) {
             throw new ArgumentException("value too long", nameof(value));
         }
-        buffer[offset + len] = 0;
+        if (value != null) {
+            encoding.GetBytes(value.AsSpan(), buffer[..len]);
+        }
+        buffer[len] = 0;
         return len;
     }
 
@@ -132,19 +141,19 @@ sealed partial class XenIfaceDevice {
         }
     }
 
-    static int FormatPath(string? value, byte[] buffer, int offset) {
+    static int FormatPath(string? value, Span<byte> buffer) {
         if (value != null) {
             ValidatePath(value);
         }
-        return FormatString(value, buffer, offset, true);
+        return FormatString(value, buffer, true);
     }
 
     internal string? StoreTryRead(string path, bool strict) {
-        var inBuf = new byte[XENSTORE_PAYLOAD_MAX];
-        FormatPath(path, inBuf, 0);
-        var outBuf = new byte[XENSTORE_PAYLOAD_MAX];
+        using var inBuf = RentStoreBuffer();
+        FormatPath(path, inBuf.Span);
+        using var outBuf = RentStoreBuffer();
         unsafe {
-            if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_READ, inBuf, outBuf)) {
+            if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_READ, inBuf.Span, outBuf.Span)) {
                 var err = Marshal.GetLastPInvokeError();
                 if (err == (int)WIN32_ERROR.ERROR_FILE_NOT_FOUND) {
                     return null;
@@ -153,15 +162,17 @@ sealed partial class XenIfaceDevice {
             }
         }
         outBuf[^1] = 0;
-        return GetEncoding(strict).GetString(outBuf, 0, outBuf.IndexOf<byte>(0));
+        var output = outBuf.Span;
+        return GetEncoding(strict).GetString(output[..output.IndexOf<byte>(0)]);
     }
 
     internal void StoreWrite(string path, string? value, bool strict) {
-        var inBuf = new byte[XENSTORE_PAYLOAD_MAX];
-        var pathLen = FormatPath(path, inBuf, 0);
-        FormatString(value, inBuf, pathLen + 1, strict);
+        using var inBuf = RentStoreBuffer();
+        var input = inBuf.Span;
+        var pathLen = FormatPath(path, input);
+        FormatString(value, input[(pathLen + 1)..], strict);
         unsafe {
-            if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_WRITE, inBuf)) {
+            if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_WRITE, inBuf.Span)) {
                 throw new Win32Exception(nameof(IOCTL_XENIFACE_STORE_WRITE));
             }
         }
@@ -171,11 +182,11 @@ sealed partial class XenIfaceDevice {
     /// Values from StoreDirectory are always taken as paths and are strictly checked.
     /// </summary>
     internal List<string>? StoreTryDirectory(string path) {
-        var inBuf = new byte[XENSTORE_PAYLOAD_MAX];
-        FormatPath(path, inBuf, 0);
-        var outBuf = new byte[XENSTORE_PAYLOAD_MAX];
+        using var inBuf = RentStoreBuffer();
+        FormatPath(path, inBuf.Span);
+        using var outBuf = RentStoreBuffer();
         unsafe {
-            if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_DIRECTORY, inBuf, outBuf)) {
+            if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_DIRECTORY, inBuf.Span, outBuf.Span)) {
                 var err = Marshal.GetLastPInvokeError();
                 if (err == (int)WIN32_ERROR.ERROR_FILE_NOT_FOUND) {
                     return null;
@@ -188,27 +199,28 @@ sealed partial class XenIfaceDevice {
                 throw new Win32Exception(nameof(IOCTL_XENIFACE_STORE_DIRECTORY));
             }
         }
-        return ServerUtils.ParseMultiString(outBuf, GetEncoding(true).GetString)
+        return ServerUtils.ParseMultiString(
+            outBuf.Span, GetEncoding(true).GetString)
             .Select(x => { ValidatePath(x); return x; })
             .ToList();
     }
 
     internal void StoreRemove(string path) {
-        var inBuf = new byte[XENSTORE_PAYLOAD_MAX];
-        FormatPath(path, inBuf, 0);
+        using var inBuf = RentStoreBuffer();
+        FormatPath(path, inBuf.Span);
         unsafe {
-            if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_REMOVE, inBuf)) {
+            if (!PInvoke.DeviceIoControl(Handle, IOCTL_XENIFACE_STORE_REMOVE, inBuf.Span)) {
                 throw new Win32Exception(nameof(IOCTL_XENIFACE_STORE_REMOVE));
             }
         }
     }
 
     internal WatchAbiHandle WatchAdd(string path, SafeWaitHandle evt) {
-        var inPath = new byte[XENSTORE_PAYLOAD_MAX];
-        var pathLen = FormatPath(path, inPath, 0);
+        using var inPath = RentStoreBuffer();
+        var pathLen = FormatPath(path, inPath.Span);
         unsafe {
             var outBuf = new XENIFACE_STORE_ADD_WATCH_OUT();
-            fixed (byte* pathBytes = inPath) {
+            fixed (byte* pathBytes = inPath.Span) {
                 using var shref = evt.Borrow();
                 var inBuf = new XENIFACE_STORE_ADD_WATCH_IN() {
                     Path = pathBytes,
