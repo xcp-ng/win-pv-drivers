@@ -4,7 +4,8 @@ runs:
   using: composite
   steps:
     - shell: pwsh
-      run: |
+      run:
+        | # zizmor: ignore[github-env] path is deterministic; binary is verified
         $ErrorActionPreference = 'Stop'
 
         $Tools = Join-Path $Env:RUNNER_TEMP 'tools'
