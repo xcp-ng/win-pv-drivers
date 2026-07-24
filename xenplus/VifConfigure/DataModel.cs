@@ -69,7 +69,7 @@ sealed class VifConfigurationIPv6Static : VifConfigurationIPv6 {
 }
 
 sealed class VifConfigurationIPv6Autoconf : VifConfigurationIPv6 {
-    public override string Category => "autoconf IPv4";
+    public override string Category => "autoconf IPv6";
 }
 
 class VifConfigurationEqualityComparer : IEqualityComparer<VifConfiguration> {
