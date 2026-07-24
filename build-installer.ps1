@@ -36,8 +36,7 @@ $ErrorActionPreference = "Stop"
 
 if (!$NoBuild) {
     msbuild.exe `
-        "$PSScriptRoot\installer\installer.slnx" `
-        /t:XenDrivers:$Target `
+        "$PSScriptRoot\installer\XenDrivers.wixproj" `
         /restore `
         /p:Configuration=$Configuration `
         /p:Platform=$Platform
