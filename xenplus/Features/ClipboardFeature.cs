@@ -157,11 +157,9 @@ sealed class ClipboardFeature(
                 }
 
                 ClientMessage? msg;
-                using (var frame = ArrayPoolLease<byte>.Rent(length, clearArray: true)) {
-                    await client.Stream.ReadExactlyAsync(frame.Memory[..length], ct);
-                    msg = JsonSerializer.Deserialize(
-                        frame.Span[..length],
-                        ClipboardMessageContext.Default.ClientMessage);
+                using (var frame = ArrayPoolLease<byte>.RentExact(length, clearArray: true)) {
+                    await client.Stream.ReadExactlyAsync(frame.Memory, ct);
+                    msg = JsonSerializer.Deserialize(frame.Span, ClipboardMessageContext.Default.ClientMessage);
                 }
 
                 if (msg is ReportClipboardMessage reportClipboard) {

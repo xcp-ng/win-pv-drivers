@@ -51,11 +51,9 @@ sealed class ClipboardPipe : IDisposable {
                     }
 
                     ServerMessage? msg;
-                    using (var frame = ArrayPoolLease<byte>.Rent(length, clearArray: true)) {
-                        await _pipe.ReadExactlyAsync(frame.Memory[..length], ct);
-                        msg = JsonSerializer.Deserialize(
-                            frame.Span[..length],
-                            ClipboardMessageContext.Default.ServerMessage);
+                    using (var frame = ArrayPoolLease<byte>.RentExact(length, clearArray: true)) {
+                        await _pipe.ReadExactlyAsync(frame.Memory, ct);
+                        msg = JsonSerializer.Deserialize(frame.Span, ClipboardMessageContext.Default.ServerMessage);
                     }
                     if (msg is SetClipboardMessage setClipboard) {
                         text = setClipboard.Text;
