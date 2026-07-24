@@ -1,0 +1,31 @@
+name: test
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        configuration:
+          - Debug
+          - Release
+        platform:
+          - x64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          submodules: true
+          persist-credentials: false
+      - name: InstallerTests
+        run: dotnet test -p Configuration=${{matrix.configuration}} -p Platform=${{matrix.platform}} .\InstallerTests\InstallerTests.csproj
+      - name: xenplus_tests
+        run: dotnet test -p Configuration=${{matrix.configuration}} -p Platform=${{matrix.platform}} .\xenplus_tests\xenplus_tests.csproj
