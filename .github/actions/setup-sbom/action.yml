@@ -1,0 +1,21 @@
+name: setup-sbom
+description: Download and add the pinned Microsoft SBOM Tool to PATH
+runs:
+  using: composite
+  steps:
+    - shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+
+        $Tools = Join-Path $Env:RUNNER_TEMP 'tools'
+        $Sbom = Join-Path $Tools 'sbom.exe'
+        New-Item -Path $Tools -ItemType Directory -Force | Out-Null
+        Invoke-WebRequest -Uri $Env:SBOM_TOOL_URI -OutFile $Sbom
+        if ((Get-FileHash $Sbom -Algorithm SHA256).Hash -ine $Env:SBOM_TOOL_SHA256) {
+          throw "sbom-tool failed verification"
+        }
+
+        Add-Content -Path $Env:GITHUB_PATH -Value $Tools -Force
+      env:
+        SBOM_TOOL_URI: https://github.com/microsoft/sbom-tool/releases/download/v4.1.4/sbom-tool-win-x64.exe
+        SBOM_TOOL_SHA256: 9ba208cbec21c93b6d1ba01f50681a47d9d14d302f59b33e505b220b89aa0363

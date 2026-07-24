@@ -1,0 +1,20 @@
+name: setup-wix
+description: Download and stage the pinned WiX build
+runs:
+  using: composite
+  steps:
+    - shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+
+        $Archive = Join-Path $Env:RUNNER_TEMP 'wix.zip'
+        Invoke-WebRequest -Uri $Env:WIX_ZIP_URI -OutFile $Archive
+        if ((Get-FileHash $Archive -Algorithm SHA256).Hash -ine $Env:WIX_ZIP_SHA256) {
+          throw "wix.zip failed verification"
+        }
+
+        Remove-Item -Path .\deps\wix\ -Recurse -Force -ErrorAction SilentlyContinue
+        Expand-Archive -Path $Archive -DestinationPath .\deps\wix\ -Force
+      env:
+        WIX_ZIP_URI: https://github.com/xcp-ng/wix-builder/releases/download/v7.0.0-xcpng.4/wix.zip
+        WIX_ZIP_SHA256: 08ded9b5c6da4dd8ae269a70f06b31af136e13cca3003825d7fb052b72157ef0

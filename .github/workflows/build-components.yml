@@ -31,17 +31,8 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Download WiX
-        run: |
-          $ErrorActionPreference = 'Stop'
-          Invoke-WebRequest -Uri $Env:WIX_ZIP_URI -OutFile $Env:RUNNER_TEMP\wix.zip
-          if ((Get-FileHash $Env:RUNNER_TEMP\wix.zip).Hash -ine $Env:WIX_ZIP_SHA256) {
-            throw "wix.zip failed verification"
-          }
-          Expand-Archive -Path $Env:RUNNER_TEMP\wix.zip -DestinationPath .\deps\wix\ -Force
-        env:
-          WIX_ZIP_URI: https://github.com/xcp-ng/wix-builder/releases/download/v7.0.0-xcpng.4/wix.zip
-          WIX_ZIP_SHA256: 08ded9b5c6da4dd8ae269a70f06b31af136e13cca3003825d7fb052b72157ef0
+      - name: Setup WiX
+        uses: ./.github/actions/setup-wix
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
       - name: Configure branding
