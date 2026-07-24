@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace XenPlus.XenIface;
@@ -5,66 +6,101 @@ namespace XenPlus.XenIface;
 sealed class StrictStoreEncoding : Encoding {
     public static StrictStoreEncoding Instance = new();
 
-    // Check* should already take care of preventing fallbacks, but this doesn't hurt.
-    static readonly Encoding _safeASCIIEncoding = GetEncoding(
-        "us-ascii",
-        new EncoderExceptionFallback(),
-        new DecoderExceptionFallback());
+    static unsafe void CheckBuffer(
+        void* buffer,
+        int length,
+        [CallerArgumentExpression(nameof(buffer))] string name = "") {
+        ArgumentOutOfRangeException.ThrowIfNegative(length);
+        ArgumentNullException.ThrowIfNull(buffer, name);
+    }
 
-    static void CheckChars(char[] chars, int index, int count) {
-        ArgumentNullException.ThrowIfNull(chars);
-        ArgumentOutOfRangeException.ThrowIfNegative(index);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(index, chars.Length);
-        ArgumentOutOfRangeException.ThrowIfNegative(count);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(index + count, chars.Length);
-        foreach (var c in chars.AsSpan()[index..(index + count)]) {
+    public override unsafe int GetByteCount(char* chars, int count) {
+        CheckBuffer(chars, count);
+        for (int i = 0; i < count; i++) {
+            char c = chars[i];
             if (!((c >= '\x20' && c <= '\x7f') || c == '\n')) {
                 throw new EncoderFallbackException("found out-of-range char");
             }
         }
-    }
-
-    static void CheckBytes(byte[] bytes, int index, int count) {
-        ArgumentNullException.ThrowIfNull(bytes);
-        ArgumentOutOfRangeException.ThrowIfNegative(index);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(index, bytes.Length);
-        ArgumentOutOfRangeException.ThrowIfNegative(count);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(index + count, bytes.Length);
-        for (var i = index; i < index + count; i++) {
-            byte b = bytes[i];
-            if (!((b >= 0x20 && b <= 0x7f) || b == 10)) {
-                throw new DecoderFallbackException("found out-of-range byte", bytes, i);
-            }
-        }
+        return count;
     }
 
     public override int GetByteCount(char[] chars, int index, int count) {
-        CheckChars(chars, index, count);
-        return _safeASCIIEncoding.GetByteCount(chars, index, count);
+        ArgumentNullException.ThrowIfNull(chars);
+        return GetByteCount(chars.AsSpan(index, count));
+    }
+
+    public override unsafe int GetBytes(char* chars, int charCount, byte* bytes, int byteCount) {
+        CheckBuffer(chars, charCount);
+        CheckBuffer(bytes, byteCount);
+        ArgumentOutOfRangeException.ThrowIfLessThan(byteCount, charCount);
+        for (int i = 0; i < charCount; i++) {
+            char c = chars[i];
+            if (!((c >= '\x20' && c <= '\x7f') || c == '\n')) {
+                throw new EncoderFallbackException("found out-of-range char");
+            }
+            bytes[i] = (byte)c;
+        }
+        return charCount;
     }
 
     public override int GetBytes(char[] chars, int charIndex, int charCount, byte[] bytes, int byteIndex) {
-        CheckChars(chars, charIndex, charCount);
-        return _safeASCIIEncoding.GetBytes(chars, charIndex, charCount, bytes, byteIndex);
+        ArgumentNullException.ThrowIfNull(bytes);
+        var destination = bytes.AsSpan(byteIndex);
+        ArgumentOutOfRangeException.ThrowIfLessThan(
+            destination.Length,
+            GetByteCount(chars, charIndex, charCount),
+            nameof(bytes));
+        return GetBytes(chars.AsSpan(charIndex, charCount), destination);
+    }
+
+    public override unsafe int GetCharCount(byte* bytes, int count) {
+        CheckBuffer(bytes, count);
+        for (int i = 0; i < count; i++) {
+            byte b = bytes[i];
+            if (!((b >= 0x20 && b <= 0x7f) || b == 10)) {
+                throw new DecoderFallbackException("found out-of-range byte");
+            }
+        }
+        return count;
     }
 
     public override int GetCharCount(byte[] bytes, int index, int count) {
-        CheckBytes(bytes, index, count);
-        return _safeASCIIEncoding.GetCharCount(bytes, index, count);
+        ArgumentNullException.ThrowIfNull(bytes);
+        return GetCharCount(bytes.AsSpan(index, count));
+    }
+
+    public override unsafe int GetChars(byte* bytes, int byteCount, char* chars, int charCount) {
+        CheckBuffer(bytes, byteCount);
+        CheckBuffer(chars, charCount);
+        ArgumentOutOfRangeException.ThrowIfLessThan(charCount, byteCount);
+        for (int i = 0; i < byteCount; i++) {
+            byte b = bytes[i];
+            if (!((b >= 0x20 && b <= 0x7f) || b == 10)) {
+                throw new DecoderFallbackException("found out-of-range byte");
+            }
+            chars[i] = (char)b;
+        }
+        return byteCount;
     }
 
     public override int GetChars(byte[] bytes, int byteIndex, int byteCount, char[] chars, int charIndex) {
-        CheckBytes(bytes, byteIndex, byteCount);
-        return _safeASCIIEncoding.GetChars(bytes, byteIndex, byteCount, chars, charIndex);
+        ArgumentNullException.ThrowIfNull(chars);
+        var destination = chars.AsSpan(charIndex);
+        ArgumentOutOfRangeException.ThrowIfLessThan(
+            destination.Length,
+            GetCharCount(bytes, byteIndex, byteCount),
+            nameof(chars));
+        return GetChars(bytes.AsSpan(byteIndex, byteCount), destination);
     }
 
     public override int GetMaxByteCount(int charCount) {
         ArgumentOutOfRangeException.ThrowIfNegative(charCount);
-        return _safeASCIIEncoding.GetMaxByteCount(charCount);
+        return charCount;
     }
 
     public override int GetMaxCharCount(int byteCount) {
         ArgumentOutOfRangeException.ThrowIfNegative(byteCount);
-        return _safeASCIIEncoding.GetMaxCharCount(byteCount);
+        return byteCount;
     }
 }
