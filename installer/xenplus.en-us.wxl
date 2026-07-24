@@ -2,7 +2,9 @@
 <WixLocalization Culture="en-us" xmlns="http://wixtoolset.org/schemas/v4/wxl">
   <?include Include.wxi ?>
 
-  <String Id="XenplusFeatureTitle" Value="Xen Guest Agent" />
-  <String Id="XenplusFeatureDescription" Value="Xen guest agent for Windows. Requires PV interface driver. Version $(XenplusVersion)." />
-  <String Id="XenplusServiceDisplayName" Value="Xen guest agent for Windows" />
+  <String Id="XenplusFeatureTitle" Value="Windows Guest Agent" />
+  <String Id="XenplusFeatureDescription" Value="XenPlus guest agent for Windows. Requires PV interface driver. Version $(XenplusVersion)." />
+  <String Id="XenplusServiceDisplayName" Value="XenPlus Guest Agent" />
+  <String Id="XenplusSessionFeatureTitle" Value="Session Agent" />
+  <String Id="XenplusSessionFeatureDescription" Value="XenPlus session utility and clipboard sync agent." />
 </WixLocalization>
