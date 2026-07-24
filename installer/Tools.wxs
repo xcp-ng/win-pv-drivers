@@ -13,7 +13,7 @@
     </DirectoryRef>
 
     <ComponentGroup Id="XenBootFixComponent" Directory="XenBootFixFolder">
-      <File Source="!(bindpath.xenbootfix)XenBootFix.exe" />
+      <File Source="!(bindpath.xenbootfix)\XenBootFix.exe" />
     </ComponentGroup>
   </Fragment>
 </Wix>
