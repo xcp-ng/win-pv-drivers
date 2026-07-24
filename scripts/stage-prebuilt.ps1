@@ -15,7 +15,9 @@ param (
     [Parameter()]
     [string]$TimeProvider = "$PSScriptRoot\..\input\timeprovider.zip",
     [Parameter()]
-    [string]$Xstdvga = "$PSScriptRoot\..\input\xstdvga.zip"
+    [string]$Xstdvga = "$PSScriptRoot\..\input\xstdvga.zip",
+    [Parameter()]
+    [string]$Components = "$PSScriptRoot\..\input\components.zip"
 )
 
 $ErrorActionPreference = "Stop"
@@ -68,5 +70,15 @@ if ($Xstdvga) {
     & $tar -xvf $Xstdvga -C $XstdvgaDir --strip-components 1
     if ($LASTEXITCODE -ne 0) {
         throw "extracting Xstdvga failed with error $LASTEXITCODE"
+    }
+}
+
+if ($Components) {
+    $ComponentsDir = "$PSScriptRoot\..\components\$Platform\$Configuration"
+    Remove-Item $ComponentsDir -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -Path $ComponentsDir -ItemType Directory -Force | Out-Null
+    & $tar -xvf $Components -C $ComponentsDir
+    if ($LASTEXITCODE -ne 0) {
+        throw "extracting Components failed with error $LASTEXITCODE"
     }
 }

@@ -123,6 +123,8 @@ Run the command:
 .\build-components.ps1 -Configuration Release -Platform x64
 ```
 
+The collected binaries are located at `components\<platform>\<configuration>`.
+
 ## Building the installer and release package
 
 Run the command:

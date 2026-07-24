@@ -34,6 +34,8 @@ $ErrorActionPreference = "Stop"
 . $PSScriptRoot\scripts\branding-generic.ps1
 . $PSScriptRoot\scripts\sign.ps1
 
+$ComponentsDir = "$PSScriptRoot\components\$Platform\$Configuration"
+
 if (!$NoBuild) {
     msbuild.exe `
         "$PSScriptRoot\installer\XenDrivers.wixproj" `
@@ -68,7 +70,7 @@ if ($Target -ine "Clean") {
     $XenCleanDir = "$PackageDir\XenClean"
     New-Item -Path $XenCleanDir -ItemType Directory -Force
     Copy-Item `
-        -Path "$PSScriptRoot\XenClean\bin\$Platform\$Configuration\net462\*" `
+        -Path "$ComponentsDir\XenClean\*" `
         -Include *.exe `
         -Destination $XenCleanDir\ `
         -Force
@@ -77,7 +79,7 @@ if ($Target -ine "Clean") {
     $XenBootFixDir = "$PackageDir\XenBootFix"
     New-Item -Path $XenBootFixDir -ItemType Directory -Force
     Copy-Item `
-        -Path "$PSScriptRoot\XenBootFix\$Platform\$Configuration\*" `
+        -Path "$ComponentsDir\XenBootFix\*" `
         -Include *.exe `
         -Destination $XenBootFixDir\ `
         -Force
@@ -91,7 +93,7 @@ if ($Target -ine "Clean") {
 
         New-Item -Path $VersionDir\sbom\XenDriverUtils -ItemType Directory -Force
         sbom.exe generate `
-            -b $PSScriptRoot\XenDriverUtils\bin\$Platform\$Configuration\net462 `
+            -b $ComponentsDir\XenDriverUtils `
             -bc $PSScriptRoot\XenDriverUtils `
             -m $VersionDir\sbom\XenDriverUtils `
             -D true `
@@ -104,7 +106,7 @@ if ($Target -ine "Clean") {
 
         New-Item -Path $VersionDir\sbom\XenClean -ItemType Directory -Force
         sbom.exe generate `
-            -b $PSScriptRoot\XenClean\bin\$Platform\$Configuration\net462 `
+            -b $ComponentsDir\XenClean `
             -bc $PSScriptRoot\XenClean `
             -m $VersionDir\sbom\XenClean `
             -D true `
@@ -117,7 +119,7 @@ if ($Target -ine "Clean") {
 
         New-Item -Path $VersionDir\sbom\XenBootFix -ItemType Directory -Force
         sbom.exe generate `
-            -b $PSScriptRoot\XenBootFix\$Platform\$Configuration `
+            -b $ComponentsDir\XenBootFix `
             -bc $PSScriptRoot\XenBootFix `
             -m $VersionDir\sbom\XenBootFix `
             -D true `
@@ -169,7 +171,7 @@ if ($Target -ine "Clean") {
 
         New-Item -Path $VersionDir\sbom\DriverInstallCustomAction -ItemType Directory -Force
         sbom.exe generate `
-            -b $PSScriptRoot\DriverInstallCustomAction\bin\$Platform\$Configuration\net462 `
+            -b $ComponentsDir\DriverInstallCustomAction `
             -bc $PSScriptRoot\DriverInstallCustomAction `
             -m $VersionDir\sbom\DriverInstallCustomAction `
             -D true `
@@ -229,7 +231,7 @@ if ($Target -ine "Clean") {
         $XenCleanSymbolDir = "$SymbolDir\XenClean"
         New-Item -Path $XenCleanSymbolDir -ItemType Directory -Force
         Copy-Item `
-            -Path "$PSScriptRoot\XenClean\bin\$Platform\$Configuration\net462\*" `
+            -Path "$ComponentsDir\XenClean\*" `
             -Filter *.pdb `
             -Destination $XenCleanSymbolDir\ `
             -Force
@@ -237,7 +239,7 @@ if ($Target -ine "Clean") {
         $XenBootFixSymbolDir = "$SymbolDir\XenBootFix"
         New-Item -Path $XenBootFixSymbolDir -ItemType Directory -Force
         Copy-Item `
-            -Path "$PSScriptRoot\XenBootFix\$Platform\$Configuration\*" `
+            -Path "$ComponentsDir\XenBootFix\*" `
             -Include *.pdb `
             -Destination $XenBootFixSymbolDir\ `
             -Force

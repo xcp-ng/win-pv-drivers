@@ -24,13 +24,13 @@
     <BindPath Include="$(ProjectDir)driver-bins\$(Platform)\$(Configuration)">
       <BindName>driver-bins</BindName>
     </BindPath>
-    <BindPath Include="$(ProjectDir)..\DriverInstallCustomAction\bin\$(Platform)\$(Configuration)\net462">
+    <BindPath Include="$(ProjectDir)..\components\$(Platform)\$(Configuration)\DriverInstallCustomAction">
       <BindName>xeninstca</BindName>
     </BindPath>
     <BindPath Include="$(ProjectDir)..\xenplus\bin\publish\$(Platform)\$(Configuration)">
       <BindName>xenplus</BindName>
     </BindPath>
-    <BindPath Include="$(ProjectDir)..\XenBootFix\$(Platform)\$(Configuration)">
+    <BindPath Include="$(ProjectDir)..\components\$(Platform)\$(Configuration)\XenBootFix">
       <BindName>xenbootfix</BindName>
     </BindPath>
     <BindPath Include="$(ProjectDir)..\xentimeprovider\$(Platform)\$(Configuration)">
