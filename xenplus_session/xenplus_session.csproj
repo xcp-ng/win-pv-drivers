@@ -73,6 +73,7 @@
       <XenRcExe Condition=" '$(XenRcExe)' == '' ">"$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots@KitsRoot10)bin\$(TargetPlatformVersion)\$(PlatformTarget)\rc.exe"</XenRcExe>
       <Win32Resource>$(IntermediateOutputPath)Resource.res</Win32Resource>
     </PropertyGroup>
+    <MakeDir Directories="$(IntermediateOutputPath)" />
     <Exec Command="$(XenRcExe) /fo &quot;$(IntermediateOutputPath)Resource.res&quot; &quot;$(ProjectDir)Resource.rc&quot;" />
   </Target>
 
