@@ -8,6 +8,7 @@
     <Nullable>warnings</Nullable>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AccelerateBuildsInVisualStudio>false</AccelerateBuildsInVisualStudio>
+    <NoWarn>9269;$(NoWarn)</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
