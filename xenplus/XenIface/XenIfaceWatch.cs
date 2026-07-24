@@ -14,18 +14,6 @@ abstract class XenIfaceWatch : IDisposable {
     /// Event handler runs in an arbitrary thread. Event triggers may overlap.
     /// </summary>
     public abstract event XenIfaceWatchEventHandler? WatchTriggered;
-
-    /// <summary>
-    /// One-shot wait. Unreliable due to watch events being uncounted.
-    /// </summary>
-    /// <param name="timeoutMilliseconds">Timeout, in milliseconds</param>
-    /// <param name="discount">Number of waits to ignore before completing</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>the watched path</returns>
-    public abstract Task<string?> WaitOneAsync(
-        int timeoutMilliseconds,
-        int discount = 0,
-        CancellationToken cancellationToken = default);
 }
 
 sealed class XenIfaceWatchImpl : XenIfaceWatch {
@@ -78,37 +66,6 @@ sealed class XenIfaceWatchImpl : XenIfaceWatch {
             return;
         }
         _watchHandle = device.WatchAdd(_path, _event.SafeWaitHandle);
-    }
-
-    public override async Task<string?> WaitOneAsync(
-        int timeoutMilliseconds,
-        int discount = 0,
-        CancellationToken cancellationToken = default) {
-
-        var source = new TaskCompletionSource();
-        var remainingTriggers = discount + 1;
-        void handler(object? sender, XenIfaceWatchEventArgs args) {
-            if (Interlocked.Decrement(ref remainingTriggers) == 0) {
-                source.TrySetResult();
-            }
-        }
-        WatchTriggered += handler;
-        try {
-            var timeoutTask = Task.Delay(timeoutMilliseconds, cancellationToken);
-            var completed = await Task.WhenAny(
-                source.Task,
-                timeoutTask,
-                _disposedSource.Task);
-            ObjectDisposedException.ThrowIf(completed == _disposedSource.Task, this);
-            if (completed == timeoutTask) {
-                throw new TimeoutException();
-            }
-            Check.DebugAssert(completed == source.Task);
-            return _path;
-        } finally {
-            WatchTriggered -= handler;
-            source.TrySetCanceled(CancellationToken.None);
-        }
     }
 
     public override void Dispose() {
