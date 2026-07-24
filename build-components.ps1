@@ -27,13 +27,3 @@ msbuild.exe `
 if ($LASTEXITCODE -ne 0) {
     throw "MSBuild failed with error $LASTEXITCODE"
 }
-
-dotnet.exe publish .\xenplus\xenplus.csproj -c $Configuration -r win-$Platform -o .\xenplus\bin\publish\x64\Release
-if ($LASTEXITCODE -ne 0) {
-    throw "dotnet publish failed with error $LASTEXITCODE"
-}
-
-dotnet.exe publish .\xenplus_session\xenplus.csproj -c $Configuration -r win-$Platform -o .\xenplus\bin\publish\x64\Release
-if ($LASTEXITCODE -ne 0) {
-    throw "dotnet publish failed with error $LASTEXITCODE"
-}

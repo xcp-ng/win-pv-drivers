@@ -1,0 +1,58 @@
+name: build-xenplus
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options:
+          - Dev
+          - Prod
+        default: Dev
+
+permissions:
+  contents: read
+
+jobs:
+  build-xenplus:
+    runs-on: windows-latest
+    environment:
+      name: ${{inputs.environment}}
+      deployment: false
+    env:
+      WINPV_OUTPUT: xenplus/bin/publish/x64/Release
+      WINPV_CATALOG: catalog.csv
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Add .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: "10.0.x"
+      - name: Configure branding
+        uses: ./.github/actions/branding
+        with:
+          branding-data: ${{toJson(vars)}}
+      - name: Build XenPlus
+        run: .\build-xenplus.ps1 -Configuration Release -Platform x64
+      - name: Catalog XenPlus
+        run: |
+          Import-Module .\scripts\artifact.psm1 -Force
+          Get-ArtifactCatalog -Path .\$Env:WINPV_OUTPUT -Include *.exe |
+          Export-Csv -NoTypeInformation .\$Env:WINPV_OUTPUT\$Env:WINPV_CATALOG
+      - name: Upload XenPlus
+        id: upload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: xenplus
+          path: ${{env.WINPV_OUTPUT}}/
+    outputs:
+      output-path: ${{env.WINPV_OUTPUT}}
+      output-sha256: ${{steps.upload.outputs.artifact-digest}}
+      catalog-name: ${{env.WINPV_CATALOG}}

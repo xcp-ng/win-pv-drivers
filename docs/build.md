@@ -85,6 +85,16 @@ Output drivers will be collected in `installer\driver-bins`.
 If you need to sign the drivers externally (e.g. WHQL signatures), you must replace the drivers found here with your own signed binaries.
 These binaries should be located at `installer\driver-bins\<platform>\<configuration>\<driver name>` for each driver included in the package.
 
+## Building XenPlus
+
+Run the command:
+
+```powershell
+.\build-xenplus.ps1 -Configuration Release -Platform x64
+```
+
+The binaries are located at `xenplus\bin\publish\<platform>\<configuration>`.
+
 ## Building the Xen time provider
 
 Run the command:

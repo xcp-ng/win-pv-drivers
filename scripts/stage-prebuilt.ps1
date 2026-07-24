@@ -11,6 +11,8 @@ param (
     [Parameter()]
     [string]$DriversSigned,
     [Parameter()]
+    [string]$Xenplus = "$PSScriptRoot\..\input\xenplus.zip",
+    [Parameter()]
     [string]$TimeProvider = "$PSScriptRoot\..\input\timeprovider.zip",
     [Parameter()]
     [string]$Xstdvga = "$PSScriptRoot\..\input\xstdvga.zip"
@@ -22,11 +24,14 @@ $ErrorActionPreference = "Stop"
 $tar = Join-Path ([System.Environment]::SystemDirectory) "tar.exe"
 
 $DriversDir = "$PSScriptRoot\..\installer\driver-bins"
-Remove-Item $DriversDir -Recurse -Force -ErrorAction SilentlyContinue
-New-Item -Path $DriversDir -ItemType Directory -Force | Out-Null
-& $tar -xvf $Drivers -C $DriversDir
-if ($LASTEXITCODE -ne 0) {
-    throw "extracting Drivers failed with error $LASTEXITCODE"
+
+if ($Drivers) {
+    Remove-Item $DriversDir -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -Path $DriversDir -ItemType Directory -Force | Out-Null
+    & $tar -xvf $Drivers -C $DriversDir
+    if ($LASTEXITCODE -ne 0) {
+        throw "extracting Drivers failed with error $LASTEXITCODE"
+    }
 }
 
 if ($DriversSigned) {
@@ -36,18 +41,32 @@ if ($DriversSigned) {
     }
 }
 
-$TimeProviderDir = "$PSScriptRoot\..\xentimeprovider\$Platform\$Configuration"
-Remove-Item $TimeProviderDir -Recurse -Force -ErrorAction SilentlyContinue
-New-Item -Path $TimeProviderDir -ItemType Directory -Force | Out-Null
-& $tar -xvf $TimeProvider -C $TimeProviderDir
-if ($LASTEXITCODE -ne 0) {
-    throw "extracting TimeProvider failed with error $LASTEXITCODE"
+if ($Xenplus) {
+    $XenplusDir = "$PSScriptRoot\..\xenplus\bin\publish\$Platform\$Configuration"
+    Remove-Item $XenplusDir -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -Path $XenplusDir -ItemType Directory -Force | Out-Null
+    & $tar -xvf $Xenplus -C $XenplusDir
+    if ($LASTEXITCODE -ne 0) {
+        throw "extracting Xenplus failed with error $LASTEXITCODE"
+    }
 }
 
-$XstdvgaDir = "$PSScriptRoot\..\xstdvga\vs2022\$Platform\$Configuration\xstdvga"
-Remove-Item $XstdvgaDir -Recurse -Force -ErrorAction SilentlyContinue
-New-Item -Path $XstdvgaDir -ItemType Directory -Force | Out-Null
-& $tar -xvf $Xstdvga -C $XstdvgaDir --strip-components 1
-if ($LASTEXITCODE -ne 0) {
-    throw "extracting Xstdvga failed with error $LASTEXITCODE"
+if ($TimeProvider) {
+    $TimeProviderDir = "$PSScriptRoot\..\xentimeprovider\$Platform\$Configuration"
+    Remove-Item $TimeProviderDir -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -Path $TimeProviderDir -ItemType Directory -Force | Out-Null
+    & $tar -xvf $TimeProvider -C $TimeProviderDir
+    if ($LASTEXITCODE -ne 0) {
+        throw "extracting TimeProvider failed with error $LASTEXITCODE"
+    }
+}
+
+if ($Xstdvga) {
+    $XstdvgaDir = "$PSScriptRoot\..\xstdvga\vs2022\$Platform\$Configuration\xstdvga"
+    Remove-Item $XstdvgaDir -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -Path $XstdvgaDir -ItemType Directory -Force | Out-Null
+    & $tar -xvf $Xstdvga -C $XstdvgaDir --strip-components 1
+    if ($LASTEXITCODE -ne 0) {
+        throw "extracting Xstdvga failed with error $LASTEXITCODE"
+    }
 }

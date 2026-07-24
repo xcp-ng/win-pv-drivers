@@ -32,6 +32,7 @@ jobs:
     env:
       # should match up with the WINPV_OUTPUT of each sub-artifact workflow
       DRIVER_EXTRACT: installer/driver-bins
+      XENPLUS_EXTRACT: xenplus/bin/publish/x64/Release
       TIMEPROVIDER_EXTRACT: xentimeprovider/x64/Release
       XSTDVGA_EXTRACT: xstdvga/vs2022/x64/Release/xstdvga
     steps:
@@ -80,29 +81,26 @@ jobs:
         run: .\scripts\signer-ci.ps1 -OutFile .\branding.ps1
         env:
           SIGNER_PFX_BASE64: ${{secrets.SIGNER_PFX_BASE64}}
-      - name: Download drivers
+      - name: Download prebuilt artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: drivers
-          path: ${{env.DRIVER_EXTRACT}}/
-      - name: Download timeprovider
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: timeprovider
-          path: ${{env.TIMEPROVIDER_EXTRACT}}/
-      - name: Download xstdvga
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: xstdvga
-          path: ${{env.XSTDVGA_EXTRACT}}/
+          path: input
+          pattern: "{drivers,xenplus,timeprovider,xstdvga}"
+          merge-multiple: true
+          skip-decompress: true
+      - name: Stage prebuilt artifacts
+        run: .\scripts\stage-prebuilt.ps1 -Configuration Release -Platform x64
       - name: Testsign all sub-artifacts
         run: |
           $ErrorActionPreference = 'Stop'
           . .\branding.ps1
           . .\scripts\sign.ps1
           Set-SignerFileSignature (Get-ChildItem .\$Env:DRIVER_EXTRACT -File -Recurse -Include *.sys, *.dll, *.exe, *.cat)
+          Set-SignerFileSignature (Get-ChildItem .\$Env:XENPLUS_EXTRACT -File -Recurse -Include *.exe)
           Set-SignerFileSignature (Get-ChildItem .\$Env:TIMEPROVIDER_EXTRACT -File -Recurse -Include *.dll)
           Set-SignerFileSignature (Get-ChildItem .\$Env:XSTDVGA_EXTRACT -File -Recurse -Include *.sys, *.cat)
+      - name: Build installer components
+        run: .\build-components.ps1 -Configuration Release -Platform x64
       - name: Build installer
         id: build
         # this workflow is always testsigned, so -ExportCertificate is appropriate
