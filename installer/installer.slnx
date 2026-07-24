@@ -44,5 +44,8 @@
   <Project Path="../xenplus_session/xenplus_session.csproj" Id="8e1c4bca-fb9d-45bf-b52e-8e404cae7569">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
+  <Project Path="../xenplus_tests/xenplus_tests.csproj" Id="853a6831-7336-4351-a0cf-9a31d1754ea6">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
   <Project Path="XenDrivers.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0" />
 </Solution>

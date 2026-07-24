@@ -93,7 +93,7 @@ sealed partial class XenIfaceDevice {
         return strict ? StrictStoreEncoding.Instance : StoreEncoding.Instance;
     }
 
-    static ArrayPoolLease<byte> RentStoreBuffer() {
+    internal /* test */ static ArrayPoolLease<byte> RentStoreBuffer() {
         var buffer = ArrayPoolLease<byte>.RentExact(XENSTORE_PAYLOAD_MAX, clearArray: true);
         buffer.Span.Clear();
         return buffer;
@@ -106,7 +106,7 @@ sealed partial class XenIfaceDevice {
     /// <param name="buffer">Output buffer.</param>
     /// <param name="strict">Use strict encoding.</param>
     /// <returns>Length of resulting byte string, without null terminator.</returns>
-    static int FormatString(string? value, Span<byte> buffer, bool strict) {
+    internal /* test */ static int FormatString(string? value, Span<byte> buffer, bool strict) {
         var encoding = GetEncoding(strict);
         var len = value?.Length ?? 0;
         if (len >= buffer.Length) {
@@ -141,7 +141,7 @@ sealed partial class XenIfaceDevice {
         }
     }
 
-    static int FormatPath(string? value, Span<byte> buffer) {
+    internal /* test */ static int FormatPath(string? value, Span<byte> buffer) {
         if (value != null) {
             ValidatePath(value);
         }
