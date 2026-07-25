@@ -18,40 +18,33 @@ sealed class ClipboardSafeHandle(HGLOBAL h, CLIPBOARD_FORMAT format, bool ownsHa
         if (format != CLIPBOARD_FORMAT.CF_UNICODETEXT) {
             throw new InvalidOperationException($"Invalid clipboard format '{format}'");
         }
-        bool addRef = false;
-        DangerousAddRef(ref addRef);
-        try {
-            unsafe {
-                var locked = PInvoke.GlobalLock(this);
-                if (locked == null) {
-                    throw new Win32Exception(nameof(PInvoke.GlobalLock));
-                }
-                try {
-                    var size = PInvoke.GlobalSize(this);
-                    if (size == 0) {
-                        throw new Win32Exception(nameof(PInvoke.GlobalSize));
-                    }
-                    if (size > int.MaxValue) {
-                        throw new OutOfMemoryException("clipboard string too long");
-                    }
-                    if ((int)size / sizeof(char) > maxLength) {
-                        throw new OutOfMemoryException("clipboard string too long");
-                    }
-
-                    var chars = new Span<char>(locked, (int)size / sizeof(char));
-                    var zero = chars.IndexOf('\0');
-                    if (zero >= 0) {
-                        chars = chars[..zero];
-                    }
-
-                    return new string(chars);
-                } finally {
-                    PInvoke.GlobalUnlock(this);
-                }
+        using var shref = this.Borrow();
+        unsafe {
+            var locked = PInvoke.GlobalLock(this);
+            if (locked == null) {
+                throw new Win32Exception(nameof(PInvoke.GlobalLock));
             }
-        } finally {
-            if (addRef) {
-                DangerousRelease();
+            try {
+                var size = PInvoke.GlobalSize(this);
+                if (size == 0) {
+                    throw new Win32Exception(nameof(PInvoke.GlobalSize));
+                }
+                if (size > int.MaxValue) {
+                    throw new OutOfMemoryException("clipboard string too long");
+                }
+                if ((int)size / sizeof(char) > maxLength) {
+                    throw new OutOfMemoryException("clipboard string too long");
+                }
+
+                var chars = new Span<char>(locked, (int)size / sizeof(char));
+                var zero = chars.IndexOf('\0');
+                if (zero >= 0) {
+                    chars = chars[..zero];
+                }
+
+                return new string(chars);
+            } finally {
+                PInvoke.GlobalUnlock(this);
             }
         }
     }
