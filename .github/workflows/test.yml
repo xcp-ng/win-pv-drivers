@@ -26,16 +26,22 @@ jobs:
       - name: InstallerTests
         run: |
           foreach ($Configuration in @("Debug", "Release")) {
-            dotnet test -p Configuration=$Configuration -p Platform=x64 InstallerTests\InstallerTests.csproj
+            dotnet run `
+              --project InstallerTests\InstallerTests.csproj `
+              --configuration $Configuration `
+              --property:Platform=x64
             if ($LASTEXITCODE -ne 0) {
-              throw "dotnet test failed with error $LASTEXITCODE"
+              throw "InstallerTests failed with error $LASTEXITCODE"
             }
           }
       - name: xenplus_tests
         run: |
           foreach ($Configuration in @("Debug", "Release")) {
-            dotnet test -p Configuration=$Configuration -p Platform=x64 xenplus_tests\xenplus_tests.csproj
+            dotnet run `
+              --project xenplus_tests\xenplus_tests.csproj `
+              --configuration $Configuration `
+              --property:Platform=x64
             if ($LASTEXITCODE -ne 0) {
-              throw "dotnet test failed with error $LASTEXITCODE"
+              throw "xenplus_tests failed with error $LASTEXITCODE"
             }
           }
