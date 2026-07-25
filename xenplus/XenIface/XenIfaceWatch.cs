@@ -7,6 +7,7 @@ namespace XenPlus.XenIface;
 abstract class XenIfaceWatch : IDisposable {
     public abstract void Dispose();
     public abstract string Path { get; }
+    internal /* test */ abstract bool Ready { get; }
     internal abstract void Rearm(XenIfaceDevice device);
 
     public delegate void XenIfaceWatchEventHandler(object? sender, XenIfaceWatchEventArgs args);
@@ -33,6 +34,7 @@ sealed class XenIfaceWatchImpl : XenIfaceWatch {
     public override event XenIfaceWatchEventHandler? WatchTriggered;
 
     public override string Path => _path;
+    internal /* test */ override bool Ready => Volatile.Read(ref _watchFiredFirstTime);
 
     internal XenIfaceWatchImpl(
         string path,

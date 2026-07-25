@@ -55,9 +55,7 @@ public class ArrayPoolLeaseTests {
         lease.Dispose();
 
         Assert.Throws<ObjectDisposedException>(() => _ = lease.Array);
-        Assert.Throws<ObjectDisposedException>(() => {
-            _ = lease.Span;
-        });
+        Assert.Throws<ObjectDisposedException>(() => _ = lease.Span);
         Assert.Throws<ObjectDisposedException>(() => _ = lease.Memory);
         Assert.Throws<ObjectDisposedException>(() => _ = lease[0]);
     }
