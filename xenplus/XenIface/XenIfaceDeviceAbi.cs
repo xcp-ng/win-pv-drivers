@@ -199,10 +199,11 @@ sealed partial class XenIfaceDevice {
                 throw new Win32Exception(nameof(IOCTL_XENIFACE_STORE_DIRECTORY));
             }
         }
-        return ServerUtils.ParseMultiString(
-            outBuf.Span, GetEncoding(true).GetString)
-            .Select(x => { ValidatePath(x); return x; })
-            .ToList();
+        var paths = ServerUtils.ParseMultiString(
+            outBuf.Span,
+            GetEncoding(true).GetString);
+        paths.ForEach(ValidatePath);
+        return paths;
     }
 
     internal void StoreRemove(string path) {
