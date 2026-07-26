@@ -4,18 +4,21 @@ using Windows.Win32.System.Diagnostics.Debug;
 namespace XenPlus;
 
 static class ServerUtils {
-    public static List<string> ParseMultiString<T>(ReadOnlySpan<T> buf, Func<ReadOnlySpan<T>, string> ctor)
+    public static List<U> ParseMultiString<T, U>(
+        ReadOnlySpan<T> buf,
+        Func<ReadOnlySpan<T>, U> ctor,
+        T stop = default)
     where T : struct, IEquatable<T> {
-        var strings = new List<string>();
+        var strings = new List<U>();
         if (buf.Length == 0) {
             return strings;
         }
         for (int i = 0; i < buf.Length; i++) {
-            if (default(T).Equals(buf[i])) {
+            if (stop.Equals(buf[i])) {
                 break;
             }
             int start = i;
-            while (i < buf.Length && !default(T).Equals(buf[i])) {
+            while (i < buf.Length && !stop.Equals(buf[i])) {
                 i++;
             }
             strings.Add(ctor(buf[start..i]));
