@@ -27,12 +27,9 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
-  <Target Name="ExcludeTestAssemblyFromSingleFile"
-          BeforeTargets="_ComputeFilesToBundle"
-          Condition="'$(PublishSingleFile)' == 'true'">
+  <Target Name="ExcludeTestAssemblyFromSingleFile" BeforeTargets="_ComputeFilesToBundle" Condition="'$(PublishSingleFile)' == 'true'">
     <ItemGroup>
-      <ResolvedFileToPublish Update="@(ResolvedFileToPublish)"
-                             Condition="'%(ResolvedFileToPublish.RelativePath)' == '$(TargetFileName)'">
+      <ResolvedFileToPublish Update="@(ResolvedFileToPublish)" Condition="'%(ResolvedFileToPublish.RelativePath)' == '$(TargetFileName)'">
         <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       </ResolvedFileToPublish>
     </ItemGroup>
