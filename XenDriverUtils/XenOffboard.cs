@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 
 namespace XenDriverUtils {
     public class XenOffboard {
@@ -92,6 +93,44 @@ namespace XenDriverUtils {
 
             // 0x80070002/0x80070003 (ERROR_FILE_NOT_FOUND/ERROR_PATH_NOT_FOUND in HRESULT form)
             return process.ExitCode == -2147024894 || process.ExitCode == -2147024893;
+        }
+
+        static readonly TimeSpan CopyXenvifPollInterval = TimeSpan.FromSeconds(3);
+
+        public static bool WaitUntilReadyForCopyXenvif(TimeSpan timeout) {
+            if (timeout < TimeSpan.Zero) {
+                throw new ArgumentOutOfRangeException(nameof(timeout));
+            }
+
+            if (IsReadyForCopyXenvif()) {
+                return true;
+            }
+
+            Logger.LogFormat(
+                LogLevel.Info,
+                "Waiting {0} seconds for Copy-XenVifSettings to disappear",
+                timeout.TotalSeconds);
+
+            var deadline = DateTimeOffset.UtcNow + timeout;
+            while (DateTimeOffset.UtcNow < deadline) {
+                var remaining = deadline - DateTimeOffset.UtcNow;
+                if (remaining <= TimeSpan.Zero) {
+                    break;
+                }
+                Thread.Sleep(remaining < CopyXenvifPollInterval ? remaining : CopyXenvifPollInterval);
+
+                if (IsReadyForCopyXenvif()) {
+                    Logger.Log(LogLevel.Info, "Copy-XenVifSettings task disappeared");
+                    return true;
+                }
+            }
+
+            Logger.Log(LogLevel.Alert, "Copy-XenVifSettings task did not disappear");
+            return false;
+        }
+
+        public static bool WaitUntilReadyForCopyXenvif() {
+            return WaitUntilReadyForCopyXenvif();
         }
     }
 }

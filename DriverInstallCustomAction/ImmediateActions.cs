@@ -35,7 +35,7 @@ namespace XenInstCA {
         public static ActionResult CheckReadyForCopyXenvif(Session session) {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
 
-            if (!XenOffboard.IsReadyForCopyXenvif()) {
+            if (!XenOffboard.WaitUntilReadyForCopyXenvif()) {
                 session["NotReadyForCopyXenvif"] = "1";
             }
             return ActionResult.Success;

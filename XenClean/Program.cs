@@ -63,8 +63,8 @@ class Program {
         if (XenCleanup.IsSafeMode()) {
             Logger.Log("Skipping product uninstallation and offboarding in Safe Mode");
         } else {
-            if (!XenOffboard.IsReadyForCopyXenvif()) {
-                Logger.Log(LogLevel.Alert, "Xenvif offboarding task found, needs reboot");
+            if (!XenOffboard.WaitUntilReadyForCopyXenvif()) {
+                Logger.Log(LogLevel.Alert, "Xenvif offboarding task is pending, needs reboot");
                 return ExitCode.RebootPending;
             }
 
