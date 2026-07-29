@@ -29,5 +29,5 @@ public class ReportClipboardMessage : ClientMessage {
 [JsonSourceGenerationOptions(JsonSerializerDefaults.Strict)]
 [JsonSerializable(typeof(ServerMessage))]
 [JsonSerializable(typeof(ClientMessage))]
-partial class ClipboardMessageContext : JsonSerializerContext {
+public partial class ClipboardMessageContext : JsonSerializerContext {
 }
