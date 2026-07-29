@@ -130,7 +130,7 @@ namespace XenDriverUtils {
         }
 
         public static bool WaitUntilReadyForCopyXenvif() {
-            return WaitUntilReadyForCopyXenvif();
+            return WaitUntilReadyForCopyXenvif(TimeSpan.FromSeconds(120));
         }
     }
 }
