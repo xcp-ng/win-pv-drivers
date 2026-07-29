@@ -79,10 +79,14 @@ static class XenDiskStore {
         uint xenvbdInst;
         unsafe {
             fixed (char* xenvbdPtr = xenvbd) {
-                Cfgmgr32.CheckConfigret(PInvoke.CM_Locate_DevNode(
+                var cr = PInvoke.CM_Locate_DevNode(
                     out xenvbdInst,
                     xenvbdPtr,
-                    CM_LOCATE_DEVNODE_FLAGS.CM_LOCATE_DEVNODE_NORMAL));
+                    CM_LOCATE_DEVNODE_FLAGS.CM_LOCATE_DEVNODE_NORMAL);
+                if (cr == CONFIGRET.CR_NO_SUCH_DEVNODE) {
+                    yield break;
+                }
+                Cfgmgr32.CheckConfigret(cr);
             }
         }
 
