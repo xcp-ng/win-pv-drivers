@@ -1,6 +1,6 @@
 namespace XenPlus;
 
-sealed class SingleInstance : IDisposable {
+public sealed class SingleInstance : IDisposable {
     readonly Mutex _mutex;
     bool _taken = false;
     bool _disposed = false;

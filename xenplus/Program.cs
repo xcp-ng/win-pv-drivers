@@ -20,11 +20,18 @@ class Program {
         if (args.Length == 1 && args[0].Equals("-writeOptionsSchema", StringComparison.OrdinalIgnoreCase)) {
             Console.WriteLine(AllOptionsContext.Default.Options.GetJsonSchemaAsNode(typeof(AllOptions)).ToJsonString());
             return;
+        } else if (args.Length != 0) {
+            return;
         }
 
         var earlyLogger = new EarlyLogger();
         var mitigations = new Mitigations(earlyLogger);
         mitigations.EnableAll();
+
+        using var single = new SingleInstance("{28A507F2-2098-43BF-B34C-EB2780C210D4}");
+        if (!single.IsTaken) {
+            return;
+        }
 
         var configDir = GetConfigDir();
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings() {
