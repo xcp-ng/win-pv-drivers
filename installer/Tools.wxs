@@ -6,6 +6,15 @@
       <Feature Id="XenBootFixFeature" AllowAdvertise="no" Title="!(loc.XenBootFixFeatureTitle)" Description="!(loc.XenBootFixFeatureDescription)">
         <ComponentGroupRef Id="XenBootFixComponent" />
       </Feature>
+      <Component Location="local">
+        <RegistryValue
+          KeyPath="yes"
+          Root="HKLM"
+          Key="SOFTWARE\$(VENDOR_NAME)"
+          Name="ToolsFeatureInstalled"
+          Type="integer"
+          Value="1" />
+      </Component>
     </Feature>
 
     <DirectoryRef Id="INSTALLFOLDER">
