@@ -14,6 +14,9 @@
 
     <MediaTemplate EmbedCab="yes" />
 
+    <Property Id="XEN_SKIP_CA" Secure="yes" />
+    <Launch Condition="(NOT XEN_SKIP_CA) OR (REMOVE AND (NOT UPGRADINGPRODUCTCODE))" Message="!(loc.XenSkipCANotAllowedHere)" />
+
     <?if $(Platform) = x86 ?>
     <Launch Condition="NOT VersionNT64" Message="!(loc.MachineIsX64Error)" />
     <?endif ?>

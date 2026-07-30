@@ -28,30 +28,32 @@
       <Custom
         Action="XenfiltReset"
         Before="XenbusInstallRollback"
-        Condition="(!XenbusInternalFeature=2) AND (&amp;XenbusInternalFeature=3)" />
+        Condition="(NOT XEN_SKIP_CA) AND (!XenbusInternalFeature=2) AND (&amp;XenbusInternalFeature=3)" />
       <Custom
         Action="XenbusInstallRollback"
-        After="InstallFiles" />
+        After="InstallFiles"
+        Condition="NOT XEN_SKIP_CA" />
       <Custom
         Action="XenbusInstall"
         After="XenbusInstallRollback"
-        Condition="&amp;XenbusInternalFeature=3" />
+        Condition="(NOT XEN_SKIP_CA) AND (&amp;XenbusInternalFeature=3)" />
       <Custom
         Action="XenbusUninstallRollback"
-        After="DeleteServices" />
+        After="DeleteServices"
+        Condition="NOT XEN_SKIP_CA" />
       <Custom
         Action="XenbusUninstall"
         After="XenbusUninstallRollback"
-        Condition="&amp;XenbusInternalFeature=2" />
+        Condition="(NOT XEN_SKIP_CA) AND (&amp;XenbusInternalFeature=2)" />
 
       <Custom
         Action="XenbusServiceDelete"
         Before="XenbusCleanup"
-        Condition="(&amp;XenbusInternalFeature=2) AND XenbusServiceDelete" />
+        Condition="(NOT XEN_SKIP_CA) AND (&amp;XenbusInternalFeature=2) AND XenbusServiceDelete" />
       <Custom
         Action="XenbusCleanup"
         Before="RemoveFiles"
-        Condition="&amp;XenbusInternalFeature=2" />
+        Condition="(NOT XEN_SKIP_CA) AND (&amp;XenbusInternalFeature=2)" />
     </InstallExecuteSequence>
 
     <UI>
@@ -60,6 +62,11 @@
       <ProgressText Action="XenbusUninstall" Message="!(loc.DriverUninstallText)" />
     </UI>
 
-    <SetProperty Id="XenbusServiceDelete" Value="Services=xenbus_monitor,xenbus,xenfilt" After="CostFinalize" Sequence="execute" />
+    <SetProperty
+      Id="XenbusServiceDelete"
+      Value="Services=xenbus_monitor,xenbus,xenfilt"
+      After="CostFinalize"
+      Sequence="execute"
+      Condition="NOT XEN_SKIP_CA" />
   </Fragment>
 </Wix>

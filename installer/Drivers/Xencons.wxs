@@ -13,6 +13,11 @@
       <File Name="xencons_tty.exe" />
     </ComponentGroup>
 
-    <SetProperty Id="$(XenDriver)ServiceDelete" Value="Services=xencons_monitor,xencons" After="CostFinalize" Sequence="execute" />
+    <SetProperty
+      Id="$(XenDriver)ServiceDelete"
+      Value="Services=xencons_monitor,xencons"
+      After="CostFinalize"
+      Sequence="execute"
+      Condition="NOT XEN_SKIP_CA" />
   </Fragment>
 </Wix>

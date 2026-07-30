@@ -71,7 +71,8 @@
       Id="ConfigureXenplusService"
       Value="Service=$(ServiceName)"
       After="CostFinalize"
-      Sequence="execute" />
+      Sequence="execute"
+      Condition="NOT XEN_SKIP_CA" />
 
     <CustomAction
       Id="ConfigureXenplusService"
@@ -84,7 +85,7 @@
       <Custom
         Action="ConfigureXenplusService"
         After="InstallServices"
-        Condition="$XenplusComponent=3" />
+        Condition="(NOT XEN_SKIP_CA) AND ($XenplusComponent=3)" />
     </InstallExecuteSequence>
   </Fragment>
 </Wix>

@@ -13,6 +13,11 @@
 
     <!-- see Xennet.wxs for Xenvif backup/restore -->
 
-    <SetProperty Id="$(XenDriver)ServiceDelete" Value="Services=xenvif" After="CostFinalize" Sequence="execute" />
+    <SetProperty
+      Id="$(XenDriver)ServiceDelete"
+      Value="Services=xenvif"
+      After="CostFinalize"
+      Sequence="execute"
+      Condition="NOT XEN_SKIP_CA" />
   </Fragment>
 </Wix>

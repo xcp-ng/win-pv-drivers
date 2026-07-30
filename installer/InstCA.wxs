@@ -10,10 +10,10 @@
     <CustomAction Id="XenCheckIncompatibleDevices" BinaryRef="xeninst.dll" DllEntry="CheckIncompatibleDevices" Execute="firstSequence" Impersonate="no" />
     <!-- Need to block upgrade, thus the check for UPGRADINGPRODUCTCODE. Change is blocked but uninstall is still possible -->
     <InstallUISequence>
-      <Custom Action="XenCheckIncompatibleDevices" Before="LaunchConditions" Condition="NOT REMOVE OR UPGRADINGPRODUCTCODE" />
+      <Custom Action="XenCheckIncompatibleDevices" Before="LaunchConditions" Condition="(NOT XEN_SKIP_CA) AND (NOT REMOVE OR UPGRADINGPRODUCTCODE)" />
     </InstallUISequence>
     <InstallExecuteSequence>
-      <Custom Action="XenCheckIncompatibleDevices" Before="LaunchConditions" Condition="NOT REMOVE OR UPGRADINGPRODUCTCODE" />
+      <Custom Action="XenCheckIncompatibleDevices" Before="LaunchConditions" Condition="(NOT XEN_SKIP_CA) AND (NOT REMOVE OR UPGRADINGPRODUCTCODE)" />
     </InstallExecuteSequence>
     <Launch Condition="NOT IncompatibleDevices" Message="!(loc.IncompatibleDevicesError)" />
   </Fragment>
@@ -21,10 +21,10 @@
   <Fragment>
     <CustomAction Id="XenCheckWindowsVersion" BinaryRef="xeninst.dll" DllEntry="CheckWindowsVersion" Execute="firstSequence" Impersonate="no" />
     <InstallUISequence>
-      <Custom Action="XenCheckWindowsVersion" Before="LaunchConditions" />
+      <Custom Action="XenCheckWindowsVersion" Before="LaunchConditions" Condition="NOT XEN_SKIP_CA" />
     </InstallUISequence>
     <InstallExecuteSequence>
-      <Custom Action="XenCheckWindowsVersion" Before="LaunchConditions" />
+      <Custom Action="XenCheckWindowsVersion" Before="LaunchConditions" Condition="NOT XEN_SKIP_CA" />
     </InstallExecuteSequence>
     <Launch Condition="NOT XenWindowsNotSupported" Message="!(loc.XenWindowsNotSupportedError)" />
   </Fragment>
@@ -32,10 +32,10 @@
   <Fragment>
     <CustomAction Id="XenCheckReadyForCopyXenvif" BinaryRef="xeninst.dll" DllEntry="CheckReadyForCopyXenvif" Execute="firstSequence" Impersonate="no" />
     <InstallUISequence>
-      <Custom Action="XenCheckReadyForCopyXenvif" Before="LaunchConditions" />
+      <Custom Action="XenCheckReadyForCopyXenvif" Before="LaunchConditions" Condition="NOT XEN_SKIP_CA" />
     </InstallUISequence>
     <InstallExecuteSequence>
-      <Custom Action="XenCheckReadyForCopyXenvif" Before="LaunchConditions" />
+      <Custom Action="XenCheckReadyForCopyXenvif" Before="LaunchConditions" Condition="NOT XEN_SKIP_CA" />
     </InstallExecuteSequence>
     <Launch Condition="NOT NotReadyForCopyXenvif" Message="!(loc.NotReadyForCopyXenvifError)" />
   </Fragment>
@@ -44,14 +44,14 @@
     <CustomAction Id="XenCheck3PStorageDrivers" BinaryRef="xeninst.dll" DllEntry="Check3PStorageDrivers" Execute="immediate" Impersonate="no" />
     <!-- Check3PStorageDrivers is currently only used for Detected3PStorageDriversDlg. So no need to run this during InstallExecuteSequence. -->
     <InstallUISequence>
-      <Custom Action="XenCheck3PStorageDrivers" Before="LaunchConditions" Condition="NOT(REINSTALL OR REMOVE)" />
+      <Custom Action="XenCheck3PStorageDrivers" Before="LaunchConditions" Condition="(NOT XEN_SKIP_CA) AND NOT(REINSTALL OR REMOVE)" />
     </InstallUISequence>
   </Fragment>
 
   <Fragment>
     <CustomAction Id="XenWaitDriverInstall" BinaryRef="xeninst.dll" DllEntry="DriverWaitInstallFinish" Execute="deferred" Impersonate="no" />
     <InstallExecuteSequence>
-      <Custom Action="XenWaitDriverInstall" After="WriteRegistryValues" />
+      <Custom Action="XenWaitDriverInstall" After="WriteRegistryValues" Condition="NOT XEN_SKIP_CA" />
     </InstallExecuteSequence>
     <UI>
       <ProgressText Action="XenWaitDriverInstall" Message="!(loc.XenWaitDriverInstallText)" />
@@ -61,7 +61,7 @@
   <Fragment>
     <CustomAction Id="XenScheduleRebootCA" BinaryRef="xeninst.dll" DllEntry="ScheduleReboot" Execute="immediate" Impersonate="no" />
     <InstallExecuteSequence>
-      <Custom Action="XenScheduleRebootCA" After="InstallFinalize" />
+      <Custom Action="XenScheduleRebootCA" After="InstallFinalize" Condition="NOT XEN_SKIP_CA" />
     </InstallExecuteSequence>
   </Fragment>
 </Wix>

@@ -40,22 +40,26 @@
     Id="$(XenDriver)Install"
     Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]"
     After="CostFinalize"
-    Sequence="execute" />
+    Sequence="execute"
+    Condition="NOT XEN_SKIP_CA" />
   <SetProperty
     Id="$(XenDriver)InstallRollback"
     Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]"
     After="CostFinalize"
-    Sequence="execute" />
+    Sequence="execute"
+    Condition="NOT XEN_SKIP_CA" />
   <SetProperty
     Id="$(XenDriver)Uninstall"
     Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]"
     After="CostFinalize"
-    Sequence="execute" />
+    Sequence="execute"
+    Condition="NOT XEN_SKIP_CA" />
   <SetProperty
     Id="$(XenDriver)UninstallRollback"
     Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]"
     After="CostFinalize"
-    Sequence="execute" />
+    Sequence="execute"
+    Condition="NOT XEN_SKIP_CA" />
 
   <!-- we can use the standard DeleteServices action, but we use our CA instead since we want to reuse the action in XenClean -->
   <CustomAction
@@ -71,43 +75,47 @@
   <InstallExecuteSequence>
     <Custom
       Action="$(XenDriver)InstallRollback"
-      After="$(XenDriverDependsOn)Install" />
+      After="$(XenDriverDependsOn)Install"
+      Condition="NOT XEN_SKIP_CA" />
     <Custom
       Action="$(XenDriver)Install"
       After="$(XenDriver)InstallRollback"
-      Condition="&amp;$(XenDriver)InternalFeature=3" />
+      Condition="(NOT XEN_SKIP_CA) AND (&amp;$(XenDriver)InternalFeature=3)" />
     <Custom
       Action="$(XenDriver)Uninstall"
       Before="$(XenDriverDependsOn)UninstallRollback"
-      Condition="&amp;$(XenDriver)InternalFeature=2" />
+      Condition="(NOT XEN_SKIP_CA) AND (&amp;$(XenDriver)InternalFeature=2)" />
     <Custom
       Action="$(XenDriver)UninstallRollback"
-      Before="$(XenDriver)Uninstall" />
+      Before="$(XenDriver)Uninstall"
+      Condition="NOT XEN_SKIP_CA" />
     <Custom
       Action="$(XenDriver)ServiceDelete"
       Before="$(XenDriverDependsOn)ServiceDelete"
-      Condition="(&amp;$(XenDriver)InternalFeature=2) AND ($(XenDriver)ServiceDelete)" />
+      Condition="(NOT XEN_SKIP_CA) AND (&amp;$(XenDriver)InternalFeature=2) AND ($(XenDriver)ServiceDelete)" />
   </InstallExecuteSequence>
   <?else ?>
   <InstallExecuteSequence>
     <Custom
       Action="$(XenDriver)InstallRollback"
-      After="InstallFiles" />
+      After="InstallFiles"
+      Condition="NOT XEN_SKIP_CA" />
     <Custom
       Action="$(XenDriver)Install"
       After="$(XenDriver)InstallRollback"
-      Condition="&amp;$(XenDriver)InternalFeature=3" />
+      Condition="(NOT XEN_SKIP_CA) AND (&amp;$(XenDriver)InternalFeature=3)" />
     <Custom
       Action="$(XenDriver)UninstallRollback"
-      After="DeleteServices" />
+      After="DeleteServices"
+      Condition="NOT XEN_SKIP_CA" />
     <Custom
       Action="$(XenDriver)Uninstall"
       After="$(XenDriver)UninstallRollback"
-      Condition="&amp;$(XenDriver)InternalFeature=2" />
+      Condition="(NOT XEN_SKIP_CA) AND (&amp;$(XenDriver)InternalFeature=2)" />
     <Custom
       Action="$(XenDriver)ServiceDelete"
       Before="RemoveFiles"
-      Condition="(&amp;$(XenDriver)InternalFeature=2) AND ($(XenDriver)ServiceDelete)" />
+      Condition="(NOT XEN_SKIP_CA) AND (&amp;$(XenDriver)InternalFeature=2) AND ($(XenDriver)ServiceDelete)" />
   </InstallExecuteSequence>
   <?endif ?>
 
@@ -126,6 +134,6 @@
     Value="1"
     Before="InstallFinalize"
     Sequence="execute"
-    Condition="(&amp;$(XenDriver)InternalFeature=2) OR (&amp;$(XenDriver)InternalFeature=3)" />
+    Condition="(NOT XEN_SKIP_CA) AND ((&amp;$(XenDriver)InternalFeature=2) OR (&amp;$(XenDriver)InternalFeature=3))" />
   <?endif ?>
 </Include>

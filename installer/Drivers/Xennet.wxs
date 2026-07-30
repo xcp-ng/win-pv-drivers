@@ -20,11 +20,16 @@
     <CustomAction Id="XenvifPrepareRestore" BinaryRef="xeninst.dll" DllEntry="XenvifPrepareRestore" Execute="deferred" Impersonate="no" />
 
     <InstallExecuteSequence>
-      <Custom Action="XenvifPrepareRestore" Before="XennetUninstall" Condition="&amp;XennetInternalFeature=2" />
-      <Custom Action="XenvifBackup" Before="XenvifPrepareRestore" Condition="&amp;XennetInternalFeature=2" />
-      <Custom Action="XennetCleanup" Before="XenbusCleanup" Condition="&amp;XennetInternalFeature=2" />
+      <Custom Action="XenvifPrepareRestore" Before="XennetUninstall" Condition="(NOT XEN_SKIP_CA) AND (&amp;XennetInternalFeature=2)" />
+      <Custom Action="XenvifBackup" Before="XenvifPrepareRestore" Condition="(NOT XEN_SKIP_CA) AND (&amp;XennetInternalFeature=2)" />
+      <Custom Action="XennetCleanup" Before="XenbusCleanup" Condition="(NOT XEN_SKIP_CA) AND (&amp;XennetInternalFeature=2)" />
     </InstallExecuteSequence>
 
-    <SetProperty Id="$(XenDriver)ServiceDelete" Value="Services=xennet" After="CostFinalize" Sequence="execute" />
+    <SetProperty
+      Id="$(XenDriver)ServiceDelete"
+      Value="Services=xennet"
+      After="CostFinalize"
+      Sequence="execute"
+      Condition="NOT XEN_SKIP_CA" />
   </Fragment>
 </Wix>

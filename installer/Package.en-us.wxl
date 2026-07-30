@@ -8,6 +8,8 @@ This file contains the declaration of all the localizable strings.
   <String Id="GenericProductName" Value="Windows Guest Tools" />
   <String Id="ProductName" Value="$(VENDOR_NAME) Windows Guest Tools" />
 
+  <String Id="XenSkipCANotAllowedHere" Value="XEN_SKIP_CA can only be used for uninstallation." />
+
   <String Id="MachineIsX64Error" Value="Please install the 64-bit version of this package on 64-bit systems." />
 
   <String Id="NetFx462RequiredError" Value="[ProductName] requires .NET 4.6.2 or later." />
