@@ -8,10 +8,10 @@ using Windows.Win32.System.Ioctl;
 
 namespace XenPlus.VolumeInfo;
 
-sealed class XenDiskInformation {
-    // \\.\PhysicalDriveN
-    public required uint DiskNumber { get; init; }
+sealed class XenDiskInformation : IDiskInformation {
+    public required uint OSDeviceNumber { get; init; }
     public required uint TargetId { get; init; }
+    public uint DiskNumber => TargetId;
 }
 
 /// <remarks>
@@ -65,7 +65,7 @@ static class XenDiskStore {
         }
 
         return new XenDiskInformation() {
-            DiskNumber = devNumber.DeviceNumber,
+            OSDeviceNumber = devNumber.DeviceNumber,
             TargetId = address.TargetId,
         };
     }

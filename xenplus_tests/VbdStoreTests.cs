@@ -14,11 +14,11 @@ public class VbdStoreTests {
     [InlineData((202u << 8) | (15u << 4), "xvd", 15u)]
     [InlineData(1u << 28, "xvd", 0u)]
     [InlineData((1u << 28) | (4095u << 8), "xvd", 4095u)]
-    public void VbdNumberToTargetIdSupportsFormats(uint vbdNumber, string expectedPrefix, uint expectedId) {
+    public void VbdNumberToDiskNumberSupportsFormats(uint vbdNumber, string expectedPrefix, uint expectedDiskNumber) {
 
-        var result = VbdStore.VbdNumberToTargetId(vbdNumber);
+        var result = VbdStore.VbdNumberToDiskNumber(vbdNumber);
 
-        Assert.Equal((expectedPrefix, expectedId), result);
+        Assert.Equal((expectedPrefix, expectedDiskNumber), result);
     }
 
     [Theory]
@@ -28,13 +28,13 @@ public class VbdStoreTests {
     [InlineData((202u << 8) | 1u)]
     [InlineData((1u << 28) | 1u)]
     [InlineData((1u << 28) | (1u << 20))]
-    public void VbdNumberToTargetIdRejectsReservedBits(uint vbdNumber) {
-        Assert.Throws<ArgumentOutOfRangeException>(() => VbdStore.VbdNumberToTargetId(vbdNumber));
+    public void VbdNumberToDiskNumberRejectsReservedBits(uint vbdNumber) {
+        Assert.Throws<ArgumentOutOfRangeException>(() => VbdStore.VbdNumberToDiskNumber(vbdNumber));
     }
 
     [Fact]
-    public void VbdNumberToTargetIdRejectsUnsupportedFormat() {
-        Assert.Throws<ArgumentException>(() => VbdStore.VbdNumberToTargetId(0));
+    public void VbdNumberToDiskNumberRejectsUnsupportedFormat() {
+        Assert.Throws<ArgumentException>(() => VbdStore.VbdNumberToDiskNumber(0));
     }
 
     [Theory]
@@ -46,7 +46,7 @@ public class VbdStoreTests {
     [InlineData(52u, "xvdba")]
     [InlineData(701u, "xvdzz")]
     [InlineData(702u, "xvdaaa")]
-    public void FormatTargetNameProvidesCorrectSuffix(uint id, string expected) {
-        Assert.Equal(expected, VbdStore.FormatTargetName("xvd", id));
+    public void FormatVbdNameProvidesCorrectSuffix(uint id, string expected) {
+        Assert.Equal(expected, VbdStore.FormatVbdName("xvd", id));
     }
 }

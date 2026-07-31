@@ -8,7 +8,7 @@ using Windows.Win32.System.Ioctl;
 namespace XenPlus.VolumeInfo;
 
 sealed class VolumeExtent {
-    public required uint DiskNumber { get; init; }
+    public required uint OSDeviceNumber { get; init; }
     public required long StartingOffset { get; init; }
     public required long ExtentLength { get; init; }
 }
@@ -138,7 +138,7 @@ static class VolumeStore {
                 FileShare.ReadWrite | FileShare.Delete)) {
                 var rawExtents = GetDiskExtents(volumeHandle);
                 extents = rawExtents.Select(x => new VolumeExtent() {
-                    DiskNumber = x.DiskNumber,
+                    OSDeviceNumber = x.DiskNumber,
                     StartingOffset = x.StartingOffset,
                     ExtentLength = x.ExtentLength,
                 }).ToList();

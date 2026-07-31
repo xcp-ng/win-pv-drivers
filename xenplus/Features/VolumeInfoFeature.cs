@@ -33,15 +33,14 @@ sealed class VolumeInfoFeature(IHostLifetime _hostLifetime,
             // We need to detect XAPI to show a device name that matches what it does.
             var xapiMode = h.StoreTryRead("xenserver") != null;
 
-            var vbds = VbdStore.GetVbds(h);
-            var targetToName = new Dictionary<uint, string>();
-            foreach (var (_, number) in vbds) {
-                var (prefix, targetId) = VbdStore.VbdNumberToTargetId(number);
-                targetToName[targetId] = VbdStore.FormatTargetName(xapiMode ? "xvd" : prefix, targetId);
+            var diskNumberToVbdName = new Dictionary<uint, string>();
+            foreach (var (_, number) in VbdStore.GetVbds(h)) {
+                var (prefix, diskNumber) = VbdStore.VbdNumberToDiskNumber(number);
+                diskNumberToVbdName[diskNumber] = VbdStore.FormatVbdName(xapiMode ? "xvd" : prefix, diskNumber);
             }
 
-            var diskNumberToTarget = XenDiskStore.GetXenDisks()
-                .ToDictionary(x => x.DiskNumber, x => x.TargetId);
+            var osDeviceNumberToDiskNumber = XenDiskStore.GetXenDisks()
+                .ToDictionary(x => x.OSDeviceNumber, x => x.DiskNumber);
 
             var volumes = VolumeStore.GetVolumeInfo(!_options.CurrentValue.ReportAllDrives).ToList();
 
@@ -81,13 +80,13 @@ sealed class VolumeInfoFeature(IHostLifetime _hostLifetime,
                     for (int j = 0; j < volume.Extents.Count; j++) {
                         var extent = volume.Extents[j];
 
-                        h.StoreWrite($"data/volumes/{i}/extents/{j}/diskid", extent.DiskNumber.ToString());
+                        h.StoreWrite($"data/volumes/{i}/extents/{j}/diskid", extent.OSDeviceNumber.ToString());
                         h.StoreWrite($"data/volumes/{i}/extents/{j}/offset", extent.StartingOffset.ToString());
                         h.StoreWrite($"data/volumes/{i}/extents/{j}/length", extent.ExtentLength.ToString());
-                        if (diskNumberToTarget.TryGetValue(extent.DiskNumber, out var targetId)) {
-                            h.StoreWrite($"data/volumes/{i}/extents/{j}/target", targetId.ToString());
-                            if (targetToName.TryGetValue(targetId, out var targetName)) {
-                                h.StoreWrite($"data/volumes/{i}/extents/{j}", targetName);
+                        if (osDeviceNumberToDiskNumber.TryGetValue(extent.OSDeviceNumber, out var diskNumber)) {
+                            h.StoreWrite($"data/volumes/{i}/extents/{j}/target", diskNumber.ToString());
+                            if (diskNumberToVbdName.TryGetValue(diskNumber, out var vbdName)) {
+                                h.StoreWrite($"data/volumes/{i}/extents/{j}", vbdName);
                             }
                         }
                     }

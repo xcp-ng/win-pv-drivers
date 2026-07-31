@@ -18,7 +18,7 @@ static class VbdStore {
         return result;
     }
 
-    internal static (string prefix, uint id) VbdNumberToTargetId(uint vbdNumber) {
+    internal static (string prefix, uint diskNumber) VbdNumberToDiskNumber(uint vbdNumber) {
         if ((vbdNumber & (1u << 28)) != 0) {
             ArgumentOutOfRangeException.ThrowIfNotEqual(vbdNumber & 0xeff000ffu, 0u);
             return ("xvd", (vbdNumber & ((1u << 20) - 1)) >> 8);
@@ -41,14 +41,14 @@ static class VbdStore {
         }
     }
 
-    internal static string FormatTargetName(string prefix, uint id) {
+    internal static string FormatVbdName(string prefix, uint diskNumber) {
         const string alphabet = "abcdefghijklmnopqrstuvwxyz";
         var result = "";
-        while (id >= 26) {
-            result += alphabet[(int)(id % 26)];
-            id = (id / 26) - 1;
+        while (diskNumber >= 26) {
+            result += alphabet[(int)(diskNumber % 26)];
+            diskNumber = (diskNumber / 26) - 1;
         }
-        result += alphabet[(int)id];
+        result += alphabet[(int)diskNumber];
         var suffix = result.ToCharArray();
         Array.Reverse(suffix);
         return prefix + new string(suffix);
