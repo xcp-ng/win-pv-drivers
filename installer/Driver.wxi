@@ -3,7 +3,12 @@
   <?include Include.wxi ?>
 
   <!-- for installation tracking purposes -->
-  <Feature Id="$(XenDriver)InternalFeature" AllowAdvertise="no" Display="hidden">
+  <Feature
+    Id="$(XenDriver)InternalFeature"
+    InstallDefault="followParent"
+    AllowAbsent="no"
+    AllowAdvertise="no"
+    Display="hidden">
     <ComponentGroupRef Id="$(XenDriver)Component" />
   </Feature>
 

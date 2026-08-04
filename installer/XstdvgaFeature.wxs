@@ -8,7 +8,7 @@
       AllowAdvertise="no"
       Title="!(loc.XstdvgaFeatureTitle)"
       Description="!(loc.XstdvgaFeatureDescription)">
-      <ComponentGroupRef Id="XstdvgaComponent" />
+      <FeatureRef Id="XstdvgaInternalFeature" />
     </Feature>
   </Fragment>
 </Wix>
