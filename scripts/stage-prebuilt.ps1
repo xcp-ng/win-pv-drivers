@@ -11,16 +11,25 @@ param (
     [Parameter()]
     [string]$DriversSigned,
     [Parameter()]
+    [switch]$ResignDrivers,
+    [Parameter()]
     [string]$Xenplus = "$PSScriptRoot\..\input\xenplus.zip",
     [Parameter()]
     [string]$TimeProvider = "$PSScriptRoot\..\input\timeprovider.zip",
     [Parameter()]
     [string]$Xstdvga = "$PSScriptRoot\..\input\xstdvga.zip",
     [Parameter()]
+    [switch]$ResignXstdvga,
+    [Parameter()]
+    [string]$XstdvgaSigned,
+    [Parameter()]
     [string]$Components = "$PSScriptRoot\..\input\components.zip"
 )
 
 $ErrorActionPreference = "Stop"
+
+. $PSScriptRoot\..\branding.ps1
+. $PSScriptRoot\sign.ps1
 
 # specifically use the Windows bsdtar
 $tar = Join-Path ([System.Environment]::SystemDirectory) "tar.exe"
@@ -33,6 +42,10 @@ if ($Drivers) {
     & $tar -xvf $Drivers -C $DriversDir
     if ($LASTEXITCODE -ne 0) {
         throw "extracting Drivers failed with error $LASTEXITCODE"
+    }
+
+    if ($ResignDrivers) {
+        Set-SignerFileSignature (Get-ChildItem "$DriversDir\$Platform\$Configuration" -File -Recurse -Include *.sys, *.dll, *.exe, *.cat)
     }
 }
 
@@ -70,6 +83,20 @@ if ($Xstdvga) {
     & $tar -xvf $Xstdvga -C $XstdvgaDir
     if ($LASTEXITCODE -ne 0) {
         throw "extracting Xstdvga failed with error $LASTEXITCODE"
+    }
+
+    if ($ResignXstdvga) {
+        Set-SignerFileSignature (Get-ChildItem $XstdvgaDir -File -Recurse -Include *.sys, *.cat)
+    }
+}
+
+if ($XstdvgaSigned) {
+    $XstdvgaDir = "$PSScriptRoot\..\xstdvga\vs2022\$Platform\$Configuration\xstdvga"
+    Remove-Item $XstdvgaDir -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -Path $XstdvgaDir -ItemType Directory -Force | Out-Null
+    & $tar -xvf $XstdvgaSigned -C $XstdvgaDir --strip-components 1
+    if ($LASTEXITCODE -ne 0) {
+        throw "extracting XstdvgaSigned failed with error $LASTEXITCODE"
     }
 }
 
