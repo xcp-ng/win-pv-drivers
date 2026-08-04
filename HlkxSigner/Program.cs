@@ -10,7 +10,7 @@ static void Sign(string package, X509Certificate2 certificate) {
     var packageToSign = Package.Open(package, FileMode.Open);
 
     try {
-        // Specify that the digital signature should exist 
+        // Specify that the digital signature should exist
         // embedded in the signature part
         var signatureManager = new PackageDigitalSignatureManager(packageToSign) {
             CertificateOption = CertificateEmbeddingOption.InCertificatePart
@@ -73,8 +73,7 @@ try {
 
     var signer = store.Certificates
         .Cast<X509Certificate2>()
-        .Where(x => x.HasPrivateKey && x.Thumbprint.Equals(certThumbprint, StringComparison.OrdinalIgnoreCase))
-        .FirstOrDefault()
+        .FirstOrDefault(x => x.HasPrivateKey && x.Thumbprint.Equals(certThumbprint, StringComparison.OrdinalIgnoreCase))
         ?? throw new FileNotFoundException("Certificate not found");
     Sign(packagePath, signer);
 } catch (Exception ex) {
