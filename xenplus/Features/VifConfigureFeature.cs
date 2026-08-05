@@ -111,6 +111,93 @@ sealed class VifConfigureFeature(
         }
     }
 
+    static IEnumerable<(string fileName, List<string> arguments)> GetCommandsConfigv4(
+        MIB_IF_ROW2 mibIf,
+        MibUnicastIpAddressTableSafeHandle mibIPTable,
+        VifConfigurationIPv4 config) {
+        var interfaceIndex = mibIf.InterfaceIndex.ToString();
+
+        if (config is VifConfigurationIPv4Dhcp) {
+            if (!mibIPTable.HasDhcpAddress(mibIf.InterfaceIndex, ADDRESS_FAMILY.AF_INET)) {
+                yield return (NetshPath, ["interface", "ipv4", "set", "address", interfaceIndex, "source=dhcp"]);
+            }
+        } else if (config is VifConfigurationIPv4Static staticv4) {
+            var address = staticv4.Address[0];
+            yield return (NetshPath, [
+                "interface",
+                "ipv4",
+                "set",
+                "address",
+                interfaceIndex,
+                "source=static",
+                $"address={address.Address.ToStringWithoutScopeId()}/{address.Prefix}",
+                $"gateway={staticv4.Gateway?.ToString() ?? "none"}",
+            ]);
+        }
+    }
+
+    static IEnumerable<(string fileName, List<string> arguments)> GetCommandsConfigv6(
+        MIB_IF_ROW2 mibIf,
+        MibUnicastIpAddressTableSafeHandle mibIPTable,
+        MibIpForwardTable2SafeHandle mibRouteTable,
+        VifConfigurationIPv6 config) {
+        var interfaceIndex = mibIf.InterfaceIndex.ToString();
+
+        if (config is VifConfigurationIPv6Autoconf) {
+            foreach (var address in mibIPTable.GetManualUnicastAddresses(
+                mibIf.InterfaceIndex,
+                ADDRESS_FAMILY.AF_INET6)) {
+                yield return (NetshPath, [
+                    "interface",
+                    "ipv6",
+                    "delete",
+                    "address",
+                    interfaceIndex,
+                    address.Address.ToStringWithoutScopeId(),
+                ]);
+            }
+        } else if (config is VifConfigurationIPv6Static staticv6) {
+            var address = staticv6.Address[0];
+            foreach (var existing in mibIPTable.GetManualUnicastAddresses(
+                mibIf.InterfaceIndex,
+                ADDRESS_FAMILY.AF_INET6)) {
+                if (existing.Address.EqualsWithoutScopeId(address.Address) && existing.Prefix == address.Prefix) {
+                    continue;
+                }
+                yield return (NetshPath, [
+                    "interface",
+                    "ipv6",
+                    "delete",
+                    "address",
+                    interfaceIndex,
+                    existing.Address.ToStringWithoutScopeId(),
+                ]);
+            }
+            if (!mibIPTable.HasUnicastAddress(mibIf.InterfaceIndex, address)) {
+                yield return (NetshPath, [
+                    "interface",
+                    "ipv6",
+                    "add",
+                    "address",
+                    interfaceIndex,
+                    $"{address.Address.ToStringWithoutScopeId()}/{address.Prefix}",
+                ]);
+            }
+            if (staticv6.Gateway is IPAddress gateway &&
+                !mibRouteTable.HasDefaultRoute(mibIf.InterfaceIndex, gateway)) {
+                yield return (NetshPath, [
+                    "interface",
+                    "ipv6",
+                    "add",
+                    "route",
+                    "::/0",
+                    interfaceIndex,
+                    gateway.ToStringWithoutScopeId(),
+                ]);
+            }
+        }
+    }
+
     async Task ApplyVifConfiguration(
         MibIfTable2SafeHandle mibIfTable,
         MibUnicastIpAddressTableSafeHandle mibIPTable,
@@ -138,75 +225,10 @@ sealed class VifConfigureFeature(
 
         List<(string fileName, List<string> arguments)> commands = [];
 
-        var interfaceIndex = mibIf.InterfaceIndex.ToString();
-        if (config is VifConfigurationIPv4Dhcp) {
-            if (!mibIPTable.HasDhcpAddress(mibIf.InterfaceIndex, ADDRESS_FAMILY.AF_INET)) {
-                commands.Add((NetshPath, ["interface", "ipv4", "set", "address", interfaceIndex, "source=dhcp"]));
-            }
-        } else if (config is VifConfigurationIPv4Static staticv4) {
-            var address = staticv4.Address[0];
-            commands.Add((NetshPath, [
-                "interface",
-                "ipv4",
-                "set",
-                "address",
-                interfaceIndex,
-                "source=static",
-                $"address={address.Address.ToStringWithoutScopeId()}/{address.Prefix}",
-                $"gateway={staticv4.Gateway?.ToString() ?? "none"}",
-            ]));
-        } else if (config is VifConfigurationIPv6Autoconf) {
-            foreach (var address in mibIPTable.GetManualUnicastAddresses(
-                mibIf.InterfaceIndex,
-                ADDRESS_FAMILY.AF_INET6)) {
-                commands.Add((NetshPath, [
-                    "interface",
-                    "ipv6",
-                    "delete",
-                    "address",
-                    interfaceIndex,
-                    address.Address.ToStringWithoutScopeId(),
-                ]));
-            }
-        } else if (config is VifConfigurationIPv6Static staticv6) {
-            var address = staticv6.Address[0];
-            foreach (var existing in mibIPTable.GetManualUnicastAddresses(
-                mibIf.InterfaceIndex,
-                ADDRESS_FAMILY.AF_INET6)) {
-                if (existing.Address.EqualsWithoutScopeId(address.Address) && existing.Prefix == address.Prefix) {
-                    continue;
-                }
-                commands.Add((NetshPath, [
-                    "interface",
-                    "ipv6",
-                    "delete",
-                    "address",
-                    interfaceIndex,
-                    existing.Address.ToStringWithoutScopeId(),
-                ]));
-            }
-            if (!mibIPTable.HasUnicastAddress(mibIf.InterfaceIndex, address)) {
-                commands.Add((NetshPath, [
-                    "interface",
-                    "ipv6",
-                    "add",
-                    "address",
-                    interfaceIndex,
-                    $"{address.Address.ToStringWithoutScopeId()}/{address.Prefix}",
-                ]));
-            }
-            if (staticv6.Gateway is IPAddress gateway &&
-                !mibRouteTable.HasDefaultRoute(mibIf.InterfaceIndex, gateway)) {
-                commands.Add((NetshPath, [
-                    "interface",
-                    "ipv6",
-                    "add",
-                    "route",
-                    "::/0",
-                    interfaceIndex,
-                    gateway.ToStringWithoutScopeId(),
-                ]));
-            }
+        if (config is VifConfigurationIPv4 configv4) {
+            commands.AddRange(GetCommandsConfigv4(mibIf, mibIPTable, configv4));
+        } else if (config is VifConfigurationIPv6 configv6) {
+            commands.AddRange(GetCommandsConfigv6(mibIf, mibIPTable, mibRouteTable, configv6));
         }
 
         if (commands.Count > 0) {
