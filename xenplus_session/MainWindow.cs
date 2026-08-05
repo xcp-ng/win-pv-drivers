@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Web;
 using Windows.Win32;
@@ -238,6 +239,26 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
         }
     }
 
+    static bool SanitizeUri(string? source, [NotNullWhen(true)] out string? sanitized) {
+        sanitized = null;
+
+        if (!Uri.TryCreate(source, UriKind.Absolute, out var uri)) {
+            return false;
+        }
+
+        if (!"https".Equals(uri.Scheme, StringComparison.OrdinalIgnoreCase) &&
+            !"http".Equals(uri.Scheme, StringComparison.OrdinalIgnoreCase)) {
+            return false;
+        }
+
+        if (!string.IsNullOrEmpty(uri.UserInfo) || string.IsNullOrEmpty(uri.Host)) {
+            return false;
+        }
+
+        sanitized = uri.ToString();
+        return true;
+    }
+
     LRESULT OnAbout(HWND hwnd) {
         if (_showingAbout) {
             return (LRESULT)0;
@@ -280,9 +301,9 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
 
             td.HyperlinkClicked += (sender, args) => {
                 try {
-                    if (Uri.TryCreate(args.Uri, UriKind.Absolute, out var uri)) {
+                    if (SanitizeUri(args.Uri, out var uri)) {
                         var psi = new ProcessStartInfo() {
-                            FileName = uri.ToString(),
+                            FileName = uri,
                             UseShellExecute = true,
                         };
                         Process.Start(psi)?.Dispose();
