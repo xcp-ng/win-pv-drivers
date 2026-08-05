@@ -78,52 +78,35 @@ static class IPHelperExtensions {
                 row.SuffixOrigin == NL_SUFFIX_ORIGIN.IpSuffixOriginDhcp));
     }
 
-    internal static bool HasUnicastAddress(
-        this MibUnicastIpAddressTableSafeHandle mibIPTable,
-        uint interfaceIndex,
-        CIDR address) {
-        return mibIPTable.Any(row =>
-            row.InterfaceIndex == interfaceIndex &&
-            row.OnLinkPrefixLength == address.Prefix &&
-            AddressEquals(row.Address, address.Address));
-    }
-
-    internal static bool HasDefaultRoute(
-        this MibIpForwardTable2SafeHandle mibRouteTable,
-        uint interfaceIndex,
-        IPAddress gateway) {
-        ADDRESS_FAMILY family;
-        switch (gateway.AddressFamily) {
-            case AddressFamily.InterNetwork:
-                family = ADDRESS_FAMILY.AF_INET;
-                break;
-            case AddressFamily.InterNetworkV6:
-                family = ADDRESS_FAMILY.AF_INET6;
-                break;
-            default:
-                return false;
-        }
-
-        return mibRouteTable.Any(row =>
-            row.InterfaceIndex == interfaceIndex &&
-            row.DestinationPrefix.Prefix.si_family == family &&
-            row.DestinationPrefix.PrefixLength == 0 &&
-            AddressEquals(row.NextHop, gateway));
-    }
-
-    internal static List<CIDR> GetManualUnicastAddresses(
+    internal static IEnumerable<(CIDR cidr, bool isManual)> GetUnicastAddresses(
         this MibUnicastIpAddressTableSafeHandle mibIPTable,
         uint interfaceIndex,
         ADDRESS_FAMILY family) {
         return mibIPTable.Where(row =>
             row.InterfaceIndex == interfaceIndex &&
-            row.Address.si_family == family &&
-            (row.PrefixOrigin == NL_PREFIX_ORIGIN.IpPrefixOriginManual ||
-                row.SuffixOrigin == NL_SUFFIX_ORIGIN.IpSuffixOriginManual)
-        ).Select(row => new CIDR() {
-            Address = Check.Unwrap(row.Address.ToIPAddress()),
-            Prefix = row.OnLinkPrefixLength,
-        }).ToList();
+            row.Address.si_family == family
+        ).Select(row => (
+            new CIDR() {
+                Address = Check.Unwrap(row.Address.ToIPAddress()),
+                Prefix = row.OnLinkPrefixLength,
+            },
+            row.PrefixOrigin == NL_PREFIX_ORIGIN.IpPrefixOriginManual ||
+                row.SuffixOrigin == NL_SUFFIX_ORIGIN.IpSuffixOriginManual
+        ));
+    }
+
+    internal static IEnumerable<(IPAddress ip, bool isManual)> GetDefaultRoute(
+        this MibIpForwardTable2SafeHandle mibRouteTable,
+        uint interfaceIndex,
+        ADDRESS_FAMILY family) {
+        return mibRouteTable.Where(row =>
+            row.InterfaceIndex == interfaceIndex &&
+            row.DestinationPrefix.Prefix.si_family == family &&
+            row.DestinationPrefix.PrefixLength == 0
+        ).Select(row => (
+            row.NextHop.ToIPAddress()!,
+            row.Origin == NL_ROUTE_ORIGIN.NlroManual
+        ));
     }
 
     internal static bool EqualsWithoutScopeId(this IPAddress ip, IPAddress other) {
