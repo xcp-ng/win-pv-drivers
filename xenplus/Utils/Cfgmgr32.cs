@@ -86,6 +86,8 @@ static class Cfgmgr32 {
                 if (cr == CONFIGRET.CR_SUCCESS) {
                     Check.Assert(devPropType == DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
                     break;
+                } else if (cr != CONFIGRET.CR_NO_SUCH_VALUE) {
+                    return [];
                 } else if (cr != CONFIGRET.CR_BUFFER_SMALL) {
                     CheckConfigret(cr);
                 }
