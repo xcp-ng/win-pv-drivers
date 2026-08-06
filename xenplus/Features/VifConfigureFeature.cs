@@ -317,6 +317,47 @@ sealed class VifConfigureFeature(
         }
     }
 
+    // the above is for applying 1 config, but this is for applying a group of configs with the same error code endpoint
+    async Task ApplyVifConfigurations(
+        MibIfTable2SafeHandle mibIfTable,
+        MibUnicastIpAddressTableSafeHandle mibIPTable,
+        MibIpForwardTable2SafeHandle mibRouteTable,
+        HashSet<VifConfiguration> configs,
+        CancellationToken ct) {
+        foreach (var configGroup in configs.GroupBy(x => x.StorePath)) {
+            var errors = new List<Exception>();
+            foreach (var config in configGroup) {
+                var suffix = config is VifConfigurationIPv6 ? "6" : "";
+                try {
+                    _logger.LogDebug(
+                        "Applying {} config update for '{}' (MAC '{}')",
+                        config.Category,
+                        config.StorePath,
+                        config.Mac);
+
+                    await ApplyVifConfiguration(mibIfTable, mibIPTable, mibRouteTable, config, ct);
+                } catch (Exception ex) {
+                    _logger.LogWarning(
+                        ex,
+                        "Cannot apply {} config update for '{}' (MAC '{}')",
+                        config.Category,
+                        config.StorePath,
+                        config.Mac);
+                    errors.Add(ex);
+                } finally {
+                    using var h = _xi.Lock();
+                    VifStore.AcknowledgeVifConfiguration(h, config.StorePath, suffix);
+                }
+            }
+            try {
+                using var h = _xi.Lock();
+                VifStore.RespondVifConfiguration(h, configGroup.Key, errors);
+            } catch (Exception ex) {
+                _logger.LogWarning(ex, "Cannot report VIF config error to XAPI");
+            }
+        }
+    }
+
     void ReportFeature(object? sender, XenIfaceResumedEventArgs args) {
         try {
             using var h = _xi.Lock();
@@ -354,31 +395,8 @@ sealed class VifConfigureFeature(
                     ADDRESS_FAMILY.AF_UNSPEC);
                 using var mibRouteTable = MibIpForwardTable2SafeHandle.GetIpForwardTable2(ADDRESS_FAMILY.AF_UNSPEC);
 
-                foreach (var config in ParseVifConfigurations()) {
-                    _logger.LogDebug(
-                        "Applying {} config update for '{}' (MAC '{}')",
-                        config.Category,
-                        config.StorePath,
-                        config.Mac);
-
-                    var suffix = config is VifConfigurationIPv6 ? "6" : "";
-                    try {
-                        await ApplyVifConfiguration(mibIfTable, mibIPTable, mibRouteTable, config, stoppingToken);
-
-                        using var h = _xi.Lock();
-                        VifStore.RespondVifConfiguration(h, config.StorePath, suffix);
-                    } catch (Exception ex) {
-                        _logger.LogWarning(
-                            ex,
-                            "Cannot apply {} config update for '{}' (MAC '{}')",
-                            config.Category,
-                            config.StorePath,
-                            config.Mac);
-
-                        using var h = _xi.Lock();
-                        VifStore.RespondVifConfiguration(h, config.StorePath, suffix, ex);
-                    }
-                }
+                var configs = ParseVifConfigurations();
+                await ApplyVifConfigurations(mibIfTable, mibIPTable, mibRouteTable, configs, stoppingToken);
             } catch (OperationCanceledException) {
             } catch (Exception ex) {
                 _logger.LogWarning(ex, "Cannot process VIF config update");
