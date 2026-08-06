@@ -277,7 +277,7 @@ sealed class VifConfigureFeature(
         }
 
         if (commands.Count > 0) {
-            DebugLogDebug(
+            _logger.LogDebug(
                 "Running {} netsh script:\n{}",
                 commands.Count,
                 string.Join("\n", commands.Select(cmd => $"{cmd.fileName} {string.Join(' ', cmd.arguments)}")));
