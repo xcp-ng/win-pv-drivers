@@ -56,7 +56,7 @@
     </ComponentGroup>
 
     <ComponentGroup Id="XenplusSessionComponentGroup">
-      <Component>
+      <Component Directory="XenplusFolder">
         <File Source="!(bindpath.xenplus)\xenplus_session.exe" Id="xenplus_session.exe" />
         <RegistryValue
           Root="HKLM"
