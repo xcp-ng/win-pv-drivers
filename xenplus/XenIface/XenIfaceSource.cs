@@ -287,21 +287,24 @@ sealed partial class XenIfaceSource : IDisposable {
         }
     }
 
-    unsafe void Worker(object? _param) {
+    void Worker(object? _param) {
         GCHandle gch = GCHandle.Alloc(this);
         try {
+            CM_Unregister_NotificationSafeHandle cmWorker;
             var filter = new CM_NOTIFY_FILTER {
-                cbSize = (uint)sizeof(CM_NOTIFY_FILTER),
+                cbSize = (uint)Unsafe.SizeOf<CM_NOTIFY_FILTER>(),
                 Flags = 0,
                 FilterType = CM_NOTIFY_FILTER_TYPE_DEVICEINTERFACE,
                 Reserved = 0,
                 u = { DeviceInterface = { ClassGuid = GUID_INTERFACE_XENIFACE } }
             };
-            Cfgmgr32.CheckConfigret(PInvoke.CM_Register_Notification(
-                filter,
-                (void*)GCHandle.ToIntPtr(gch),
-                &WorkerCmCallback,
-                out var cmWorker));
+            unsafe {
+                Cfgmgr32.CheckConfigret(PInvoke.CM_Register_Notification(
+                    filter,
+                    (void*)GCHandle.ToIntPtr(gch),
+                    &WorkerCmCallback,
+                    out cmWorker));
+            }
 
             using var _1 = cmWorker;
             using var _2 = _tombstones;
