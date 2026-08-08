@@ -143,34 +143,45 @@ sealed partial class XenIfaceSource : IDisposable {
     /// <summary>
     /// locked
     /// </summary>
-    void RefreshDevices(out XenIfaceDevice? lastActive) {
-        lastActive = null;
-        if (_active != null) {
-            if (!_active.Handle.IsClosed && !_active.Handle.IsInvalid) {
-                return;
-            } else {
-                lastActive = _active;
-                _active = null;
+    void RefreshDevices(DisposeStack tombstones) {
+        XenIfaceDevice? lastActive = null, newActive = null;
+
+        try {
+            if (_active != null) {
+                if (!_active.Handle.IsClosed && !_active.Handle.IsInvalid) {
+                    return;
+                } else {
+                    (_active, lastActive) = (lastActive, _active);
+                }
+            }
+
+            foreach (var device in Cfgmgr32.GetDeviceInterfaces(GUID_INTERFACE_XENIFACE)) {
+                try {
+                    _logger.LogTrace("Trying {device}", device);
+                    newActive = new XenIfaceDevice(this, device);
+                    _logger.LogDebug("Opened {device}", device);
+                    break;
+                } catch (Exception ex) {
+                    _logger.LogTrace(ex, "Failed to open device {device}", device);
+                }
+            }
+
+            if (newActive == null) {
+                throw new XenIfaceNotFoundException("No active device");
+            }
+
+            newActive.SuspendRegister(_suspend.SafeWaitHandle);
+            (_active, newActive) = (newActive, _active);
+            _suspend.Set();
+        } finally {
+            if (lastActive != null) {
+                _logger.LogDebug("killing last active {}", lastActive.DevicePath);
+                tombstones.Push(lastActive);
+            }
+            if (newActive != null) {
+                tombstones.Push(newActive);
             }
         }
-
-        foreach (var device in Cfgmgr32.GetDeviceInterfaces(GUID_INTERFACE_XENIFACE)) {
-            try {
-                _logger.LogTrace("Trying {device}", device);
-                _active = new XenIfaceDevice(this, device);
-                _logger.LogDebug("Opened {device}", device);
-                break;
-            } catch (Exception ex) {
-                _logger.LogTrace(ex, "Failed to open device {device}", device);
-            }
-        }
-
-        if (_active == null) {
-            throw new XenIfaceNotFoundException("No active device");
-        }
-
-        _active.SuspendRegister(_suspend.SafeWaitHandle);
-        _suspend.Set();
     }
 
     internal void OnDeviceCallback(CM_NOTIFY_ACTION action, XenIfaceDevice target) {
@@ -267,11 +278,7 @@ sealed partial class XenIfaceSource : IDisposable {
                             if (request is WorkerRequest workerRequest &&
                                 workerRequest.Action == CM_NOTIFY_ACTION_DEVICEINTERFACEARRIVAL) {
                                 try {
-                                    RefreshDevices(out var lastActive);
-                                    if (lastActive != null) {
-                                        _logger.LogDebug("killing last active {}", lastActive.DevicePath);
-                                        tombstones.Push(lastActive);
-                                    }
+                                    RefreshDevices(tombstones);
                                 } catch (XenIfaceNotFoundException ex) {
                                     _logger.LogInformation(ex, "Did not find Xen PV interface. This is a transient error.");
                                 }
