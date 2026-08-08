@@ -146,7 +146,7 @@ sealed partial class XenIfaceSource : IDisposable {
     void RefreshDevices(out XenIfaceDevice? lastActive) {
         lastActive = null;
         if (_active != null) {
-            if (!_active.Handle.IsInvalid) {
+            if (!_active.Handle.IsClosed && !_active.Handle.IsInvalid) {
                 return;
             } else {
                 lastActive = _active;
