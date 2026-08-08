@@ -18,6 +18,7 @@ sealed class WindowLockException : Exception {
 abstract class Window : IDisposable {
     readonly GCHandle _gch;
     bool _disposed = false;
+    protected HWND _hwnd = HWND.Null;
 
     static readonly Lock _registeredClassesLock = new();
     static readonly Dictionary<string, ushort> _registeredClasses = [];
@@ -53,7 +54,7 @@ abstract class Window : IDisposable {
 
                 var createParam = (void*)GCHandle.ToIntPtr(_gch);
                 Debug.WriteLine("CreateWindowEx createParam={0:x}", (nint)createParam);
-                var handle = PInvoke.CreateWindowEx(
+                var hwnd = PInvoke.CreateWindowEx(
                     0,
                     className,
                     windowName,
@@ -66,7 +67,7 @@ abstract class Window : IDisposable {
                     null,
                     PInvoke.GetModuleHandle(null),
                     createParam);
-                if (handle == HWND.Null) {
+                if (hwnd == HWND.Null) {
                     throw new Win32Exception(nameof(PInvoke.CreateWindowEx));
                 }
             }
@@ -101,6 +102,7 @@ abstract class Window : IDisposable {
 
             var gch = GCHandle.FromIntPtr(createParam);
             var target = gch.Target as Window ?? throw new WindowLockException();
+            target._hwnd = hwnd;
 
             Marshal.SetLastPInvokeError(0);
             if (PInvoke.SetWindowLongPtr(hwnd, WINDOW_LONG_PTR_INDEX.GWLP_USERDATA, createParam) == 0) {
