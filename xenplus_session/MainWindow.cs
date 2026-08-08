@@ -54,6 +54,14 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     static ushort HIWORD(LPARAM value) => (ushort)((value >> 16) & 0xffff);
 
+    // dispatch machinery
+
+    public void OnPosted() {
+        PInvoke.PostMessage(_hwnd, (uint)WmApp.MainLoop, 0, 0);
+    }
+
+    public event EventHandler? Dispatched;
+
     async Task ReceiveClipboardAsync(HWND hwnd) {
         await foreach (var data in _pipe.ReceiveAsync(_cts.Token)) {
             bool opened = false;
@@ -343,6 +351,9 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
 
     protected override LRESULT WndProc(HWND hwnd, uint msg, WPARAM wparam, LPARAM lparam) {
         switch (msg) {
+            case (uint)WmApp.MainLoop:
+                Dispatched?.Invoke(this, EventArgs.Empty);
+                return (LRESULT)0;
             case PInvoke.WM_CREATE:
                 return OnCreate(hwnd);
             case PInvoke.WM_CLIPBOARDUPDATE:

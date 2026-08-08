@@ -12,7 +12,11 @@ sealed class Program {
             return 0;
         }
 
-        using var mainWindow = new MainWindow();
-        return MessageLoopSynchronizationContext.Run();
+        return MessageLoopSynchronizationContext.Run(syncContext => {
+            var mainWindow = new MainWindow();
+            syncContext.Posted += (o, e) => mainWindow.OnPosted();
+            mainWindow.Dispatched += (o, e) => syncContext.Dispatch();
+            return mainWindow;
+        });
     }
 }
