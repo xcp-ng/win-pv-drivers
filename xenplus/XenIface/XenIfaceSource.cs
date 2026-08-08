@@ -46,6 +46,10 @@ sealed partial class XenIfaceSource : IDisposable {
     /// locked
     /// </summary>
     readonly HashSet<XenIfaceWatch> _watches = [];
+    /// <summary>
+    /// locked, for the worker
+    /// </summary>
+    readonly DisposeStack _tombstones = new();
 
     bool _disposed = false;
 
@@ -141,9 +145,9 @@ sealed partial class XenIfaceSource : IDisposable {
     public event XenIfaceResumedEventHandler? Resumed;
 
     /// <summary>
-    /// locked
+    /// locked, worker
     /// </summary>
-    void RefreshDevices(DisposeStack tombstones) {
+    void RefreshDevices() {
         XenIfaceDevice? lastActive = null, newActive = null;
 
         try {
@@ -176,10 +180,10 @@ sealed partial class XenIfaceSource : IDisposable {
         } finally {
             if (lastActive != null) {
                 _logger.LogDebug("killing last active {}", lastActive.DevicePath);
-                tombstones.Push(lastActive);
+                _tombstones.Push(lastActive);
             }
             if (newActive != null) {
-                tombstones.Push(newActive);
+                _tombstones.Push(newActive);
             }
         }
     }
@@ -245,6 +249,43 @@ sealed partial class XenIfaceSource : IDisposable {
         return (uint)WIN32_ERROR.ERROR_SUCCESS;
     }
 
+    /// <summary>
+    /// locked, worker
+    /// </summary>
+    void OnWorkerRequest(WorkerRequest workerRequest) {
+        if (workerRequest.Action == CM_NOTIFY_ACTION_DEVICEINTERFACEARRIVAL) {
+            try {
+                RefreshDevices();
+            } catch (XenIfaceNotFoundException ex) {
+                _logger.LogInformation(ex, "Did not find Xen PV interface. This is a transient error.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// locked, worker
+    /// </summary>
+    void OnDeviceRequest(DeviceRequest deviceRequest) {
+        if (deviceRequest.Action == CM_NOTIFY_ACTION_DEVICEQUERYREMOVEFAILED ||
+            deviceRequest.Action == CM_NOTIFY_ACTION_DEVICEREMOVEPENDING ||
+            deviceRequest.Action == CM_NOTIFY_ACTION_DEVICEREMOVECOMPLETE) {
+            if (ReferenceEquals(deviceRequest.TargetDevice, _active)) {
+                _active = null;
+                if (deviceRequest.Action == CM_NOTIFY_ACTION_DEVICEQUERYREMOVEFAILED) {
+                    // we killed the device in its callback, so we have to rescan to compensate
+                    _requests.Enqueue(new WorkerRequest {
+                        Action = CM_NOTIFY_ACTION_DEVICEINTERFACEARRIVAL
+                    });
+                }
+            }
+            _logger.LogDebug(
+                "{} on {}",
+                deviceRequest.Action,
+                deviceRequest.TargetDevice.DevicePath);
+            _tombstones.Push(deviceRequest.TargetDevice);
+        }
+    }
+
     unsafe void Worker(object? _param) {
         GCHandle gch = GCHandle.Alloc(this);
         try {
@@ -261,62 +302,37 @@ sealed partial class XenIfaceSource : IDisposable {
                 &WorkerCmCallback,
                 out var cmWorker));
 
-            using (cmWorker) {
-                using var tombstones = new DisposeStack();
-
-                while (true) {
-                    // due to the worker thread needing a separate unlocked section, we can't use BlockingCollection or
-                    // similar blocking queues, and have to base the worker thread off of a monitor instead
-                    lock (_lock) {
-                        // pulses can get lost when the worker is in the unlocked section below, so we need to watch the
-                        // predicate
-                        while (_requests.Count == 0) {
-                            Monitor.Wait(_lock);
-                        }
-
-                        while (_requests.TryDequeue(out var request)) {
-                            if (request is WorkerRequest workerRequest &&
-                                workerRequest.Action == CM_NOTIFY_ACTION_DEVICEINTERFACEARRIVAL) {
-                                try {
-                                    RefreshDevices(tombstones);
-                                } catch (XenIfaceNotFoundException ex) {
-                                    _logger.LogInformation(ex, "Did not find Xen PV interface. This is a transient error.");
-                                }
-
-                            } else if (request is DeviceRequest listenerRequest &&
-                                  (listenerRequest.Action == CM_NOTIFY_ACTION_DEVICEQUERYREMOVEFAILED ||
-                                  listenerRequest.Action == CM_NOTIFY_ACTION_DEVICEREMOVEPENDING ||
-                                  listenerRequest.Action == CM_NOTIFY_ACTION_DEVICEREMOVECOMPLETE)) {
-                                if (ReferenceEquals(listenerRequest.TargetDevice, _active)) {
-                                    _active = null;
-                                    if (listenerRequest.Action == CM_NOTIFY_ACTION_DEVICEQUERYREMOVEFAILED) {
-                                        // we killed the device in its callback, so we have to rescan to compensate
-                                        _requests.Enqueue(new WorkerRequest {
-                                            Action = CM_NOTIFY_ACTION_DEVICEINTERFACEARRIVAL
-                                        });
-                                    }
-                                }
-                                _logger.LogDebug(
-                                    "{} on {}",
-                                    listenerRequest.Action,
-                                    listenerRequest.TargetDevice.DevicePath);
-                                tombstones.Push(listenerRequest.TargetDevice);
-
-                            } else if (request is ExitRequest) {
-                                _logger.LogDebug("exiting worker");
-                                if (_active != null) {
-                                    tombstones.Push(_active);
-                                    _active = null;
-                                }
-                                return;
-                            }
-                        }
+            using var _1 = cmWorker;
+            using var _2 = _tombstones;
+            while (true) {
+                // due to the worker thread needing a separate unlocked section, we can't use BlockingCollection or
+                // similar blocking queues, and have to base the worker thread off of a monitor instead
+                lock (_lock) {
+                    // pulses can get lost when the worker is in the unlocked section below, so we need to watch the
+                    // predicate
+                    while (_requests.Count == 0) {
+                        Monitor.Wait(_lock);
                     }
 
-                    // closing old listeners must be done outside of the lock, since CM_Unregister_Notification will
-                    // wait for callbacks to finish
-                    tombstones.Dispose();
+                    while (_requests.TryDequeue(out var request)) {
+                        if (request is WorkerRequest workerRequest) {
+                            OnWorkerRequest(workerRequest);
+                        } else if (request is DeviceRequest deviceRequest) {
+                            OnDeviceRequest(deviceRequest);
+                        } else if (request is ExitRequest) {
+                            _logger.LogDebug("exiting worker");
+                            if (_active != null) {
+                                _tombstones.Push(_active);
+                                _active = null;
+                            }
+                            return;
+                        }
+                    }
                 }
+
+                // closing old listeners must be done outside of the lock, since CM_Unregister_Notification will wait
+                // for callbacks to finish
+                _tombstones.Dispose();
             }
         } finally {
             gch.Free();
