@@ -22,9 +22,8 @@ sealed partial class XenIfaceDevice : IDisposable {
         if (Environment.Is64BitProcess != Environment.Is64BitOperatingSystem) {
             throw new PlatformNotSupportedException("running under WOW64 is not supported");
         }
+        _gch = GCHandle.Alloc(this);
         try {
-            _gch = GCHandle.Alloc(this);
-
             _parent = parent;
             DevicePath = devicePath;
             Handle = File.OpenHandle(
@@ -33,21 +32,26 @@ sealed partial class XenIfaceDevice : IDisposable {
                 FileAccess.ReadWrite,
                 FileShare.ReadWrite);
 
-            using var shref = Handle.Borrow();
-            var filter = new CM_NOTIFY_FILTER {
-                cbSize = (uint)sizeof(CM_NOTIFY_FILTER),
-                Flags = 0,
-                FilterType = CM_NOTIFY_FILTER_TYPE_DEVICEHANDLE,
-                Reserved = 0,
-                u = { DeviceHandle = { hTarget = (HANDLE)shref.DangerousHandle } }
-            };
-            Cfgmgr32.CheckConfigret(PInvoke.CM_Register_Notification(
-                filter,
-                (void*)GCHandle.ToIntPtr(_gch),
-                &DeviceCmCallback,
-                out _cmDevice));
+            try {
+                using var shref = Handle.Borrow();
+                var filter = new CM_NOTIFY_FILTER {
+                    cbSize = (uint)sizeof(CM_NOTIFY_FILTER),
+                    Flags = 0,
+                    FilterType = CM_NOTIFY_FILTER_TYPE_DEVICEHANDLE,
+                    Reserved = 0,
+                    u = { DeviceHandle = { hTarget = (HANDLE)shref.DangerousHandle } }
+                };
+                Cfgmgr32.CheckConfigret(PInvoke.CM_Register_Notification(
+                    filter,
+                    (void*)GCHandle.ToIntPtr(_gch),
+                    &DeviceCmCallback,
+                    out _cmDevice));
+            } catch {
+                Handle.Dispose();
+                throw;
+            }
         } catch {
-            Dispose();
+            _gch.Free();
             throw;
         }
     }
