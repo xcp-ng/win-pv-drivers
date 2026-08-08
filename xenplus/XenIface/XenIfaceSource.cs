@@ -284,10 +284,17 @@ sealed partial class XenIfaceSource : IDisposable {
                                 }
 
                             } else if (request is DeviceRequest listenerRequest &&
-                                  (listenerRequest.Action == CM_NOTIFY_ACTION_DEVICEREMOVEPENDING ||
+                                  (listenerRequest.Action == CM_NOTIFY_ACTION_DEVICEQUERYREMOVEFAILED ||
+                                  listenerRequest.Action == CM_NOTIFY_ACTION_DEVICEREMOVEPENDING ||
                                   listenerRequest.Action == CM_NOTIFY_ACTION_DEVICEREMOVECOMPLETE)) {
                                 if (ReferenceEquals(listenerRequest.TargetDevice, _active)) {
                                     _active = null;
+                                    if (listenerRequest.Action == CM_NOTIFY_ACTION_DEVICEQUERYREMOVEFAILED) {
+                                        // we killed the device in its callback, so we have to rescan to compensate
+                                        _requests.Enqueue(new WorkerRequest {
+                                            Action = CM_NOTIFY_ACTION_DEVICEINTERFACEARRIVAL
+                                        });
+                                    }
                                 }
                                 _logger.LogDebug(
                                     "{} on {}",
