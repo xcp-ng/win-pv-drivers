@@ -52,7 +52,7 @@ class Program {
             options.Filter = (_, _) => true;
         });
 
-        builder.Services.AddWindowsServiceEx();
+        builder.Services.AddWindowsService();
 
         builder.Services.AddSingleton<XenIfaceSource>();
 
