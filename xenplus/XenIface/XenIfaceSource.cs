@@ -201,6 +201,7 @@ sealed partial class XenIfaceSource : IDisposable {
     internal XenIfaceWatch WatchAddLocked(XenIfaceDevice? device, string path) {
         AutoResetEvent? evt = null;
         XenIfaceWatchImpl? result = null;
+        ObjectDisposedException.ThrowIf(_disposed, this);
         try {
             evt = new AutoResetEvent(false);
             result = new XenIfaceWatchImpl(path, this, evt, device);
