@@ -304,6 +304,10 @@ sealed partial class XenIfaceSource : IDisposable {
 
                             } else if (request is ExitRequest) {
                                 _logger.LogDebug("exiting worker");
+                                if (_active != null) {
+                                    tombstones.Push(_active);
+                                    _active = null;
+                                }
                                 return;
                             }
                         }
