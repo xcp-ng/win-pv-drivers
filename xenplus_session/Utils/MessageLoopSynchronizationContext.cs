@@ -13,11 +13,24 @@ class MessageLoopSynchronizationContext : SynchronizationContext, IDisposable {
     readonly Thread _owner = Thread.CurrentThread;
     readonly ConcurrentQueue<WorkItem> _queue = new();
     readonly AutoResetEvent _pending = new(false);
-    volatile bool _exited = false;
+    readonly CancellationTokenSource _exited = new();
+    readonly CancellationToken _ct;
+
+    public MessageLoopSynchronizationContext() {
+        _ct = _exited.Token;
+    }
+
+    /// <remarks>
+    /// Invoked synchronously in <see cref="Post"/>, so handlers should queue work/post message instead of running them
+    /// synchronously.
+    /// </remarks>
+    public event EventHandler? Posted;
 
     public override void Post(SendOrPostCallback d, object? state) {
+        ObjectDisposedException.ThrowIf(_exited.IsCancellationRequested, this);
         _queue.Enqueue(new(d, state, ExecutionContext.Capture()));
         _pending.Set();
+        Posted?.Invoke(this, EventArgs.Empty);
     }
 
     public override void Send(SendOrPostCallback d, object? state) {
@@ -37,22 +50,18 @@ class MessageLoopSynchronizationContext : SynchronizationContext, IDisposable {
                 wait.Set();
             }
         }, state);
-        wait.Wait();
+        wait.Wait(_ct);
 
         if (dex != null) {
             ExceptionDispatchInfo.Throw(dex);
         }
     }
 
-    public override int Wait(nint[] waitHandles, bool waitAll, int millisecondsTimeout) {
-        return base.Wait(waitHandles, waitAll, millisecondsTimeout);
-    }
-
     public override SynchronizationContext CreateCopy() {
         return this;
     }
 
-    int? DoWorkOne() {
+    public void Dispatch() {
         while (_queue.TryDequeue(out var item)) {
             if (item.Context != null) {
                 ExecutionContext.Run(item.Context, (state) => item.Callback(state), item.State);
@@ -60,10 +69,13 @@ class MessageLoopSynchronizationContext : SynchronizationContext, IDisposable {
                 item.Callback(item.State);
             }
         }
+    }
+
+    int? DoWorkOne() {
+        Dispatch();
 
         while (PInvoke.PeekMessage(out var msg, HWND.Null, 0, 0, PEEK_MESSAGE_REMOVE_TYPE.PM_REMOVE)) {
             if (msg.message == PInvoke.WM_QUIT) {
-                _exited = true;
                 return (int)msg.wParam.Value;
             }
             PInvoke.TranslateMessage(msg);
@@ -73,47 +85,64 @@ class MessageLoopSynchronizationContext : SynchronizationContext, IDisposable {
         return null;
     }
 
-    public static int Run() {
+    /// <remarks>
+    /// <see cref="MainWindow"/> or whatever similar thing must outlive the <see cref="initializer"/>, so do not dispose
+    /// it inside the initializer.
+    /// </remarks>
+    public static int Run(Func<MessageLoopSynchronizationContext, IDisposable> initializer) {
         using var context = new MessageLoopSynchronizationContext();
         var waiting = new HANDLE[1];
 
+        var previous = Current;
         SetSynchronizationContext(context);
         try {
-            while (true) {
-                WAIT_EVENT result;
-                using (var shref = context._pending.SafeWaitHandle.Borrow()) {
-                    waiting[0] = (HANDLE)shref.DangerousHandle;
-                    result = PInvoke.MsgWaitForMultipleObjects(
-                       waiting,
-                       false,
-                       PInvoke.INFINITE,
-                       QUEUE_STATUS_FLAGS.QS_ALLINPUT);
-                }
+            IDisposable? lifetime = null;
+            try {
+                lifetime = initializer(context);
 
-                switch (result) {
-                    case WAIT_EVENT.WAIT_OBJECT_0:
-                    case WAIT_EVENT.WAIT_OBJECT_0 + 1:
-                        if (context.DoWorkOne() is int exitCode) {
-                            return exitCode;
-                        }
-                        break;
-                    case WAIT_EVENT.WAIT_TIMEOUT:
-                        throw new TimeoutException();
-                    case WAIT_EVENT.WAIT_FAILED:
-                        throw new Win32Exception(nameof(PInvoke.MsgWaitForMultipleObjects));
-                    default:
-                        throw new Exception($"Unexpected wait result {result}");
+                while (true) {
+                    WAIT_EVENT result;
+                    using (var shref = context._pending.SafeWaitHandle.Borrow()) {
+                        waiting[0] = (HANDLE)shref.DangerousHandle;
+                        result = PInvoke.MsgWaitForMultipleObjects(
+                           waiting,
+                           false,
+                           PInvoke.INFINITE,
+                           QUEUE_STATUS_FLAGS.QS_ALLINPUT);
+                    }
+
+                    switch (result) {
+                        case WAIT_EVENT.WAIT_OBJECT_0:
+                        case WAIT_EVENT.WAIT_OBJECT_0 + 1:
+                            if (context.DoWorkOne() is int exitCode) {
+                                return exitCode;
+                            }
+                            break;
+                        case WAIT_EVENT.WAIT_TIMEOUT:
+                            throw new TimeoutException();
+                        case WAIT_EVENT.WAIT_FAILED:
+                            throw new Win32Exception(nameof(PInvoke.MsgWaitForMultipleObjects));
+                        default:
+                            throw new Exception($"Unexpected wait result {result}");
+                    }
                 }
+            } finally {
+                // since the initializer may have done work, we still need to cancel them even if it failed
+                context._exited.Cancel();
+                // it also implies that lifetime.Dispose() cannot post work
+                lifetime?.Dispose();
             }
         } finally {
-            SetSynchronizationContext(null);
+            SetSynchronizationContext(previous);
         }
     }
 
     public void Dispose() {
-        if (!_exited) {
+        if (!_exited.IsCancellationRequested) {
             throw new InvalidOperationException("Message loop is still running");
         }
-        _pending.Dispose();
+        /// Don't dispose <see cref="_pending"/> since someone could still be in <see cref="Post"/>.
+        /// Conversely, <see cref="_exited"/> can be disposed here since <see cref="Send"/> can survive that.
+        _exited.Dispose();
     }
 }
