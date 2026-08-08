@@ -14,7 +14,6 @@ namespace XenPlus;
 sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_session main window") {
     const int MaxClipboardSize = 100000;
     const int NotifyIconId = 1;
-    const uint TrayMenuMessage = PInvoke.WM_APP + NotifyIconId;
 
     readonly Lazy<AppConfig> _config = new();
 
@@ -134,7 +133,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
                 NOTIFY_ICON_DATA_FLAGS.NIF_ICON |
                 NOTIFY_ICON_DATA_FLAGS.NIF_TIP |
                 NOTIFY_ICON_DATA_FLAGS.NIF_SHOWTIP,
-            uCallbackMessage = TrayMenuMessage,
+            uCallbackMessage = (uint)WmApp.TrayMenuMessage,
             hIcon = (HICON)hiconScope.DangerousHandle,
             szTip = VersionInfo.Description,
             uVersion = PInvoke.NOTIFYICON_VERSION_4,
@@ -349,7 +348,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
             case PInvoke.WM_CLIPBOARDUPDATE:
                 OnClipboardUpdateAsync(hwnd);
                 return (LRESULT)0;
-            case TrayMenuMessage:
+            case (uint)WmApp.TrayMenuMessage:
                 return (uint)LOWORD(lparam) switch {
                     PInvoke.WM_CONTEXTMENU => OnContextMenu(hwnd, msg, wparam, lparam),
                     _ => (LRESULT)0,
