@@ -237,6 +237,8 @@ sealed class ClipboardFeature(
 
         try {
             await ServeClientLoopAsync(sid, client, client.CancellationTokenSource.Token);
+        } catch (EndOfStreamException) {
+            // client closed its end
         } catch (Exception ex) {
             _logger.LogWarning(ex, "Failed to serve client {}", sid);
         } finally {
