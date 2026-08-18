@@ -19,8 +19,8 @@
     <CustomAction Id="XenvbdWaitDriverUninstall" BinaryRef="xeninst.dll" DllEntry="DriverWaitInstallFinish" Execute="deferred" Impersonate="no" />
 
     <InstallExecuteSequence>
-      <Custom Action="XenvbdWaitDriverUninstall" Before="XenvbdCleanup" Condition="(NOT XEN_SKIP_CA) AND ($Xenvbd.inf=2)" />
-      <Custom Action="XenvbdCleanup" Before="XenbusCleanup" Condition="(NOT XEN_SKIP_CA) AND ($Xenvbd.inf=2)" />
+      <Custom Action="XenvbdWaitDriverUninstall" Before="XenvbdCleanup" Condition="(NOT XEN_SKIP_CA) AND (&amp;XenvbdInternalFeature=2)" />
+      <Custom Action="XenvbdCleanup" Before="XenbusCleanup" Condition="(NOT XEN_SKIP_CA) AND (&amp;XenvbdInternalFeature=2)" />
     </InstallExecuteSequence>
 
     <SetProperty
