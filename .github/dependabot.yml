@@ -4,12 +4,15 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "sunday"
     cooldown:
-      default-days: 15
+      default-days: 7
+    commit-message:
+      prefix: "actions: "
     groups:
-      trusted:
+      ci-deps:
         patterns:
-          - "actions/*"
+          - "*"
   - package-ecosystem: "nuget"
     directories:
       - "/"
