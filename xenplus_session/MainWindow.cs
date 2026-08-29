@@ -64,12 +64,8 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
 
     async Task ReceiveClipboardAsync(HWND hwnd) {
         await foreach (var data in _pipe.ReceiveAsync(_cts.Token)) {
-            bool opened = false;
             try {
-                if (!PInvoke.OpenClipboard(hwnd)) {
-                    throw new Win32Exception(nameof(PInvoke.OpenClipboard));
-                }
-                opened = true;
+                using var openClipboard = new OpenClipboardSafeHandle(hwnd);
 
                 var translated = data.ReplaceLineEndings();
                 var span = translated.AsSpan();
@@ -82,10 +78,6 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
                 _lastSeq = PInvoke.GetClipboardSequenceNumber();
             } catch (Exception ex) {
                 Trace.TraceInformation("setting clipboard failed: {0}", ex.ToString());
-            } finally {
-                if (opened) {
-                    PInvoke.CloseClipboard();
-                }
             }
         }
     }
@@ -105,22 +97,11 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
             }
             _lastSeq = seq;
 
-            bool opened = false;
             string s;
-            try {
-                if (!PInvoke.OpenClipboard(hwnd)) {
-                    throw new Win32Exception(nameof(PInvoke.OpenClipboard));
-                }
-                opened = true;
-
+            using (var openClipboard = new OpenClipboardSafeHandle(hwnd)) {
                 using var cb = ClipboardSafeHandle.GetClipboard(CLIPBOARD_FORMAT.CF_UNICODETEXT);
                 s = cb.GetString().ReplaceLineEndings("\n");
                 Debug.WriteLine("got clipboard of length {0}", s.Length);
-            } finally {
-                if (opened) {
-                    PInvoke.CloseClipboard();
-                    opened = false;
-                }
             }
 
             await _pipe.SendAsync(s, _cts.Token);
