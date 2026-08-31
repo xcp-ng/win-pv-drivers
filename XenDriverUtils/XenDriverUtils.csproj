@@ -12,11 +12,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Copy-XenVifSettings.signed.ps1" />
+    <None Remove="Copy-XenVifSettings.ps1" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Copy-XenVifSettings.signed.ps1" />
+    <EmbeddedResource Include="Copy-XenVifSettings.ps1" />
   </ItemGroup>
 
   <ItemGroup>

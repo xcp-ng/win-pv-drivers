@@ -6,7 +6,6 @@ param (
 
 . "$ProjectDir\..\branding.ps1"
 . "$ProjectDir\..\scripts\branding-generic.ps1"
-. "$ProjectDir\..\scripts\sign.ps1"
 
 $BrandingFile = "$ProjectDir\Branding.cs"
 $OldBranding = Get-Content -Raw $BrandingFile -ErrorAction Ignore
@@ -34,6 +33,3 @@ if ($NewBranding -ne $OldBranding) {
     Write-Output "Updating Branding.cs"
     Set-Content -Path $BrandingFile -Value $NewBranding -NoNewline
 }
-
-Copy-Item -Force "$ProjectDir\Copy-XenVifSettings.ps1" "$ProjectDir\Copy-XenVifSettings.signed.ps1"
-Set-SignerFileSignature -FilePath "$ProjectDir\Copy-XenVifSettings.signed.ps1"
