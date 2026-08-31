@@ -32,9 +32,12 @@
 
   <ItemGroup>
     <LinkerArg Include="/DEPENDENTLOADFLAG:0x800" Condition="$(RuntimeIdentifier.StartsWith('win'))" />
+    <NativeLibrary Include="..\EarlyInitNAOT\$(Platform)\$(Configuration)\EarlyInitNAOT.lib" Condition="$(RuntimeIdentifier.StartsWith('win'))" />
+    <LinkerArg Include="/include:_EarlyInitNAOT" Condition="$(RuntimeIdentifier.StartsWith('win'))" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\EarlyInitNAOT\EarlyInitNAOT.vcxproj" />
     <ProjectReference Include="..\XenDriverUtils\XenDriverUtils.csproj" />
   </ItemGroup>
 

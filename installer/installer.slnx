@@ -12,6 +12,7 @@
     <Platform Solution="*|x64" Project="x64" />
     <Platform Solution="*|x86" Project="x86" />
   </Project>
+  <Project Path="../EarlyInitNAOT/EarlyInitNAOT.vcxproj" Id="b00ab9c6-64bb-4c3f-ba31-55381d5f1f5a" />
   <Project Path="../HlkxSigner/HlkxSigner.csproj">
     <Build Project="false" />
   </Project>

@@ -19,11 +19,22 @@ $ErrorActionPreference = "Stop"
 msbuild.exe `
     "$PSScriptRoot\installer\installer.slnx" `
     /t:DriverInstallCustomAction:$Target `
-    /t:XenClean:$Target `
     /t:XenBootFix:$Target `
     /restore `
     /p:Configuration=$Configuration `
     /p:Platform=$Platform
+if ($LASTEXITCODE -ne 0) {
+    throw "MSBuild failed with error $LASTEXITCODE"
+}
+
+msbuild.exe `
+    "$PSScriptRoot\installer\installer.slnx" `
+    /t:XenClean:$Target `
+    /restore `
+    /p:Configuration=$Configuration `
+    /p:Platform=$Platform `
+    /p:RuntimeIdentifier=win-$Platform `
+    /p:SelfContained=true
 if ($LASTEXITCODE -ne 0) {
     throw "MSBuild failed with error $LASTEXITCODE"
 }
@@ -34,7 +45,7 @@ if ($Target -ine "Clean") {
     $ComponentOutputs = @{
         DriverInstallCustomAction = "$PSScriptRoot\DriverInstallCustomAction\bin\$Platform\$Configuration\net462"
         XenDriverUtils            = "$PSScriptRoot\XenDriverUtils\bin\$Platform\$Configuration\net462"
-        XenClean                  = "$PSScriptRoot\XenClean\bin\$Platform\$Configuration\net462"
+        XenClean                  = "$PSScriptRoot\XenClean\bin\$Platform\$Configuration\net10.0-windows10.0.26100.0\win-$Platform\publish"
         XenBootFix                = "$PSScriptRoot\XenBootFix\$Platform\$Configuration"
     }
     foreach ($Component in $ComponentOutputs.GetEnumerator()) {
