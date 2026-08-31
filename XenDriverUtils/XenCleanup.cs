@@ -8,8 +8,13 @@ using Windows.Win32.Foundation;
 
 namespace XenDriverUtils {
     public class ThirdPartyStorageDriver {
-        public string DriverInfPath { get; set; }
-        public string Service { get; set; }
+        public string DriverInfPath { get; }
+        public string Service { get; }
+
+        public ThirdPartyStorageDriver(string driverInfPath, string service) {
+            DriverInfPath = driverInfPath;
+            Service = service;
+        }
     }
 
     public enum UnplugType {
@@ -30,11 +35,10 @@ namespace XenDriverUtils {
                 foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)
                     .Where(x => DriverUtils.GetDeviceEnumeratorName(devInfo, x) == "PCI")) {
                     var driverPath = DriverUtils.GetDeviceDriverInfPath(devInfo, devInfoData);
-                    if (driverPath.StartsWith("oem", StringComparison.OrdinalIgnoreCase)) {
-                        found3PDrivers.Add(new ThirdPartyStorageDriver() {
-                            DriverInfPath = driverPath,
-                            Service = DriverUtils.GetDeviceService(devInfo, devInfoData),
-                        });
+                    var service = DriverUtils.GetDeviceService(devInfo, devInfoData);
+                    if (driverPath?.StartsWith("oem", StringComparison.OrdinalIgnoreCase) == true
+                            && !string.IsNullOrEmpty(service)) {
+                        found3PDrivers.Add(new ThirdPartyStorageDriver(driverPath, service!));
                     }
                 }
             }
@@ -69,7 +73,7 @@ namespace XenDriverUtils {
                 foreach (var filterValue in FilterValueList) {
                     try {
                         if (classSubkey.GetValueKind(filterValue) == RegistryValueKind.MultiString) {
-                            var filters = (string[])classSubkey.GetValue(filterValue);
+                            var filters = classSubkey.GetValue(filterValue) as string[];
                             if (filters == null) {
                                 continue;
                             }

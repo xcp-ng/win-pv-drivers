@@ -65,7 +65,7 @@ namespace XenDriverUtils {
             return strings;
         }
 
-        public static T[] GetDeviceProperty<T>(
+        public static T[]? GetDeviceProperty<T>(
                 SetupDiDestroyDeviceInfoListSafeHandle devInfo,
                 SP_DEVINFO_DATA devInfoData,
                 DEVPROPKEY propKey,
@@ -115,7 +115,7 @@ namespace XenDriverUtils {
             return buf;
         }
 
-        public static string GetDevicePropertyString(
+        public static string? GetDevicePropertyString(
             SetupDiDestroyDeviceInfoListSafeHandle devInfo,
             SP_DEVINFO_DATA devInfoData,
             DEVPROPKEY devPropKey) {
@@ -173,25 +173,25 @@ namespace XenDriverUtils {
             return hwids.Union(cids, StringComparer.OrdinalIgnoreCase).ToList();
         }
 
-        public static string GetDeviceService(
+        public static string? GetDeviceService(
             SetupDiDestroyDeviceInfoListSafeHandle devInfo,
             SP_DEVINFO_DATA devInfoData) {
             return GetDevicePropertyString(devInfo, devInfoData, DEVPKEY_Device_Service);
         }
 
-        public static string GetDeviceEnumeratorName(
+        public static string? GetDeviceEnumeratorName(
             SetupDiDestroyDeviceInfoListSafeHandle devInfo,
             SP_DEVINFO_DATA devInfoData) {
             return GetDevicePropertyString(devInfo, devInfoData, DEVPKEY_Device_EnumeratorName);
         }
 
-        public static string GetDeviceDriverInfPath(
+        public static string? GetDeviceDriverInfPath(
             SetupDiDestroyDeviceInfoListSafeHandle devInfo,
             SP_DEVINFO_DATA devInfoData) {
             return GetDevicePropertyString(devInfo, devInfoData, DEVPKEY_Device_DriverInfPath);
         }
 
-        public static string GetDeviceInstanceId(
+        public static string? GetDeviceInstanceId(
             SetupDiDestroyDeviceInfoListSafeHandle devInfo,
             SP_DEVINFO_DATA devInfoData) {
             return GetDevicePropertyString(devInfo, devInfoData, DEVPKEY_Device_InstanceId);
@@ -270,7 +270,7 @@ namespace XenDriverUtils {
             }
         }
 
-        static IEnumerable<string> GetMatchingOemInfs(IEnumerable<string> wantedCatalogNames, string provider = null) {
+        static IEnumerable<string> GetMatchingOemInfs(IEnumerable<string> wantedCatalogNames, string? provider = null) {
             var windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
             var infdir = Path.Combine(windir, "inf");
 
@@ -280,7 +280,7 @@ namespace XenDriverUtils {
                     continue;
                 }
 
-                string matchingPath = null;
+                string? matchingPath = null;
                 try {
                     using var infFile = InfFile.Open(oemInfPath, null, INF_STYLE.INF_STYLE_WIN4, out _);
                     var infCatalog = infFile.GetStringField("Version", "CatalogFile", 1);

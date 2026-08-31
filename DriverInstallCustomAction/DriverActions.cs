@@ -101,7 +101,7 @@ namespace XenInstCA {
                     var infName = DriverUtils.GetDeviceDriverInfPath(devInfo, devInfoData);
                     Logger.Log($"Current inf path: {infName}");
                     if (!string.IsNullOrEmpty(infName)
-                            && infName.StartsWith("oem", StringComparison.OrdinalIgnoreCase)) {
+                            && infName!.StartsWith("oem", StringComparison.OrdinalIgnoreCase)) {
                         collectedInfPaths.Add(infName);
                     }
 

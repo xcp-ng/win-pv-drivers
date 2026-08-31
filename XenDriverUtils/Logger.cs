@@ -10,9 +10,9 @@ namespace XenDriverUtils {
         protected abstract void Write(LogLevel level, string message);
         protected abstract void WriteFormat(LogLevel level, string format, params object[] args);
 
-        private static Logger Instance = null;
+        private static Logger? Instance;
 
-        public static Logger SetLogger(Logger logger) {
+        public static Logger? SetLogger(Logger? logger) {
             var old = Instance;
             Instance = logger;
             return old;

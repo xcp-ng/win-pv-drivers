@@ -91,7 +91,7 @@ class Program {
         var dryRun = false;
         var noReboot = false;
         var confirm = true;
-        string onboardFamily = null;
+        string? onboardFamily = null;
 
         var exitCode = ExitCode.Error;
 
@@ -113,7 +113,7 @@ class Program {
         }
 
         var runName = $"xenclean_{DateTime.Now:yyyy-MM-dd_HH-mm-ss_fffffff}";
-        string logPath = null;
+        string? logPath = null;
         try {
             using var logger = new TempFileLogger();
             logPath = logger.LogPath;
@@ -121,12 +121,10 @@ class Program {
             Logger.SetLogger(logger);
             Logger.LogFormat(LogLevel.Interactive, "Log path is {0}", logger.LogPath);
 
-            var onboarding = !string.IsNullOrEmpty(onboardFamily);
-
             if (dryRun) {
                 Logger.Log("Dry-run is enabled, actions are not taken for real");
             }
-            if (onboarding) {
+            if (!string.IsNullOrEmpty(onboardFamily)) {
                 Logger.LogFormat(LogLevel.Interactive, "Running in onboarding mode for family {0}", onboardFamily);
             }
             Logger.LogFormat(
@@ -159,7 +157,7 @@ class Program {
                 }
             }
 
-            if (onboarding && !IsOnboardCleanupNeeded(onboardFamily, out exitCode)) {
+            if (!string.IsNullOrEmpty(onboardFamily) && !IsOnboardCleanupNeeded(onboardFamily, out exitCode)) {
                 Logger.LogFormat(LogLevel.Interactive, "Cleanup skipped due to onboard status {0}", exitCode);
             } else {
                 using var _ = new LogSection($"Executing cleanup {(dryRun ? "(dry-run)" : "")}");
@@ -185,7 +183,9 @@ class Program {
         } finally {
             Logger.SetLogger(new ConsoleLogger());
 
-            if (exitCode < ExitCode.ReadyForOnboard) {
+            if (logPath == null) {
+                Logger.Log(LogLevel.Alert, "No temporary log was created");
+            } else if (exitCode < ExitCode.ReadyForOnboard) {
                 // Don't delete the temp file when we did something meaningful.
                 var copiedLogPath = Path.Combine(Environment.GetEnvironmentVariable("SystemDrive") + "\\", runName + ".log");
                 Logger.LogFormat(LogLevel.Interactive, "Program done, copying log to {0}", copiedLogPath);
@@ -210,7 +210,8 @@ class Program {
                 CreateNoWindow = true,
                 UseShellExecute = false,
             };
-            Process.Start(psi).WaitForExit();
+            using var process = Process.Start(psi);
+            process?.WaitForExit();
         }
 
         return (int)exitCode;

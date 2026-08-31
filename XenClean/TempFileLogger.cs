@@ -5,7 +5,7 @@ using XenDriverUtils;
 namespace XenClean {
     class TempFileLogger : Logger, IDisposable {
         readonly string _logPath;
-        readonly TextWriter _writer;
+        readonly TextWriter? _writer;
 
         public string LogPath => _logPath;
 

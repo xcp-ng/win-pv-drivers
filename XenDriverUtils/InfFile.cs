@@ -13,7 +13,7 @@ namespace XenDriverUtils {
             handle = existingHandle;
         }
 
-        public static InfFile Open(string FileName, string InfClass, INF_STYLE InfStyle, out uint ErrorLine) {
+        public static InfFile Open(string FileName, string? InfClass, INF_STYLE InfStyle, out uint ErrorLine) {
             unsafe {
                 var infHandle = (IntPtr)PInvoke.SetupOpenInfFile(FileName, InfClass, InfStyle, out ErrorLine);
                 if (infHandle == HANDLE.INVALID_HANDLE_VALUE) {
@@ -68,7 +68,7 @@ namespace XenDriverUtils {
                             var err = Marshal.GetLastWin32Error();
                             throw new Win32Exception(err, $"Inf cannot get line {err}");
                         }
-                        return Marshal.PtrToStringUni(mem);
+                        return Marshal.PtrToStringUni(mem)!;
                     } finally {
                         Marshal.FreeHGlobal(mem);
                     }
@@ -95,7 +95,7 @@ namespace XenDriverUtils {
                             var err = Marshal.GetLastWin32Error();
                             throw new Win32Exception(err, $"Inf cannot get field {err}");
                         }
-                        return Marshal.PtrToStringUni(mem);
+                        return Marshal.PtrToStringUni(mem)!;
                     } finally {
                         Marshal.FreeHGlobal(mem);
                     }

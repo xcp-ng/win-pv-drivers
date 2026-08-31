@@ -25,7 +25,7 @@ namespace XenClean {
             var keyPath = $"{root.Name}\\{keyName}";
             using var section = new LogSection(keyPath);
 
-            RegistryKey key;
+            RegistryKey? key;
             try {
                 key = root.OpenSubKey(keyName, false);
             } catch (Exception ex) {
@@ -39,7 +39,7 @@ namespace XenClean {
 
                 foreach (var name in key.GetValueNames()) {
                     RegistryValueKind kind;
-                    object value;
+                    object? value;
                     var displayName = string.IsNullOrEmpty(name) ? "(default)" : name;
 
                     try {
