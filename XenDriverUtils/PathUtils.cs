@@ -2,43 +2,67 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Security;
 
 namespace XenDriverUtils {
     public static class PathUtils {
-        const string AdminSd = "O:BAG:BAD:(A;;GA;;;BA)(A;;GA;;;SY)";
+        static string GetSecureSD() {
+            var identity = WindowsIdentity.GetCurrent();
+            var isAdmin = new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
+            if (isAdmin) {
+                return $"O:BAG:BAD:(A;;GA;;;BA)(A;;GA;;;SY)";
+            } else {
+                var user = identity.User?.ToString() ?? throw new IOException("Cannot determine current user");
+                return $"O:{user}G:{user}D:(A;;GA;;;{user})(A;;GA;;;BA)(A;;GA;;;SY)";
+            }
+        }
 
         public static DirectoryInfo CreateSecureTempDirectory() {
             var tempRoot = Path.GetTempPath();
-            for (int attempt = 0; attempt < 100; attempt++) {
-                var randomPath = Path.Combine(tempRoot, Guid.NewGuid().ToString("D"));
 
-                if (!PInvoke.ConvertStringSecurityDescriptorToSecurityDescriptor(AdminSd, PInvoke.SDDL_REVISION_1, out var sd)) {
-                    Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
-                }
+            if (!PInvoke.ConvertStringSecurityDescriptorToSecurityDescriptor(
+                GetSecureSD(),
+                PInvoke.SDDL_REVISION_1,
+                out var sd)) {
+                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+            }
 
-                bool success;
+            try {
+                SECURITY_ATTRIBUTES sa;
                 unsafe {
-                    var sa = new SECURITY_ATTRIBUTES() {
+                    sa = new SECURITY_ATTRIBUTES() {
                         nLength = (uint)Marshal.SizeOf<SECURITY_ATTRIBUTES>(),
                         lpSecurityDescriptor = sd.Value,
                         bInheritHandle = false,
                     };
-                    success = PInvoke.CreateDirectory(randomPath, sa);
                 }
 
-                if (success) {
-                    return new DirectoryInfo(randomPath);
-                }
+                for (int attempt = 0; attempt < 100; attempt++) {
+                    var randomPath = Path.Combine(tempRoot, Guid.NewGuid().ToString("D"));
 
-                var err = Marshal.GetLastWin32Error();
-                if (err != (int)WIN32_ERROR.ERROR_ALREADY_EXISTS) {
-                    throw new Win32Exception(err, $"Creating {randomPath} failed");
+                    bool success;
+                    unsafe {
+                        success = PInvoke.CreateDirectory(randomPath, sa);
+                    }
+
+                    if (success) {
+                        return new DirectoryInfo(randomPath);
+                    }
+
+                    var err = Marshal.GetLastWin32Error();
+                    if (err != (int)WIN32_ERROR.ERROR_ALREADY_EXISTS) {
+                        throw new Win32Exception(err, $"Creating {randomPath} failed");
+                    }
+                }
+                throw new IOException("Tried too many times without creating new directory");
+            } finally {
+                unsafe {
+                    PInvoke.LocalFree((HLOCAL)sd.Value);
                 }
             }
-            throw new IOException("Tried too many times without creating new directory");
         }
     }
 }

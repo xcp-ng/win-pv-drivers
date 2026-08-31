@@ -47,6 +47,7 @@ SERVICE_FAILURE_ACTIONS_FLAG
 
 ConvertStringSecurityDescriptorToSecurityDescriptor
 CreateDirectory
+LocalFree
 SDDL_REVISION_1
 WIN32_ERROR
 
