@@ -24,7 +24,6 @@ The relevant source code may be found at these locations:
     * [XenPlus session agent](xenplus_session/)
     * [Support library](xenplus_lib/)
     * [Tests](xenplus_tests/)
-* [Xen Time Provider](https://github.com/xcp-ng/win-xentimeprovider)
 * [Developer support scripts](scripts/)
 * Supplemental tools: [bundled extras](extras/), [SBUpdate](SBUpdate/), [HlkxSigner](HlkxSigner/)
 * [Source documentation](docs/)

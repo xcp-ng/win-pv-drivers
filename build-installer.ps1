@@ -143,19 +143,6 @@ if ($Target -ine "Clean") {
             throw "sbom-tool for xenplus failed with error $LASTEXITCODE"
         }
 
-        New-Item -Path $VersionDir\sbom\xentimeprovider -ItemType Directory -Force
-        sbom.exe generate `
-            -b $PSScriptRoot\xentimeprovider\$Platform\$Configuration `
-            -bc $PSScriptRoot\xentimeprovider `
-            -m $VersionDir\sbom\xentimeprovider `
-            -D true `
-            -ps $Env:VENDOR_NAME `
-            -pn xentimeprovider `
-            -pv (Get-PackageVersion XenTimeProvider)
-        if ($LASTEXITCODE -ne 0) {
-            throw "sbom-tool for xentimeprovider failed with error $LASTEXITCODE"
-        }
-
         New-Item -Path $VersionDir\sbom\xstdvga -ItemType Directory -Force
         sbom.exe generate `
             -b $PSScriptRoot\xstdvga\vs2022\$Platform\$Configuration\xstdvga `
@@ -250,14 +237,6 @@ if ($Target -ine "Clean") {
             -Path "$PSScriptRoot\xenplus\bin\publish\$Platform\$Configuration\*" `
             -Include *.pdb `
             -Destination $XenplusSymbolDir\ `
-            -Force
-
-        $XenTimeProviderSymbolDir = "$SymbolDir\xentimeprovider"
-        New-Item -Path $XenTimeProviderSymbolDir -ItemType Directory -Force
-        Copy-Item `
-            -Path "$PSScriptRoot\xentimeprovider\$Platform\$Configuration\*" `
-            -Include *.pdb `
-            -Destination $XenTimeProviderSymbolDir\ `
             -Force
 
         $XstdvgaSymbolDir = "$SymbolDir\xstdvga"

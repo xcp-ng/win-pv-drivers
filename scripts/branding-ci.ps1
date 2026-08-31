@@ -98,7 +98,6 @@ $content = @"
     XenClean        = '$(Out-SafeString -PatternType Version -InputObject $Env:PackageVersions_XenClean)'
     XenBootFix      = '$(Out-SafeString -PatternType Version -InputObject $Env:PackageVersions_XenBootFix)'
     xenplus         = '$(Out-SafeString -PatternType Version -InputObject $Env:PackageVersions_xenplus)'
-    XenTimeProvider = '$(Out-SafeString -PatternType Version -InputObject $Env:PackageVersions_XenTimeProvider)'
     xstdvga         = '$(Out-SafeString -PatternType Version -InputObject $Env:PackageVersions_xstdvga)'
 }
 

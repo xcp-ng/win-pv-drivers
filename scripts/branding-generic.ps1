@@ -83,9 +83,6 @@ if (!$PackageVersions['XenBootFix']) {
 if (!$PackageVersions['xenplus']) {
     $PackageVersions['xenplus'] = $PackageVersions['Product']
 }
-if (!$PackageVersions['XenTimeProvider']) {
-    $PackageVersions['XenTimeProvider'] = $PackageVersions['Product']
-}
 
 if (!$Env:MSI_UPGRADE_CODE_X86) {
     $Env:MSI_UPGRADE_CODE_X86 = '{10828840-D8A9-4953-B44A-1F1D3CD7ECB0}'

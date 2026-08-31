@@ -15,8 +15,6 @@ param (
     [Parameter()]
     [string]$Xenplus = "$PSScriptRoot\..\input\xenplus.zip",
     [Parameter()]
-    [string]$TimeProvider = "$PSScriptRoot\..\input\timeprovider.zip",
-    [Parameter()]
     [string]$Xstdvga = "$PSScriptRoot\..\input\xstdvga.zip",
     [Parameter()]
     [switch]$ResignXstdvga,
@@ -63,16 +61,6 @@ if ($Xenplus) {
     & $tar -xvf $Xenplus -C $XenplusDir
     if ($LASTEXITCODE -ne 0) {
         throw "extracting Xenplus failed with error $LASTEXITCODE"
-    }
-}
-
-if ($TimeProvider) {
-    $TimeProviderDir = "$PSScriptRoot\..\xentimeprovider\$Platform\$Configuration"
-    Remove-Item $TimeProviderDir -Recurse -Force -ErrorAction SilentlyContinue
-    New-Item -Path $TimeProviderDir -ItemType Directory -Force | Out-Null
-    & $tar -xvf $TimeProvider -C $TimeProviderDir
-    if ($LASTEXITCODE -ne 0) {
-        throw "extracting TimeProvider failed with error $LASTEXITCODE"
     }
 }
 

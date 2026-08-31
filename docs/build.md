@@ -54,8 +54,7 @@ $PackageVersions = @{
     XenClean        = '9.0.9009.0'  # defaults to product version
     XenBootFix      = '9.0.9010.0'  # defaults to product version
     xenplus         = '9.0.9011.0'  # defaults to product version
-    XenTimeProvider = '9.0.9012.0'  # defaults to product version
-    xstdvga         = '9.0.9013.0'  # defaults to product version
+    xstdvga         = '9.0.9012.0'  # defaults to product version
 }
 
 # These variables influence the UpgradeCode property of generated MSI packages.
@@ -94,16 +93,6 @@ Run the command:
 ```
 
 The binaries are located at `xenplus\bin\publish\<platform>\<configuration>`.
-
-## Building the Xen time provider
-
-Run the command:
-
-```powershell
-.\build-timeprovider.ps1 -Configuration Release -Platform x64
-```
-
-The binaries are located at `xentimeprovider\<platform>\<configuration>`.
 
 ## Building the XSTDVGA driver
 

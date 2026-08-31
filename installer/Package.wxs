@@ -64,7 +64,6 @@
     <UIRef Id="WixUI_ErrorProgressText" />
 
     <ComponentGroupRef Id="BrandingComponent" />
-    <!--<ComponentGroupRef Id="TimeProviderImportComponent" />-->
 
     <FeatureRef Id="PVBusFeature" />
     <FeatureRef Id="XenplusFeature" />

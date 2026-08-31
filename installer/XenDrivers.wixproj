@@ -33,9 +33,6 @@
     <BindPath Include="$(ProjectDir)..\components\$(Platform)\$(Configuration)\XenBootFix">
       <BindName>xenbootfix</BindName>
     </BindPath>
-    <BindPath Include="$(ProjectDir)..\xentimeprovider\$(Platform)\$(Configuration)">
-      <BindName>xentimeprovider</BindName>
-    </BindPath>
     <BindPath Include="$(ProjectDir)..\xstdvga\vs2022\$(Platform)\$(Configuration)\xstdvga">
       <BindName>xstdvga</BindName>
     </BindPath>
