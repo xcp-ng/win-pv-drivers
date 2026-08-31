@@ -1,4 +1,3 @@
-using System.Linq;
 using XenDriverUtils;
 
 namespace XenClean {
