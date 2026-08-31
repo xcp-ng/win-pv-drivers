@@ -2,10 +2,12 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using XenClean;
 using XenDriverUtils;
 
 [assembly: DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+[assembly: SupportedOSPlatform("windows10.0.14393.0")]
 
 class Program {
     [DllImport("kernel32.dll")]

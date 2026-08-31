@@ -2,21 +2,36 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net462</TargetFramework>
-    <LangVersion>9.0</LangVersion>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
     <Platforms>x64;x86;ARM64</Platforms>
-    <Nullable>warnings</Nullable>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AccelerateBuildsInVisualStudio>false</AccelerateBuildsInVisualStudio>
+    <SupportedOSPlatformVersion>10.0.14393.0</SupportedOSPlatformVersion>
+
+    <!-- Native AOT -->
+    <PublishAot>true</PublishAot>
+    <PublishTrimmed>true</PublishTrimmed>
+    <IsAotCompatible>true</IsAotCompatible>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+
+    <!-- mitigations -->
+    <ControlFlowGuard>Guard</ControlFlowGuard>
+    <CetCompat>true</CetCompat>
+
+    <!-- feature/size options -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+    <OptimizationPreference>Size</OptimizationPreference>
+
+    <!-- versioning -->
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateSupportedRuntime>false</GenerateSupportedRuntime>
-    <AccelerateBuildsInVisualStudio>false</AccelerateBuildsInVisualStudio>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Costura.Fody" Version="6.0.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <LinkerArg Include="/DEPENDENTLOADFLAG:0x800" Condition="$(RuntimeIdentifier.StartsWith('win'))" />
   </ItemGroup>
 
   <ItemGroup>

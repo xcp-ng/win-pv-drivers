@@ -1,14 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFrameworks>net462;net10.0-windows10.0.26100.0</TargetFrameworks>
     <AssemblyName>xdutils</AssemblyName>
-    <LangVersion>9.0</LangVersion>
     <Platforms>x64;x86;ARM64</Platforms>
-    <Nullable>warnings</Nullable>
+    <Nullable>enable</Nullable>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AccelerateBuildsInVisualStudio>false</AccelerateBuildsInVisualStudio>
     <NoWarn>9269;$(NoWarn)</NoWarn>
+    <SupportedOSPlatformVersion>10.0.14393.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net462'">
+    <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' != 'net462'">
+    <!-- Native AOT -->
+    <IsAotCompatible>true</IsAotCompatible>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+
+    <!-- CsWin32 -->
+    <CsWin32RunAsBuildTask>true</CsWin32RunAsBuildTask>
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,8 +38,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Memory" Version="4.6.3" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
+    <PackageReference Include="System.Memory" Version="4.6.3" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" Condition="'$(TargetFramework)' == 'net462'" />
   </ItemGroup>
 
   <Target Name="XenGeneratedFiles" BeforeTargets="BeforeBuild">
