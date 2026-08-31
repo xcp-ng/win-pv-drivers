@@ -16,7 +16,7 @@ namespace XenClean {
                 _writer = new StreamWriter(file);
             } catch (Exception ex) {
                 _writer = null;
-                WriteFormat(LogLevel.Alert, "Opening log path {0} failed: {1} {2}", _logPath, ex.HResult, ex.Message);
+                WriteFormat(LogLevel.Alert, "Opening log path {0} failed: {1}", _logPath, ex.ToString());
             }
         }
 
@@ -25,7 +25,7 @@ namespace XenClean {
         }
 
         protected override void Write(LogLevel level, string message) {
-            var toWrite = $"[{level}] " + message;
+            var toWrite = $"{DateTimeOffset.Now:O} [{level}] " + message;
             if (level <= LogLevel.Interactive) {
                 Console.WriteLine(toWrite);
             }
@@ -38,7 +38,7 @@ namespace XenClean {
         }
 
         protected override void WriteFormat(LogLevel level, string format, params object[] args) {
-            var toWrite = $"[{level}] " + string.Format(format, args);
+            var toWrite = $"{DateTimeOffset.Now:O} [{level}] " + string.Format(format, args);
             if (level <= LogLevel.Interactive) {
                 Console.WriteLine(toWrite);
             }

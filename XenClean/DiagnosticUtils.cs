@@ -29,7 +29,7 @@ namespace XenClean {
             try {
                 key = root.OpenSubKey(keyName, false);
             } catch (Exception ex) {
-                Logger.LogFormat(LogLevel.Info, "Error when opening key {0} for logging: {1} {2}", keyPath, ex.HResult, ex.Message);
+                Logger.LogFormat(LogLevel.Info, "Error when opening key {0} for logging: {1}", keyPath, ex.ToString());
                 return;
             }
             using (key) {
@@ -46,7 +46,7 @@ namespace XenClean {
                         kind = key.GetValueKind(name);
                         value = key.GetValue(name, null, RegistryValueOptions.DoNotExpandEnvironmentNames);
                     } catch (Exception ex) {
-                        Logger.LogFormat(LogLevel.Info, "Error when reading value {0}: {1} {2}", displayName, ex.HResult, ex.Message);
+                        Logger.LogFormat(LogLevel.Info, "Error when reading value {0}: {1}", displayName, ex.ToString());
                         continue;
                     }
 

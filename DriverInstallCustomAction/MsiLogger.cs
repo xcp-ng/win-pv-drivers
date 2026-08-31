@@ -11,11 +11,11 @@ namespace XenInstCA {
         }
 
         protected override void Write(LogLevel level, string message) {
-            _session.Log(message);
+            _session.Log($"{DateTimeOffset.Now:O} [{level}] " + message);
         }
 
         protected override void WriteFormat(LogLevel level, string format, params object[] args) {
-            var toWrite = string.Format(format, args);
+            var toWrite = $"{DateTimeOffset.Now:O} [{level}] " + string.Format(format, args);
             _session.Log(toWrite);
         }
     }

@@ -298,7 +298,7 @@ namespace XenDriverUtils {
                         }
                     }
                 } catch (Exception ex) {
-                    Logger.LogFormat(LogLevel.Interactive, "Cannot parse {0}: {1} {2}", oemInfPath, ex.HResult, ex.Message);
+                    Logger.LogFormat(LogLevel.Interactive, "Cannot parse {0}: {1}", oemInfPath, ex.ToString());
                 }
 
                 if (matchingPath != null) {
@@ -318,7 +318,7 @@ namespace XenDriverUtils {
                 try {
                     UninstallDriver(oemInfName, dryRun: dryRun);
                 } catch (Exception ex) {
-                    Logger.Log($"Cannot uninstall driver {oemInfName}: {ex.Message}");
+                    Logger.LogFormat(LogLevel.Interactive, "Cannot uninstall driver {0}: {1}", oemInfName, ex.ToString());
                 }
             }
         }
@@ -331,7 +331,7 @@ namespace XenDriverUtils {
                 try {
                     UninstallDriver(oemInfName, dryRun: dryRun);
                 } catch (Exception ex) {
-                    Logger.Log($"Cannot uninstall driver {oemInfName}: {ex.Message}");
+                    Logger.LogFormat(LogLevel.Interactive, "Cannot uninstall driver {0}: {1}", oemInfName, ex.ToString());
                 }
             }
         }

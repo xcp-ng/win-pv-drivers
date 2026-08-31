@@ -96,7 +96,7 @@ namespace XenClean {
                             Logger.Log(LogLevel.Trace, line);
                         }
                     } catch (Exception ex) {
-                        Logger.LogFormat(LogLevel.Alert, "Cannot read MSI uninstallation log: {0} {1}", ex.HResult, ex.Message);
+                        Logger.LogFormat(LogLevel.Alert, "Cannot read MSI uninstallation log: {0}", ex.ToString());
                     }
                     if (msiexecProcess.ExitCode != 0 &&
                         msiexecProcess.ExitCode != (int)WIN32_ERROR.ERROR_SUCCESS_REBOOT_REQUIRED &&

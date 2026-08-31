@@ -109,7 +109,7 @@ namespace XenDriverUtils {
                     }
                 }
             } catch (Exception ex) {
-                Logger.Log($"Cannot delete StartOverride subkey: {ex.Message}");
+                Logger.LogFormat(LogLevel.Interactive, "Cannot delete StartOverride subkey: {0}", ex.ToString());
             }
         }
 

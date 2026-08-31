@@ -155,7 +155,7 @@ class Program {
                 try {
                     RestorePoint.CreateRestorePoint(runName, dryRun: dryRun);
                 } catch (Exception ex) {
-                    Logger.LogFormat(LogLevel.Info, "Could not create restore point: {0} {1}", ex.HResult, ex.Message);
+                    Logger.LogFormat(LogLevel.Info, "Could not create restore point: {0}", ex.ToString());
                 }
             }
 
@@ -166,7 +166,7 @@ class Program {
                 try {
                     exitCode = DoCleanupTasks(dryRun: dryRun);
                 } catch (Exception ex) {
-                    Logger.LogFormat(LogLevel.Alert, "Cleanup FAILED: {0} {1}", ex.HResult, ex.Message);
+                    Logger.LogFormat(LogLevel.Alert, "Cleanup FAILED: {0}", ex.ToString());
                 }
                 Logger.LogFormat(LogLevel.Interactive, "Cleanup task status is {0}", exitCode);
             }

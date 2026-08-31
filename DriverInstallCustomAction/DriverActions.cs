@@ -109,7 +109,7 @@ namespace XenInstCA {
                         DriverUtils.UninstallDevice(devInfo, devInfoData, out var thisNeedsReboot);
                         needsReboot |= thisNeedsReboot;
                     } catch (Exception ex) {
-                        Logger.Log($"Cannot uninstall device: {ex.Message}");
+                        Logger.LogFormat(LogLevel.Interactive, "Cannot uninstall device: {0}", ex.ToString());
                     }
                 }
             }
@@ -119,7 +119,7 @@ namespace XenInstCA {
                     try {
                         DriverUtils.UninstallDriver(oemInfName, dryRun: false);
                     } catch (Exception ex) {
-                        Logger.Log($"Cannot uninstall driver {oemInfName}: {ex.Message}");
+                        Logger.LogFormat(LogLevel.Interactive, "Cannot uninstall driver {0}: {1}", oemInfName, ex.ToString());
                     }
                 }
             }
