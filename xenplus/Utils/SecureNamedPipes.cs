@@ -64,7 +64,6 @@ static class SecureNamedPipes {
         }
 
         HANDLE h;
-        string pipeFullPath = @"\\.\pipe\" + pipePath;
         unsafe {
             var sa = new SECURITY_ATTRIBUTES() {
                 nLength = (uint)Unsafe.SizeOf<SECURITY_ATTRIBUTES>(),
@@ -87,10 +86,12 @@ static class SecureNamedPipes {
                 }
             }
         }
-        return new(
-            direction,
-            isAsync,
-            false,
-            new SafePipeHandle(h, true));
+        var safeHandle = new SafePipeHandle(h, true);
+        try {
+            return new(direction, isAsync, false, safeHandle);
+        } catch {
+            safeHandle.Dispose();
+            throw;
+        }
     }
 }
