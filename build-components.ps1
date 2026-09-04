@@ -26,9 +26,13 @@ if ($LASTEXITCODE -ne 0) {
     throw "MSBuild failed with error $LASTEXITCODE"
 }
 
+$XenCleanTarget = $Target
+if ($Target -ine "Clean") {
+    $XenCleanTarget = "Publish"
+}
 msbuild.exe `
     "$PSScriptRoot\installer\installer.slnx" `
-    /t:XenClean:$Target `
+    /t:XenClean:$XenCleanTarget `
     /restore `
     /p:Configuration=$Configuration `
     /p:Platform=$Platform `
