@@ -31,3 +31,4 @@ runs:
         PackageVersions_xstdvga: ${{fromJSON(inputs.branding-data).PackageVersions_xstdvga}}
         MSI_UPGRADE_CODE_X86: ${{fromJSON(inputs.branding-data).MSI_UPGRADE_CODE_X86}}
         MSI_UPGRADE_CODE_X64: ${{fromJSON(inputs.branding-data).MSI_UPGRADE_CODE_X64}}
+        PRODUCT_URL: ${{fromJSON(inputs.branding-data).PRODUCT_URL}}

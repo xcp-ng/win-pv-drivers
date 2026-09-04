@@ -47,7 +47,7 @@ function Out-SafeString {
         "Base64"         = '^[a-z0-9+/=\r\n\t ]*$'
         "NumericBoolean" = '^[01]?$'
         "DriverVer"      = '^([0-9]{2}/[0-9]{2}/[0-9]{4},[0-9]+(\.[0-9]+){0,3})?$'
-        "Uri"            = '^[a-z0-9\-._~:/?#=@&+%]?$'
+        "Uri"            = '^[a-z0-9\-._~:/?#=@&+]*$'
     }
 
     if ($InputObject -isnot [string]) {
@@ -56,20 +56,21 @@ function Out-SafeString {
     if (!$PatternType) {
         throw "Invalid pattern type $PatternType"
     }
+
+    $Pattern = $AllowedPatterns[$PatternType]
+    if (!($InputObject -imatch $Pattern)) {
+        throw "Invalid input for pattern type $PatternType"
+    }
+
     if ($PatternType -eq "Uri") {
         $uri = $null;
         if (![uri]::TryCreate($InputObject, [System.UriKind]::Absolute, [ref]$uri)) {
             throw "Invalid input for pattern type $PatternType"
         }
-        if ($uri.Scheme -notin @("http", "https")) {
-            throw "Invalid URI scheme $($uri.Scheme)"
+        if ($uri.Scheme -notin @("http", "https") -or [string]::IsNullOrEmpty($uri.Host) -or $uri.UserInfo) {
+            throw "Invalid URI"
         }
-        return $uri.ToString();
-    }
-
-    $Pattern = $AllowedPatterns[$PatternType]
-    if (!($InputObject -imatch $Pattern)) {
-        throw "Invalid input for pattern type $PatternType"
+        return $uri.AbsoluteUri;
     }
 
     return $InputObject
@@ -103,5 +104,7 @@ $content = @"
 
 `$Env:MSI_UPGRADE_CODE_X86 = '$(Out-SafeString -PatternType Guid -InputObject $Env:MSI_UPGRADE_CODE_X86)'
 `$Env:MSI_UPGRADE_CODE_X64 = '$(Out-SafeString -PatternType Guid -InputObject $Env:MSI_UPGRADE_CODE_X64)'
+
+`$Env:PRODUCT_URL = '$(Out-SafeString -PatternType Uri -InputObject $Env:PRODUCT_URL)'
 "@
 Set-Content -Path $OutFile -Value $content -Force
