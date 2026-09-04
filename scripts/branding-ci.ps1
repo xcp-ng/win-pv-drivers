@@ -62,7 +62,7 @@ function Out-SafeString {
         throw "Invalid input for pattern type $PatternType"
     }
 
-    if ($PatternType -eq "Uri") {
+    if ($InputObject -and $PatternType -eq "Uri") {
         $uri = $null;
         if (![uri]::TryCreate($InputObject, [System.UriKind]::Absolute, [ref]$uri)) {
             throw "Invalid input for pattern type $PatternType"
