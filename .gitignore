@@ -374,7 +374,8 @@ Branding.inc
 /package/
 /package-*
 output/
-installer/driver-bins/
+staging/
+driver-bins/
 deps/
 /XenDriverUtils/Copy-XenVifSettings.signed.ps1
 *.lscache

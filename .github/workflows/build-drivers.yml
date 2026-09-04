@@ -24,7 +24,7 @@ jobs:
       name: ${{inputs.environment}}
       deployment: false
     env:
-      WINPV_OUTPUT: installer/driver-bins
+      WINPV_OUTPUT: driver-bins/x64/Release
       WINPV_CATALOG: catalog.csv
     steps:
       - name: Checkout
@@ -52,6 +52,5 @@ jobs:
           name: drivers
           path: ${{env.WINPV_OUTPUT}}/
     outputs:
-      output-path: ${{env.WINPV_OUTPUT}}
       output-sha256: ${{steps.upload.outputs.artifact-digest}}
       catalog-name: ${{env.WINPV_CATALOG}}

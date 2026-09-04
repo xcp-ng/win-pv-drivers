@@ -14,7 +14,6 @@ $ErrorActionPreference = "Stop"
 
 . $PSScriptRoot\branding.ps1
 . $PSScriptRoot\scripts\branding-generic.ps1
-. $PSScriptRoot\scripts\sign.ps1
 
 msbuild.exe `
     "$PSScriptRoot\installer\installer.slnx" `

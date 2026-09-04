@@ -79,10 +79,10 @@ Using the Developer PowerShell for VS, navigate to this repository and build the
 .\build-drivers.ps1 -Configuration Release -Platform x64
 ```
 
-Output drivers will be collected in `installer\driver-bins`.
+Output drivers will be collected in `driver-bins\<platform>\<configuration>`.
 
-If you need to sign the drivers externally (e.g. WHQL signatures), you must replace the drivers found here with your own signed binaries.
-These binaries should be located at `installer\driver-bins\<platform>\<configuration>\<driver name>` for each driver included in the package.
+If you sign the drivers externally (for example through Microsoft attestation signing), pass the returned archive to `stage-prebuilt.ps1` using `-DriversSigned`.
+It is overlaid onto the corresponding files under `staging\<platform>\<configuration>\drivers`.
 
 ## Building XenPlus
 
@@ -113,6 +113,21 @@ Run the command:
 ```
 
 The collected binaries are located at `components\<platform>\<configuration>`.
+
+## Staging built files
+
+To package and stage locally-built outputs:
+
+```powershell
+.\prestage.ps1 -Configuration Release -Platform x64
+.\scripts\stage-prebuilt.ps1 `
+    -Configuration Release `
+    -Platform x64 `
+    -Drivers .\input\drivers-local.zip -SignDrivers `
+    -Components .\input\components-local.zip -SignComponents `
+    -Xenplus .\input\xenplus-local.zip -SignXenplus `
+    -Xstdvga .\input\xstdvga-local.zip -SignXstdvga
+```
 
 ## Building the installer and release package
 

@@ -6,7 +6,6 @@ param (
 
 . "$ProjectDir\..\branding.ps1"
 . "$ProjectDir\..\scripts\branding-generic.ps1"
-. "$ProjectDir\..\scripts\sign.ps1"
 
 $ver = Get-PackageVersion xenplus
 $productVer = Get-PackageVersion Product

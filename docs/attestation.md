@@ -49,7 +49,7 @@ Use the [artifact.psm1](/scripts/artifact.psm1) PowerShell module to verify the 
 ```powershell
 > Import-Module scripts\artifact.psm1 -Force
 
-> Test-ArtifactCatalog -TrustedCatalog (Import-Csv .\drivers-catalog.csv) -ComparePath .\drivers-signed\xenbus -CatalogPrefix .\xenbus\x64\Release -Include *.sys, *.dll, *.exe, *.inf
+> Test-ArtifactCatalog -TrustedCatalog (Import-Csv .\drivers-catalog.csv) -ComparePath .\drivers-signed\xenbus -CatalogPrefix .\xenbus -Include *.sys, *.dll, *.exe, *.inf
 ```
 
 **Tip**: You can verify parts of the catalog by choosing `CatalogPrefix` accordingly.

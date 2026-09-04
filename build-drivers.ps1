@@ -22,12 +22,11 @@ param (
 
 . $PSScriptRoot\branding.ps1
 . $PSScriptRoot\scripts\branding-generic.ps1
-. $PSScriptRoot\scripts\sign.ps1
 
 # Drivers are ordered by build date first so the Hmm gives you a more granular revision number (down to the minute).
 $DriverTime = (Get-Date -Format Hmm)
 
-$OutputPath = "$PSScriptRoot\installer\driver-bins"
+$OutputPath = "$PSScriptRoot\driver-bins"
 Remove-Item -Path $OutputPath -Force -Recurse -ErrorAction SilentlyContinue
 $ErrorActionPreference = "Stop"
 foreach ($repo in $Drivers) {
@@ -71,7 +70,6 @@ foreach ($repo in $Drivers) {
         New-Item -ItemType Directory -Path $DriverOutput -Force
         Copy-Item -Path .\$SolutionDir\$DriverConfigShort\$Platform\package\* -Destination $DriverOutput\ -Force -Recurse
 
-        Set-SignerFileSignature $DriverOutput\*.sys, $DriverOutput\*.dll, $DriverOutput\*.exe, $DriverOutput\*.cat
     }
     finally {
         $Env:MAJOR_VERSION = ''

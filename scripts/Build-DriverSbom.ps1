@@ -14,13 +14,12 @@ $ErrorActionPreference = "Stop"
 
 . $PSScriptRoot\..\branding.ps1
 . $PSScriptRoot\..\scripts\branding-generic.ps1
-. $PSScriptRoot\..\scripts\sign.ps1
 
-$OutputPath = "$PSScriptRoot\..\installer\driver-bins"
+$OutputPath = "$PSScriptRoot\..\staging\$Platform\$Configuration\drivers"
 foreach ($repo in $Drivers) {
     Push-Location $PSScriptRoot\..\$repo
     try {
-        $DriverOutput = "$OutputPath\$Platform\$Configuration\$repo"
+        $DriverOutput = "$OutputPath\$repo"
 
         sbom.exe generate -b $DriverOutput -bc . -D true -ps $Env:VENDOR_NAME -pn $repo -pv (Get-PackageVersion $repo)
         if ($LASTEXITCODE -ne 0) {

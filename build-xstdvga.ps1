@@ -13,7 +13,6 @@ param (
 
 . $PSScriptRoot\branding.ps1
 . $PSScriptRoot\scripts\branding-generic.ps1
-. $PSScriptRoot\scripts\sign.ps1
 
 $ErrorActionPreference = "Stop"
 
@@ -42,8 +41,6 @@ try {
         -SolutionDir $SolutionDir `
         -DriverVer $DriverVer
 
-    Write-Host "Signing"
-    Set-SignerFileSignature .\$SolutionDir\$Platform\$Configuration\xstdvga\xstdvga.sys, .\$SolutionDir\$Platform\$Configuration\xstdvga\xstdvga.cat
 }
 finally {
     Pop-Location

@@ -34,7 +34,11 @@ $ErrorActionPreference = "Stop"
 . $PSScriptRoot\scripts\branding-generic.ps1
 . $PSScriptRoot\scripts\sign.ps1
 
-$ComponentsDir = "$PSScriptRoot\components\$Platform\$Configuration"
+$StagingDir = "$PSScriptRoot\staging\$Platform\$Configuration"
+$DriversDir = "$StagingDir\drivers"
+$ComponentsDir = "$StagingDir\components"
+$XenplusDir = "$StagingDir\xenplus"
+$XstdvgaDir = "$StagingDir\xstdvga"
 
 if (!$NoBuild) {
     msbuild.exe `
@@ -86,7 +90,7 @@ if ($Target -ine "Clean") {
 
     if ($Sbom) {
         & "$PSScriptRoot\scripts\Build-DriverSbom.ps1" -Configuration $Configuration -Platform $Platform
-        Get-ChildItem -Directory -Filter _manifest -Recurse $PSScriptRoot\installer\driver-bins\ | ForEach-Object {
+        Get-ChildItem -Directory -Filter _manifest -Recurse $DriversDir | ForEach-Object {
             $Driver = $($_.Parent.Name)
             $_ | Copy-Item -Destination $VersionDir\sbom\$Driver -Recurse
         }
@@ -132,7 +136,7 @@ if ($Target -ine "Clean") {
 
         New-Item -Path $VersionDir\sbom\xenplus -ItemType Directory -Force
         sbom.exe generate `
-            -b $PSScriptRoot\xenplus\bin\publish\$Platform\$Configuration `
+            -b $XenplusDir `
             -bc $PSScriptRoot\xenplus `
             -m $VersionDir\sbom\xenplus `
             -D true `
@@ -145,7 +149,7 @@ if ($Target -ine "Clean") {
 
         New-Item -Path $VersionDir\sbom\xstdvga -ItemType Directory -Force
         sbom.exe generate `
-            -b $PSScriptRoot\xstdvga\vs2022\$Platform\$Configuration\xstdvga `
+            -b $XstdvgaDir `
             -bc $PSScriptRoot\xstdvga\vs2022 `
             -m $VersionDir\sbom\xstdvga `
             -D true `
@@ -210,7 +214,7 @@ if ($Target -ine "Clean") {
         $DriversSymbolDir = "$VersionDir\symbols\drivers"
         New-Item -Path $DriversSymbolDir -ItemType Directory -Force
         Copy-Item `
-            -Path "$PSScriptRoot\installer\driver-bins\$Platform\$Configuration\*\*" `
+            -Path "$DriversDir\*\*" `
             -Filter *.pdb `
             -Destination $DriversSymbolDir\ `
             -Force
@@ -234,7 +238,7 @@ if ($Target -ine "Clean") {
         $XenplusSymbolDir = "$SymbolDir\xenplus"
         New-Item -Path $XenplusSymbolDir -ItemType Directory -Force
         Copy-Item `
-            -Path "$PSScriptRoot\xenplus\bin\publish\$Platform\$Configuration\*" `
+            -Path "$XenplusDir\*" `
             -Include *.pdb `
             -Destination $XenplusSymbolDir\ `
             -Force
@@ -242,7 +246,7 @@ if ($Target -ine "Clean") {
         $XstdvgaSymbolDir = "$SymbolDir\xstdvga"
         New-Item -Path $XstdvgaSymbolDir -ItemType Directory -Force
         Copy-Item `
-            -Path "$PSScriptRoot\xstdvga\vs2022\$Platform\$Configuration\xstdvga\*" `
+            -Path "$XstdvgaDir\*" `
             -Include *.pdb `
             -Destination $XstdvgaSymbolDir\ `
             -Force

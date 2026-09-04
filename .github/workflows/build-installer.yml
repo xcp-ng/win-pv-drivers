@@ -29,12 +29,6 @@ jobs:
     environment:
       name: ${{inputs.environment}}
       deployment: false
-    env:
-      # should match up with the WINPV_OUTPUT of each sub-artifact workflow
-      DRIVER_EXTRACT: installer/driver-bins
-      XENPLUS_EXTRACT: xenplus/bin/publish/x64/Release
-      XSTDVGA_EXTRACT: xstdvga/vs2022/x64/Release/xstdvga
-      COMPONENTS_EXTRACT: components/x64/Release
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -62,16 +56,7 @@ jobs:
           merge-multiple: true
           skip-decompress: true
       - name: Stage prebuilt artifacts
-        run: .\scripts\stage-prebuilt.ps1 -Configuration Release -Platform x64
-      - name: Testsign all sub-artifacts
-        run: |
-          $ErrorActionPreference = 'Stop'
-          . .\branding.ps1
-          . .\scripts\sign.ps1
-          Set-SignerFileSignature (Get-ChildItem .\$Env:DRIVER_EXTRACT -File -Recurse -Include *.sys, *.dll, *.exe, *.cat)
-          Set-SignerFileSignature (Get-ChildItem .\$Env:XENPLUS_EXTRACT -File -Recurse -Include *.exe)
-          Set-SignerFileSignature (Get-ChildItem .\$Env:XSTDVGA_EXTRACT -File -Recurse -Include *.sys, *.cat)
-          Set-SignerFileSignature (Get-ChildItem .\$Env:COMPONENTS_EXTRACT -File -Recurse -Include xeninst.CA.dll, xdutils.dll, XenClean.exe, XenBootFix.exe)
+        run: .\scripts\stage-prebuilt.ps1 -Configuration Release -Platform x64 -SignDrivers -SignXenplus -SignXstdvga -SignComponents
       - name: Build installer
         id: build
         # this workflow is always testsigned, so -ExportCertificate is appropriate

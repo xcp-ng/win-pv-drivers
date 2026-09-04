@@ -53,6 +53,5 @@ jobs:
           name: xenplus
           path: ${{env.WINPV_OUTPUT}}/
     outputs:
-      output-path: ${{env.WINPV_OUTPUT}}
       output-sha256: ${{steps.upload.outputs.artifact-digest}}
       catalog-name: ${{env.WINPV_CATALOG}}

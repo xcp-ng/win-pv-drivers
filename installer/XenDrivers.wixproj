@@ -21,19 +21,19 @@
     <BindPath Include="$(ProjectDir)branding">
       <BindName>branding</BindName>
     </BindPath>
-    <BindPath Include="$(ProjectDir)driver-bins\$(Platform)\$(Configuration)">
+    <BindPath Include="$(ProjectDir)..\staging\$(Platform)\$(Configuration)\drivers">
       <BindName>driver-bins</BindName>
     </BindPath>
-    <BindPath Include="$(ProjectDir)..\components\$(Platform)\$(Configuration)\DriverInstallCustomAction">
+    <BindPath Include="$(ProjectDir)..\staging\$(Platform)\$(Configuration)\components\DriverInstallCustomAction">
       <BindName>xeninstca</BindName>
     </BindPath>
-    <BindPath Include="$(ProjectDir)..\xenplus\bin\publish\$(Platform)\$(Configuration)">
+    <BindPath Include="$(ProjectDir)..\staging\$(Platform)\$(Configuration)\xenplus">
       <BindName>xenplus</BindName>
     </BindPath>
-    <BindPath Include="$(ProjectDir)..\components\$(Platform)\$(Configuration)\XenBootFix">
+    <BindPath Include="$(ProjectDir)..\staging\$(Platform)\$(Configuration)\components\XenBootFix">
       <BindName>xenbootfix</BindName>
     </BindPath>
-    <BindPath Include="$(ProjectDir)..\xstdvga\vs2022\$(Platform)\$(Configuration)\xstdvga">
+    <BindPath Include="$(ProjectDir)..\staging\$(Platform)\$(Configuration)\xstdvga">
       <BindName>xstdvga</BindName>
     </BindPath>
   </ItemGroup>

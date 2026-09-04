@@ -11,17 +11,23 @@ param (
     [Parameter()]
     [string]$DriversSigned,
     [Parameter()]
-    [switch]$ResignDrivers,
+    [switch]$SignDrivers,
     [Parameter()]
     [string]$Xenplus = "$PSScriptRoot\..\input\xenplus.zip",
     [Parameter()]
+    [switch]$SignXenplus,
+    [Parameter()]
     [string]$Xstdvga = "$PSScriptRoot\..\input\xstdvga.zip",
     [Parameter()]
-    [switch]$ResignXstdvga,
+    [switch]$SignXstdvga,
     [Parameter()]
     [string]$XstdvgaSigned,
     [Parameter()]
-    [string]$Components = "$PSScriptRoot\..\input\components.zip"
+    [string]$Components = "$PSScriptRoot\..\input\components.zip",
+    [Parameter()]
+    [switch]$SignComponents,
+    [Parameter()]
+    [string]$StagingRoot = "$PSScriptRoot\..\staging"
 )
 
 $ErrorActionPreference = "Stop"
@@ -32,68 +38,72 @@ $ErrorActionPreference = "Stop"
 # specifically use the Windows bsdtar
 $tar = Join-Path ([System.Environment]::SystemDirectory) "tar.exe"
 
-$DriversDir = "$PSScriptRoot\..\installer\driver-bins"
+function Expand-Artifact {
+    param (
+        [Parameter(Mandatory)]
+        [string]$Archive,
+        [Parameter(Mandatory)]
+        [string]$Destination,
+        [Parameter()]
+        [switch]$Replace,
+        [Parameter()]
+        [int]$StripComponents = 0
+    )
 
-if ($Drivers) {
-    Remove-Item $DriversDir -Recurse -Force -ErrorAction SilentlyContinue
-    New-Item -Path $DriversDir -ItemType Directory -Force | Out-Null
-    & $tar -xvf $Drivers -C $DriversDir
-    if ($LASTEXITCODE -ne 0) {
-        throw "extracting Drivers failed with error $LASTEXITCODE"
+    if (!(Test-Path -LiteralPath $Archive -PathType Leaf)) {
+        throw "Artifact '$Archive' doesn't exist"
     }
+    if ($Replace) {
+        Remove-Item -LiteralPath $Destination -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    New-Item -Path $Destination -ItemType Directory -Force | Out-Null
 
-    if ($ResignDrivers) {
-        Set-SignerFileSignature (Get-ChildItem "$DriversDir\$Platform\$Configuration" -File -Recurse -Include *.sys, *.dll, *.exe, *.cat)
+    $TarArgs = @("-xvf", $Archive, "-C", $Destination)
+    if ($StripComponents) {
+        $TarArgs += @("--strip-components", $StripComponents)
+    }
+    & $tar @TarArgs
+    if ($LASTEXITCODE -ne 0) {
+        throw "extracting '$Archive' failed with error $LASTEXITCODE"
     }
 }
 
-if ($DriversSigned) {
-    & $tar -xvf $DriversSigned -C "$DriversDir\$Platform\$Configuration" --strip-components 1
-    if ($LASTEXITCODE -ne 0) {
-        throw "extracting DriversSigned failed with error $LASTEXITCODE"
+$ConfigurationDir = Join-Path $StagingRoot "$Platform\$Configuration"
+$DriversDir = Join-Path $ConfigurationDir "drivers"
+$XenplusDir = Join-Path $ConfigurationDir "xenplus"
+$XstdvgaDir = Join-Path $ConfigurationDir "xstdvga"
+$ComponentsDir = Join-Path $ConfigurationDir "components"
+
+if ($Drivers) {
+    Expand-Artifact -Archive $Drivers -Destination $DriversDir -Replace
+    if ($SignDrivers) {
+        Set-SignerFileSignature (Get-ChildItem $DriversDir -File -Recurse -Include *.sys, *.dll, *.exe, *.cat)
     }
+}
+if ($DriversSigned) {
+    Expand-Artifact -Archive $DriversSigned -Destination $DriversDir -StripComponents 1
 }
 
 if ($Xenplus) {
-    $XenplusDir = "$PSScriptRoot\..\xenplus\bin\publish\$Platform\$Configuration"
-    Remove-Item $XenplusDir -Recurse -Force -ErrorAction SilentlyContinue
-    New-Item -Path $XenplusDir -ItemType Directory -Force | Out-Null
-    & $tar -xvf $Xenplus -C $XenplusDir
-    if ($LASTEXITCODE -ne 0) {
-        throw "extracting Xenplus failed with error $LASTEXITCODE"
+    Expand-Artifact -Archive $Xenplus -Destination $XenplusDir -Replace
+    if ($SignXenplus) {
+        Set-SignerFileSignature (Get-ChildItem $XenplusDir -File -Recurse -Include *.exe)
     }
 }
 
 if ($Xstdvga) {
-    $XstdvgaDir = "$PSScriptRoot\..\xstdvga\vs2022\$Platform\$Configuration\xstdvga"
-    Remove-Item $XstdvgaDir -Recurse -Force -ErrorAction SilentlyContinue
-    New-Item -Path $XstdvgaDir -ItemType Directory -Force | Out-Null
-    & $tar -xvf $Xstdvga -C $XstdvgaDir
-    if ($LASTEXITCODE -ne 0) {
-        throw "extracting Xstdvga failed with error $LASTEXITCODE"
-    }
-
-    if ($ResignXstdvga) {
+    Expand-Artifact -Archive $Xstdvga -Destination $XstdvgaDir -Replace
+    if ($SignXstdvga) {
         Set-SignerFileSignature (Get-ChildItem $XstdvgaDir -File -Recurse -Include *.sys, *.cat)
     }
 }
-
 if ($XstdvgaSigned) {
-    $XstdvgaDir = "$PSScriptRoot\..\xstdvga\vs2022\$Platform\$Configuration\xstdvga"
-    Remove-Item $XstdvgaDir -Recurse -Force -ErrorAction SilentlyContinue
-    New-Item -Path $XstdvgaDir -ItemType Directory -Force | Out-Null
-    & $tar -xvf $XstdvgaSigned -C $XstdvgaDir --strip-components 1
-    if ($LASTEXITCODE -ne 0) {
-        throw "extracting XstdvgaSigned failed with error $LASTEXITCODE"
-    }
+    Expand-Artifact -Archive $XstdvgaSigned -Destination $XstdvgaDir -StripComponents 1
 }
 
 if ($Components) {
-    $ComponentsDir = "$PSScriptRoot\..\components\$Platform\$Configuration"
-    Remove-Item $ComponentsDir -Recurse -Force -ErrorAction SilentlyContinue
-    New-Item -Path $ComponentsDir -ItemType Directory -Force | Out-Null
-    & $tar -xvf $Components -C $ComponentsDir
-    if ($LASTEXITCODE -ne 0) {
-        throw "extracting Components failed with error $LASTEXITCODE"
+    Expand-Artifact -Archive $Components -Destination $ComponentsDir -Replace
+    if ($SignComponents) {
+        Set-SignerFileSignature (Get-ChildItem $ComponentsDir -File -Recurse -Include xeninst.CA.dll, xdutils.dll, XenClean.exe, XenBootFix.exe)
     }
 }
