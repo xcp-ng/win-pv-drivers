@@ -100,7 +100,7 @@ sealed class ClipboardSafeHandle(HGLOBAL h, CLIPBOARD_FORMAT format, bool ownsHa
         if (!ownsHandle) {
             throw new InvalidOperationException("cannot set clipboard with unowned handle");
         }
-        if (PInvoke.SetClipboardData((uint)format, (HANDLE)shref.DangerousHandle) == HANDLE.Null) {
+        if (PInvoke.SetClipboardData((uint)format, (HANDLE)shref.Handle) == HANDLE.Null) {
             throw new Win32Exception(nameof(PInvoke.SetClipboardData));
         }
         // SetClipboardData gives ownership of the handle over to Windows.

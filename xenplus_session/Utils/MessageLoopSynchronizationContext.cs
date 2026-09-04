@@ -103,7 +103,7 @@ class MessageLoopSynchronizationContext : SynchronizationContext, IDisposable {
                 while (true) {
                     WAIT_EVENT result;
                     using (var shref = context._pending.SafeWaitHandle.Borrow()) {
-                        waiting[0] = (HANDLE)shref.DangerousHandle;
+                        waiting[0] = (HANDLE)shref.Handle;
                         result = PInvoke.MsgWaitForMultipleObjects(
                            waiting,
                            false,

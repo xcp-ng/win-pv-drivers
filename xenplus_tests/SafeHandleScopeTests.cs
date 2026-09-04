@@ -67,7 +67,7 @@ public class SafeHandleScopeTests {
         handle.Dispose();
 
         Assert.Equal(0, handle.ReleaseCount);
-        Assert.Equal(123, borrowed.DangerousHandle);
+        Assert.Equal(123, borrowed.Handle);
 
         borrowed.Dispose();
         borrowed.Dispose();

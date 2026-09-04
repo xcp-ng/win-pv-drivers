@@ -33,17 +33,11 @@ sealed class DsRolePrimaryDomainInfoBasicSafeHandle : SafeHandle {
         return true;
     }
 
-    unsafe DSROLE_PRIMARY_DOMAIN_INFO_BASIC* Info {
-        get {
-            return (DSROLE_PRIMARY_DOMAIN_INFO_BASIC*)handle;
-        }
-    }
-
     public DSROLE_MACHINE_ROLE MachineRole {
         get {
             using var shref = this.Borrow();
             unsafe {
-                return Info->MachineRole;
+                return ((DSROLE_PRIMARY_DOMAIN_INFO_BASIC*)shref.Handle)->MachineRole;
             }
         }
     }
@@ -52,7 +46,7 @@ sealed class DsRolePrimaryDomainInfoBasicSafeHandle : SafeHandle {
         get {
             using var shref = this.Borrow();
             unsafe {
-                return Info->DomainNameFlat.ToString();
+                return ((DSROLE_PRIMARY_DOMAIN_INFO_BASIC*)shref.Handle)->DomainNameFlat.ToString();
             }
         }
     }
@@ -61,7 +55,7 @@ sealed class DsRolePrimaryDomainInfoBasicSafeHandle : SafeHandle {
         get {
             using var shref = this.Borrow();
             unsafe {
-                return Info->DomainNameDns.ToString();
+                return ((DSROLE_PRIMARY_DOMAIN_INFO_BASIC*)shref.Handle)->DomainNameDns.ToString();
             }
         }
     }
@@ -70,7 +64,7 @@ sealed class DsRolePrimaryDomainInfoBasicSafeHandle : SafeHandle {
         get {
             using var shref = this.Borrow();
             unsafe {
-                return Info->DomainForestName.ToString();
+                return ((DSROLE_PRIMARY_DOMAIN_INFO_BASIC*)shref.Handle)->DomainForestName.ToString();
             }
         }
     }
@@ -79,7 +73,8 @@ sealed class DsRolePrimaryDomainInfoBasicSafeHandle : SafeHandle {
         get {
             using var shref = this.Borrow();
             unsafe {
-                return ((Info->Flags & PInvoke.DSROLE_PRIMARY_DOMAIN_GUID_PRESENT) != 0) ? Info->DomainGuid : null;
+                var info = (DSROLE_PRIMARY_DOMAIN_INFO_BASIC*)shref.Handle;
+                return ((info->Flags & PInvoke.DSROLE_PRIMARY_DOMAIN_GUID_PRESENT) != 0) ? info->DomainGuid : null;
             }
         }
     }

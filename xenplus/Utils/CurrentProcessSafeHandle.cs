@@ -12,7 +12,7 @@ sealed class CurrentProcessSafeHandle : SafeHandle {
         SetHandle(PInvoke.GetCurrentProcess());
     }
 
-    public override bool IsInvalid => DangerousGetHandle() == nint.Zero;
+    public override bool IsInvalid => handle == nint.Zero;
 
     protected override bool ReleaseHandle() {
         return true;

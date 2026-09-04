@@ -18,11 +18,15 @@ public sealed class SafeHandleReferenceScope : IDisposable {
         _h.DangerousAddRef(ref _ref);
     }
 
-    public nint DangerousHandle {
+    public nint Handle {
         get {
 #if DEBUG
             Validate();
 #endif
+            ObjectDisposedException.ThrowIf(!_ref, this);
+            if (_h.IsInvalid) {
+                throw new InvalidOperationException("tried to acquire handle from invalid SafeHandle");
+            }
             return _h.DangerousGetHandle();
         }
     }

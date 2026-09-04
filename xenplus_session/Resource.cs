@@ -26,7 +26,7 @@ static class Resources {
         HICON phicon;
         unsafe {
             PInvoke.LoadIconMetric(
-                (HINSTANCE)hinstScope.DangerousHandle,
+                (HINSTANCE)hinstScope.Handle,
                 MAKEINTRESOURCE(resourceId),
                 large ? _LI_METRIC.LIM_LARGE : _LI_METRIC.LIM_SMALL,
                 &phicon).ThrowOnFailure();
@@ -39,7 +39,7 @@ static class Resources {
         using var hinstScope = hinst.Borrow();
         unsafe {
             var hmenu = PInvoke.LoadMenu(
-                (HINSTANCE)hinstScope.DangerousHandle,
+                (HINSTANCE)hinstScope.Handle,
                 MAKEINTRESOURCE(resourceId));
             if (hmenu == HMENU.Null) {
                 throw new Win32Exception(nameof(PInvoke.LoadMenu));

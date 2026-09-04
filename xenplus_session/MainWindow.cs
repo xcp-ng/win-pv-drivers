@@ -37,7 +37,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
     bool _closing = false;
 
     HMENU GetSubMenu(SafeHandleReferenceScope menuScope, int index) {
-        var result = PInvoke.GetSubMenu((HMENU)menuScope.DangerousHandle, index);
+        var result = PInvoke.GetSubMenu((HMENU)menuScope.Handle, index);
         if (result == HMENU.Null) {
             throw new Win32Exception(nameof(PInvoke.GetSubMenu));
         }
@@ -123,7 +123,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
                 NOTIFY_ICON_DATA_FLAGS.NIF_TIP |
                 NOTIFY_ICON_DATA_FLAGS.NIF_SHOWTIP,
             uCallbackMessage = (uint)WmApp.TrayMenuMessage,
-            hIcon = (HICON)hiconScope.DangerousHandle,
+            hIcon = (HICON)hiconScope.Handle,
             szTip = VersionInfo.Description,
             uVersion = PInvoke.NOTIFYICON_VERSION_4,
         };
@@ -257,7 +257,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
             using var hinst = PInvoke.GetModuleHandle(null);
             using var hinstScope = hinst.Borrow();
 
-            td.Instance = (HINSTANCE)hinstScope.DangerousHandle;
+            td.Instance = (HINSTANCE)hinstScope.Handle;
             td.EnableHyperlinks = true;
             td.AllowDialogCancellation = true;
             td.PositionRelativeToWindow = true;

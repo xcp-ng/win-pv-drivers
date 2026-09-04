@@ -226,7 +226,7 @@ sealed partial class XenIfaceDevice {
                 var inBuf = new XENIFACE_STORE_ADD_WATCH_IN() {
                     Path = pathBytes,
                     PathLength = (uint)(pathLen + 1),
-                    Event = (void*)shref.DangerousHandle
+                    Event = (void*)shref.Handle
                 };
                 if (!PInvoke.DeviceIoControl(
                     Handle,
@@ -263,7 +263,7 @@ sealed partial class XenIfaceDevice {
             using var shref = evt.Borrow();
             var outBuf = new XENIFACE_SUSPEND_REGISTER_OUT();
             var inBuf = new XENIFACE_SUSPEND_REGISTER_IN() {
-                Event = (void*)shref.DangerousHandle
+                Event = (void*)shref.Handle
             };
             if (!PInvoke.DeviceIoControl(
                 Handle,

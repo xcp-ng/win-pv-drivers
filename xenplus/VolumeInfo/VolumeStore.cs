@@ -36,7 +36,7 @@ static class VolumeStore {
             yield return new(volumeName[..volumeName.IndexOf('\0')]);
             try {
                 using var borrow = findVolume.Borrow();
-                if (!PInvoke.FindNextVolume((HANDLE)borrow.DangerousHandle, volumeName.AsSpan())) {
+                if (!PInvoke.FindNextVolume((HANDLE)borrow.Handle, volumeName.AsSpan())) {
                     throw new Win32Exception(nameof(PInvoke.FindNextVolume));
                 }
             } catch (Win32Exception ex) when (ex.NativeErrorCode == (int)WIN32_ERROR.ERROR_NO_MORE_FILES) {

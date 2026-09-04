@@ -39,7 +39,7 @@ sealed partial class XenIfaceDevice : IDisposable {
                     Flags = 0,
                     FilterType = CM_NOTIFY_FILTER_TYPE_DEVICEHANDLE,
                     Reserved = 0,
-                    u = { DeviceHandle = { hTarget = (HANDLE)shref.DangerousHandle } }
+                    u = { DeviceHandle = { hTarget = (HANDLE)shref.Handle } }
                 };
                 Cfgmgr32.CheckConfigret(PInvoke.CM_Register_Notification(
                     filter,

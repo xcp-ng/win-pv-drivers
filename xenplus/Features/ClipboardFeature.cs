@@ -439,7 +439,7 @@ sealed class ClipboardFeature(
                         outBufferSize: 0,
                         inheritability: HandleInheritability.None,
                         rejectRemoteClients: true,
-                        securityDescriptor: shref.DangerousHandle);
+                        securityDescriptor: shref.Handle);
                 }
                 try {
                     await pipe.WaitForConnectionAsync(stoppingToken);

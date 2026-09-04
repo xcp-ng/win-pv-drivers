@@ -31,17 +31,11 @@ sealed class MibIpForwardTable2SafeHandle : SafeHandle, IReadOnlyList<MIB_IPFORW
         return true;
     }
 
-    unsafe MIB_IPFORWARD_TABLE2* Table {
-        get {
-            return (MIB_IPFORWARD_TABLE2*)handle;
-        }
-    }
-
     public int Count {
         get {
             using var shref = this.Borrow();
             unsafe {
-                return (int)Table->NumEntries;
+                return (int)((MIB_IPFORWARD_TABLE2*)shref.Handle)->NumEntries;
             }
         }
     }
@@ -50,10 +44,11 @@ sealed class MibIpForwardTable2SafeHandle : SafeHandle, IReadOnlyList<MIB_IPFORW
         get {
             using var shref = this.Borrow();
             unsafe {
-                if (index < 0 || index >= (int)Table->NumEntries) {
+                var table = (MIB_IPFORWARD_TABLE2*)shref.Handle;
+                if (index < 0 || index >= (int)table->NumEntries) {
                     throw new IndexOutOfRangeException();
                 }
-                return Table->Table[index];
+                return table->Table[index];
             }
         }
     }
