@@ -54,7 +54,7 @@ jobs:
             throw "CodeQL download failed with error $LASTEXITCODE"
           }
       - name: Configure branding
-        uses: ./.github/actions/branding
+        uses: $/.github/actions/branding
         with:
           branding-data: ${{toJson(vars)}}
       - name: Build xstdvga

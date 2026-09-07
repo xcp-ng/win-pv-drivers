@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   build-attested:
-    uses: ./.github/workflows/build-attested.yml
+    uses: $/.github/workflows/build-attested.yml
     with:
       environment: ${{inputs.environment}}
     permissions:
@@ -36,13 +36,13 @@ jobs:
           submodules: true
           persist-credentials: false
       - name: Setup WiX
-        uses: ./.github/actions/setup-wix
+        uses: $/.github/actions/setup-wix
       - name: Setup SBOM tool
-        uses: ./.github/actions/setup-sbom
+        uses: $/.github/actions/setup-sbom
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
       - name: Configure branding
-        uses: ./.github/actions/branding
+        uses: $/.github/actions/branding
         with:
           branding-data: ${{toJson(vars)}}
       - name: Configure test signer

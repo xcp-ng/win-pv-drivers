@@ -19,19 +19,19 @@ permissions:
 
 jobs:
   build-drivers:
-    uses: ./.github/workflows/build-drivers.yml
+    uses: $/.github/workflows/build-drivers.yml
     with:
       environment: ${{inputs.environment}}
   build-xenplus:
-    uses: ./.github/workflows/build-xenplus.yml
+    uses: $/.github/workflows/build-xenplus.yml
     with:
       environment: ${{inputs.environment}}
   build-xstdvga:
-    uses: ./.github/workflows/build-xstdvga.yml
+    uses: $/.github/workflows/build-xstdvga.yml
     with:
       environment: ${{inputs.environment}}
   build-components:
-    uses: ./.github/workflows/build-components.yml
+    uses: $/.github/workflows/build-components.yml
     with:
       environment: ${{inputs.environment}}
   build-attested:

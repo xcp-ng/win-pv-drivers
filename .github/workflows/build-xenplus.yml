@@ -36,7 +36,7 @@ jobs:
         with:
           dotnet-version: "10.0.x"
       - name: Configure branding
-        uses: ./.github/actions/branding
+        uses: $/.github/actions/branding
         with:
           branding-data: ${{toJson(vars)}}
       - name: Build XenPlus
