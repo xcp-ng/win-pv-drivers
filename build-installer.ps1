@@ -89,101 +89,133 @@ if ($Target -ine "Clean") {
         -Force
 
     if ($Sbom) {
-        & "$PSScriptRoot\scripts\Build-DriverSbom.ps1" -Configuration $Configuration -Platform $Platform
-        Get-ChildItem -Directory -Filter _manifest -Recurse $DriversDir | ForEach-Object {
-            $Driver = $($_.Parent.Name)
-            $_ | Copy-Item -Destination $VersionDir\sbom\$Driver -Recurse
-        }
+        $SbomDir = "$VersionDir\sbom"
+        New-Item -Path $SbomDir -ItemType Directory -Force | Out-Null
+        $SbomComponents = @(
+            [PSCustomObject]@{
+                ComponentName = "xenbus"
+                SourcePath    = "$PSScriptRoot\xenbus"
+                BinaryPath    = "$DriversDir\xenbus"
+                Version       = (Get-PackageVersion xenbus)
+            }
+            [PSCustomObject]@{
+                ComponentName = "xencons"
+                SourcePath    = "$PSScriptRoot\xencons"
+                BinaryPath    = "$DriversDir\xencons"
+                Version       = (Get-PackageVersion xencons)
+            }
+            [PSCustomObject]@{
+                ComponentName = "xenhid"
+                SourcePath    = "$PSScriptRoot\xenhid"
+                BinaryPath    = "$DriversDir\xenhid"
+                Version       = (Get-PackageVersion xenhid)
+            }
+            [PSCustomObject]@{
+                ComponentName = "xeniface"
+                SourcePath    = "$PSScriptRoot\xeniface"
+                BinaryPath    = "$DriversDir\xeniface"
+                Version       = (Get-PackageVersion xeniface)
+            }
+            [PSCustomObject]@{
+                ComponentName = "xennet"
+                SourcePath    = "$PSScriptRoot\xennet"
+                BinaryPath    = "$DriversDir\xennet"
+                Version       = (Get-PackageVersion xennet)
+            }
+            [PSCustomObject]@{
+                ComponentName = "xenvbd"
+                SourcePath    = "$PSScriptRoot\xenvbd"
+                BinaryPath    = "$DriversDir\xenvbd"
+                Version       = (Get-PackageVersion xenvbd)
+            }
+            [PSCustomObject]@{
+                ComponentName = "xenvif"
+                SourcePath    = "$PSScriptRoot\xenvif"
+                BinaryPath    = "$DriversDir\xenvif"
+                Version       = (Get-PackageVersion xenvif)
+            }
+            [PSCustomObject]@{
+                ComponentName = "xenvkbd"
+                SourcePath    = "$PSScriptRoot\xenvkbd"
+                BinaryPath    = "$DriversDir\xenvkbd"
+                Version       = (Get-PackageVersion xenvkbd)
+            }
+            [PSCustomObject]@{
+                ComponentName = "XenDriverUtils"
+                SourcePath    = "$PSScriptRoot\XenDriverUtils"
+                BinaryPath    = "$ComponentsDir\XenDriverUtils"
+                Version       = (Get-PackageVersion Product)
+            }
+            [PSCustomObject]@{
+                ComponentName = "XenClean"
+                SourcePath    = "$PSScriptRoot\XenClean"
+                BinaryPath    = "$ComponentsDir\XenClean"
+                Version       = (Get-PackageVersion XenClean)
+            }
+            [PSCustomObject]@{
+                ComponentName = "XenBootFix"
+                SourcePath    = "$PSScriptRoot\XenBootFix"
+                BinaryPath    = "$ComponentsDir\XenBootFix"
+                Version       = (Get-PackageVersion XenBootFix)
+            }
+            [PSCustomObject]@{
+                ComponentName = "xenplus"
+                SourcePath    = "$PSScriptRoot\xenplus"
+                BinaryPath    = $XenplusDir
+                Version       = (Get-PackageVersion xenplus)
+            }
+            [PSCustomObject]@{
+                ComponentName = "xstdvga"
+                SourcePath    = "$PSScriptRoot\xstdvga\vs2022"
+                BinaryPath    = $XstdvgaDir
+                Version       = (Get-PackageVersion xstdvga)
+            }
+            [PSCustomObject]@{
+                ComponentName = "DriverInstallCustomAction"
+                SourcePath    = "$PSScriptRoot\DriverInstallCustomAction"
+                BinaryPath    = "$ComponentsDir\DriverInstallCustomAction"
+                Version       = (Get-PackageVersion Product)
+            }
+            [PSCustomObject]@{
+                ComponentName = "win-pv-drivers-installer"
+                SourcePath    = "$PSScriptRoot\installer"
+                BinaryPath    = "$PSScriptRoot\installer\bin\$Platform\$Configuration\en-US"
+                Version       = (Get-PackageVersion Product)
+            }
+        )
 
-        New-Item -Path $VersionDir\sbom\XenDriverUtils -ItemType Directory -Force
-        sbom.exe generate `
-            -b $ComponentsDir\XenDriverUtils `
-            -bc $PSScriptRoot\XenDriverUtils `
-            -m $VersionDir\sbom\XenDriverUtils `
-            -D true `
-            -ps $Env:VENDOR_NAME `
-            -pn XenDriverUtils `
-            -pv (Get-PackageVersion Product)
-        if ($LASTEXITCODE -ne 0) {
-            throw "sbom-tool for XenDriverUtils failed with error $LASTEXITCODE"
-        }
+        foreach ($component in $SbomComponents) {
+            $SbomPath = "$SbomDir\$($component.ComponentName).spdx.json"
+            $ManifestDir = "$SbomDir\$($component.ComponentName)"
+            $GeneratedSbomPath = "$ManifestDir\_manifest\spdx_2.2\manifest.spdx.json"
+            Remove-Item -Path $SbomPath -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path $ManifestDir -Recurse -Force -ErrorAction SilentlyContinue
+            New-Item -Path $ManifestDir -ItemType Directory -Force | Out-Null
 
-        New-Item -Path $VersionDir\sbom\XenClean -ItemType Directory -Force
-        sbom.exe generate `
-            -b $ComponentsDir\XenClean `
-            -bc $PSScriptRoot\XenClean `
-            -m $VersionDir\sbom\XenClean `
-            -D true `
-            -ps $Env:VENDOR_NAME `
-            -pn XenClean `
-            -pv (Get-PackageVersion XenClean)
-        if ($LASTEXITCODE -ne 0) {
-            throw "sbom-tool for XenClean failed with error $LASTEXITCODE"
-        }
+            $sbomArgs = @(
+                "generate",
+                "-b", $component.BinaryPath,
+                "-bc", $component.SourcePath,
+                "-m", $ManifestDir,
+                "-D", "true",
+                "-ps", $Env:VENDOR_NAME,
+                "-pn", $component.ComponentName,
+                "-pv", $component.Version
+            )
 
-        New-Item -Path $VersionDir\sbom\XenBootFix -ItemType Directory -Force
-        sbom.exe generate `
-            -b $ComponentsDir\XenBootFix `
-            -bc $PSScriptRoot\XenBootFix `
-            -m $VersionDir\sbom\XenBootFix `
-            -D true `
-            -ps $Env:VENDOR_NAME `
-            -pn XenBootFix `
-            -pv (Get-PackageVersion XenBootFix)
-        if ($LASTEXITCODE -ne 0) {
-            throw "sbom-tool for XenBootFix failed with error $LASTEXITCODE"
-        }
-
-        New-Item -Path $VersionDir\sbom\xenplus -ItemType Directory -Force
-        sbom.exe generate `
-            -b $XenplusDir `
-            -bc $PSScriptRoot\xenplus `
-            -m $VersionDir\sbom\xenplus `
-            -D true `
-            -ps $Env:VENDOR_NAME `
-            -pn xenplus `
-            -pv (Get-PackageVersion xenplus)
-        if ($LASTEXITCODE -ne 0) {
-            throw "sbom-tool for xenplus failed with error $LASTEXITCODE"
-        }
-
-        New-Item -Path $VersionDir\sbom\xstdvga -ItemType Directory -Force
-        sbom.exe generate `
-            -b $XstdvgaDir `
-            -bc $PSScriptRoot\xstdvga\vs2022 `
-            -m $VersionDir\sbom\xstdvga `
-            -D true `
-            -ps $Env:VENDOR_NAME `
-            -pn xstdvga `
-            -pv (Get-PackageVersion xstdvga)
-        if ($LASTEXITCODE -ne 0) {
-            throw "sbom-tool for xstdvga failed with error $LASTEXITCODE"
-        }
-
-        New-Item -Path $VersionDir\sbom\DriverInstallCustomAction -ItemType Directory -Force
-        sbom.exe generate `
-            -b $ComponentsDir\DriverInstallCustomAction `
-            -bc $PSScriptRoot\DriverInstallCustomAction `
-            -m $VersionDir\sbom\DriverInstallCustomAction `
-            -D true `
-            -ps $Env:VENDOR_NAME `
-            -pn DriverInstallerCustomAction `
-            -pv (Get-PackageVersion Product)
-        if ($LASTEXITCODE -ne 0) {
-            throw "sbom-tool for DriverInstallCustomAction failed with error $LASTEXITCODE"
-        }
-
-        New-Item -Path $VersionDir\sbom\win-pv-drivers-installer -ItemType Directory -Force
-        sbom.exe generate `
-            -b $PSScriptRoot\installer\bin\$Platform\$Configuration\en-US `
-            -bc $PSScriptRoot\installer\ `
-            -m $VersionDir\sbom\win-pv-drivers-installer `
-            -D true `
-            -ps $Env:VENDOR_NAME `
-            -pn win-pv-drivers-installer `
-            -pv (Get-PackageVersion Product)
-        if ($LASTEXITCODE -ne 0) {
-            throw "sbom-tool for win-pv-drivers-installer failed with error $LASTEXITCODE"
+            try {
+                & sbom.exe @sbomArgs
+                if ($LASTEXITCODE -ne 0) {
+                    throw "sbom-tool for $($component.ComponentName) failed with error $LASTEXITCODE"
+                }
+                if (-not (Test-Path -LiteralPath $GeneratedSbomPath -PathType Leaf)) {
+                    throw "sbom-tool did not produce $GeneratedSbomPath"
+                }
+                Copy-Item -LiteralPath $GeneratedSbomPath -Destination $SbomPath -Force
+            }
+            finally {
+                Remove-Item -Path $ManifestDir -Recurse -Force -ErrorAction SilentlyContinue
+            }
         }
     }
 
