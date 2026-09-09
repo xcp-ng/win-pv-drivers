@@ -9,6 +9,15 @@
       Title="!(loc.XstdvgaFeatureTitle)"
       Description="!(loc.XstdvgaFeatureDescription)">
       <FeatureRef Id="XstdvgaInternalFeature" />
+      <Component Location="local">
+        <RegistryValue
+          KeyPath="yes"
+          Root="HKLM"
+          Key="SOFTWARE\$(VENDOR_NAME)"
+          Name="XstdvgaFeatureInstalled"
+          Type="integer"
+          Value="1" />
+      </Component>
     </Feature>
   </Fragment>
 </Wix>
