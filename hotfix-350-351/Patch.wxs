@@ -1,0 +1,76 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Patch
+    Id="{DC74D77B-47E7-4822-B9E0-70AF7E0943ED}"
+    ClientPatchId="Xcpng920350Hotfix"
+    Manufacturer="XCP-ng"
+    TargetProductName="XCP-ng Windows Guest Tools"
+    Classification="Hotfix"
+    Description="XCP-ng Windows Guest Tools Hotfix 9.2.351"
+    DisplayName="XCP-ng Windows Guest Tools Hotfix 9.2.351"
+    AllowRemoval="no"
+    OptimizedInstallMode="yes">
+    <OptimizeCustomActions SkipDeferred="yes" />
+    <TargetProductCodes Replace="yes">
+      <TargetProductCode Id="{0A0AC079-D00E-40CB-882B-1FED732786AA}" />
+    </TargetProductCodes>
+    <Media Id="1" EmbedCab="no">
+      <PatchBaseline
+        Id="Xcpng920350"
+        BaselineFile="XenTools-x64.msi"
+        UpdateFile="XenTools-fix-9.2.351.msi">
+        <Validate
+          ProductId="yes"
+          ProductLanguage="no"
+          ProductVersion="Update"
+          ProductVersionOperator="Equal"
+          UpgradeCode="yes" />
+      </PatchBaseline>
+    </Media>
+    <PatchFamily
+      Id="Xcpng920350Hotfix"
+      ProductCode="{0A0AC079-D00E-40CB-882B-1FED732786AA}"
+      Version="9.2.351.0"
+      Supersede="no">
+      <PropertyRef Id="ProductVersion" />
+
+      <CustomActionRef Id="XenbusInstall" />
+      <CustomActionRef Id="XenconsInstall" />
+      <CustomActionRef Id="XenifaceInstall" />
+      <CustomActionRef Id="XenvifInstall" />
+      <CustomActionRef Id="XennetInstall" />
+      <CustomActionRef Id="XenvbdInstall" />
+      <CustomActionRef Id="XenvkbdInstall" />
+      <CustomActionRef Id="XenhidInstall" />
+      <CustomActionRef Id="XstdvgaInstall" />
+
+      <CustomActionRef Id="XenbusUninstall" />
+      <CustomActionRef Id="XenconsUninstall" />
+      <CustomActionRef Id="XenifaceUninstall" />
+      <CustomActionRef Id="XenvifUninstall" />
+      <CustomActionRef Id="XennetUninstall" />
+      <CustomActionRef Id="XenvbdUninstall" />
+      <CustomActionRef Id="XenvkbdUninstall" />
+      <CustomActionRef Id="XenhidUninstall" />
+      <CustomActionRef Id="XstdvgaUninstall" />
+
+      <CustomActionRef Id="XenbusServiceDelete" />
+      <CustomActionRef Id="XenconsServiceDelete" />
+      <CustomActionRef Id="XenifaceServiceDelete" />
+      <CustomActionRef Id="XenvifServiceDelete" />
+      <CustomActionRef Id="XennetServiceDelete" />
+      <CustomActionRef Id="XenvbdServiceDelete" />
+      <CustomActionRef Id="XenvkbdServiceDelete" />
+      <CustomActionRef Id="XenhidServiceDelete" />
+      <CustomActionRef Id="XstdvgaServiceDelete" />
+
+      <CustomActionRef Id="XenbusNeedsReboot" />
+      <CustomActionRef Id="XennetNeedsReboot" />
+      <CustomActionRef Id="XenvbdNeedsReboot" />
+      <CustomActionRef Id="XenfiltReset" />
+      <CustomActionRef Id="XenbusCleanup" />
+      <CustomActionRef Id="XenvifPrepareRestore" />
+      <CustomActionRef Id="XenvifBackup" />
+      <CustomActionRef Id="XennetCleanup" />
+    </PatchFamily>
+  </Patch>
+</Wix>

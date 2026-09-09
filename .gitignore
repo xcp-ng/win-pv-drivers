@@ -380,3 +380,6 @@ deps/
 /XenDriverUtils/Copy-XenVifSettings.signed.ps1
 *.lscache
 /input/
+hotfix-350-351/*.msi
+hotfix-350-351/*.msp
+hotfix-350-351/*.wixpdb
