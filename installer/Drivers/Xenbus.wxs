@@ -2,11 +2,13 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
     <?define XenDriver="Xenbus" ?>
+    <?define XenComponentInstalledGuid="{536896A0-784F-46ED-801C-23109FD1B444}" ?>
     <?define XenDriverManualInstallSequence ?>
     <?define XenDriverUpgradeNeedsReboot ?>
     <?include ../Driver.wxi ?>
 
     <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.driver-bins)$(XenDriver)">
+      <ComponentRef Id="$(XenDriver)ComponentInstalled" />
       <File Name="xen.sys" />
       <File Name="xenbus.cat" DefaultVersion="$(XenbusVersion)" DefaultLanguage="1033" />
       <File Name="xenbus.inf" Id="Xenbus.inf" DefaultVersion="$(XenbusVersion)" DefaultLanguage="1033" />
@@ -28,32 +30,32 @@
       <Custom
         Action="XenfiltReset"
         Before="XenbusInstallRollback"
-        Condition="(NOT XEN_SKIP_CA) AND (!XenbusInternalFeature=2) AND (&amp;XenbusInternalFeature=3)" />
+        Condition="(NOT XEN_SKIP_CA) AND (?XenbusComponentInstalled=2) AND ($XenbusComponentInstalled=3)" />
       <Custom
         Action="XenbusInstallRollback"
         After="InstallFiles"
-        Condition="NOT XEN_SKIP_CA" />
+        Condition="(NOT XEN_SKIP_CA) AND ($XenbusComponentInstalled=3)" />
       <Custom
         Action="XenbusInstall"
         After="XenbusInstallRollback"
-        Condition="(NOT XEN_SKIP_CA) AND (&amp;XenbusInternalFeature=3)" />
+        Condition="(NOT XEN_SKIP_CA) AND ($XenbusComponentInstalled=3)" />
       <Custom
         Action="XenbusUninstallRollback"
         After="DeleteServices"
-        Condition="NOT XEN_SKIP_CA" />
+        Condition="(NOT XEN_SKIP_CA) AND ($XenbusComponentInstalled=2)" />
       <Custom
         Action="XenbusUninstall"
         After="XenbusUninstallRollback"
-        Condition="(NOT XEN_SKIP_CA) AND (&amp;XenbusInternalFeature=2)" />
+        Condition="(NOT XEN_SKIP_CA) AND ($XenbusComponentInstalled=2)" />
 
       <Custom
         Action="XenbusServiceDelete"
         Before="XenbusCleanup"
-        Condition="(NOT XEN_SKIP_CA) AND (&amp;XenbusInternalFeature=2) AND XenbusServiceDelete" />
+        Condition="(NOT XEN_SKIP_CA) AND ($XenbusComponentInstalled=2) AND XenbusServiceDelete" />
       <Custom
         Action="XenbusCleanup"
         Before="RemoveFiles"
-        Condition="(NOT XEN_SKIP_CA) AND (&amp;XenbusInternalFeature=2)" />
+        Condition="(NOT XEN_SKIP_CA) AND ($XenbusComponentInstalled=2)" />
     </InstallExecuteSequence>
 
     <UI>

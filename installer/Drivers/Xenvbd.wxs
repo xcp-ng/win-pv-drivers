@@ -2,11 +2,13 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
     <?define XenDriver="Xenvbd" ?>
+    <?define XenComponentInstalledGuid="{022D52D9-DF26-449B-A42C-EA110397A6D0}" ?>
     <?define XenDriverDependsOn="Xenbus" ?>
     <?define XenDriverUpgradeNeedsReboot ?>
     <?include ../Driver.wxi ?>
 
     <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.driver-bins)$(XenDriver)">
+      <ComponentRef Id="$(XenDriver)ComponentInstalled" />
       <File Name="xencrsh.sys" />
       <File Name="xenvbd.cat" DefaultVersion="$(XenvbdVersion)" DefaultLanguage="1033" />
       <File Name="xenvbd.inf" Id="Xenvbd.inf" DefaultVersion="$(XenvbdVersion)" DefaultLanguage="1033" />
@@ -19,8 +21,8 @@
     <CustomAction Id="XenvbdWaitDriverUninstall" BinaryRef="xeninst.dll" DllEntry="DriverWaitInstallFinish" Execute="deferred" Impersonate="no" />
 
     <InstallExecuteSequence>
-      <Custom Action="XenvbdWaitDriverUninstall" Before="XenvbdCleanup" Condition="(NOT XEN_SKIP_CA) AND (&amp;XenvbdInternalFeature=2)" />
-      <Custom Action="XenvbdCleanup" Before="XenbusCleanup" Condition="(NOT XEN_SKIP_CA) AND (&amp;XenvbdInternalFeature=2)" />
+      <Custom Action="XenvbdWaitDriverUninstall" Before="XenvbdCleanup" Condition="(NOT XEN_SKIP_CA) AND ($XenvbdComponentInstalled=2)" />
+      <Custom Action="XenvbdCleanup" Before="XenbusCleanup" Condition="(NOT XEN_SKIP_CA) AND ($XenvbdComponentInstalled=2)" />
     </InstallExecuteSequence>
 
     <SetProperty

@@ -4,98 +4,44 @@
 
   <Fragment>
     <Feature Id="PVBusFeature" AllowAdvertise="no" Display="expand" Title="!(loc.PVBusFeatureTitle)" Description="!(loc.PVBusFeatureDescription)">
-      <FeatureRef Id="XenbusInternalFeature" />
+      <ComponentGroupRef Id="XenbusComponent" />
       <FeatureRef Id="PVConsoleFeature" />
       <FeatureRef Id="PVIfaceFeature" />
       <FeatureRef Id="PVNetworkFeature" />
       <FeatureRef Id="PVDiskFeature" />
       <FeatureRef Id="PVHidFeature" />
-      <Component Location="local">
-        <RegistryValue
-          KeyPath="yes"
-          Root="HKLM"
-          Key="SOFTWARE\$(VENDOR_NAME)"
-          Name="PVBusFeatureInstalled"
-          Type="integer"
-          Value="1" />
-      </Component>
     </Feature>
   </Fragment>
 
   <Fragment>
     <Feature Id="PVConsoleFeature" AllowAdvertise="no" Title="!(loc.PVConsoleFeatureTitle)" Description="!(loc.PVConsoleFeatureDescription)">
-      <FeatureRef Id="XenconsInternalFeature" />
-      <Component Location="local">
-        <RegistryValue
-          KeyPath="yes"
-          Root="HKLM"
-          Key="SOFTWARE\$(VENDOR_NAME)"
-          Name="PVConsoleFeatureInstalled"
-          Type="integer"
-          Value="1" />
-      </Component>
+      <ComponentGroupRef Id="XenconsComponent" />
     </Feature>
   </Fragment>
 
   <Fragment>
     <Feature Id="PVIfaceFeature" AllowAdvertise="no" Display="expand" Title="!(loc.PVIfaceFeatureTitle)" Description="!(loc.PVIfaceFeatureDescription)">
-      <FeatureRef Id="XenifaceInternalFeature" />
-      <Component Location="local">
-        <RegistryValue
-          KeyPath="yes"
-          Root="HKLM"
-          Key="SOFTWARE\$(VENDOR_NAME)"
-          Name="PVIfaceFeatureInstalled"
-          Type="integer"
-          Value="1" />
-      </Component>
+      <ComponentGroupRef Id="XenifaceComponent" />
     </Feature>
   </Fragment>
 
   <Fragment>
     <Feature Id="PVNetworkFeature" AllowAdvertise="no" Title="!(loc.PVNetworkFeatureTitle)" Description="!(loc.PVNetworkFeatureDescription)">
-      <FeatureRef Id="XenvifInternalFeature" />
-      <FeatureRef Id="XennetInternalFeature" />
-      <Component Location="local">
-        <RegistryValue
-          KeyPath="yes"
-          Root="HKLM"
-          Key="SOFTWARE\$(VENDOR_NAME)"
-          Name="PVNetworkFeatureInstalled"
-          Type="integer"
-          Value="1" />
-      </Component>
+      <ComponentGroupRef Id="XenvifComponent" />
+      <ComponentGroupRef Id="XennetComponent" />
     </Feature>
   </Fragment>
 
   <Fragment>
     <Feature Id="PVDiskFeature" AllowAdvertise="no" Title="!(loc.PVDiskFeatureTitle)" Description="!(loc.PVDiskFeatureDescription)">
-      <FeatureRef Id="XenvbdInternalFeature" />
-      <Component Location="local">
-        <RegistryValue
-          KeyPath="yes"
-          Root="HKLM"
-          Key="SOFTWARE\$(VENDOR_NAME)"
-          Name="PVDiskFeatureInstalled"
-          Type="integer"
-          Value="1" />
-      </Component>
+      <ComponentGroupRef Id="XenvbdComponent" />
     </Feature>
   </Fragment>
 
   <Fragment>
     <Feature Id="PVHidFeature" AllowAdvertise="no" Title="!(loc.PVHidFeatureTitle)" Description="!(loc.PVHidFeatureDescription)">
-      <FeatureRef Id="XenvkbdInternalFeature" />
-      <FeatureRef Id="XenhidInternalFeature" />
-      <Component Location="local">
-        <RegistryValue
-          KeyPath="yes"
-          Root="HKLM"
-          Key="SOFTWARE\$(VENDOR_NAME)"
-          Name="PVHidFeatureInstalled"
-          Type="integer"
-          Value="1" />
-      </Component>
+      <ComponentGroupRef Id="XenvkbdComponent" />
+      <ComponentGroupRef Id="XenhidComponent" />
     </Feature>
   </Fragment>
 </Wix>

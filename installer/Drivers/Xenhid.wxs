@@ -2,10 +2,12 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
     <?define XenDriver="Xenhid" ?>
+    <?define XenComponentInstalledGuid="{A86C26C0-33AB-49BF-9391-231F64B30743}" ?>
     <?define XenDriverDependsOn="Xenvkbd" ?>
     <?include ../Driver.wxi ?>
 
     <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.driver-bins)$(XenDriver)">
+      <ComponentRef Id="$(XenDriver)ComponentInstalled" />
       <File Name="xenhid.cat" DefaultVersion="$(XenhidVersion)" DefaultLanguage="1033" />
       <File Name="xenhid.inf" Id="Xenhid.inf" DefaultVersion="$(XenhidVersion)" DefaultLanguage="1033" />
       <File Name="xenhid.sys" />

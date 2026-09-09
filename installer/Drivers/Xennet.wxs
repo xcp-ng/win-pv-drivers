@@ -2,11 +2,13 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
     <?define XenDriver="Xennet" ?>
+    <?define XenComponentInstalledGuid="{1FE7D791-864D-401B-B02E-D64BB81F1718}" ?>
     <?define XenDriverDependsOn="Xenvif" ?>
     <?define XenDriverUpgradeNeedsReboot ?>
     <?include ../Driver.wxi ?>
 
     <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.driver-bins)$(XenDriver)">
+      <ComponentRef Id="$(XenDriver)ComponentInstalled" />
       <File Name="xennet.cat" DefaultVersion="$(XennetVersion)" DefaultLanguage="1033" />
       <File Name="xennet.inf" Id="Xennet.inf" DefaultVersion="$(XennetVersion)" DefaultLanguage="1033" />
       <File Name="xennet.sys" />
@@ -20,9 +22,9 @@
     <CustomAction Id="XenvifPrepareRestore" BinaryRef="xeninst.dll" DllEntry="XenvifPrepareRestore" Execute="deferred" Impersonate="no" />
 
     <InstallExecuteSequence>
-      <Custom Action="XenvifPrepareRestore" Before="XennetUninstall" Condition="(NOT XEN_SKIP_CA) AND (&amp;XennetInternalFeature=2)" />
-      <Custom Action="XenvifBackup" Before="XenvifPrepareRestore" Condition="(NOT XEN_SKIP_CA) AND (&amp;XennetInternalFeature=2)" />
-      <Custom Action="XennetCleanup" Before="XenbusCleanup" Condition="(NOT XEN_SKIP_CA) AND (&amp;XennetInternalFeature=2)" />
+      <Custom Action="XenvifPrepareRestore" Before="XennetUninstall" Condition="(NOT XEN_SKIP_CA) AND ($XennetComponentInstalled=2)" />
+      <Custom Action="XenvifBackup" Before="XenvifPrepareRestore" Condition="(NOT XEN_SKIP_CA) AND ($XennetComponentInstalled=2)" />
+      <Custom Action="XennetCleanup" Before="XenbusCleanup" Condition="(NOT XEN_SKIP_CA) AND ($XennetComponentInstalled=2)" />
     </InstallExecuteSequence>
 
     <SetProperty

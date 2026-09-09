@@ -2,10 +2,12 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
     <?define XenDriver="Xeniface" ?>
+    <?define XenComponentInstalledGuid="{0741B784-1A77-40EB-9B64-9B816E42CEAD}" ?>
     <?define XenDriverDependsOn="Xenbus" ?>
     <?include ../Driver.wxi ?>
 
     <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.driver-bins)$(XenDriver)">
+      <ComponentRef Id="$(XenDriver)ComponentInstalled" />
       <File Name="xenagent.dll" />
       <File Name="xenagent.exe" />
       <File Name="xencontrol.dll" />
