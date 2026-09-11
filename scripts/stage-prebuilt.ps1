@@ -104,6 +104,6 @@ if ($XstdvgaSigned) {
 if ($Components) {
     Expand-Artifact -Archive $Components -Destination $ComponentsDir -Replace
     if ($SignComponents) {
-        Set-SignerFileSignature (Get-ChildItem $ComponentsDir -File -Recurse -Include xeninst.CA.dll, xdutils.dll, XenClean.exe, XenBootFix.exe)
+        Set-SignerFileSignature (Get-ChildItem $ComponentsDir -File -Recurse -Include xeninst.CA.dll, XenClean.exe, XenBootFix.exe)
     }
 }
