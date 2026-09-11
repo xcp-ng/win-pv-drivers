@@ -30,7 +30,7 @@ $CabinetTemplate = @(
 Get-ChildItem -Directory $Path | ForEach-Object {
     $subdir = $_.Name
     $CabinetTemplate += @(".Set DestinationDir=$subdir")
-    $_ | Get-ChildItem -Recurse -File -Exclude $Exclude | ForEach-Object {
+    Get-ChildItem $_.FullName -Recurse -File -Exclude $Exclude | ForEach-Object {
         $CabinetTemplate += @($_.FullName)
     }
 }
