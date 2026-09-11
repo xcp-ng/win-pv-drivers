@@ -4,7 +4,9 @@ param (
     [Parameter()]
     $OutPath = "output",
     [Parameter()]
-    $OutName = "drivers.cab"
+    $OutName = "drivers.cab",
+    [Parameter()]
+    [string[]]$Exclude = @("*.csv", "*.map", "*.pdb", "*.lib", "xencontrol.dll")
 )
 
 $ErrorActionPreference = "Stop"
@@ -28,7 +30,7 @@ $CabinetTemplate = @(
 Get-ChildItem -Directory $Path | ForEach-Object {
     $subdir = $_.Name
     $CabinetTemplate += @(".Set DestinationDir=$subdir")
-    $_ | Get-ChildItem -Recurse -File | ForEach-Object {
+    $_ | Get-ChildItem -Recurse -File -Exclude $Exclude | ForEach-Object {
         $CabinetTemplate += @($_.FullName)
     }
 }
