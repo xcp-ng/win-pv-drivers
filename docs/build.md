@@ -25,9 +25,14 @@ You customize the driver and installer package by creating `branding.ps1` inside
 See below for an example of the `branding.ps1` file.
 
 ```powershell
+# Warning: Many key installer settings (installer paths, stable component names)
+# are keyed on VENDOR_NAME and VENDOR_PREFIX. Changing these values after
+# releasing your installer without further precautions may break upgrades and
+# uninstallation.
 $Env:VENDOR_NAME = 'Xen Project'
-$Env:PRODUCT_NAME = 'Xen'
 $Env:VENDOR_PREFIX = 'XP'
+
+$Env:PRODUCT_NAME = 'Xen'
 $Env:COPYRIGHT = 'Copyright (c) Xen Project.'
 
 # These are WinPV driver-specific settings recommended for use with the XCP-ng
