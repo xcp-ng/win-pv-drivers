@@ -45,6 +45,13 @@ jobs:
         uses: $/.github/actions/branding
         with:
           branding-data: ${{toJson(vars)}}
+      - name: Show branding
+        shell: pwsh
+        run: |
+          Add-Content -Path $Env:GITHUB_STEP_SUMMARY -Value '### branding.ps1'
+          Add-Content -Path $Env:GITHUB_STEP_SUMMARY -Value '```powershell'
+          Get-Content -LiteralPath .\branding.ps1 | Add-Content -Path $Env:GITHUB_STEP_SUMMARY
+          Add-Content -Path $Env:GITHUB_STEP_SUMMARY -Value '```'
       - name: Configure test signer
         run: .\scripts\signer-ci.ps1 -OutFile .\branding.ps1
         env:
