@@ -25,13 +25,15 @@ You customize the driver and installer package by creating `branding.ps1` inside
 See below for an example of the `branding.ps1` file.
 
 ```powershell
-# Warning: Many key installer settings (installer paths, stable component names)
-# are keyed on VENDOR_NAME and VENDOR_PREFIX. Changing these values after
-# releasing your installer without further precautions may break upgrades and
-# uninstallation.
-$Env:VENDOR_NAME = 'Xen Project'
+# Warning: VENDOR_KEY and VENDOR_PREFIX are persistent installer and driver
+# identities. VENDOR_KEY is used for installer paths and component registry
+# entries and must stay stable after publishing to prevent upgrade and
+# uninstallation issues. VENDOR_PREFIX is used in driver hardware IDs and
+# service names; changing it requires a migration path for existing installs.
+$Env:VENDOR_KEY = 'XenProject'
 $Env:VENDOR_PREFIX = 'XP'
 
+$Env:VENDOR_NAME = 'Xen Project'
 $Env:PRODUCT_NAME = 'Xen'
 $Env:COPYRIGHT = 'Copyright (c) Xen Project.'
 
@@ -39,6 +41,10 @@ $Env:COPYRIGHT = 'Copyright (c) Xen Project.'
 # WinPV tools.
 $Env:FORCE_ACTIVATE = '1'
 $Env:FORCE_UNPLUG = '1'
+
+# Do not set these values. They are currently not supported.
+# $Env:VENDOR_DEVICE_ID = '...'
+# $Env:OBJECT_PREFIX = '...'
 
 # These version numbers are used in multiple places.
 # You must have at least 2 version components (major.minor).
@@ -70,11 +76,11 @@ $Env:MSI_UPGRADE_CODE_X64 = '{GUIDHERE-GUID-HERE-GUID-HEREGUIDHERE}'
 
 $Env:SIGNER = "<signer certificate thumbprint or PFX path>"
 
+# URL to be shown in the xenplus_session About box.
 $Env:PRODUCT_URL = "<put your branding URL here>"
 ```
 
-Specify `$Env:SIGNER` in `branding.ps1` to choose a specific signing certificate thumbprint or PFX path if necessary.
-(A test certificate will be used for the drivers otherwise)
+Specify `$Env:SIGNER` in `branding.ps1` to choose a specific signing certificate thumbprint or PFX path.
 
 ## Building drivers
 

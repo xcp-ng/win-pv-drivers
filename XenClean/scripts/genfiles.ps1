@@ -24,6 +24,7 @@ namespace XenClean {
         public const string MsiUpgradeCodeX86 = "${Env:MSI_UPGRADE_CODE_X86}";
         public const string MsiUpgradeCodeX64 = "${Env:MSI_UPGRADE_CODE_X64}";
         public const string VendorName = "${Env:VENDOR_NAME}";
+        public const string VendorKey = "${Env:VENDOR_KEY}";
     }
 }
 "@

@@ -10,9 +10,10 @@ runs:
     - run: .\scripts\branding-ci.ps1 -OutFile .\branding.ps1
       shell: pwsh
       env:
+        VENDOR_KEY: ${{fromJSON(inputs.branding-data).VENDOR_KEY}}
+        VENDOR_PREFIX: ${{fromJSON(inputs.branding-data).VENDOR_PREFIX}}
         VENDOR_NAME: ${{fromJSON(inputs.branding-data).VENDOR_NAME}}
         PRODUCT_NAME: ${{fromJSON(inputs.branding-data).PRODUCT_NAME}}
-        VENDOR_PREFIX: ${{fromJSON(inputs.branding-data).VENDOR_PREFIX}}
         COPYRIGHT: ${{fromJSON(inputs.branding-data).COPYRIGHT}}
         FORCE_ACTIVATE: ${{fromJSON(inputs.branding-data).FORCE_ACTIVATE}}
         FORCE_UNPLUG: ${{fromJSON(inputs.branding-data).FORCE_UNPLUG}}

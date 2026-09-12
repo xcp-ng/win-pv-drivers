@@ -20,10 +20,11 @@ using System.Reflection;
 
 namespace XenDriverUtils {
     public static class VersionInfo {
-        public const string VendorName = "${Env:VENDOR_NAME}";
-        public const string ProductName = "${Env:PRODUCT_NAME}";
+        public const string VendorKey = "${Env:VENDOR_KEY}";
         public const string VendorPrefix = "${Env:VENDOR_PREFIX}";
         public const string VendorDeviceId = "${Env:VENDOR_DEVICE_ID}";
+        public const string VendorName = "${Env:VENDOR_NAME}";
+        public const string ProductName = "${Env:PRODUCT_NAME}";
         public const string Copyright = "${Env:COPYRIGHT}";
     }
 }

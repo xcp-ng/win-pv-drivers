@@ -3,8 +3,8 @@ using Microsoft.Win32;
 namespace XenPlus;
 
 sealed class AppConfig {
-    const uint _assert_VendorName = VersionInfo.VendorName == "" ? -1 : 0;
-    const string ConfigKeyName = $"SOFTWARE\\{VersionInfo.VendorName}\\XenPlus";
+    const uint _assert_VendorKey = VersionInfo.VendorKey == "" ? -1 : 0;
+    const string ConfigKeyName = $"SOFTWARE\\{VersionInfo.VendorKey}\\XenPlus";
 
     bool _showTrayIcon = true;
     public bool ShowTrayIcon {

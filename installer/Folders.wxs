@@ -3,7 +3,7 @@
   <?include Include.wxi?>
   <Fragment>
     <StandardDirectory Id="ProgramFiles6432Folder">
-      <Directory Id="ManufacturerFolder" Name="$(VENDOR_NAME)">
+      <Directory Id="ManufacturerFolder" Name="$(VENDOR_KEY)">
         <Directory Id="INSTALLFOLDER" Name="Windows PV Drivers">
         </Directory>
       </Directory>

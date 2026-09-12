@@ -313,7 +313,7 @@ namespace XenDriverUtils {
                 return;
             }
             var wantedCatalogName = $"{baseName}.cat";
-            foreach (var oemInfPath in GetMatchingOemInfs(new[] { wantedCatalogName }, VersionInfo.VendorName)) {
+            foreach (var oemInfPath in GetMatchingOemInfs(new[] { wantedCatalogName }, VersionInfo.VendorKey)) {
                 var oemInfName = Path.GetFileName(oemInfPath);
                 try {
                     UninstallDriver(oemInfName, dryRun: dryRun);

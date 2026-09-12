@@ -12,10 +12,11 @@ $OldBranding = Get-Content -Raw $BrandingFile -ErrorAction Ignore
 $NewBranding = @"
 <?xml version="1.0" encoding="utf-8"?>
 <Include xmlns="http://wixtoolset.org/schemas/v4/wxs">
-    <?define VENDOR_NAME="${Env:VENDOR_NAME}"?>
-    <?define PRODUCT_NAME="${Env:PRODUCT_NAME}"?>
+    <?define VENDOR_KEY="${Env:VENDOR_KEY}"?>
     <?define VENDOR_PREFIX="${Env:VENDOR_PREFIX}"?>
     <?define VENDOR_DEVICE_ID="${Env:VENDOR_DEVICE_ID}"?>
+    <?define VENDOR_NAME="${Env:VENDOR_NAME}"?>
+    <?define PRODUCT_NAME="${Env:PRODUCT_NAME}"?>
     <?define COPYRIGHT="${Env:COPYRIGHT}"?>
 "@
 

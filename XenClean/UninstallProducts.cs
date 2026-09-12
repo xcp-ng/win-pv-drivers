@@ -38,14 +38,9 @@ namespace XenClean {
             // Citrix Hypervisor/XS8
             new("{AF9B2559-3E91-4206-98C2-F560009FF7F1}", new(new List<string>() { "XenServer", "XCP-ng" }, false)),
 
-            // generic x86 (does not work due to check in Invoke-XenClean)
-            new("{10828840-D8A9-4953-B44A-1F1D3CD7ECB0}", new(new List<string>() { "Unknown" }, true)),
-            // generic x64
-            new("{D60FED1E-316C-41B0-B7A5-E44951A82618}", new(new List<string>() { "Unknown" }, true)),
-
             // ours
-            new(VersionInfo.MsiUpgradeCodeX86, new(new List<string>() { VersionInfo.VendorName }, true)),
-            new(VersionInfo.MsiUpgradeCodeX64, new(new List<string>() { VersionInfo.VendorName }, true)),
+            new(VersionInfo.MsiUpgradeCodeX86, new(new List<string>() { VersionInfo.VendorKey }, true)),
+            new(VersionInfo.MsiUpgradeCodeX64, new(new List<string>() { VersionInfo.VendorKey }, true)),
         };
 
         public static List<string> FindProducts(out bool foundHasXenvifOffboard) {

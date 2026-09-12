@@ -78,9 +78,11 @@ function Out-SafeString {
 
 # Branding file is emitted as step summary. Don't put any secrets here!
 $content = @"
+`$Env:VENDOR_KEY = '$(Out-SafeString -PatternType PathSafe -InputObject $Env:VENDOR_KEY)'
+`$Env:VENDOR_PREFIX = '$(Out-SafeString -PatternType VendorPrefix -InputObject $Env:VENDOR_PREFIX)'
+
 `$Env:VENDOR_NAME = '$(Out-SafeString -PatternType PathSafe -InputObject $Env:VENDOR_NAME)'
 `$Env:PRODUCT_NAME = '$(Out-SafeString -PatternType PathSafe -InputObject $Env:PRODUCT_NAME)'
-`$Env:VENDOR_PREFIX = '$(Out-SafeString -PatternType VendorPrefix -InputObject $Env:VENDOR_PREFIX)'
 `$Env:COPYRIGHT = '$(Out-SafeString -PatternType Freeform -InputObject $Env:COPYRIGHT)'
 
 `$Env:FORCE_ACTIVATE = '$(Out-SafeString -PatternType NumericBoolean -InputObject $Env:FORCE_ACTIVATE)'

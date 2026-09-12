@@ -22,7 +22,7 @@ jobs:
         with:
           dotnet-version: "10.0.x"
       - name: Add branding
-        run: New-Item -Type File -Path branding.ps1 -Value '$Env:VENDOR_PREFIX = "XN"'
+        run: New-Item -Type File -Path branding.ps1 -Value '$Env:VENDOR_KEY = "XCP-ng"; $Env:VENDOR_PREFIX = "XN"; $PackageVersions = @{ Product = "9.1.0.0" }; $Env:MSI_UPGRADE_CODE_X86 = "{10828840-D8A9-4953-B44A-1F1D3CD7ECB0}"; $Env:MSI_UPGRADE_CODE_X64 = "{D60FED1E-316C-41B0-B7A5-E44951A82618}"'
       - name: InstallerTests
         run: |
           foreach ($Configuration in @("Debug", "Release")) {

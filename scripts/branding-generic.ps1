@@ -22,12 +22,24 @@ function Get-PackageVersion {
     }
 }
 
-if (!$Env:VENDOR_NAME) {
-    $Env:VENDOR_NAME = 'Xen Project'
+if (!$Env:VENDOR_KEY) {
+    throw 'VENDOR_KEY must be set in branding.ps1.'
+}
+if (!$Env:VENDOR_PREFIX) {
+    throw 'VENDOR_PREFIX must be set in branding.ps1.'
+}
+if (!$PackageVersions -or !$PackageVersions['Product']) {
+    throw 'PackageVersions.Product must be set in branding.ps1.'
+}
+if (!$Env:MSI_UPGRADE_CODE_X86) {
+    throw 'MSI_UPGRADE_CODE_X86 must be set in branding.ps1.'
+}
+if (!$Env:MSI_UPGRADE_CODE_X64) {
+    throw 'MSI_UPGRADE_CODE_X64 must be set in branding.ps1.'
 }
 
-if (!$Env:VENDOR_PREFIX) {
-    $Env:VENDOR_PREFIX = 'XP'
+if (!$Env:VENDOR_NAME) {
+    $Env:VENDOR_NAME = $Env:VENDOR_KEY
 }
 
 if (!$Env:PRODUCT_NAME) {
@@ -40,15 +52,7 @@ if (!$Env:OBJECT_PREFIX) {
 }
 
 if (!$Env:COPYRIGHT) {
-    $Env:COPYRIGHT = 'Copyright (c) Xen Project.'
-}
-
-if ($null -eq $PackageVersions) {
-    $PackageVersions = @{
-    }
-}
-if (!$PackageVersions['Product']) {
-    $PackageVersions['Product'] = '9.1.0.0'
+    $Env:COPYRIGHT = "Copyright (c) $($Env:VENDOR_NAME), Xen Project, and others"
 }
 if (!$PackageVersions['xenbus']) {
     $PackageVersions['xenbus'] = $PackageVersions['Product']
@@ -82,12 +86,4 @@ if (!$PackageVersions['XenBootFix']) {
 }
 if (!$PackageVersions['xenplus']) {
     $PackageVersions['xenplus'] = $PackageVersions['Product']
-}
-
-if (!$Env:MSI_UPGRADE_CODE_X86) {
-    $Env:MSI_UPGRADE_CODE_X86 = '{10828840-D8A9-4953-B44A-1F1D3CD7ECB0}'
-}
-
-if (!$Env:MSI_UPGRADE_CODE_X64) {
-    $Env:MSI_UPGRADE_CODE_X64 = '{D60FED1E-316C-41B0-B7A5-E44951A82618}'
 }

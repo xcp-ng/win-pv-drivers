@@ -10,7 +10,7 @@
         <RegistryValue
           KeyPath="yes"
           Root="HKLM"
-          Key="SOFTWARE\$(VENDOR_NAME)"
+          Key="SOFTWARE\$(VENDOR_KEY)"
           Name="ToolsFeatureInstalled"
           Type="integer"
           Value="1" />

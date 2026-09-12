@@ -10,7 +10,7 @@
     Location="local">
     <RegistryValue
       Root="HKLM"
-      Key="SOFTWARE\$(VENDOR_NAME)\Components"
+      Key="SOFTWARE\$(VENDOR_KEY)\Components"
       Name="$(XenDriver)"
       Type="integer"
       Value="1"
