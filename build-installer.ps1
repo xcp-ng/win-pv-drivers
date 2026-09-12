@@ -200,7 +200,8 @@ if ($Target -ine "Clean") {
                 "-D", "true",
                 "-ps", $Env:VENDOR_NAME,
                 "-pn", $component.ComponentName,
-                "-pv", $component.Version
+                "-pv", $component.Version,
+                "-V", "error"
             )
 
             try {
