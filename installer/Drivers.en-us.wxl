@@ -14,4 +14,11 @@
   <String Id="PVDiskFeatureDescription" Value="Xen paravirtualized storage driver. Xenvbd $(XenvbdVersion)." />
   <String Id="PVHidFeatureTitle" Value="PV HID Driver" />
   <String Id="PVHidFeatureDescription" Value="Xen paravirtualized HID keyboard/mouse drivers. Xenvkbd $(XenvkbdVersion) and Xenhid $(XenhidVersion)." />
+
+  <String Id="DriverInstallText" Value="Installing driver" />
+  <String Id="DriverInstallTemplate" Value="[1]" />
+  <String Id="DriverUninstallText" Value="Removing driver" />
+  <String Id="DriverUninstallTemplate" Value="[1]" />
+
+  <String Id="XenbusCleanupText" Value="Cleaning up" />
 </WixLocalization>

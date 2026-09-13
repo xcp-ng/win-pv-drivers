@@ -132,8 +132,8 @@
 
   <!-- setting the template doesn't work in either ProgressText or ActionStart[3] and I don't know why -->
   <UI>
-    <ProgressText Action="$(XenDriver)Install" Message="!(loc.DriverInstallText)" />
-    <ProgressText Action="$(XenDriver)Uninstall" Message="!(loc.DriverUninstallText)" />
+    <ProgressText Action="$(XenDriver)Install" Message="!(loc.DriverInstallText)" Template="!(loc.DriverInstallTemplate)" />
+    <ProgressText Action="$(XenDriver)Uninstall" Message="!(loc.DriverUninstallText)" Template="!(loc.DriverUninstallTemplate)" />
   </UI>
 
   <?endif ?>

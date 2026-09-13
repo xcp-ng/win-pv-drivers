@@ -5,12 +5,17 @@
   <String Id="IncompatibleDevicesError" Value="Found incompatible devices: [IncompatibleDevices].
 Disable the &quot;Manage Citrix PV drivers via Windows Update&quot; feature and uninstall all existing drivers before continuing.
 You may need to run the XenClean tool." />
+  <String Id="XenCheckIncompatibleDevicesText" Value="Checking for incompatible devices" />
 
   <String Id="XenWindowsNotSupportedError" Value="This version of Windows is not supported. Minimum supported version: [XenMinSupportedVersion]. Current version: [XenWindowsNotSupported]." />
+  <String Id="XenCheckWindowsVersionText" Value="Checking Windows version" />
 
   <String Id="NotReadyForCopyXenvifError" Value="Network reconfiguration is still pending. Did you reboot after uninstalling Xen drivers?
 If problem remains, you may need to delete the Copy-XenVifSettings task from Task Scheduler." />
+  <String Id="XenCheckReadyForCopyXenvifText" Value="Waiting for network settings migration" />
 
-  <String Id="XenWaitDriverInstallText" Value="Finalizing" />
+  <String Id="XenCheck3PStorageDriversText" Value="Checking for third-party storage drivers" />
+
+  <String Id="XenWaitDriverInstallText" Value="Finishing driver installation" />
 
 </WixLocalization>

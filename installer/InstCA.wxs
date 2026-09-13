@@ -16,6 +16,9 @@
       <Custom Action="XenCheckIncompatibleDevices" Before="LaunchConditions" Condition="(NOT XEN_SKIP_CA) AND (NOT REMOVE OR UPGRADINGPRODUCTCODE)" />
     </InstallExecuteSequence>
     <Launch Condition="NOT IncompatibleDevices" Message="!(loc.IncompatibleDevicesError)" />
+    <UI>
+      <ProgressText Action="XenCheckIncompatibleDevices" Message="!(loc.XenCheckIncompatibleDevicesText)" />
+    </UI>
   </Fragment>
 
   <Fragment>
@@ -27,6 +30,9 @@
       <Custom Action="XenCheckWindowsVersion" Before="LaunchConditions" Condition="NOT XEN_SKIP_CA" />
     </InstallExecuteSequence>
     <Launch Condition="NOT XenWindowsNotSupported" Message="!(loc.XenWindowsNotSupportedError)" />
+    <UI>
+      <ProgressText Action="XenCheckWindowsVersion" Message="!(loc.XenCheckWindowsVersionText)" />
+    </UI>
   </Fragment>
 
   <Fragment>
@@ -38,6 +44,9 @@
       <Custom Action="XenCheckReadyForCopyXenvif" Before="LaunchConditions" Condition="NOT XEN_SKIP_CA" />
     </InstallExecuteSequence>
     <Launch Condition="NOT NotReadyForCopyXenvif" Message="!(loc.NotReadyForCopyXenvifError)" />
+    <UI>
+      <ProgressText Action="XenCheckReadyForCopyXenvif" Message="!(loc.XenCheckReadyForCopyXenvifText)" />
+    </UI>
   </Fragment>
 
   <Fragment>
@@ -46,6 +55,9 @@
     <InstallUISequence>
       <Custom Action="XenCheck3PStorageDrivers" Before="LaunchConditions" Condition="(NOT XEN_SKIP_CA) AND NOT (REINSTALL OR REMOVE)" />
     </InstallUISequence>
+    <UI>
+      <ProgressText Action="XenCheck3PStorageDrivers" Message="!(loc.XenCheck3PStorageDriversText)" />
+    </UI>
   </Fragment>
 
   <Fragment>

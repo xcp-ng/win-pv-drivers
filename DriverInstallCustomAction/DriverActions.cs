@@ -34,10 +34,7 @@ namespace XenInstCA {
                 return ActionResult.Success;
             }
 
-            if (CustomActionUtils.ReportAction(
-                session,
-                $"{driver.DriverName}Install",
-                driver.DriverName) == MessageResult.Cancel) {
+            if (CustomActionUtils.ReportActionData1(session, driver.DriverName) == MessageResult.Cancel) {
                 return ActionResult.UserExit;
             }
             Logger.Log($"Installing {driver.DriverName} inf {driver.InfPath}");
@@ -66,10 +63,7 @@ namespace XenInstCA {
                 return ActionResult.Success;
             }
 
-            if (CustomActionUtils.ReportAction(
-                session,
-                $"{driver.DriverName}Uninstall",
-                driver.DriverName) == MessageResult.Cancel) {
+            if (CustomActionUtils.ReportActionData1(session, driver.DriverName) == MessageResult.Cancel) {
                 return ActionResult.UserExit;
             }
 
@@ -146,7 +140,6 @@ namespace XenInstCA {
         [CustomAction]
         public static ActionResult DriverWaitInstallFinish(Session session) {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
-            CustomActionUtils.ReportAction(session, $"XenWaitDriverInstall", "");
             // wait for up to 1 minute until all pending installations are done
             for (int i = 0; i < 5; i++) {
                 // wait twice just to be sure that Windows doesn't decide to install something a second time
