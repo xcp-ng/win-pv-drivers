@@ -9,6 +9,8 @@ param (
     [ValidateSet("x86", "x64")]
     [string]$Platform,
     [Parameter()]
+    [switch]$StageLocal,
+    [Parameter()]
     [string]$OutDir = "$PSScriptRoot\output",
     [Parameter()]
     [switch]$ExportCertificate,
@@ -39,6 +41,17 @@ $DriversDir = "$StagingDir\drivers"
 $ComponentsDir = "$StagingDir\components"
 $XenplusDir = "$StagingDir\xenplus"
 $XstdvgaDir = "$StagingDir\xstdvga"
+
+if ($StageLocal) {
+    & "$PSScriptRoot\scripts\prestage.ps1" -Configuration $Configuration -Platform $Platform
+    & "$PSScriptRoot\scripts\stage-prebuilt.ps1" `
+        -Configuration $Configuration `
+        -Platform $Platform `
+        -Drivers .\input\drivers-local.zip -SignDrivers `
+        -Components .\input\components-local.zip -SignComponents `
+        -Xenplus .\input\xenplus-local.zip -SignXenplus `
+        -Xstdvga .\input\xstdvga-local.zip -SignXstdvga
+}
 
 if (!$NoBuild) {
     msbuild.exe `

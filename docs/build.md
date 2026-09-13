@@ -125,27 +125,12 @@ Run the command:
 
 The collected binaries are located at `components\<platform>\<configuration>`.
 
-## Staging built files
-
-To package and stage locally-built outputs:
-
-```powershell
-.\prestage.ps1 -Configuration Release -Platform x64
-.\scripts\stage-prebuilt.ps1 `
-    -Configuration Release `
-    -Platform x64 `
-    -Drivers .\input\drivers-local.zip -SignDrivers `
-    -Components .\input\components-local.zip -SignComponents `
-    -Xenplus .\input\xenplus-local.zip -SignXenplus `
-    -Xstdvga .\input\xstdvga-local.zip -SignXstdvga
-```
-
 ## Building the installer and release package
 
 Run the command:
 
 ```powershell
-.\build-installer.ps1 -Configuration Release -Platform x64
+.\build-installer.ps1 -Configuration Release -Platform x64 -StageLocal
 ```
 
 By default, output files will be dropped in the `output\<version>-<configuration>-<platform>` directory.

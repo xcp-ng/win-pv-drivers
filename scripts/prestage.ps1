@@ -7,15 +7,15 @@ param (
     [ValidateSet("x86", "x64")]
     [string]$Platform,
     [Parameter()]
-    [string]$InputDir = "$PSScriptRoot\input",
+    [string]$InputDir = "$PSScriptRoot\..\input",
     [Parameter()]
-    [string]$Drivers = "$PSScriptRoot\driver-bins\$Platform\$Configuration",
+    [string]$Drivers = "$PSScriptRoot\..\driver-bins\$Platform\$Configuration",
     [Parameter()]
-    [string]$Components = "$PSScriptRoot\components\$Platform\$Configuration",
+    [string]$Components = "$PSScriptRoot\..\components\$Platform\$Configuration",
     [Parameter()]
-    [string]$Xenplus = "$PSScriptRoot\xenplus\bin\publish\$Platform\$Configuration",
+    [string]$Xenplus = "$PSScriptRoot\..\xenplus\bin\publish\$Platform\$Configuration",
     [Parameter()]
-    [string]$Xstdvga = "$PSScriptRoot\xstdvga\vs2022\$Platform\$Configuration\xstdvga"
+    [string]$Xstdvga = "$PSScriptRoot\..\xstdvga\vs2022\$Platform\$Configuration\xstdvga"
 )
 
 $ErrorActionPreference = "Stop"
