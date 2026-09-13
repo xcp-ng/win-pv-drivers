@@ -47,9 +47,9 @@
 
     <Upgrade Id="$(var.UpgradeCode)">
       <UpgradeVersion Maximum="$(ProductVersion)" IncludeMinimum="no" IncludeMaximum="no" MigrateFeatures="yes" Property="UPGRADE_DETECTED" />
-      <!-- TODO: enable check if f0e7679cbeca or similar incompatible changes are introduced in the future -->
+      <!-- TODO: eventually block older versions from upgrading, then we can safely move/version the driver paths -->
       <!-- XCP-ng -->
-      <!--<UpgradeVersion Maximum="9.1.xxx" IncludeMaximum="yes" OnlyDetect="yes" Property="UNSUPPORTED_UPGRADE_DETECTED" />-->
+      <!--<UpgradeVersion Maximum="9.2.384" IncludeMaximum="no" OnlyDetect="yes" Property="UNSUPPORTED_UPGRADE_DETECTED" />-->
       <UpgradeVersion Minimum="$(ProductVersion)" IncludeMinimum="no" IncludeMaximum="no" OnlyDetect="yes" Property="DOWNGRADE_DETECTED" />
       <UpgradeVersion
         Minimum="9.2.350"
