@@ -22,7 +22,7 @@
     <?endif ?>
 
     <PropertyRef Id="WIX_IS_NETFRAMEWORK_462_OR_LATER_INSTALLED" />
-    <Launch Condition="WIX_IS_NETFRAMEWORK_462_OR_LATER_INSTALLED" Message="!(loc.NetFx462RequiredError)" />
+    <Launch Condition="WIX_IS_NETFRAMEWORK_462_OR_LATER_INSTALLED OR XEN_SKIP_CA" Message="!(loc.NetFx462RequiredError)" />
 
     <?if $(Platform) = x86 ?>
     <!-- XCP-ng v8 x86 -->
