@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [Parameter()][string]$Wix = "$Env:USERPROFILE\.nuget\packages\wixtoolset.sdk\7.0.0-xcpng.4\tools\net472\x64\wix.exe"
+    [Parameter()][string]$Wix = "$Env:USERPROFILE\.nuget\packages\wixtoolset.sdk\7.0.1-xcpng.1\tools\net472\x64\wix.exe"
 )
 
 $ErrorActionPreference = 'Stop'

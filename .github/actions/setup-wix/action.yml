@@ -16,5 +16,5 @@ runs:
         Remove-Item -Path .\deps\wix\ -Recurse -Force -ErrorAction SilentlyContinue
         Expand-Archive -Path $Archive -DestinationPath .\deps\wix\ -Force
       env:
-        WIX_ZIP_URI: https://github.com/xcp-ng/wix-builder/releases/download/v7.0.0-xcpng.4/wix.zip
-        WIX_ZIP_SHA256: 08ded9b5c6da4dd8ae269a70f06b31af136e13cca3003825d7fb052b72157ef0
+        WIX_ZIP_URI: https://github.com/xcp-ng/wix-builder/releases/download/v7.0.1-xcpng.1/wix.zip
+        WIX_ZIP_SHA256: c2f853c169f1a9394cf3e6106398b6103ac1bebcbcdd40d13001433965b2d36a
