@@ -73,7 +73,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
                     span = span[..MaxClipboardSize];
                 }
 
-                using var cb = ClipboardSafeHandle.CreateString(span);
+                using var cb = ClipboardSafeHandle.CreateString(openClipboard, span);
                 cb.SetClipboard();
                 _lastSeq = PInvoke.GetClipboardSequenceNumber();
             } catch (Exception ex) {
@@ -99,7 +99,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
 
             string s;
             using (var openClipboard = new OpenClipboardSafeHandle(hwnd)) {
-                using var cb = ClipboardSafeHandle.GetClipboard(CLIPBOARD_FORMAT.CF_UNICODETEXT);
+                using var cb = ClipboardSafeHandle.GetClipboard(openClipboard, CLIPBOARD_FORMAT.CF_UNICODETEXT);
                 s = cb.GetString().ReplaceLineEndings("\n");
                 Debug.WriteLine("got clipboard of length {0}", s.Length);
             }
