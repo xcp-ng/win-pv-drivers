@@ -2,6 +2,10 @@ using System.Runtime.InteropServices;
 
 namespace XenPlus;
 
+/// <remarks>
+/// <para>Needless to say, any use of the <see cref="Handle"/> must cease before <see cref="Dispose"/> is called.</para>
+/// <para>As a result, this class is not meant to be thread-safe.</para>
+/// </remarks>
 public sealed class SafeHandleReferenceScope : IDisposable {
     readonly SafeHandle _h;
     bool _ref = false;
