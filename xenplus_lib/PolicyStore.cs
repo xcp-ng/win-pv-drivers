@@ -63,6 +63,6 @@ public sealed class PolicyStore<
         return policies
             .OfType<T>()
             .Select(selector)
-            .FirstOrDefault();
+            .FirstOrDefault(value => value is not null);
     }
 }
