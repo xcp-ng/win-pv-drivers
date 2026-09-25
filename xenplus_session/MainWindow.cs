@@ -16,6 +16,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
     const int NotifyIconId = 1;
 
     readonly Lazy<AppConfig> _config = new();
+    readonly SessionPolicyService _policy = new();
 
     readonly ClipboardPipe _pipe = new();
     readonly CancellationTokenSource _cts = new();
@@ -162,7 +163,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
         _listened = true;
         _receiver = ReceiveClipboardAsync(hwnd);
 
-        if (_config.Value.ShowTrayIcon) {
+        if (!_policy.HideTrayIcon && _config.Value.ShowTrayIcon) {
             try {
                 CreateTrayIcon(hwnd);
             } catch (Exception ex) {
