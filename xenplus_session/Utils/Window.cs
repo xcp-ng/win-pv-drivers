@@ -45,27 +45,37 @@ abstract class Window : IDisposable {
         }
     }
 
-    public Window(string className, string windowName) {
+    public Window(
+        string? className = null,
+        string? windowName = null,
+        WINDOW_STYLE style = WINDOW_STYLE.WS_OVERLAPPED,
+        WINDOW_EX_STYLE exStyle = 0,
+        RECT position = default,
+        HWND parent = default,
+        SafeHandle? menu = null,
+        SafeHandle? instance = null) {
         _gch = GCHandle.Alloc(this);
 
         try {
             unsafe {
-                _ = RegisterClass(className);
+                if (className != null) {
+                    _ = RegisterClass(className);
+                }
 
                 var createParam = (void*)GCHandle.ToIntPtr(_gch);
                 Debug.WriteLine("CreateWindowEx createParam={0:x}", (nint)createParam);
                 var hwnd = PInvoke.CreateWindowEx(
-                    0,
+                    exStyle,
                     className,
                     windowName,
-                    WINDOW_STYLE.WS_OVERLAPPED,
-                    0,
-                    0,
-                    0,
-                    0,
-                    HWND.Null,
-                    null,
-                    PInvoke.GetModuleHandle(null),
+                    style,
+                    position.X,
+                    position.Y,
+                    position.Width,
+                    position.Height,
+                    parent,
+                    menu,
+                    instance ?? PInvoke.GetModuleHandle(null),
                     createParam);
                 if (hwnd == HWND.Null) {
                     throw new Win32Exception(nameof(PInvoke.CreateWindowEx));
