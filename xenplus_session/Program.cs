@@ -16,7 +16,6 @@ sealed class Program {
             var mainWindow = new MainWindow();
             syncContext.Posted += (o, e) => mainWindow.OnPosted();
             mainWindow.Dispatched += (o, e) => syncContext.Dispatch();
-            return mainWindow;
         });
     }
 }

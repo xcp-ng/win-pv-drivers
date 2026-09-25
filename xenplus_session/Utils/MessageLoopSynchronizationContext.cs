@@ -89,50 +89,44 @@ class MessageLoopSynchronizationContext : SynchronizationContext, IDisposable {
     /// <see cref="MainWindow"/> or whatever similar thing must outlive the <see cref="initializer"/>, so do not dispose
     /// it inside the initializer.
     /// </remarks>
-    public static int Run(Func<MessageLoopSynchronizationContext, IDisposable> initializer) {
+    public static int Run(Action<MessageLoopSynchronizationContext> initializer) {
         using var context = new MessageLoopSynchronizationContext();
         var waiting = new HANDLE[1];
 
         var previous = Current;
         SetSynchronizationContext(context);
         try {
-            IDisposable? lifetime = null;
-            try {
-                lifetime = initializer(context);
+            initializer(context);
 
-                while (true) {
-                    WAIT_EVENT result;
-                    using (var shref = context._pending.SafeWaitHandle.Borrow()) {
-                        waiting[0] = (HANDLE)shref.Handle;
-                        result = PInvoke.MsgWaitForMultipleObjects(
-                           waiting,
-                           false,
-                           PInvoke.INFINITE,
-                           QUEUE_STATUS_FLAGS.QS_ALLINPUT);
-                    }
-
-                    switch (result) {
-                        case WAIT_EVENT.WAIT_OBJECT_0:
-                        case WAIT_EVENT.WAIT_OBJECT_0 + 1:
-                            if (context.DoWorkOne() is int exitCode) {
-                                return exitCode;
-                            }
-                            break;
-                        case WAIT_EVENT.WAIT_TIMEOUT:
-                            throw new TimeoutException();
-                        case WAIT_EVENT.WAIT_FAILED:
-                            throw new Win32Exception(nameof(PInvoke.MsgWaitForMultipleObjects));
-                        default:
-                            throw new Exception($"Unexpected wait result {result}");
-                    }
+            while (true) {
+                WAIT_EVENT result;
+                using (var shref = context._pending.SafeWaitHandle.Borrow()) {
+                    waiting[0] = (HANDLE)shref.Handle;
+                    result = PInvoke.MsgWaitForMultipleObjects(
+                       waiting,
+                       false,
+                       PInvoke.INFINITE,
+                       QUEUE_STATUS_FLAGS.QS_ALLINPUT);
                 }
-            } finally {
-                // since the initializer may have done work, we still need to cancel them even if it failed
-                context._exited.Cancel();
-                // it also implies that lifetime.Dispose() cannot post work
-                lifetime?.Dispose();
+
+                switch (result) {
+                    case WAIT_EVENT.WAIT_OBJECT_0:
+                    case WAIT_EVENT.WAIT_OBJECT_0 + 1:
+                        if (context.DoWorkOne() is int exitCode) {
+                            return exitCode;
+                        }
+                        break;
+                    case WAIT_EVENT.WAIT_TIMEOUT:
+                        throw new TimeoutException();
+                    case WAIT_EVENT.WAIT_FAILED:
+                        throw new Win32Exception(nameof(PInvoke.MsgWaitForMultipleObjects));
+                    default:
+                        throw new Exception($"Unexpected wait result {result}");
+                }
             }
         } finally {
+            // since the initializer may have done work, we still need to cancel them even if it failed
+            context._exited.Cancel();
             SetSynchronizationContext(previous);
         }
     }
