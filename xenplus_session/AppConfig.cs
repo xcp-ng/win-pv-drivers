@@ -1,8 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Win32;
 
 namespace XenPlus;
 
 sealed class AppConfig {
+    [SuppressMessage("CodeQuality", "IDE0051", Justification = "static assertion")]
     const uint _assert_VendorKey = VersionInfo.VendorKey == "" ? -1 : 0;
     const string ConfigKeyName = $"SOFTWARE\\{VersionInfo.VendorKey}\\XenPlus";
 

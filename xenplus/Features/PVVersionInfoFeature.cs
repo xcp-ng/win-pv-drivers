@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Options;
 using XenPlus.XenIface;
 
@@ -12,6 +13,7 @@ sealed class PVVersionInfoFeature(
     IOptionsMonitor<PVVersionInfoOptions> _options,
     XenIfaceSource _xi,
     ILogger<PVVersionInfoFeature> _logger) : FeatureBase(_hostLifetime, _logger) {
+    [SuppressMessage("CodeQuality", "IDE0051", Justification = "static assertion")]
     const uint _assert_ProductVersion = VersionInfo.ProductVersion == "" ? -1 : 0;
     readonly Version _productVer = Version.Parse(VersionInfo.ProductVersion);
 
