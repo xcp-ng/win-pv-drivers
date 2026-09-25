@@ -253,9 +253,9 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
         }
         _showingAbout = true;
         try {
-            using var td = new TaskDialog();
             using var hinst = PInvoke.GetModuleHandle(null);
             using var hinstScope = hinst.Borrow();
+            using var td = new TaskDialog();
 
             td.Instance = (HINSTANCE)hinstScope.Handle;
             td.EnableHyperlinks = true;
