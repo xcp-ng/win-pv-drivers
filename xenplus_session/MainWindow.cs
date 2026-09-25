@@ -348,6 +348,8 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
             case PInvoke.WM_COMMAND:
                 return OnCommand(hwnd, msg, wparam, lparam);
             case PInvoke.WM_WINDOWPOSCHANGING:
+                // For some weird reason, revealing the desktop when our tray context menu is open will also forcefully
+                // show our main window. We don't want that, so hook the show event to stop that.
                 unsafe {
                     if (lparam != 0) {
                         ((WINDOWPOS*)lparam.Value)->flags &= ~SET_WINDOW_POS_FLAGS.SWP_SHOWWINDOW;
