@@ -29,7 +29,11 @@ public interface IPolicyInstance<T> {
 public sealed class PolicyStore<
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] T>
     where T : IPolicyInstance<T> {
-    readonly Lazy<List<T?>> _policies;
+    readonly string _vendorKey;
+    readonly string _category;
+    readonly List<RegistryKey> _roots;
+    readonly Lock _lock = new();
+    List<T?>? _policies = null;
 
     public PolicyStore(
         string vendorKey,
@@ -37,10 +41,16 @@ public sealed class PolicyStore<
         params RegistryKey[] roots) {
         ArgumentException.ThrowIfNullOrEmpty(vendorKey);
         ArgumentException.ThrowIfNullOrEmpty(category);
-        _policies = new(() => roots.Select(root => {
+        _vendorKey = vendorKey;
+        _category = category;
+        _roots = new(roots);
+    }
+
+    void DoRefresh() {
+        _policies = _roots.Select(root => {
             RegistryKey? key = null;
             try {
-                key = root.OpenSubKey($"SOFTWARE\\Policies\\{vendorKey}\\{category}");
+                key = root.OpenSubKey($"SOFTWARE\\Policies\\{_vendorKey}\\{_category}");
             } catch {
             }
             if (key == null) {
@@ -50,10 +60,25 @@ public sealed class PolicyStore<
             using (key) {
                 return T.LoadPolicy(key);
             }
-        }).ToList());
+        }).ToList();
     }
 
-    public List<T?> Policies => _policies.Value;
+    public IReadOnlyList<T?>? Policies {
+        get {
+            lock (_lock) {
+                if (_policies == null) {
+                    DoRefresh();
+                }
+                return _policies;
+            }
+        }
+    }
+
+    public void Refresh() {
+        lock (_lock) {
+            DoRefresh();
+        }
+    }
 
     public U? Get<U>(Func<T, U?> selector) {
         var policies = Policies;

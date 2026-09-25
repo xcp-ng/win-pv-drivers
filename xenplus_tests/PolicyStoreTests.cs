@@ -13,7 +13,7 @@ public class PolicyStoreTests {
 
         var store = new PolicyStore<TestPolicy>("TestVendor", "TestCategory", missing, present);
 
-        Assert.Equal(2, store.Policies.Count);
+        Assert.Equal(2, store.Policies!.Count);
         Assert.Null(store.Policies[0]);
         Assert.NotNull(store.Policies[1]);
         Assert.Null(store.Policies[1]!.Enabled);
@@ -33,7 +33,7 @@ public class PolicyStoreTests {
 
         var store = new PolicyStore<TestPolicy>("TestVendor", "TestCategory", closed, present);
 
-        Assert.Null(store.Policies[0]);
+        Assert.Null(store.Policies![0]);
         Assert.True(store.Get(policy => policy.Enabled));
         Assert.Null(IPolicyInstance<TestPolicy>.ReadBool(closed, "Enabled"));
         policyKey.SetValue("Invalid", "true", RegistryValueKind.String);
@@ -57,6 +57,57 @@ public class PolicyStoreTests {
 
         Assert.False(store.Get(policy => policy.Enabled));
         Assert.Equal("fallback", store.Get(policy => policy.Name));
+    }
+
+    [Fact]
+    public void RefreshReloadsAddedChangedAndRemovedPolicy() {
+        using var registry = new TestRegistry();
+        var root = registry.CreateRoot("Root");
+        var store = new PolicyStore<TestPolicy>("TestVendor", "TestCategory", root);
+
+        Assert.Null(store.Policies![0]);
+
+        using (var key = root.CreateSubKey(TestRegistry.PolicyPath)) {
+            key.SetValue("Enabled", 1, RegistryValueKind.DWord);
+            Assert.Null(store.Get(policy => policy.Enabled));
+
+            store.Refresh();
+            Assert.True(store.Get(policy => policy.Enabled));
+
+            key.SetValue("Enabled", 0, RegistryValueKind.DWord);
+            Assert.True(store.Get(policy => policy.Enabled));
+
+            store.Refresh();
+            Assert.False(store.Get(policy => policy.Enabled));
+        }
+
+        root.DeleteSubKeyTree(TestRegistry.PolicyPath);
+        Assert.False(store.Get(policy => policy.Enabled));
+
+        store.Refresh();
+        Assert.Null(store.Policies![0]);
+        Assert.Null(store.Get(policy => policy.Enabled));
+    }
+
+    [Fact]
+    public void RefreshReevaluatesPrecedence() {
+        using var registry = new TestRegistry();
+        var first = registry.CreateRoot("First");
+        var second = registry.CreateRoot("Second");
+        using var secondKey = second.CreateSubKey(TestRegistry.PolicyPath);
+        secondKey.SetValue("Enabled", 1, RegistryValueKind.DWord);
+        var store = new PolicyStore<TestPolicy>("TestVendor", "TestCategory", first, second);
+
+        Assert.True(store.Get(policy => policy.Enabled));
+
+        using var firstKey = first.CreateSubKey(TestRegistry.PolicyPath);
+        firstKey.SetValue("Enabled", 0, RegistryValueKind.DWord);
+        store.Refresh();
+        Assert.False(store.Get(policy => policy.Enabled));
+
+        firstKey.DeleteValue("Enabled");
+        store.Refresh();
+        Assert.True(store.Get(policy => policy.Enabled));
     }
 
     private sealed record TestPolicy(bool? Enabled, string? Name) : IPolicyInstance<TestPolicy> {
