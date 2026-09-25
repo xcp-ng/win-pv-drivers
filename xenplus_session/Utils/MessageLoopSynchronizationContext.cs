@@ -124,6 +124,9 @@ class MessageLoopSynchronizationContext : SynchronizationContext, IDisposable {
                         throw new Exception($"Unexpected wait result {result}");
                 }
             }
+        } catch (Exception ex) {
+            Environment.FailFast("Main loop threw an unhandled exception", ex);
+            throw; // just to suppress warning
         } finally {
             // since the initializer may have done work, we still need to cancel them even if it failed
             context._exited.Cancel();
