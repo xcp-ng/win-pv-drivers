@@ -24,6 +24,7 @@ sealed class VifConfigureFeature(
     IHostLifetime _hostLifetime,
     IOptionsMonitor<VifConfigureOptions> _options,
     XenIfaceSource _xi,
+    PolicyService _policy,
     ILogger<VifConfigureFeature> _logger) : FeatureBase(_hostLifetime, _logger) {
     const string FeatureKey = "control/feature-static-ip-setting";
     const string VifConfigRoot = "xenserver/device/vif";
@@ -379,7 +380,13 @@ sealed class VifConfigureFeature(
     }
 
     protected override async Task ExecuteFeatureAsync(CancellationToken stoppingToken) {
+        if (_policy.DisableRemoteControl) {
+            _logger.LogDebug("{} blocked by policy", nameof(VifConfigureFeature));
+            return;
+        }
+
         if (!_options.CurrentValue.Enabled) {
+            _logger.LogDebug("{} disabled by config", nameof(VifConfigureFeature));
             return;
         }
 

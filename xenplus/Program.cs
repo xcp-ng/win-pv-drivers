@@ -41,7 +41,6 @@ class Program {
 
         builder.Configuration.Sources.Clear();
         builder.Configuration.AddJsonFile("appsettings.dist.json", true, true);
-        builder.Configuration.AddJsonFile("appsettings.installed.json", true, true);
         builder.Configuration.AddJsonFile("appsettings.user.json", true, true);
 
         builder.Logging.ClearProviders();
@@ -53,6 +52,8 @@ class Program {
         });
 
         builder.Services.AddWindowsService();
+
+        builder.Services.AddSingleton<PolicyService>();
 
         builder.Services.AddSingleton<XenIfaceSource>();
 

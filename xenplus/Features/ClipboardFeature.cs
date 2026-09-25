@@ -45,6 +45,7 @@ sealed class ClipboardFeature(
     IHostLifetime _hostLifetime,
     IOptions<ClipboardOptions> _options,
     XenIfaceSource _xi,
+    PolicyService _policy,
     ILogger<ClipboardFeature> _logger) : FeatureBase(_hostLifetime, _logger) {
     const string SetClipboardPath = "data/set_clipboard";
     const string ReportClipboardPath = "data/report_clipboard";
@@ -376,9 +377,16 @@ sealed class ClipboardFeature(
     }
 
     protected override async Task ExecuteFeatureAsync(CancellationToken stoppingToken) {
-        if (!_options.Value.Enabled) {
+        if (_policy.DisableRemoteControl) {
+            _logger.LogDebug("{} blocked by policy", nameof(ClipboardFeature));
             return;
         }
+
+        if (!_options.Value.Enabled) {
+            _logger.LogDebug("{} disabled by config", nameof(ClipboardFeature));
+            return;
+        }
+
         if (_options.Value.UnsafeAllowAnySessionForTest) {
             _logger.LogWarning("""
             ClipboardOptions.UnsafeAllowAnySessionForTest mode is enabled, which is insecure.

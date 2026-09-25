@@ -27,6 +27,7 @@ namespace XenPlus {
         public const string FileVersion = "$ver";
         public const string ProductVersion = "$productVer";
         public const string Description = "$description";
+        public const string VendorKey = "${Env:VENDOR_KEY}";
         public const string VendorName = "${Env:VENDOR_NAME}";
         public const string ProductName = "${Env:PRODUCT_NAME}";
         public const string Copyright = "${Env:COPYRIGHT}";
