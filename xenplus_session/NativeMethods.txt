@@ -21,6 +21,7 @@ WM_CREATE
 WM_DESTROY
 WM_QUERYENDSESSION
 WM_QUIT
+WM_SETTINGCHANGE
 
 AddClipboardFormatListener
 GetClipboardSequenceNumber

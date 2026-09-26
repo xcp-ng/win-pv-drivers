@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Web;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -331,6 +332,11 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
         }
     }
 
+    LRESULT OnPolicyChange() {
+        _policy.Refresh();
+        return (LRESULT)0;
+    }
+
     protected override LRESULT WndProc(HWND hwnd, uint msg, WPARAM wparam, LPARAM lparam) {
         switch (msg) {
             case (uint)WmApp.MainLoop:
@@ -360,6 +366,11 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
             case PInvoke.WM_QUERYENDSESSION:
                 PInvoke.SendMessage(hwnd, PInvoke.WM_CLOSE, 0, 0);
                 return (LRESULT)1;
+            case PInvoke.WM_SETTINGCHANGE:
+                if ("Policy".Equals(Marshal.PtrToStringUni(lparam), StringComparison.Ordinal)) {
+                    return OnPolicyChange();
+                }
+                return (LRESULT)0;
             case PInvoke.WM_CLOSE:
                 OnCloseAsync(hwnd);
                 return (LRESULT)0;

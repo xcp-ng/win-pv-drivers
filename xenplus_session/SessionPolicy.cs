@@ -21,4 +21,7 @@ sealed class SessionPolicyService {
         Registry.CurrentUser);
 
     public bool HideTrayIcon => _policy.Get(p => p.HideTrayIcon) ?? false;
+    public void Refresh() {
+        _policy.Refresh();
+    }
 }
