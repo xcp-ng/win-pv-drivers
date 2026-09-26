@@ -46,8 +46,8 @@ public sealed class PolicyStore<
         _roots = new(roots);
     }
 
-    void DoRefresh() {
-        _policies = _roots.Select(root => {
+    List<T?>? FetchPolicies() {
+        return _roots.Select(root => {
             RegistryKey? key = null;
             try {
                 key = root.OpenSubKey($"SOFTWARE\\Policies\\{_vendorKey}\\{_category}");
@@ -66,17 +66,16 @@ public sealed class PolicyStore<
     public IReadOnlyList<T?>? Policies {
         get {
             lock (_lock) {
-                if (_policies == null) {
-                    DoRefresh();
-                }
+                _policies ??= FetchPolicies();
                 return _policies;
             }
         }
     }
 
     public void Refresh() {
+        var newPolicies = FetchPolicies();
         lock (_lock) {
-            DoRefresh();
+            _policies = newPolicies;
         }
     }
 
