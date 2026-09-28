@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<policyDefinitionResources
+    xmlns="http://www.microsoft.com/GroupPolicy/PolicyDefinitions"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.microsoft.com/GroupPolicy/PolicyDefinitions ../PolicyDefinitionFiles.xsd"
+    revision="1.0"
+    schemaVersion="1.0">
+    <displayName>XCP-ng Windows Guest Tools</displayName>
+    <description>Administrative template for XCP-ng Windows Guest Tools policies.</description>
+
+    <resources>
+        <stringTable>
+            <string id="XCPngGuestTools">XCP-ng Windows Guest Tools</string>
+            <string id="XenPlus920386">XCP-ng Windows Guest Tools 9.2.386</string>
+            <string id="SUPPORTED_XenPlus920386OrLater">XCP-ng Windows Guest Tools 9.2.386 or later</string>
+
+            <string id="XCPngPolicies">XCP-ng Windows Guest Tools</string>
+            <string id="XenPlusPolicies">XenPlus guest agent</string>
+
+            <string id="ShowTrayIcon">Show the Xen session agent notification area icon</string>
+            <string id="ShowTrayIconExplain">This policy setting controls whether the Xen session agent may display its notification area icon.
+
+If you disable this policy setting, the notification area icon is hidden, regardless of the user's preference.
+
+If you enable or do not configure this policy setting, the user's preference determines whether the icon is displayed.</string>
+
+            <string id="DisableRemoteControl">Disable remote control features</string>
+            <string id="DisableRemoteControlExplain">This policy setting controls remote control features provided by the Xen guest agent, including clipboard integration, garbage collection requests, and virtual interface reconfiguration.
+
+If you enable this policy setting, these features are disabled.
+
+If you disable or do not configure this policy setting, these features remain available, subject to their individual configuration.</string>
+        </stringTable>
+    </resources>
+</policyDefinitionResources>
