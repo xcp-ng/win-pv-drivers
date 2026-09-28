@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.Win32;
 
 namespace XenPlus;
@@ -8,9 +7,7 @@ namespace XenPlus;
 /// with <see cref="PolicyStore{T}"/> just yet.
 /// </remarks>
 sealed class AppConfig {
-    [SuppressMessage("CodeQuality", "IDE0051", Justification = "static assertion")]
-    const uint _assert_VendorKey = VersionInfo.VendorKey == "" ? -1 : 0;
-    const string ConfigKeyName = $"SOFTWARE\\{VersionInfo.VendorKey}\\XenPlus";
+    const string ConfigKeyName = $"SOFTWARE\\{RequiredConstants.VendorKey}\\XenPlus";
 
     bool _showTrayIcon = true;
     public bool ShowTrayIcon {

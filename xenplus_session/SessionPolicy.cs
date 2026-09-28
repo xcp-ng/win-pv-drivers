@@ -15,7 +15,7 @@ sealed class SessionPolicyInstance : IPolicyInstance<SessionPolicyInstance> {
 
 sealed class SessionPolicyService {
     readonly PolicyStore<SessionPolicyInstance> _policy = new(
-        VersionInfo.VendorKey,
+        RequiredConstants.VendorKey,
         SessionPolicyInstance.Category,
         Registry.LocalMachine,
         Registry.CurrentUser);
