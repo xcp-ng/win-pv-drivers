@@ -162,7 +162,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
     }
 
     void RefreshTrayIcon(HWND hwnd) {
-        if (!_policy.HideTrayIcon && _config.Value.ShowTrayIcon) {
+        if (_policy.ShowTrayIcon && _config.Value.ShowTrayIcon) {
             try {
                 CreateTrayIcon(hwnd);
             } catch (Exception ex) {

@@ -4,11 +4,11 @@ namespace XenPlus;
 
 sealed class SessionPolicyInstance : IPolicyInstance<SessionPolicyInstance> {
     public const string Category = "XenPlus";
-    public required bool? HideTrayIcon { get; init; }
+    public required bool? ShowTrayIcon { get; init; }
 
     public static SessionPolicyInstance? LoadPolicy(RegistryKey key) {
         return new() {
-            HideTrayIcon = IPolicyInstance<SessionPolicyInstance>.ReadBool(key, nameof(HideTrayIcon)),
+            ShowTrayIcon = IPolicyInstance<SessionPolicyInstance>.ReadBool(key, nameof(ShowTrayIcon)),
         };
     }
 }
@@ -20,7 +20,7 @@ sealed class SessionPolicyService {
         Registry.LocalMachine,
         Registry.CurrentUser);
 
-    public bool HideTrayIcon => _policy.Get(p => p.HideTrayIcon) ?? false;
+    public bool ShowTrayIcon => _policy.Get(p => p.ShowTrayIcon) ?? true;
     public void Refresh() {
         _policy.Refresh();
     }
