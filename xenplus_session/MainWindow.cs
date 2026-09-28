@@ -113,6 +113,10 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
     }
 
     void CreateTrayIcon(HWND hwnd) {
+        if (_hasTrayIcon) {
+            return;
+        }
+
         using var hicon = Resources.LoadIcon(Resources.Icon, false);
         using var hiconScope = hicon.Borrow();
 
@@ -157,6 +161,18 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
         _hasTrayIcon = false;
     }
 
+    void RefreshTrayIcon(HWND hwnd) {
+        if (!_policy.HideTrayIcon && _config.Value.ShowTrayIcon) {
+            try {
+                CreateTrayIcon(hwnd);
+            } catch (Exception ex) {
+                Trace.TraceInformation("cannot create tray icon: {0}", ex.ToString());
+            }
+        } else {
+            DestroyTrayIcon(hwnd);
+        }
+    }
+
     LRESULT OnCreate(HWND hwnd) {
         if (!PInvoke.AddClipboardFormatListener(hwnd)) {
             throw new Win32Exception(nameof(PInvoke.AddClipboardFormatListener));
@@ -164,13 +180,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
         _listened = true;
         _receiver = ReceiveClipboardAsync(hwnd);
 
-        if (!_policy.HideTrayIcon && _config.Value.ShowTrayIcon) {
-            try {
-                CreateTrayIcon(hwnd);
-            } catch (Exception ex) {
-                Trace.TraceInformation("cannot create tray icon: {0}", ex.ToString());
-            }
-        }
+        RefreshTrayIcon(hwnd);
         return (LRESULT)0;
     }
 
@@ -179,9 +189,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
             return;
         }
         _cts.Cancel();
-        if (_hasTrayIcon) {
-            DestroyTrayIcon(hwnd);
-        }
+        DestroyTrayIcon(hwnd);
         if (_listened) {
             PInvoke.RemoveClipboardFormatListener(hwnd);
             _listened = false;
@@ -332,8 +340,9 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
         }
     }
 
-    LRESULT OnPolicyChange() {
+    LRESULT OnPolicyChange(HWND hwnd) {
         _policy.Refresh();
+        RefreshTrayIcon(hwnd);
         return (LRESULT)0;
     }
 
@@ -368,7 +377,7 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
                 return (LRESULT)1;
             case PInvoke.WM_SETTINGCHANGE:
                 if ("Policy".Equals(Marshal.PtrToStringUni(lparam), StringComparison.Ordinal)) {
-                    return OnPolicyChange();
+                    return OnPolicyChange(hwnd);
                 }
                 return (LRESULT)0;
             case PInvoke.WM_CLOSE:
