@@ -1,6 +1,6 @@
 namespace XenPlus;
 
-sealed class DisposeStack : IDisposable {
+public sealed class DisposeStack : IDisposable {
     readonly Stack<IDisposable> _stack = new();
 
     public void Push(IDisposable item) {
