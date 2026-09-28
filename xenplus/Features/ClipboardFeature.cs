@@ -270,9 +270,14 @@ sealed class ClipboardFeature(
         using var scope = await _lock.EnterScopeAsync(ct);
 
         using (var h = _xi.Lock()) {
-            var chunk = h.StoreTryRead(SetClipboardPath);
+            string? chunk = null;
+            try {
+                chunk = h.StoreTryRead(SetClipboardPath);
+            } catch (Exception ex) {
+                DebugLogTrace(ex, "cannot read set_clipboard");
+            }
             if (chunk == null) {
-                // watches triggered by store removes
+                // read failed, or watches triggered by store removes
                 return null;
             }
             DebugLogTrace("got chunk of length {}; current depth is {}", chunk.Length, _setClipboardChunks.Count);

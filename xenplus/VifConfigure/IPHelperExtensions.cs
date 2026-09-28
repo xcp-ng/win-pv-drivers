@@ -87,7 +87,7 @@ static class IPHelperExtensions {
             row.Address.si_family == family
         ).Select(row => (
             new CIDR() {
-                Address = Check.Unwrap(row.Address.ToIPAddress()),
+                Address = row.Address.ToIPAddress() ?? throw new NullReferenceException(),
                 Prefix = row.OnLinkPrefixLength,
             },
             row.PrefixOrigin == NL_PREFIX_ORIGIN.IpPrefixOriginManual ||
