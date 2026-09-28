@@ -3,6 +3,10 @@ using Microsoft.Win32;
 
 namespace XenPlus;
 
+/// <remarks>
+/// <see cref="AppConfig"/> supports writing and doesn't have the same refresh mechanism, that's why it's not merged
+/// with <see cref="PolicyStore{T}"/> just yet.
+/// </remarks>
 sealed class AppConfig {
     [SuppressMessage("CodeQuality", "IDE0051", Justification = "static assertion")]
     const uint _assert_VendorKey = VersionInfo.VendorKey == "" ? -1 : 0;
