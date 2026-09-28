@@ -19,7 +19,9 @@ param (
     [Parameter()]
     [switch]$Kasan,
     [Parameter()]
-    [switch]$Sign
+    [switch]$Sign,
+    [Parameter()]
+    [switch]$CodeAnalysis
 )
 
 . $PSScriptRoot\branding.ps1
@@ -60,6 +62,9 @@ foreach ($repo in $Drivers) {
             "/p:SignMode=Off",
             "/t:$Target"
         )
+        if ($CodeAnalysis) {
+            $BuildArgs += @("/p:RunCodeAnalysis=true", "/p:EnablePREFast=true")
+        }
         if ($Kasan) {
             $BuildArgs += @("/p:EnableKASAN=true")
         }
