@@ -41,9 +41,9 @@ sealed class VifConfigurationIPv4None : VifConfigurationIPv4 {
 
 sealed class VifConfigurationIPv4Static : VifConfigurationIPv4 {
     public override string Category => "static IPv4";
-    /// <summary>
-    /// CIDRs
-    /// </summary>
+    /// <remarks>
+    /// Despite being a list of addresses, XAPI only provides one address and so only one will be consumed.
+    /// </remarks>
     public required List<CIDR> Address { get; set; }
     public required IPAddress? Gateway { get; set; }
     public required List<IPAddress>? Dns { get; set; }
@@ -62,9 +62,9 @@ sealed class VifConfigurationIPv6None : VifConfigurationIPv6 {
 
 sealed class VifConfigurationIPv6Static : VifConfigurationIPv6 {
     public override string Category => "static IPv6";
-    /// <summary>
-    /// CIDRs
-    /// </summary>
+    /// <remarks>
+    /// Despite being a list of addresses, XAPI only provides one address and so only one will be consumed.
+    /// </remarks>
     public required List<CIDR> Address { get; set; }
     public required IPAddress? Gateway { get; set; }
     public required List<IPAddress>? Dns { get; set; }
