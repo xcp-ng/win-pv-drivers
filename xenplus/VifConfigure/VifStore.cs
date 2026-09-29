@@ -20,13 +20,13 @@ static class VifStore {
             Prefix = int.Parse(splitAddress[1], System.Globalization.NumberStyles.None),
         };
         if (!address.Validate(AddressFamily.InterNetwork)) {
-            throw new ArgumentException($"IPv4 address '{rawAddress}' is not acceptable");
+            throw new ArgumentException($"Address '{rawAddress}' is not an IPv4 address");
         }
 
         var rawGateway = h.StoreTryReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "gateway"));
         var gateway = rawGateway != null ? IPAddress.Parse(rawGateway) : null;
         if (gateway != null && gateway.AddressFamily != AddressFamily.InterNetwork) {
-            throw new ArgumentException($"IPv4 gateway '{rawGateway}' is not acceptable");
+            throw new ArgumentException($"Gateway '{rawGateway}' is not an IPv4 address");
         }
 
         List<IPAddress>? dnsList = null;
@@ -39,7 +39,7 @@ static class VifStore {
                 var dns = rawDns != null ? IPAddress.Parse(rawDns) : null;
                 if (dns != null) {
                     if (dns.AddressFamily != AddressFamily.InterNetwork) {
-                        throw new ArgumentException($"IPv4 DNS '{rawDns}' is not acceptable");
+                        throw new ArgumentException($"DNS '{rawDns}' is not an IPv4 address");
                     }
                     dnsList.Add(dns);
                 }
@@ -64,13 +64,13 @@ static class VifStore {
             Prefix = int.Parse(splitAddress[1], System.Globalization.NumberStyles.None),
         };
         if (!address.Validate(AddressFamily.InterNetworkV6)) {
-            throw new ArgumentException($"IPv6 address '{rawAddress}' is not acceptable");
+            throw new ArgumentException($"Address '{rawAddress}' is not an IPv6 address");
         }
 
         var rawGateway = h.StoreTryReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "gateway6"));
         var gateway = rawGateway != null ? IPAddress.Parse(rawGateway) : null;
         if (gateway != null && gateway.AddressFamily != AddressFamily.InterNetworkV6) {
-            throw new ArgumentException($"IPv6 gateway '{rawGateway}' is not acceptable");
+            throw new ArgumentException($"Gateway '{rawGateway}' is not an IPv6 address");
         }
 
         List<IPAddress>? dnsList = null;
@@ -83,7 +83,7 @@ static class VifStore {
                 var dns = rawDns != null ? IPAddress.Parse(rawDns) : null;
                 if (dns != null) {
                     if (dns.AddressFamily != AddressFamily.InterNetworkV6) {
-                        throw new ArgumentException($"IPv6 DNS '{rawDns}' is not acceptable");
+                        throw new ArgumentException($"DNS '{rawDns}' is not an IPv6 address");
                     }
                     dnsList.Add(dns);
                 }
