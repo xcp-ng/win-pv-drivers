@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 
@@ -7,6 +8,28 @@ namespace XenPlus.VifConfigure;
 struct CIDR {
     public required IPAddress Address { get; set; }
     public required int Prefix { get; set; }
+
+    public static bool TryParse(string value, out CIDR result) {
+        var splitAddress = value.Split('/', 2);
+        if (splitAddress.Length != 2) {
+            result = new() { Address = IPAddress.None, Prefix = 255 };
+            return false;
+        }
+
+        if (!IPAddress.TryParse(splitAddress[0], out var address)) {
+            result = new() { Address = IPAddress.None, Prefix = 255 };
+            return false;
+        }
+        if (!int.TryParse(splitAddress[1], NumberStyles.None, null, out var prefix)) {
+            result = new() { Address = IPAddress.None, Prefix = 255 };
+            return false;
+        }
+        result = new() {
+            Address = address,
+            Prefix = prefix,
+        };
+        return true;
+    }
 
     public readonly bool Validate(AddressFamily family) {
         if (Address.AddressFamily != family) {
