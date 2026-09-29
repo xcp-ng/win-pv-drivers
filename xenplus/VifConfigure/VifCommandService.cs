@@ -11,7 +11,7 @@ namespace XenPlus.VifConfigure;
 class VifCommandService(IOptionsMonitor<VifConfigureOptions> _options, string _netshPath) {
     public IEnumerable<(string fileName, List<string> arguments)> GetCommandsConfigv4(
         MIB_IF_ROW2 mibIf,
-        MibUnicastIpAddressTableSafeHandle mibIPTable,
+        IReadOnlyList<MIB_UNICASTIPADDRESS_ROW> mibIPTable,
         VifConfigurationIPv4 config) {
         var interfaceIndex = mibIf.InterfaceIndex.ToString();
 
@@ -54,8 +54,8 @@ class VifCommandService(IOptionsMonitor<VifConfigureOptions> _options, string _n
 
     public IEnumerable<(string fileName, List<string> arguments)> GetCommandsConfigv6(
         MIB_IF_ROW2 mibIf,
-        MibUnicastIpAddressTableSafeHandle mibIPTable,
-        MibIpForwardTable2SafeHandle mibRouteTable,
+        IReadOnlyList<MIB_UNICASTIPADDRESS_ROW> mibIPTable,
+        IReadOnlyList<MIB_IPFORWARD_ROW2> mibRouteTable,
         VifConfigurationIPv6 config) {
         var interfaceIndex = mibIf.InterfaceIndex.ToString();
 
