@@ -14,6 +14,7 @@ sealed class VifConfigureOptions {
     public bool AllowConfigureNonVifs { get; set; } = true;
     [Range(100, 3_600_000)]
     public int CommandTimeoutMilliseconds { get; set; } = 5000;
+    public bool ClearDnsOnEmptyDnsSetting { get; set; } = false;
 }
 
 [OptionsValidator]
@@ -112,7 +113,7 @@ sealed class VifConfigureFeature(
         }
     }
 
-    static IEnumerable<(string fileName, List<string> arguments)> GetCommandsConfigv4(
+    IEnumerable<(string fileName, List<string> arguments)> GetCommandsConfigv4(
         MIB_IF_ROW2 mibIf,
         MibUnicastIpAddressTableSafeHandle mibIPTable,
         VifConfigurationIPv4 config) {
@@ -122,6 +123,7 @@ sealed class VifConfigureFeature(
             if (!mibIPTable.HasDhcpAddress(mibIf.InterfaceIndex, ADDRESS_FAMILY.AF_INET)) {
                 yield return (NetshPath, ["interface", "ipv4", "set", "address", interfaceIndex, "source=dhcp"]);
             }
+            yield return (NetshPath, ["interface", "ipv4", "set", "dnsservers", interfaceIndex, "source=dhcp"]);
         } else if (config is VifConfigurationIPv4Static staticv4) {
             var address = staticv4.Address[0];
             yield return (NetshPath, [
@@ -134,10 +136,27 @@ sealed class VifConfigureFeature(
                 $"address={address.Address.ToStringWithoutScopeId()}/{address.Prefix}",
                 $"gateway={staticv4.Gateway?.ToString() ?? "none"}",
             ]);
+
+            var dns = staticv4.Dns;
+            if (dns != null) {
+                if (dns.Count > 0) {
+                    for (int i = 0; i < dns.Count; i++) {
+                        yield return (NetshPath, [
+                            "interface",
+                            "ipv4",
+                            i == 0 ? "set" : "add",
+                            "dnsservers",
+                            interfaceIndex,
+                            $"address={dns[i]}"]);
+                    }
+                } else if (_options.CurrentValue.ClearDnsOnEmptyDnsSetting) {
+                    yield return (NetshPath, ["interface", "ipv4", "set", "dnsservers", interfaceIndex, "address=none"]);
+                }
+            }
         }
     }
 
-    static IEnumerable<(string fileName, List<string> arguments)> GetCommandsConfigv6(
+    IEnumerable<(string fileName, List<string> arguments)> GetCommandsConfigv6(
         MIB_IF_ROW2 mibIf,
         MibUnicastIpAddressTableSafeHandle mibIPTable,
         MibIpForwardTable2SafeHandle mibRouteTable,
@@ -174,6 +193,7 @@ sealed class VifConfigureFeature(
                     ]);
                 }
             }
+            yield return (NetshPath, ["interface", "ipv6", "set", "dnsservers", interfaceIndex, "source=dhcp"]);
 
         } else if (config is VifConfigurationIPv6Static staticv6) {
             var address = staticv6.Address[0];
@@ -240,6 +260,23 @@ sealed class VifConfigureFeature(
                     interfaceIndex,
                     newGateway.ToStringWithoutScopeId(),
                 ]);
+            }
+
+            var dns = staticv6.Dns;
+            if (dns != null) {
+                if (dns.Count > 0) {
+                    for (int i = 0; i < dns.Count; i++) {
+                        yield return (NetshPath, [
+                            "interface",
+                            "ipv6",
+                            i == 0 ? "set" : "add",
+                            "dnsservers",
+                            interfaceIndex,
+                            $"address={dns[i]}"]);
+                    }
+                } else if (_options.CurrentValue.ClearDnsOnEmptyDnsSetting) {
+                    yield return (NetshPath, ["interface", "ipv6", "set", "dnsservers", interfaceIndex, "address=none"]);
+                }
             }
         }
     }

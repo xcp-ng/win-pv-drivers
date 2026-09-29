@@ -46,6 +46,7 @@ sealed class VifConfigurationIPv4Static : VifConfigurationIPv4 {
     /// </summary>
     public required List<CIDR> Address { get; set; }
     public required IPAddress? Gateway { get; set; }
+    public required List<IPAddress>? Dns { get; set; }
 }
 
 sealed class VifConfigurationIPv4Dhcp : VifConfigurationIPv4 {
@@ -66,6 +67,7 @@ sealed class VifConfigurationIPv6Static : VifConfigurationIPv6 {
     /// </summary>
     public required List<CIDR> Address { get; set; }
     public required IPAddress? Gateway { get; set; }
+    public required List<IPAddress>? Dns { get; set; }
 }
 
 sealed class VifConfigurationIPv6Autoconf : VifConfigurationIPv6 {

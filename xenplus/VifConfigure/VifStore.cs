@@ -29,11 +29,29 @@ static class VifStore {
             throw new ArgumentException($"IPv4 gateway '{rawGateway}' is not acceptable");
         }
 
+        List<IPAddress>? dnsList = null;
+        var dnsPath = StoreUtils.PathJoin(vc, StaticIpSetting, "dns");
+        var dnsKeys = h.StoreTryDirectory(dnsPath);
+        if (dnsKeys != null) {
+            dnsList = [];
+            foreach (var dnsKey in dnsKeys) {
+                var rawDns = h.StoreTryReadStrict(StoreUtils.PathJoin(dnsPath, dnsKey));
+                var dns = rawDns != null ? IPAddress.Parse(rawDns) : null;
+                if (dns != null) {
+                    if (dns.AddressFamily != AddressFamily.InterNetwork) {
+                        throw new ArgumentException($"IPv4 DNS '{rawDns}' is not acceptable");
+                    }
+                    dnsList.Add(dns);
+                }
+            }
+        }
+
         return new VifConfigurationIPv4Static() {
             StorePath = vc,
             Mac = mac,
             Address = [address],
             Gateway = gateway,
+            Dns = dnsList,
         };
     }
 
@@ -55,11 +73,29 @@ static class VifStore {
             throw new ArgumentException($"IPv6 gateway '{rawGateway}' is not acceptable");
         }
 
+        List<IPAddress>? dnsList = null;
+        var dnsPath = StoreUtils.PathJoin(vc, StaticIpSetting, "dns6");
+        var dnsKeys = h.StoreTryDirectory(dnsPath);
+        if (dnsKeys != null) {
+            dnsList = [];
+            foreach (var dnsKey in dnsKeys) {
+                var rawDns = h.StoreTryReadStrict(StoreUtils.PathJoin(dnsPath, dnsKey));
+                var dns = rawDns != null ? IPAddress.Parse(rawDns) : null;
+                if (dns != null) {
+                    if (dns.AddressFamily != AddressFamily.InterNetworkV6) {
+                        throw new ArgumentException($"IPv6 DNS '{rawDns}' is not acceptable");
+                    }
+                    dnsList.Add(dns);
+                }
+            }
+        }
+
         return new VifConfigurationIPv6Static() {
             StorePath = vc,
             Mac = mac,
             Address = [address],
             Gateway = gateway,
+            Dns = dnsList,
         };
     }
 
