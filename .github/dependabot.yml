@@ -19,6 +19,7 @@ updates:
     exclude-paths:
       # XenClean references EarlyInitNAOT, which Dependabot cannot parse
       - "XenClean/**"
+      - "installer/installer.slnx"
     schedule:
       interval: "weekly"
     cooldown:
