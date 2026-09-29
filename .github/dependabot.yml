@@ -15,11 +15,16 @@ updates:
           - "*"
   - package-ecosystem: "nuget"
     directories:
-      - "**/*"
-    exclude-paths:
-      # XenClean references EarlyInitNAOT, which Dependabot cannot parse
-      - "**/XenClean.csproj"
-      - "**/installer.slnx"
+      # XenClean references EarlyInitNAOT, which Dependabot cannot parse.
+      # For some reason, exclude-paths doesn't work for this purpose. So we have to exclude that manually.
+      - "/DriverInstallCustomAction"
+      - "/HlkxSigner"
+      - "/InstallerTests"
+      - "/XenDriverUtils"
+      - "/xenplus"
+      - "/xenplus_lib"
+      - "/xenplus_session"
+      - "/xenplus_tests"
     schedule:
       interval: "weekly"
     cooldown:
