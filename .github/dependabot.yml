@@ -15,7 +15,7 @@ updates:
           - "*"
   - package-ecosystem: "nuget"
     directories:
-      - "/"
+      - "**/*"
     schedule:
       interval: "weekly"
     cooldown:
