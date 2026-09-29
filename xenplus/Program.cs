@@ -1,6 +1,7 @@
 using System.Text.Json.Schema;
 using Microsoft.Extensions.Options;
 using XenPlus.Features;
+using XenPlus.VifConfigure;
 using XenPlus.XenIface;
 
 namespace XenPlus;
@@ -79,6 +80,9 @@ class Program {
 
         builder.Services.AddSingleton<IValidateOptions<VifConfigureOptions>, ValidateVifConfigureOptions>();
         builder.Services.Configure<VifConfigureOptions>(builder.Configuration.GetSection(nameof(VifConfigureOptions)));
+        builder.Services.AddSingleton<VifCommandService>(provider => new(
+            provider.GetRequiredService<IOptionsMonitor<VifConfigureOptions>>(),
+            Path.Combine(Environment.SystemDirectory, "netsh.exe")));
         builder.Services.AddHostedService<VifConfigureFeature>();
 
         builder.Services.Configure<GarbageCollectOptions>(builder.Configuration.GetSection(nameof(GarbageCollectOptions)));
