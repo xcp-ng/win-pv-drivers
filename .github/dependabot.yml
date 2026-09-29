@@ -16,6 +16,9 @@ updates:
   - package-ecosystem: "nuget"
     directories:
       - "**/*"
+    exclude-paths:
+      # XenClean references EarlyInitNAOT, which Dependabot cannot parse
+      - "XenClean/**"
     schedule:
       interval: "weekly"
     cooldown:
