@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<policyDefinitions
+    xmlns="http://www.microsoft.com/GroupPolicy/PolicyDefinitions"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.microsoft.com/GroupPolicy/PolicyDefinitions PolicyDefinitionFiles.xsd"
+    revision="1.0"
+    schemaVersion="1.0">
+    <policyNamespaces>
+        <target prefix="XenPlus" namespace="XCPng.XenPlus.Policies" />
+    </policyNamespaces>
+    <resources minRequiredRevision="1.0" />
+
+    <supportedOn>
+        <products>
+            <product name="XCPngGuestTools" displayName="$(string.XCPngGuestTools)">
+                <majorVersion
+                    name="XenPlus920386"
+                    displayName="$(string.XenPlus920386)"
+                    versionIndex="90200386" />
+            </product>
+        </products>
+        <definitions>
+            <definition
+                name="SUPPORTED_XenPlus920386OrLater"
+                displayName="$(string.SUPPORTED_XenPlus920386OrLater)">
+                <and>
+                    <range ref="XCPngGuestTools" minVersionIndex="90200386" />
+                </and>
+            </definition>
+        </definitions>
+    </supportedOn>
+
+    <categories>
+        <category name="XCPngPolicies" displayName="$(string.XCPngPolicies)" />
+        <category name="XenPlusPolicies" displayName="$(string.XenPlusPolicies)">
+            <parentCategory ref="XCPngPolicies" />
+        </category>
+    </categories>
+
+    <policies>
+        <policy
+            name="ShowTrayIcon"
+            class="Both"
+            displayName="$(string.ShowTrayIcon)"
+            explainText="$(string.ShowTrayIconExplain)"
+            key="SOFTWARE\Policies\XCP-ng\XenPlus"
+            valueName="ShowTrayIcon">
+            <parentCategory ref="XenPlusPolicies" />
+            <supportedOn ref="SUPPORTED_XenPlus920386OrLater" />
+            <enabledValue>
+                <decimal value="1" />
+            </enabledValue>
+            <disabledValue>
+                <decimal value="0" />
+            </disabledValue>
+        </policy>
+        <policy
+            name="DisableRemoteControl"
+            class="Machine"
+            displayName="$(string.DisableRemoteControl)"
+            explainText="$(string.DisableRemoteControlExplain)"
+            key="SOFTWARE\Policies\XCP-ng\XenPlus"
+            valueName="DisableRemoteControl">
+            <parentCategory ref="XenPlusPolicies" />
+            <supportedOn ref="SUPPORTED_XenPlus920386OrLater" />
+            <enabledValue>
+                <decimal value="1" />
+            </enabledValue>
+            <disabledValue>
+                <decimal value="0" />
+            </disabledValue>
+        </policy>
+    </policies>
+</policyDefinitions>

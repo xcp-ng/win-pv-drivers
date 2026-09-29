@@ -13,20 +13,33 @@ static class VifStore {
 
     static VifConfigurationIPv4Static ParseVifConfigurationIPv4Static(XenIfaceHandle h, string vc, string mac) {
         var rawAddress = h.StoreReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "address"));
-        var splitAddress = rawAddress.Split('/', 2);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(splitAddress.Length, 2, $"Cannot parse CIDR from '{rawAddress}'");
-        var address = new CIDR() {
-            Address = IPAddress.Parse(splitAddress[0]),
-            Prefix = int.Parse(splitAddress[1], System.Globalization.NumberStyles.None),
-        };
-        if (!address.Validate(AddressFamily.InterNetwork)) {
-            throw new ArgumentException($"IPv4 address '{rawAddress}' is not acceptable");
+        if (!CIDR.TryParse(rawAddress, out var address) ||
+            !address.Validate(AddressFamily.InterNetwork)) {
+            throw new ArgumentException($"Address '{rawAddress}' is not an IPv4 CIDR");
         }
 
         var rawGateway = h.StoreTryReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "gateway"));
-        var gateway = rawGateway != null ? IPAddress.Parse(rawGateway) : null;
-        if (gateway != null && gateway.AddressFamily != AddressFamily.InterNetwork) {
-            throw new ArgumentException($"IPv4 gateway '{rawGateway}' is not acceptable");
+        IPAddress? gateway = null;
+        if (rawGateway != null) {
+            if (!IPAddress.TryParse(rawGateway, out gateway) || gateway.AddressFamily != AddressFamily.InterNetwork) {
+                throw new ArgumentException($"Gateway '{rawGateway}' is not an IPv4 address");
+            }
+        }
+
+        List<IPAddress>? dnsList = null;
+        var dnsPath = StoreUtils.PathJoin(vc, StaticIpSetting, "dns");
+        var dnsKeys = h.StoreTryDirectory(dnsPath);
+        if (dnsKeys != null) {
+            dnsList = [];
+            foreach (var dnsKey in dnsKeys) {
+                var rawDns = h.StoreTryReadStrict(StoreUtils.PathJoin(dnsPath, dnsKey));
+                if (rawDns != null) {
+                    if (!IPAddress.TryParse(rawDns, out var dns) || dns.AddressFamily != AddressFamily.InterNetwork) {
+                        throw new ArgumentException($"DNS '{rawDns}' is not an IPv4 address");
+                    }
+                    dnsList.Add(dns);
+                }
+            }
         }
 
         return new VifConfigurationIPv4Static() {
@@ -34,25 +47,39 @@ static class VifStore {
             Mac = mac,
             Address = [address],
             Gateway = gateway,
+            Dns = dnsList,
         };
     }
 
     static VifConfigurationIPv6Static ParseVifConfigurationIPv6Static(XenIfaceHandle h, string vc, string mac) {
         var rawAddress = h.StoreReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "address6"));
-        var splitAddress = rawAddress.Split('/', 2);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(splitAddress.Length, 2, $"Cannot parse CIDR from '{rawAddress}'");
-        var address = new CIDR() {
-            Address = IPAddress.Parse(splitAddress[0]),
-            Prefix = int.Parse(splitAddress[1], System.Globalization.NumberStyles.None),
-        };
-        if (!address.Validate(AddressFamily.InterNetworkV6)) {
-            throw new ArgumentException($"IPv6 address '{rawAddress}' is not acceptable");
+        if (!CIDR.TryParse(rawAddress, out var address) ||
+            !address.Validate(AddressFamily.InterNetworkV6)) {
+            throw new ArgumentException($"Address '{rawAddress}' is not an IPv6 CIDR");
         }
 
         var rawGateway = h.StoreTryReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "gateway6"));
-        var gateway = rawGateway != null ? IPAddress.Parse(rawGateway) : null;
-        if (gateway != null && gateway.AddressFamily != AddressFamily.InterNetworkV6) {
-            throw new ArgumentException($"IPv6 gateway '{rawGateway}' is not acceptable");
+        IPAddress? gateway = null;
+        if (gateway != null) {
+            if (!IPAddress.TryParse(rawGateway, out gateway) || gateway.AddressFamily != AddressFamily.InterNetworkV6) {
+                throw new ArgumentException($"Gateway '{rawGateway}' is not an IPv6 address");
+            }
+        }
+
+        List<IPAddress>? dnsList = null;
+        var dnsPath = StoreUtils.PathJoin(vc, StaticIpSetting, "dns6");
+        var dnsKeys = h.StoreTryDirectory(dnsPath);
+        if (dnsKeys != null) {
+            dnsList = [];
+            foreach (var dnsKey in dnsKeys) {
+                var rawDns = h.StoreTryReadStrict(StoreUtils.PathJoin(dnsPath, dnsKey));
+                if (rawDns != null) {
+                    if (!IPAddress.TryParse(rawDns, out var dns) || dns.AddressFamily != AddressFamily.InterNetworkV6) {
+                        throw new ArgumentException($"DNS '{rawDns}' is not an IPv6 address");
+                    }
+                    dnsList.Add(dns);
+                }
+            }
         }
 
         return new VifConfigurationIPv6Static() {
@@ -60,6 +87,7 @@ static class VifStore {
             Mac = mac,
             Address = [address],
             Gateway = gateway,
+            Dns = dnsList,
         };
     }
 

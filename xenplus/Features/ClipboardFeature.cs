@@ -270,9 +270,14 @@ sealed class ClipboardFeature(
         using var scope = await _lock.EnterScopeAsync(ct);
 
         using (var h = _xi.Lock()) {
-            var chunk = h.StoreTryRead(SetClipboardPath);
+            string? chunk = null;
+            try {
+                chunk = h.StoreTryRead(SetClipboardPath);
+            } catch (Exception ex) {
+                DebugLogTrace(ex, "cannot read set_clipboard");
+            }
             if (chunk == null) {
-                // watches triggered by store removes
+                // read failed, or watches triggered by store removes
                 return null;
             }
             DebugLogTrace("got chunk of length {}; current depth is {}", chunk.Length, _setClipboardChunks.Count);
@@ -376,6 +381,33 @@ sealed class ClipboardFeature(
         }
     }
 
+    async Task ServeClientsAsync(CancellationToken ct) {
+        while (!ct.IsCancellationRequested) {
+            NamedPipeServerStream pipe;
+            var secure = _secure.Value;
+            using (var shref = secure.Borrow()) {
+                pipe = SecureNamedPipes.Listen(
+                    pipePath: ClipboardPipePath,
+                    direction: PipeDirection.InOut,
+                    maxNumberOfServerInstances: NamedPipeServerStream.MaxAllowedServerInstances,
+                    transmissionMode: PipeTransmissionMode.Byte,
+                    options: PipeOptions.Asynchronous,
+                    inBufferSize: 0,
+                    outBufferSize: 0,
+                    inheritability: HandleInheritability.None,
+                    rejectRemoteClients: true,
+                    securityDescriptor: shref.Handle);
+            }
+            try {
+                await pipe.WaitForConnectionAsync(ct);
+            } catch {
+                pipe.Dispose();
+                throw;
+            }
+            _ = ServeClientAsync(pipe, ct);
+        }
+    }
+
     protected override async Task ExecuteFeatureAsync(CancellationToken stoppingToken) {
         if (_policy.DisableRemoteControl) {
             _logger.LogDebug("{} blocked by policy", nameof(ClipboardFeature));
@@ -401,24 +433,28 @@ sealed class ClipboardFeature(
         } catch (XenIfaceNotFoundException) {
         }
 
+        // used to bubble up exceptions from event handlers
+        using var failCts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+        var failToken = failCts.Token;
+        var failed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         async void onSetClipboard(object? sender, XenIfaceWatchEventArgs args) {
             try {
                 DebugLogTrace(nameof(onSetClipboard));
-                await OnSetClipboardAsync(sender, args, stoppingToken);
+                await OnSetClipboardAsync(sender, args, failToken);
             } catch (OperationCanceledException) {
             } catch (Exception ex) {
-                // GetClientOnSetClipboard exploding can't be good news
-                Environment.FailFast(nameof(OnSetClipboardAsync), ex);
+                failed.TrySetException(ex);
             }
         }
 
         async void onReportClipboard(object? sender, XenIfaceWatchEventArgs args) {
             try {
                 DebugLogTrace(nameof(onReportClipboard));
-                await OnReportClipboardAsync(sender, args, stoppingToken);
+                await OnReportClipboardAsync(sender, args, failToken);
             } catch (OperationCanceledException) {
             } catch (Exception ex) {
-                Environment.FailFast(nameof(OnReportClipboardAsync), ex);
+                failed.TrySetException(ex);
             }
         }
 
@@ -433,31 +469,22 @@ sealed class ClipboardFeature(
             _reportClipboard.WatchTriggered += onReportClipboard;
             reportWatched = true;
 
-            while (!stoppingToken.IsCancellationRequested) {
-                NamedPipeServerStream pipe;
-                var secure = _secure.Value;
-                using (var shref = secure.Borrow()) {
-                    pipe = SecureNamedPipes.Listen(
-                        pipePath: ClipboardPipePath,
-                        direction: PipeDirection.InOut,
-                        maxNumberOfServerInstances: NamedPipeServerStream.MaxAllowedServerInstances,
-                        transmissionMode: PipeTransmissionMode.Byte,
-                        options: PipeOptions.Asynchronous,
-                        inBufferSize: 0,
-                        outBufferSize: 0,
-                        inheritability: HandleInheritability.None,
-                        rejectRemoteClients: true,
-                        securityDescriptor: shref.Handle);
-                }
-                try {
-                    await pipe.WaitForConnectionAsync(stoppingToken);
-                } catch {
-                    pipe.Dispose();
-                    throw;
-                }
-                _ = ServeClientAsync(pipe, stoppingToken);
+            // This section needs subtle error handling because we need to handle the failures of intersecting tasks.
+            var server = ServeClientsAsync(failToken);
+            var finished = await Task.WhenAny(server, failed.Task);
+            if (finished == failed.Task) {
+                failCts.Cancel();
+                // don't await finished yet or we'll get an immediate exception
+            }
+            try {
+                await server;
+            } catch (OperationCanceledException) {
+            }
+            if (finished == failed.Task) {
+                await finished;
             }
         } finally {
+            failCts.Cancel();
             if (reportWatched) {
                 _reportClipboard!.WatchTriggered -= onReportClipboard;
             }

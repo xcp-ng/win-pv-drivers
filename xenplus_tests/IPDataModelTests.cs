@@ -37,7 +37,7 @@ public class IPDataModelTests {
 
     [Fact]
     public void ConfigurationEqualityUsesConcreteTypeAndCaseInsensitiveMac() {
-        var comparer = new VifConfigurationEqualityComparer();
+        var comparer = new VifConfigurationMacEqualityComparer();
         var first = new VifConfigurationIPv4Dhcp {
             StorePath = "first",
             Mac = "AA:BB:CC:DD:EE:FF",

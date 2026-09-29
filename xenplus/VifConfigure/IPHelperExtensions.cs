@@ -68,7 +68,7 @@ static class IPHelperExtensions {
     }
 
     internal static bool HasDhcpAddress(
-        this MibUnicastIpAddressTableSafeHandle mibIPTable,
+        this IReadOnlyList<MIB_UNICASTIPADDRESS_ROW> mibIPTable,
         uint interfaceIndex,
         ADDRESS_FAMILY family) {
         return mibIPTable.Any(row =>
@@ -79,7 +79,7 @@ static class IPHelperExtensions {
     }
 
     internal static IEnumerable<(CIDR cidr, bool isManual)> GetUnicastAddresses(
-        this MibUnicastIpAddressTableSafeHandle mibIPTable,
+        this IReadOnlyList<MIB_UNICASTIPADDRESS_ROW> mibIPTable,
         uint interfaceIndex,
         ADDRESS_FAMILY family) {
         return mibIPTable.Where(row =>
@@ -87,7 +87,7 @@ static class IPHelperExtensions {
             row.Address.si_family == family
         ).Select(row => (
             new CIDR() {
-                Address = Check.Unwrap(row.Address.ToIPAddress()),
+                Address = row.Address.ToIPAddress() ?? throw new NullReferenceException(),
                 Prefix = row.OnLinkPrefixLength,
             },
             row.PrefixOrigin == NL_PREFIX_ORIGIN.IpPrefixOriginManual ||
@@ -96,7 +96,7 @@ static class IPHelperExtensions {
     }
 
     internal static IEnumerable<(IPAddress ip, bool isManual)> GetDefaultRoute(
-        this MibIpForwardTable2SafeHandle mibRouteTable,
+        this IReadOnlyList<MIB_IPFORWARD_ROW2> mibRouteTable,
         uint interfaceIndex,
         ADDRESS_FAMILY family) {
         return mibRouteTable.Where(row =>

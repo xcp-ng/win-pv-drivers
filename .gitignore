@@ -383,3 +383,5 @@ deps/
 hotfix-350-351/*.msi
 hotfix-350-351/*.msp
 hotfix-350-351/*.wixpdb
+/*.xsd
+extras/**/*.xsd

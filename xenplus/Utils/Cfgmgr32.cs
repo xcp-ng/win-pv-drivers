@@ -84,7 +84,9 @@ static class Cfgmgr32 {
                     0);
 
                 if (cr == CONFIGRET.CR_SUCCESS) {
-                    Check.Assert(devPropType == DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST);
+                    if (devPropType != DEVPROPTYPE.DEVPROP_TYPE_STRING_LIST) {
+                        throw new InvalidCastException("children property is not a string list");
+                    }
                     break;
                 } else if (cr != CONFIGRET.CR_NO_SUCH_VALUE) {
                     return [];
