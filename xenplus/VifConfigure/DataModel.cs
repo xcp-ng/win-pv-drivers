@@ -74,7 +74,10 @@ sealed class VifConfigurationIPv6Autoconf : VifConfigurationIPv6 {
     public override string Category => "autoconf IPv6";
 }
 
-class VifConfigurationEqualityComparer : IEqualityComparer<VifConfiguration> {
+/// <remarks>
+/// Per the name, it only compares the type and target MAC, nothing else. For use in collecting VIF configurations.
+/// </remarks>
+class VifConfigurationMacEqualityComparer : IEqualityComparer<VifConfiguration> {
     public bool Equals(VifConfiguration? x, VifConfiguration? y) {
         return ReferenceEquals(x, y) || (
             x?.GetType() == y?.GetType() && string.Equals(x?.Mac, y?.Mac, StringComparison.OrdinalIgnoreCase));

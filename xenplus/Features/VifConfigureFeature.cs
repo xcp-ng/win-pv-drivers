@@ -37,7 +37,7 @@ sealed class VifConfigureFeature(
     }
 
     HashSet<VifConfiguration> ParseVifConfigurations() {
-        var configs = new HashSet<VifConfiguration>(new VifConfigurationEqualityComparer());
+        var configs = new HashSet<VifConfiguration>(new VifConfigurationMacEqualityComparer());
 
         // annoyingly, Windows watch doesn't expose the real triggered path, so it's up to us to scan ourselves
         using (var h = _xi.Lock()) {
