@@ -1,0 +1,4 @@
+{
+  // Rename P/Invoke class to avoid clashing with xenplus's PInvoke (which is visible via IVT)
+  "className": "PInvokeT"
+}
