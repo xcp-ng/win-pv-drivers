@@ -78,7 +78,8 @@ public sealed partial class GnttabIoctlTests {
         AssertSucceeded(bindB);
         using var channelB = new XenIfaceTestEventChannel(b, unchecked((uint)bindB.ReadInt32()));
 
-        // Binding may signal either endpoint; start the assertion window after draining it.
+        // The interdomain bind notifies B asynchronously; observe it before resetting for revoke.
+        Assert.True(eventB.WaitOne(CompletionTimeout), "Bind-time notification on B was not delivered");
         eventA.Reset();
         eventB.Reset();
 
