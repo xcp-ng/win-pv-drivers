@@ -363,7 +363,7 @@ public sealed partial class GnttabIoctlTests {
             }, sizeof(uint));
         AssertSucceeded(bind);
         using var channel = new XenIfaceTestEventChannel(handle, unchecked((uint)bind.ReadInt32()));
-        channel.Close();
+        Assert.True(channel.Close(), "EVTCHN_CLOSE must complete synchronously and succeed");
         return channel.Port;
     }
 }

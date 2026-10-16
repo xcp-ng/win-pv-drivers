@@ -28,7 +28,7 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
         AssertSucceeded(bind);
         var channel = new XenIfaceTestEventChannel(handle, unchecked((uint)bind.ReadInt32()));
         using (channel) {
-            channel.Close();
+            Assert.True(channel.Close(), "EVTCHN_CLOSE must complete synchronously and succeed");
         }
     }
 
@@ -209,6 +209,7 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
             handle,
             IOCTL_XENIFACE_EVTCHN_CLOSE,
             new XENIFACE_EVTCHN_CLOSE_IN { LocalPort = uint.MaxValue })) {
+            Assert.False(unknownClose.IsPending, "Closing an unknown port unexpectedly returned STATUS_PENDING");
             AssertRejected(unknownClose);
         }
         using (var unknownNotify = Ioctl(
@@ -250,6 +251,7 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
             other,
             IOCTL_XENIFACE_EVTCHN_CLOSE,
             new XENIFACE_EVTCHN_CLOSE_IN { LocalPort = port })) {
+            Assert.False(wrongClose.IsPending, "Closing another file object's port unexpectedly returned STATUS_PENDING");
             AssertRejected(wrongClose);
         }
         using (var wrongNotify = Ioctl(
@@ -264,7 +266,7 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
             new XENIFACE_EVTCHN_UNMASK_IN { LocalPort = port })) {
             AssertRejected(wrongUnmask);
         }
-        channel.Close();
+        Assert.True(channel.Close(), "EVTCHN_CLOSE must complete synchronously and succeed");
     }
 
     [Fact]
@@ -287,11 +289,12 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
         AssertSucceeded(bind);
         var port = unchecked((uint)bind.ReadInt32());
         using var channel = new XenIfaceTestEventChannel(handle, port);
-        channel.Close();
+        Assert.True(channel.Close(), "EVTCHN_CLOSE must complete synchronously and succeed");
         using (var duplicate = Ioctl(
             handle,
             IOCTL_XENIFACE_EVTCHN_CLOSE,
             new XENIFACE_EVTCHN_CLOSE_IN { LocalPort = port })) {
+            Assert.False(duplicate.IsPending, "A duplicate EVTCHN_CLOSE unexpectedly returned STATUS_PENDING");
             AssertRejected(duplicate);
         }
         using var smoke = Ioctl(
@@ -327,6 +330,7 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
                 sizeof(uint));
             AssertSucceeded(bind);
             using var channel = new XenIfaceTestEventChannel(handle, unchecked((uint)bind.ReadInt32()));
+            Assert.True(channel.Close(), "Each stress-loop EVTCHN_CLOSE must complete synchronously and succeed");
         }
     }
 }

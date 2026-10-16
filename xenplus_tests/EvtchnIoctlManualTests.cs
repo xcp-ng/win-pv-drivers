@@ -57,8 +57,8 @@ public sealed partial class EvtchnIoctlTests {
             baseline.ActiveProcessorCount);
         WriteE11Signal("added observed", added);
         ExchangeEventChannelHandshake(a, b, eventA, eventB, channelA.Port, channelB.Port);
-        channelB.Close();
-        channelA.Close();
+        Assert.True(channelB.Close(), "EVTCHN_CLOSE for channel B must complete synchronously and succeed");
+        Assert.True(channelA.Close(), "EVTCHN_CLOSE for channel A must complete synchronously and succeed");
         AssertFreshEventChannelPair(a, b, domain);
     }
 

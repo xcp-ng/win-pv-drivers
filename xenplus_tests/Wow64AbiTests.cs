@@ -34,8 +34,8 @@ public sealed class Wow64AbiTests(XenIfaceIoctlFixture fixture) : IClassFixture<
             port = unchecked((uint)bind.ReadInt32());
             using var close = handle.Ioctl(IOCTL_XENIFACE_EVTCHN_CLOSE, Marshal.SizeOf<XENIFACE_EVTCHN_CLOSE_IN>(), 0,
                 p => Marshal.StructureToPtr(new XENIFACE_EVTCHN_CLOSE_IN { LocalPort = port }, p, false));
+            Assert.False(close.IsPending, "WOW64 EVTCHN_CLOSE unexpectedly returned STATUS_PENDING");
             Assert.True(close.ImmediateSuccess, $"Bind succeeded but close failed with {close.ImmediateError}");
-            Assert.True(close.TerminalSuccess, $"Bind succeeded but close ended with {close.TerminalError}");
         }
 
         Assert.True(bound, $"A valid native x86 event-channel bind was rejected with Win32 error {bind.ImmediateError}; the x64 driver does not translate this WOW64 ABI");

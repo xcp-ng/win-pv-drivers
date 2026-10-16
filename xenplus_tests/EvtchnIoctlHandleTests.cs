@@ -29,7 +29,7 @@ public sealed partial class EvtchnIoctlTests {
 
         // The bind has completed before the original device handle closes.
         owner.Dispose();
-        channel.Close();
+        Assert.True(channel.Close(), "EVTCHN_CLOSE must complete synchronously and succeed");
     }
 
     [Fact]
