@@ -43,25 +43,26 @@ sealed class XenIfaceTestGrant : IDisposable {
         }
     }
 
+    PendingIoctl InternalRevoke() {
+        if (_v1RequestId is uint requestId) {
+            return Ioctl(
+                _handle,
+                IOCTL_XENIFACE_GNTTAB_REVOKE_FOREIGN_ACCESS,
+                new XENIFACE_GNTTAB_REVOKE_FOREIGN_ACCESS_IN { RequestId = requestId });
+        } else {
+            return Ioctl(
+                _handle,
+                IOCTL_XENIFACE_GNTTAB_REVOKE_FOREIGN_ACCESS_V2,
+                new XENIFACE_GNTTAB_REVOKE_FOREIGN_ACCESS_IN_V2 { Address = Address });
+        }
+    }
+
     public void Revoke() {
         if (_revoked || Request.IsTerminal) {
             return;
         }
 
-        if (_v1RequestId is uint requestId) {
-            using var revoke = Ioctl(
-                _handle,
-                IOCTL_XENIFACE_GNTTAB_REVOKE_FOREIGN_ACCESS,
-                new XENIFACE_GNTTAB_REVOKE_FOREIGN_ACCESS_IN { RequestId = requestId });
-            AssertSucceeded(revoke);
-        } else {
-            using var revoke = Ioctl(
-                _handle,
-                IOCTL_XENIFACE_GNTTAB_REVOKE_FOREIGN_ACCESS_V2,
-                new XENIFACE_GNTTAB_REVOKE_FOREIGN_ACCESS_IN_V2 { Address = Address });
-            AssertSucceeded(revoke);
-        }
-
+        using var revoke = InternalRevoke();
         _revoked = true;
         Assert.True(Request.WaitTerminal(CompletionTimeout), "Grant request did not complete after revoke");
         Assert.True(Request.TerminalSuccess, $"Grant request ended with {Request.TerminalError}");
@@ -74,7 +75,9 @@ sealed class XenIfaceTestGrant : IDisposable {
         _disposed = true;
         try {
             if (!_revoked && !Request.IsTerminal) {
-                Revoke();
+                using var revoke = InternalRevoke();
+                _revoked = true;
+                Request.WaitTerminal(CompletionTimeout);
             }
         } finally {
             Request.Dispose();

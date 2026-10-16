@@ -15,9 +15,9 @@ sealed class XenIfaceTestEventChannel : IDisposable {
 
     public uint Port { get; }
 
-    public void Close() {
-        if (Interlocked.Exchange(ref _closed, true)) {
-            return;
+    public bool Close() {
+        if (_closed) {
+            return true;
         }
 
         using var close = Ioctl(
@@ -26,7 +26,8 @@ sealed class XenIfaceTestEventChannel : IDisposable {
             new XENIFACE_EVTCHN_CLOSE_IN {
                 LocalPort = Port
             });
-        AssertSucceeded(close);
+        _closed = close.ImmediateSuccess;
+        return _closed;
     }
 
     public void Dispose() {
