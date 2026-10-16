@@ -173,41 +173,34 @@ sealed class VifConfigureFeature(
         }
     }
 
-    // the above is for applying 1 config, but this is for applying a group of configs with the same error code endpoint
     async Task ApplyVifConfigurations(
         MibIfTable2SafeHandle mibIfTable,
         MibUnicastIpAddressTableSafeHandle mibIPTable,
         MibIpForwardTable2SafeHandle mibRouteTable,
         HashSet<VifConfiguration> configs,
         CancellationToken ct) {
-        foreach (var configGroup in configs.GroupBy(x => x.StorePath)) {
-            var errors = new List<Exception>();
-            foreach (var config in configGroup) {
-                var suffix = config is VifConfigurationIPv6 ? "6" : "";
-                try {
-                    _logger.LogDebug(
-                        "Applying {} config update for '{}' (MAC '{}')",
-                        config.Category,
-                        config.StorePath,
-                        config.Mac);
+        foreach (var config in configs) {
+            Exception? error = null;
+            try {
+                _logger.LogDebug(
+                    "Applying {} config update for '{}' (MAC '{}')",
+                    config.Category,
+                    config.StorePath,
+                    config.Mac);
 
-                    await ApplyVifConfiguration(mibIfTable, mibIPTable, mibRouteTable, config, ct);
-                } catch (Exception ex) {
-                    _logger.LogWarning(
-                        ex,
-                        "Cannot apply {} config update for '{}' (MAC '{}')",
-                        config.Category,
-                        config.StorePath,
-                        config.Mac);
-                    errors.Add(ex);
-                } finally {
-                    using var h = _xi.Lock();
-                    VifStore.AcknowledgeVifConfiguration(h, config.StorePath, suffix);
-                }
+                await ApplyVifConfiguration(mibIfTable, mibIPTable, mibRouteTable, config, ct);
+            } catch (Exception ex) {
+                _logger.LogWarning(
+                    ex,
+                    "Cannot apply {} config update for '{}' (MAC '{}')",
+                    config.Category,
+                    config.StorePath,
+                    config.Mac);
+                error = ex;
             }
             try {
                 using var h = _xi.Lock();
-                VifStore.RespondVifConfiguration(h, configGroup.Key, errors);
+                VifStore.RespondVifConfiguration(h, config, error);
             } catch (Exception ex) {
                 _logger.LogWarning(ex, "Cannot report VIF config error to XAPI");
             }
