@@ -10,7 +10,7 @@ using Windows.Win32.Security;
 namespace XenDriverUtils {
     public static class PathUtils {
         static string GetSecureSD() {
-            var identity = WindowsIdentity.GetCurrent();
+            using var identity = WindowsIdentity.GetCurrent();
             var isAdmin = new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
             if (isAdmin) {
                 return $"O:BAG:BAD:(A;;GA;;;BA)(A;;GA;;;SY)";
