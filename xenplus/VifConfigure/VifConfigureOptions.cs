@@ -9,6 +9,7 @@ sealed class VifConfigureOptions {
     [Range(100, 3_600_000)]
     public int CommandTimeoutMilliseconds { get; set; } = 5000;
     public bool ClearDnsOnEmptyDnsSetting { get; set; } = false;
+    public bool ValidateDnsServers { get; set; } = false;
 }
 
 [OptionsValidator]

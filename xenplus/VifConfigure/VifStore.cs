@@ -60,7 +60,7 @@ static class VifStore {
 
         var rawGateway = h.StoreTryReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "gateway6"));
         IPAddress? gateway = null;
-        if (gateway != null) {
+        if (rawGateway != null) {
             if (!IPAddress.TryParse(rawGateway, out gateway) || gateway.AddressFamily != AddressFamily.InterNetworkV6) {
                 throw new ArgumentException($"Gateway '{rawGateway}' is not an IPv6 address");
             }
@@ -125,24 +125,15 @@ static class VifStore {
         };
     }
 
-    internal static void AcknowledgeVifConfiguration(XenIfaceHandle h, string vc, string suffix) {
-        try {
-            h.StoreRemove(StoreUtils.PathJoin(vc, StaticIpSetting, "enabled" + suffix));
-        } catch {
-        }
-    }
-
-    internal static void RespondVifConfiguration(XenIfaceHandle h, string vc, IList<Exception> exs) {
-        var errorCode = exs.FirstOrDefault() switch {
+    internal static void RespondVifConfiguration(XenIfaceHandle h, VifConfiguration config, Exception? error) {
+        var errorCode = error switch {
             null => 0,
             VifConfigureException vex => vex.ErrorCode,
             Exception ex => ex.HResult,
         };
-        var msg = string.Join('\n', exs.Select(ex => ex.Message));
-        try {
-            h.StoreWrite(StoreUtils.PathJoin(vc, StaticIpSetting, "error-code"), errorCode.ToString());
-            h.StoreWrite(StoreUtils.PathJoin(vc, StaticIpSetting, "error-msg"), msg);
-        } catch {
-        }
+        h.StoreWrite(StoreUtils.PathJoin(config.StorePath, StaticIpSetting, "error-code"), errorCode.ToString());
+        h.StoreWrite(StoreUtils.PathJoin(config.StorePath, StaticIpSetting, "error-msg"), error?.Message ?? "");
+        var suffix = config is VifConfigurationIPv6 ? "6" : "";
+        h.StoreRemove(StoreUtils.PathJoin(config.StorePath, StaticIpSetting, "enabled" + suffix));
     }
 }
