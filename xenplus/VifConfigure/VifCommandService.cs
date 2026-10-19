@@ -9,6 +9,8 @@ namespace XenPlus.VifConfigure;
 /// A realizer for <see cref="VifConfiguration"/>.
 /// </summary>
 class VifCommandService(IOptionsMonitor<VifConfigureOptions> _options, string _netshPath) {
+    string NetshArgumentDnsValidate => _options.CurrentValue.ValidateDnsServers ? "validate=yes" : "validate=no";
+
     public IEnumerable<(string fileName, List<string> arguments)> GetCommandsConfigv4(
         MIB_IF_ROW2 mibIf,
         IReadOnlyList<MIB_UNICASTIPADDRESS_ROW> mibIPTable,
@@ -19,7 +21,15 @@ class VifCommandService(IOptionsMonitor<VifConfigureOptions> _options, string _n
             if (!mibIPTable.HasDhcpAddress(mibIf.InterfaceIndex, ADDRESS_FAMILY.AF_INET)) {
                 yield return (_netshPath, ["interface", "ipv4", "set", "address", interfaceIndex, "source=dhcp"]);
             }
-            yield return (_netshPath, ["interface", "ipv4", "set", "dnsservers", interfaceIndex, "source=dhcp"]);
+            yield return (_netshPath, [
+                "interface",
+                "ipv4",
+                "set",
+                "dnsservers",
+                interfaceIndex,
+                "source=dhcp",
+                NetshArgumentDnsValidate,
+            ]);
         } else if (config is VifConfigurationIPv4Static staticv4) {
             var address = staticv4.Address[0];
             yield return (_netshPath, [
@@ -37,13 +47,26 @@ class VifCommandService(IOptionsMonitor<VifConfigureOptions> _options, string _n
             if (dns != null) {
                 if (dns.Count > 0) {
                     for (int i = 0; i < dns.Count; i++) {
-                        yield return (_netshPath, [
+                        List<string> dnsArgs = [
                             "interface",
                             "ipv4",
-                            i == 0 ? "set" : "add",
-                            "dnsservers",
-                            interfaceIndex,
-                            $"address={dns[i]}"]);
+                        ];
+                        if (i == 0) {
+                            dnsArgs.AddRange([
+                                "set",
+                                "dnsservers",
+                                interfaceIndex,
+                                "source=static",
+                            ]);
+                        } else {
+                            dnsArgs.AddRange([
+                                "add",
+                                "dnsservers",
+                                interfaceIndex,
+                            ]);
+                        }
+                        dnsArgs.AddRange([$"address={dns[i]}", NetshArgumentDnsValidate]);
+                        yield return (_netshPath, dnsArgs);
                     }
                 } else if (_options.CurrentValue.ClearDnsOnEmptyDnsSetting) {
                     yield return (_netshPath, ["interface", "ipv4", "set", "dnsservers", interfaceIndex, "address=none"]);
@@ -89,7 +112,15 @@ class VifCommandService(IOptionsMonitor<VifConfigureOptions> _options, string _n
                     ]);
                 }
             }
-            yield return (_netshPath, ["interface", "ipv6", "set", "dnsservers", interfaceIndex, "source=dhcp"]);
+            yield return (_netshPath, [
+                "interface",
+                "ipv6",
+                "set",
+                "dnsservers",
+                interfaceIndex,
+                "source=dhcp",
+                NetshArgumentDnsValidate,
+            ]);
 
         } else if (config is VifConfigurationIPv6Static staticv6) {
             var address = staticv6.Address[0];
@@ -162,13 +193,26 @@ class VifCommandService(IOptionsMonitor<VifConfigureOptions> _options, string _n
             if (dns != null) {
                 if (dns.Count > 0) {
                     for (int i = 0; i < dns.Count; i++) {
-                        yield return (_netshPath, [
+                        List<string> dnsArgs = [
                             "interface",
                             "ipv6",
-                            i == 0 ? "set" : "add",
-                            "dnsservers",
-                            interfaceIndex,
-                            $"address={dns[i]}"]);
+                        ];
+                        if (i == 0) {
+                            dnsArgs.AddRange([
+                                "set",
+                                "dnsservers",
+                                interfaceIndex,
+                                "source=static",
+                            ]);
+                        } else {
+                            dnsArgs.AddRange([
+                                "add",
+                                "dnsservers",
+                                interfaceIndex,
+                            ]);
+                        }
+                        dnsArgs.AddRange([$"address={dns[i]}", NetshArgumentDnsValidate]);
+                        yield return (_netshPath, dnsArgs);
                     }
                 } else if (_options.CurrentValue.ClearDnsOnEmptyDnsSetting) {
                     yield return (_netshPath, ["interface", "ipv6", "set", "dnsservers", interfaceIndex, "address=none"]);
