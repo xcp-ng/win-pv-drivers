@@ -60,7 +60,7 @@ static class VifStore {
 
         var rawGateway = h.StoreTryReadStrict(StoreUtils.PathJoin(vc, StaticIpSetting, "gateway6"));
         IPAddress? gateway = null;
-        if (gateway != null) {
+        if (rawGateway != null) {
             if (!IPAddress.TryParse(rawGateway, out gateway) || gateway.AddressFamily != AddressFamily.InterNetworkV6) {
                 throw new ArgumentException($"Gateway '{rawGateway}' is not an IPv6 address");
             }
