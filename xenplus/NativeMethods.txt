@@ -44,14 +44,14 @@ WTSGetActiveConsoleSessionId
 // OSInfoService
 DSROLE_PRIMARY_DOMAIN_GUID_PRESENT
 DSROLE_PRIMARY_DOMAIN_INFO_BASIC
-DsRoleFreeMemory
+DsRoleFreeMemorySafeHandle
 DsRoleGetPrimaryDomainInformation
 
 // MemoryInfoFeature
 GlobalMemoryStatusEx
 
 // VifConfigureFeature
-FreeMibTable
+FreeMibTableSafeHandle
 GetIfTable2
 GetIpForwardTable2
 GetUnicastIpAddressTable

@@ -1,4 +1,3 @@
-using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,10 +7,15 @@ using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using Windows.Win32.Foundation;
 
 namespace XenDriverUtils {
-    public class InfFile : SafeHandleMinusOneIsInvalid {
-        public InfFile(IntPtr existingHandle, bool ownsHandle) : base(ownsHandle) {
-            handle = existingHandle;
+    public class InfFile : SetupCloseInfFileSafeHandle {
+        InfFile(IntPtr existingHandle, bool ownsHandle) : base(existingHandle, ownsHandle) {
         }
+
+        /// <remarks>
+        /// Overridden because <see cref="PInvoke.SetupOpenInfFile"/> returns <see cref="HANDLE.INVALID_HANDLE_VALUE"/>
+        /// on failure whereas <see cref="SetupCloseInfFileSafeHandle"/> only considers 0.
+        /// </remarks>
+        public override bool IsInvalid => handle == IntPtr.Zero || handle == (IntPtr)(-1);
 
         public static InfFile Open(string FileName, string? InfClass, INF_STYLE InfStyle, out uint ErrorLine) {
             unsafe {
@@ -110,15 +114,6 @@ namespace XenDriverUtils {
             } catch (Exception ex) {
                 throw new KeyNotFoundException($"{section}/{key}", ex);
             }
-        }
-
-        protected override bool ReleaseHandle() {
-            if (!IsInvalid) {
-                unsafe {
-                    PInvoke.SetupCloseInfFile(handle.ToPointer());
-                }
-            }
-            return true;
         }
     }
 }
