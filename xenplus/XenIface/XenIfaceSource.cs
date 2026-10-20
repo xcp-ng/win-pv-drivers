@@ -46,8 +46,9 @@ sealed partial class XenIfaceSource : IDisposable {
     /// locked
     /// </summary>
     readonly HashSet<XenIfaceWatch> _watches = [];
+
     /// <summary>
-    /// locked, for the worker
+    /// for the worker only
     /// </summary>
     readonly DisposeStack _tombstones = new();
 
@@ -190,11 +191,21 @@ sealed partial class XenIfaceSource : IDisposable {
 
     internal void OnDeviceCallback(CM_NOTIFY_ACTION action, XenIfaceDevice target) {
         lock (_lock) {
-            _requests.Enqueue(new DeviceRequest() {
-                Action = action,
-                TargetDevice = target
-            });
-            Monitor.Pulse(_lock);
+            if (action == CM_NOTIFY_ACTION_DEVICEQUERYREMOVE ||
+                action == CM_NOTIFY_ACTION_DEVICEQUERYREMOVEFAILED) {
+                if (ReferenceEquals(target, _active)) {
+                    _active = null;
+                }
+                // must close immediately to avoid failing DEVICEQUERYREMOVE
+                target.Handle.Close();
+            }
+            if (action != CM_NOTIFY_ACTION_DEVICEQUERYREMOVE) {
+                _requests.Enqueue(new DeviceRequest() {
+                    Action = action,
+                    TargetDevice = target
+                });
+                Monitor.Pulse(_lock);
+            }
         }
     }
 
@@ -272,18 +283,15 @@ sealed partial class XenIfaceSource : IDisposable {
             deviceRequest.Action == CM_NOTIFY_ACTION_DEVICEREMOVECOMPLETE) {
             if (ReferenceEquals(deviceRequest.TargetDevice, _active)) {
                 _active = null;
-                if (deviceRequest.Action == CM_NOTIFY_ACTION_DEVICEQUERYREMOVEFAILED) {
-                    // we killed the device in its callback, so we have to rescan to compensate
-                    _requests.Enqueue(new WorkerRequest {
-                        Action = CM_NOTIFY_ACTION_DEVICEINTERFACEARRIVAL
-                    });
-                }
             }
+            _tombstones.Push(deviceRequest.TargetDevice);
+            _requests.Enqueue(new WorkerRequest {
+                Action = CM_NOTIFY_ACTION_DEVICEINTERFACEARRIVAL
+            });
             _logger.LogDebug(
                 "{} on {}",
                 deviceRequest.Action,
                 deviceRequest.TargetDevice.DevicePath);
-            _tombstones.Push(deviceRequest.TargetDevice);
         }
     }
 

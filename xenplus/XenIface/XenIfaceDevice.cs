@@ -5,7 +5,6 @@ using Windows.Win32;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using Windows.Win32.Foundation;
 
-using static Windows.Win32.Devices.DeviceAndDriverInstallation.CM_NOTIFY_ACTION;
 using static Windows.Win32.Devices.DeviceAndDriverInstallation.CM_NOTIFY_FILTER_TYPE;
 
 namespace XenPlus.XenIface;
@@ -66,14 +65,6 @@ sealed partial class XenIfaceDevice : IDisposable {
         try {
             var gch = GCHandle.FromIntPtr((nint)context);
             var self = Check.Unwrap<XenIfaceDevice>(gch.Target);
-
-            if (action == CM_NOTIFY_ACTION_DEVICEQUERYREMOVE ||
-                action == CM_NOTIFY_ACTION_DEVICEQUERYREMOVEFAILED) {
-                // must close immediately to avoid failing DEVICEQUERYREMOVE
-                lock (self._parent.SyncRoot) {
-                    self.Handle.Close();
-                }
-            }
 
             self._parent.OnDeviceCallback(action, self);
         } catch (Exception ex) {
