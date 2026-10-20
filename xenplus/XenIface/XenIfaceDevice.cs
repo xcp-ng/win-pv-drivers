@@ -70,7 +70,9 @@ sealed partial class XenIfaceDevice : IDisposable {
             if (action == CM_NOTIFY_ACTION_DEVICEQUERYREMOVE ||
                 action == CM_NOTIFY_ACTION_DEVICEQUERYREMOVEFAILED) {
                 // must close immediately to avoid failing DEVICEQUERYREMOVE
-                self.Handle.Close();
+                lock (self._parent.SyncRoot) {
+                    self.Handle.Close();
+                }
             }
 
             self._parent.OnDeviceCallback(action, self);
