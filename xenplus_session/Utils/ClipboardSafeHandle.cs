@@ -6,25 +6,17 @@ using Windows.Win32.System.Ole;
 
 namespace XenPlus;
 
-sealed class ClipboardSafeHandle : GlobalFreeSafeHandle {
-    readonly CLIPBOARD_FORMAT _format;
-    readonly bool _ownsHandle;
-    readonly SafeHandleReferenceScope _openScope;
-
-    ClipboardSafeHandle(
-        SafeHandleReferenceScope open,
-        HGLOBAL h,
-        CLIPBOARD_FORMAT format,
-        bool ownsHandle) : base(h, ownsHandle) {
-        _format = format;
-        _ownsHandle = ownsHandle;
-        _openScope = open;
-    }
-
+/// <summary>
+/// Must only be used when clipboard is open.
+/// </summary>
+sealed class ClipboardSafeHandle(HGLOBAL h, CLIPBOARD_FORMAT format, bool ownsHandle)
+#pragma warning disable CS9107
+    : GlobalFreeSafeHandle(h, ownsHandle) {
+#pragma warning restore CS9107
     public string GetString(int maxLength = int.MaxValue) {
         ObjectDisposedException.ThrowIf(IsInvalid, this);
-        if (_format != CLIPBOARD_FORMAT.CF_UNICODETEXT) {
-            throw new InvalidOperationException($"Invalid clipboard format '{_format}'");
+        if (format != CLIPBOARD_FORMAT.CF_UNICODETEXT) {
+            throw new InvalidOperationException($"Invalid clipboard format '{format}'");
         }
         using var shref = this.Borrow();
         unsafe {
@@ -57,13 +49,8 @@ sealed class ClipboardSafeHandle : GlobalFreeSafeHandle {
         }
     }
 
-    public static ClipboardSafeHandle CreateString(OpenClipboardSafeHandle open, ReadOnlySpan<char> value) {
-        SafeHandleReferenceScope? scope = null;
-        ClipboardSafeHandle? result = null;
-
-        try {
-            scope = open.Borrow();
-
+    public static ClipboardSafeHandle CreateString(ReadOnlySpan<char> value) {
+        unsafe {
             var valueByteCount = value.Length * sizeof(char);
             var bufferByteCount = (value.Length + 1) * sizeof(char);
 
@@ -74,9 +61,9 @@ sealed class ClipboardSafeHandle : GlobalFreeSafeHandle {
                 throw new Win32Exception(nameof(PInvoke.GlobalAlloc));
             }
 
-            result = new(scope, hglobal, CLIPBOARD_FORMAT.CF_UNICODETEXT, true);
-            scope = null; // consumed by result
-            unsafe {
+            var result = new ClipboardSafeHandle(hglobal, CLIPBOARD_FORMAT.CF_UNICODETEXT, true);
+
+            try {
                 var locked = PInvoke.GlobalLock(result);
                 if (locked == null) {
                     throw new Win32Exception(nameof(PInvoke.GlobalLock));
@@ -89,19 +76,18 @@ sealed class ClipboardSafeHandle : GlobalFreeSafeHandle {
                 } finally {
                     PInvoke.GlobalUnlock(result);
                 }
+            } catch {
+                result.Dispose();
+                throw;
             }
 
             return result;
-        } catch {
-            result?.Dispose();
-            scope?.Dispose();
-            throw;
         }
     }
 
-    public static ClipboardSafeHandle GetClipboard(OpenClipboardSafeHandle open, CLIPBOARD_FORMAT format) {
+    public static ClipboardSafeHandle GetClipboard(CLIPBOARD_FORMAT format) {
         unsafe {
-            return new(open.Borrow(), (HGLOBAL)PInvoke.GetClipboardData((uint)format).Value, format, false);
+            return new((HGLOBAL)PInvoke.GetClipboardData((uint)format).Value, format, false);
         }
     }
 
@@ -111,19 +97,14 @@ sealed class ClipboardSafeHandle : GlobalFreeSafeHandle {
     public void SetClipboard() {
         using var shref = this.Borrow();
         ObjectDisposedException.ThrowIf(IsClosed || IsInvalid, this);
-        if (!_ownsHandle) {
+        if (!ownsHandle) {
             throw new InvalidOperationException("cannot set clipboard with unowned handle");
         }
-        if (PInvoke.SetClipboardData((uint)_format, (HANDLE)shref.Handle) == HANDLE.Null) {
+        if (PInvoke.SetClipboardData((uint)format, (HANDLE)shref.Handle) == HANDLE.Null) {
             throw new Win32Exception(nameof(PInvoke.SetClipboardData));
         }
         // SetClipboardData gives ownership of the handle over to Windows.
         SetHandleAsInvalid();
         // as we've borrowed, we must release the reference even if we've called SetHandleAsInvalid
-    }
-
-    protected override bool ReleaseHandle() {
-        _openScope.Dispose();
-        return base.ReleaseHandle();
     }
 }

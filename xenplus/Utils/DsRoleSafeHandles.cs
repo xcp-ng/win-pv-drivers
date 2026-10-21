@@ -1,12 +1,11 @@
 using System.ComponentModel;
-using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Networking.ActiveDirectory;
 
 namespace XenPlus;
 
-sealed class DsRolePrimaryDomainInfoBasicSafeHandle : SafeHandle {
+sealed class DsRolePrimaryDomainInfoBasicSafeHandle : DsRoleFreeMemorySafeHandle {
     unsafe DsRolePrimaryDomainInfoBasicSafeHandle(byte* info, bool ownsHandle) : base((nint)info, ownsHandle) {
     }
 
@@ -22,15 +21,6 @@ sealed class DsRolePrimaryDomainInfoBasicSafeHandle : SafeHandle {
             }
             return new(info, true);
         }
-    }
-
-    public override bool IsInvalid => handle == nint.Zero;
-
-    protected override bool ReleaseHandle() {
-        unsafe {
-            PInvoke.DsRoleFreeMemory((void*)handle);
-        }
-        return true;
     }
 
     public DSROLE_MACHINE_ROLE MachineRole {

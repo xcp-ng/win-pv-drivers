@@ -12,7 +12,7 @@ SetupFindFirstLine
 SetupFindNextLine
 SetupGetLineText
 SetupGetStringField
-SetupCloseInfFile
+SetupCloseInfFileSafeHandle
 
 SetupDiGetClassDevs
 SetupDiEnumDeviceInfo

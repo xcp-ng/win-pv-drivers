@@ -1,6 +1,5 @@
 using System.Collections;
 using System.ComponentModel;
-using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Networking.WinSock;
@@ -8,7 +7,7 @@ using Windows.Win32.NetworkManagement.IpHelper;
 
 namespace XenPlus;
 
-sealed class MibUnicastIpAddressTableSafeHandle : SafeHandle, IReadOnlyList<MIB_UNICASTIPADDRESS_ROW> {
+sealed class MibUnicastIpAddressTableSafeHandle : FreeMibTableSafeHandle, IReadOnlyList<MIB_UNICASTIPADDRESS_ROW> {
     unsafe MibUnicastIpAddressTableSafeHandle(MIB_UNICASTIPADDRESS_TABLE* table) : base((nint)table, true) {
     }
 
@@ -20,15 +19,6 @@ sealed class MibUnicastIpAddressTableSafeHandle : SafeHandle, IReadOnlyList<MIB_
             }
             return new MibUnicastIpAddressTableSafeHandle(table);
         }
-    }
-
-    public override bool IsInvalid => handle == nint.Zero;
-
-    protected override bool ReleaseHandle() {
-        unsafe {
-            PInvoke.FreeMibTable((void*)handle);
-        }
-        return true;
     }
 
     public int Count {
