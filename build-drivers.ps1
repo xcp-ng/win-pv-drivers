@@ -21,72 +21,96 @@ param (
     [Parameter()]
     [switch]$Sign,
     [Parameter()]
-    [switch]$CodeAnalysis
+    [switch]$CodeQL,
+    [Parameter()]
+    [string]$CodeQLPath = "codeql",
+    [Parameter()]
+    [string]$CodeQLVersion = "2.25.5",
+    [Parameter()]
+    [string]$CodeQLSuite = "microsoft/windows-drivers@1.10.0:windows-driver-suites/recommended.qls",
+    [Parameter()]
+    [string]$CodeQLDatabaseDir = "$PSScriptRoot\codeql-db"
 )
 
 . $PSScriptRoot\branding.ps1
 . $PSScriptRoot\scripts\branding-generic.ps1
 . $PSScriptRoot\scripts\sign.ps1
 
+$ErrorActionPreference = "Stop"
+
 # Drivers are ordered by build date first so the Hmm gives you a more granular revision number (down to the minute).
 $DriverTime = (Get-Date -Format Hmm)
 
 $OutputPath = "$PSScriptRoot\driver-bins"
 Remove-Item -Path $OutputPath -Force -Recurse -ErrorAction SilentlyContinue
-$ErrorActionPreference = "Stop"
+
 foreach ($repo in $Drivers) {
     Push-Location $PSScriptRoot\$repo
     try {
-        $rawver = Get-PackageVersion -Raw $repo
-        $ver = Get-PackageVersion $repo
-        $Env:MAJOR_VERSION = $ver.Major
-        $Env:MINOR_VERSION = $ver.Minor
-        $Env:MICRO_VERSION = $ver.Build
-        if ($rawver.Revision -eq -1) {
-            $Env:BUILD_NUMBER = $DriverTime
-        }
-        else {
-            $Env:BUILD_NUMBER = $rawver.Revision
-        }
-
         git clean -fXd
 
-        $DriverConfiguration = "$ConfigurationBase $Configuration"
-        $DriverConfigShort = $DriverConfiguration.Replace(" ", "")
-
-        $BuildArgs = @(
-            (Resolve-Path "$SolutionDir\$repo.sln"),
-            "/m:4",
-            "/p:Configuration=$DriverConfiguration",
-            "/p:Platform=$Platform",
-            "/p:SignMode=Off",
-            "/t:$Target"
-        )
-        if ($CodeAnalysis) {
-            $BuildArgs += @("/p:RunCodeAnalysis=true", "/p:EnablePREFast=true")
-        }
-        if ($Kasan) {
-            $BuildArgs += @("/p:EnableKASAN=true")
+        $DriverArgs = @{
+            Driver            = $repo
+            Target            = $Target
+            Configuration     = $Configuration
+            Platform          = $Platform
+            SolutionDir       = $SolutionDir
+            ConfigurationBase = $ConfigurationBase
+            BuildNumber       = $DriverTime
+            Kasan             = $Kasan
         }
 
-        msbuild.exe @BuildArgs
-        if ($LASTEXITCODE -ne 0) {
-            throw "MSBuild failed with error $LASTEXITCODE"
-        }
-
+        $DriverConfigShort = "$ConfigurationBase$Configuration".Replace(" ", "")
         $DriverOutput = "$OutputPath\$Platform\$Configuration\$repo"
+
+        if ($CodeQL) {
+            $Database = "$CodeQLDatabaseDir\$repo"
+
+            $BuildCommand = "powershell.exe -File `"$PSScriptRoot\build-driver.ps1`""
+            foreach ($Arg in $DriverArgs.GetEnumerator()) {
+                if ($Arg.Value -is [System.Management.Automation.SwitchParameter]) {
+                    if ($Arg.Value) {
+                        $BuildCommand += " -$($Arg.Key)"
+                    }
+                }
+                else {
+                    $BuildCommand += " -$($Arg.Key) `"$($Arg.Value)`""
+                }
+            }
+            if ($PSVersionTable.PSVersion -lt [version]"7.3" -or $PSNativeCommandArgumentPassing -eq "Legacy") {
+                $BuildCommand = $BuildCommand.Replace('"', '\"')
+            }
+
+            & $CodeQLPath database create $Database `
+                --language=cpp `
+                --source-root=. `
+                --overwrite `
+                "--command=$BuildCommand"
+            if ($LASTEXITCODE -ne 0) {
+                throw "CodeQL database create failed with error $LASTEXITCODE"
+            }
+        }
+        else {
+            & $PSScriptRoot\build-driver.ps1 @DriverArgs
+        }
+
         New-Item -ItemType Directory -Path $DriverOutput -Force
         Copy-Item -Path .\$SolutionDir\$DriverConfigShort\$Platform\package\* -Destination $DriverOutput\ -Force -Recurse
+
+        if ($CodeQL) {
+            & $CodeQLPath database analyze $Database $CodeQLSuite `
+                --format=sarifv2.1.0 `
+                "--output=$DriverOutput\$repo.sarif"
+            if ($LASTEXITCODE -ne 0) {
+                throw "CodeQL database analyze failed with error $LASTEXITCODE"
+            }
+        }
 
         if ($Sign) {
             Set-SignerFileSignature $DriverOutput\*.sys, $DriverOutput\*.dll, $DriverOutput\*.exe, $DriverOutput\*.cat
         }
     }
     finally {
-        $Env:MAJOR_VERSION = ''
-        $Env:MINOR_VERSION = ''
-        $Env:MICRO_VERSION = ''
-        $Env:BUILD_NUMBER = ''
         Pop-Location
     }
 }
