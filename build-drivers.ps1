@@ -25,8 +25,6 @@ param (
     [Parameter()]
     [string]$CodeQLPath = "codeql",
     [Parameter()]
-    [string]$CodeQLVersion = "2.25.5",
-    [Parameter()]
     [string]$CodeQLSuite = "microsoft/windows-drivers@1.10.0:windows-driver-suites/recommended.qls",
     [Parameter()]
     [string]$CodeQLDatabaseDir = "$PSScriptRoot\codeql-db"
@@ -49,36 +47,22 @@ foreach ($repo in $Drivers) {
     try {
         git clean -fXd
 
-        $DriverArgs = @{
-            Driver            = $repo
-            Target            = $Target
-            Configuration     = $Configuration
-            Platform          = $Platform
-            SolutionDir       = $SolutionDir
-            ConfigurationBase = $ConfigurationBase
-            BuildNumber       = $DriverTime
-            Kasan             = $Kasan
-        }
-
         $DriverConfigShort = "$ConfigurationBase$Configuration".Replace(" ", "")
         $DriverOutput = "$OutputPath\$Platform\$Configuration\$repo"
 
         if ($CodeQL) {
             $Database = "$CodeQLDatabaseDir\$repo"
 
-            $BuildCommand = "powershell.exe -File `"$PSScriptRoot\build-driver.ps1`""
-            foreach ($Arg in $DriverArgs.GetEnumerator()) {
-                if ($Arg.Value -is [System.Management.Automation.SwitchParameter]) {
-                    if ($Arg.Value) {
-                        $BuildCommand += " -$($Arg.Key)"
-                    }
-                }
-                else {
-                    $BuildCommand += " -$($Arg.Key) `"$($Arg.Value)`""
-                }
-            }
-            if ($PSVersionTable.PSVersion -lt [version]"7.3" -or $PSNativeCommandArgumentPassing -eq "Legacy") {
-                $BuildCommand = $BuildCommand.Replace('"', '\"')
+            $BuildCommand = "powershell.exe -File ..\build-driver.ps1 ` 
+                -Driver $repo `
+                -Target $Target `
+                -Configuration $Configuration `
+                -Platform $Platform `
+                -SolutionDir $SolutionDir `
+                -BuildNumber $DriverTime"
+
+            if ($Kasan) {
+                $BuildCommand += " -Kasan"
             }
 
             & $CodeQLPath database create $Database `
@@ -91,11 +75,20 @@ foreach ($repo in $Drivers) {
             }
         }
         else {
-            & $PSScriptRoot\build-driver.ps1 @DriverArgs
+            & $PSScriptRoot\build-driver.ps1 `
+                -Driver $repo `
+                -Target $Target `
+                -Configuration $Configuration `
+                -Platform $Platform `
+                -SolutionDir $SolutionDir `
+                -ConfigurationBase $ConfigurationBase `
+                -BuildNumber $DriverTime `
+                -Kasan:$Kasan
         }
 
         New-Item -ItemType Directory -Path $DriverOutput -Force
-        Copy-Item -Path .\$SolutionDir\$DriverConfigShort\$Platform\package\* -Destination $DriverOutput\ -Force -Recurse
+        Copy-Item -Path .\$SolutionDir\$DriverConfigShort\$Platform\package\* `
+            -Destination $DriverOutput\ -Force -Recurse
 
         if ($CodeQL) {
             & $CodeQLPath database analyze $Database $CodeQLSuite `
@@ -107,7 +100,8 @@ foreach ($repo in $Drivers) {
         }
 
         if ($Sign) {
-            Set-SignerFileSignature $DriverOutput\*.sys, $DriverOutput\*.dll, $DriverOutput\*.exe, $DriverOutput\*.cat
+            Set-SignerFileSignature $DriverOutput\*.sys, $DriverOutput\*.dll, `
+                $DriverOutput\*.exe, $DriverOutput\*.cat
         }
     }
     finally {
