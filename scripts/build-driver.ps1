@@ -23,12 +23,12 @@ param (
     [switch]$Kasan
 )
 
-. $PSScriptRoot\branding.ps1
-. $PSScriptRoot\scripts\branding-generic.ps1
+. $PSScriptRoot\..\branding.ps1
+. $PSScriptRoot\branding-generic.ps1
 
 $ErrorActionPreference = "Stop"
 
-Push-Location $PSScriptRoot\$Driver
+Push-Location $PSScriptRoot\..\$Driver
 try {
     $rawver = Get-PackageVersion -Raw $Driver
     $ver = Get-PackageVersion $Driver

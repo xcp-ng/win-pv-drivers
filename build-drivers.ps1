@@ -53,13 +53,15 @@ foreach ($repo in $Drivers) {
         if ($CodeQL) {
             $Database = "$CodeQLDatabaseDir\$repo"
 
-            $BuildCommand = "powershell.exe -File ..\build-driver.ps1 ` 
-                -Driver $repo `
-                -Target $Target `
-                -Configuration $Configuration `
-                -Platform $Platform `
-                -SolutionDir $SolutionDir `
-                -BuildNumber $DriverTime"
+            $BuildCommand = @(
+                "powershell.exe -File ..\scripts\build-driver.ps1",
+                "-Driver $repo",
+                "-Target $Target",
+                "-Configuration $Configuration",
+                "-Platform $Platform",
+                "-SolutionDir $SolutionDir",
+                "-BuildNumber $DriverTime"
+            ) -join " "
 
             if ($Kasan) {
                 $BuildCommand += " -Kasan"
@@ -75,7 +77,7 @@ foreach ($repo in $Drivers) {
             }
         }
         else {
-            & $PSScriptRoot\build-driver.ps1 `
+            & $PSScriptRoot\scripts\build-driver.ps1 `
                 -Driver $repo `
                 -Target $Target `
                 -Configuration $Configuration `
