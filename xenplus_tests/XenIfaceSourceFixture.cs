@@ -80,7 +80,7 @@ public sealed class XenIfaceSourceFixture : IDisposable {
         return devicePath!;
     }
 
-    static string DeviceInterfacePathToInstanceId(string devicePath) {
+    internal static string DeviceInterfacePathToInstanceId(string devicePath) {
         var prefixLength =
             devicePath.StartsWith(@"\\?\", StringComparison.Ordinal) ||
             devicePath.StartsWith(@"\\.\", StringComparison.Ordinal) ?
@@ -103,10 +103,11 @@ public sealed class XenIfaceSourceFixture : IDisposable {
         return new TempStorePath(Source);
     }
 
-    static async Task RunPnputilAsync(
+    static async Task<(int ExitCode, string Output)> RunPnputilAsync(
         string command,
         string instanceId,
-        CancellationToken cancellationToken) {
+        CancellationToken cancellationToken,
+        bool requireSuccess = true) {
 
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(PnputilTimeout);
@@ -137,10 +138,18 @@ public sealed class XenIfaceSourceFixture : IDisposable {
 
         var output = await stdout;
         var error = await stderr;
-        if (process.ExitCode != 0) {
+        if (requireSuccess && process.ExitCode != 0) {
             throw new InvalidOperationException(
                 $"pnputil {command} failed with exit code {process.ExitCode}: {output}{error}");
         }
+        return (process.ExitCode, $"{output}{error}");
+    }
+
+    internal Task<(int ExitCode, string Output)> TryDisableDeviceAsync(
+        string instanceId,
+        CancellationToken cancellationToken) {
+        // A veto is expected by the caller. Do not require success or wait for the source to become inactive.
+        return RunPnputilAsync("/disable-device", instanceId, cancellationToken, requireSuccess: false);
     }
 
     internal async Task DisableDeviceAsync(string instanceId, CancellationToken cancellationToken) {
@@ -150,8 +159,17 @@ public sealed class XenIfaceSourceFixture : IDisposable {
     }
 
     internal async Task EnableDeviceAsync(string instanceId, CancellationToken cancellationToken) {
-        await RunPnputilAsync("/enable-device", instanceId, cancellationToken);
-        await WaitForDeviceStateAsync(active: true, cancellationToken);
+        var rebootRequired = XenIfaceDeviceState.Enable(instanceId);
+        TestContext.Current.TestOutputHelper?.WriteLine(
+            rebootRequired ?
+                $"Enabled {instanceId} through SetupAPI; Windows still reports a reboot is required." :
+                $"Enabled {instanceId} through SetupAPI.");
+
+        // A successful configuration change with DI_NEEDREBOOT/DI_NEEDRESTART is not an enable failure.
+        // Live-rebind tests verify their own Resumed/watch postconditions separately.
+        if (!rebootRequired) {
+            await WaitForDeviceStateAsync(active: true, cancellationToken);
+        }
     }
 
     /// <summary>
