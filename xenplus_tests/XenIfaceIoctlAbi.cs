@@ -10,6 +10,10 @@ static class XenIfaceIoctl {
 
     public static readonly uint IOCTL_XENIFACE_STORE_READ = CTL_CODE(
         PInvokeT.FILE_DEVICE_UNKNOWN, 0x800, PInvokeT.METHOD_BUFFERED, PInvokeT.FILE_ANY_ACCESS);
+    public static readonly uint IOCTL_XENIFACE_STORE_WRITE = CTL_CODE(
+        PInvokeT.FILE_DEVICE_UNKNOWN, 0x801, PInvokeT.METHOD_BUFFERED, PInvokeT.FILE_ANY_ACCESS);
+    public static readonly uint IOCTL_XENIFACE_STORE_REMOVE = CTL_CODE(
+        PInvokeT.FILE_DEVICE_UNKNOWN, 0x803, PInvokeT.METHOD_BUFFERED, PInvokeT.FILE_ANY_ACCESS);
     public static readonly uint IOCTL_XENIFACE_EVTCHN_BIND_INTERDOMAIN = CTL_CODE(
         PInvokeT.FILE_DEVICE_UNKNOWN, 0x810, PInvokeT.METHOD_BUFFERED, PInvokeT.FILE_ANY_ACCESS);
     public static readonly uint IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND = CTL_CODE(

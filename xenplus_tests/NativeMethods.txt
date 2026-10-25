@@ -10,6 +10,7 @@ GetActiveProcessorGroupCount
 GetCurrentProcess
 GetOverlappedResult
 GetSystemInfo
+GlobalMemoryStatusEx
 METHOD_BUFFERED
 METHOD_NEITHER
 PSAPI_WORKING_SET_EX_INFORMATION

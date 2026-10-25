@@ -21,7 +21,8 @@ sealed class XenIfaceIoctlCoordination : IDisposable {
         }
     }
 
-    public static XenIfaceIoctlCoordination Open(string scenario) {
+    /// <summary>Returns the validated coordination token, or skips the case when it is not set.</summary>
+    public static string RequireToken() {
         const string environmentVariable = "XENIFACE_IOCTL_COORDINATION_NAME";
         var name = Environment.GetEnvironmentVariable(environmentVariable);
         if (string.IsNullOrWhiteSpace(name)) {
@@ -32,7 +33,11 @@ sealed class XenIfaceIoctlCoordination : IDisposable {
                 !(character is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9' or '_' or '-'))) {
             throw new InvalidDataException($"{environmentVariable} must contain 1-64 letters, digits, underscores, or hyphens");
         }
-        return new XenIfaceIoctlCoordination(coordinationName, scenario);
+        return coordinationName;
+    }
+
+    public static XenIfaceIoctlCoordination Open(string scenario) {
+        return new XenIfaceIoctlCoordination(RequireToken(), scenario);
     }
 
     public void SignalOwnerReady() {
