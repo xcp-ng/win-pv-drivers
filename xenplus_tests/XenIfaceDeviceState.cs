@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
@@ -70,7 +71,7 @@ static class XenIfaceDeviceState {
         }
 
         var install = new SP_DEVINSTALL_PARAMS_W {
-            cbSize = (uint)Marshal.SizeOf<SP_DEVINSTALL_PARAMS_W>()
+            cbSize = (uint)Unsafe.SizeOf<SP_DEVINSTALL_PARAMS_W>()
         };
         if (!PInvokeT.SetupDiGetDeviceInstallParams(info, device, ref install)) {
             throw new Win32Exception(Marshal.GetLastPInvokeError(), nameof(PInvokeT.SetupDiGetDeviceInstallParams));

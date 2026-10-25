@@ -311,25 +311,22 @@ public sealed partial class GnttabIoctlTests {
             legacy ? IOCTL_XENIFACE_GNTTAB_MAP_FOREIGN_PAGES : IOCTL_XENIFACE_GNTTAB_MAP_FOREIGN_PAGES_V2,
             inputLength, outputLength ?? nint.Size, buffer => {
                 if (legacy) {
-                    Marshal.StructureToPtr(new XENIFACE_GNTTAB_MAP_FOREIGN_PAGES_IN {
+                    *(XENIFACE_GNTTAB_MAP_FOREIGN_PAGES_IN*)buffer = new XENIFACE_GNTTAB_MAP_FOREIGN_PAGES_IN {
                         RequestId = requestId,
                         RemoteDomain = domain,
                         NumberPages = pages,
                         Flags = flags,
                         NotifyOffset = notifyOffset,
                         NotifyPort = notifyPort
-                    }, buffer, false);
+                    };
                 } else {
-                    Marshal.StructureToPtr(
-                        new XENIFACE_GNTTAB_MAP_FOREIGN_PAGES_IN_V2 {
-                            RemoteDomain = domain,
-                            NumberPages = pages,
-                            Flags = flags,
-                            NotifyOffset = notifyOffset,
-                            NotifyPort = notifyPort
-                        },
-                        buffer,
-                        false);
+                    *(XENIFACE_GNTTAB_MAP_FOREIGN_PAGES_IN_V2*)buffer = new XENIFACE_GNTTAB_MAP_FOREIGN_PAGES_IN_V2 {
+                        RemoteDomain = domain,
+                        NumberPages = pages,
+                        Flags = flags,
+                        NotifyOffset = notifyOffset,
+                        NotifyPort = notifyPort
+                    };
                 }
                 for (var index = 0; index < references.Length; index++) {
                     Marshal.WriteInt32(

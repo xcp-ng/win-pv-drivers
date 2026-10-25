@@ -179,14 +179,28 @@ static class XenIfaceIoctlAbi {
         return checked(fieldOffset + (int)count * elementSize);
     }
 
-    public static int PermitReferencesOffset => Marshal.OffsetOf<XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_OUT>(
-        nameof(XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_OUT.References)).ToInt32();
+    // Marshal.OffsetOf uses runtime marshalling, which is disabled for this assembly, so compute the field
+    // offsets from the actual struct layout instead.
+    public static unsafe int PermitReferencesOffset {
+        get {
+            XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_OUT value = default;
+            return (int)((byte*)value.References - (byte*)&value);
+        }
+    }
 
-    public static int MapV1ReferencesOffset => Marshal.OffsetOf<XENIFACE_GNTTAB_MAP_FOREIGN_PAGES_IN>(
-        nameof(XENIFACE_GNTTAB_MAP_FOREIGN_PAGES_IN.References)).ToInt32();
+    public static unsafe int MapV1ReferencesOffset {
+        get {
+            XENIFACE_GNTTAB_MAP_FOREIGN_PAGES_IN value = default;
+            return (int)((byte*)value.References - (byte*)&value);
+        }
+    }
 
-    public static int MapV2ReferencesOffset => Marshal.OffsetOf<XENIFACE_GNTTAB_MAP_FOREIGN_PAGES_IN_V2>(
-        nameof(XENIFACE_GNTTAB_MAP_FOREIGN_PAGES_IN_V2.References)).ToInt32();
+    public static unsafe int MapV2ReferencesOffset {
+        get {
+            XENIFACE_GNTTAB_MAP_FOREIGN_PAGES_IN_V2 value = default;
+            return (int)((byte*)value.References - (byte*)&value);
+        }
+    }
 
     public static int PermitOutputLength(uint count) {
         return ArrayLength(PermitReferencesOffset, count, sizeof(uint));

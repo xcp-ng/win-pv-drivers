@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.System.SystemInformation;
@@ -31,7 +32,7 @@ static class XenIfaceIoctlTestSupport {
         T input,
         int outputLength = 0,
         Action<nint>? writeOutput = null) where T : struct {
-        var inputLength = Marshal.SizeOf<T>();
+        var inputLength = Unsafe.SizeOf<T>();
         return handle.Ioctl(code, inputLength, outputLength, p => Marshal.StructureToPtr(input, p, false), writeOutput);
     }
 

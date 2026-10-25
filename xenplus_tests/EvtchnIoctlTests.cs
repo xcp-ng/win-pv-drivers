@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 using Windows.Win32.System.Threading;
 using static XenPlus.XenIfaceIoctl;
 using static XenPlus.XenIfaceIoctlTestSupport;
@@ -145,47 +145,43 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Fact]
     [Trait("CaseId", "E05-BUFFER-ERRORS")]
     [Trait("Profile", "local")]
-    public void E05EventChannelRejectsMalformedBuffersAndUnknownPorts() {
+    public unsafe void E05EventChannelRejectsMalformedBuffersAndUnknownPorts() {
         var (_, handle) = fixture.OpenDevice();
         using var handleLifetime = handle;
         using var notification = new EventWaitHandle(false, EventResetMode.ManualReset);
         using (var shortBind = handle.Ioctl(
             IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-            Marshal.SizeOf<XENIFACE_EVTCHN_BIND_UNBOUND_IN>() - 1,
+            Unsafe.SizeOf<XENIFACE_EVTCHN_BIND_UNBOUND_IN>() - 1,
             sizeof(uint))) {
             AssertRejected(shortBind);
         }
         using (var longBind = handle.Ioctl(
             IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-            Marshal.SizeOf<XENIFACE_EVTCHN_BIND_UNBOUND_IN>() + 1,
+            Unsafe.SizeOf<XENIFACE_EVTCHN_BIND_UNBOUND_IN>() + 1,
             sizeof(uint))) {
             AssertRejected(longBind);
         }
         using (var nullEventBind = handle.Ioctl(
             IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-            Marshal.SizeOf<XENIFACE_EVTCHN_BIND_UNBOUND_IN>(),
+            Unsafe.SizeOf<XENIFACE_EVTCHN_BIND_UNBOUND_IN>(),
             sizeof(uint),
-            p => Marshal.StructureToPtr(new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
+            p => *(XENIFACE_EVTCHN_BIND_UNBOUND_IN*)p = new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
                 RemoteDomain = 0,
                 Mask = 0,
                 Event = 0
-            },
-            p,
-            false))) {
+            })) {
             AssertRejected(nullEventBind);
         }
         using (var wrongObject = new Mutex()) {
             using var wrongTypeBind = handle.Ioctl(
                 IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-                Marshal.SizeOf<XENIFACE_EVTCHN_BIND_UNBOUND_IN>(),
+                Unsafe.SizeOf<XENIFACE_EVTCHN_BIND_UNBOUND_IN>(),
                 sizeof(uint),
-                p => Marshal.StructureToPtr(new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
+                p => *(XENIFACE_EVTCHN_BIND_UNBOUND_IN*)p = new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
                     RemoteDomain = 0,
                     Mask = 0,
                     Event = wrongObject.SafeWaitHandle.DangerousGetHandle()
-                },
-                p,
-                false));
+                });
             AssertRejected(wrongTypeBind);
         }
         using (var restrictedEvent = XenIfaceTestHandleDuplication.DuplicateEvent(
@@ -194,15 +190,13 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
             sameAccess: false)) {
             using var insufficientAccessBind = handle.Ioctl(
                 IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-                Marshal.SizeOf<XENIFACE_EVTCHN_BIND_UNBOUND_IN>(),
+                Unsafe.SizeOf<XENIFACE_EVTCHN_BIND_UNBOUND_IN>(),
                 sizeof(uint),
-                p => Marshal.StructureToPtr(new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
+                p => *(XENIFACE_EVTCHN_BIND_UNBOUND_IN*)p = new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
                     RemoteDomain = 0,
                     Mask = 0,
                     Event = restrictedEvent.DangerousGetHandle()
-                },
-                p,
-                false));
+                });
             AssertRejected(insufficientAccessBind);
         }
         using (var unknownClose = Ioctl(
