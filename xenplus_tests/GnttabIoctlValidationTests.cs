@@ -352,14 +352,7 @@ public sealed partial class GnttabIoctlTests {
 
     static uint CreateValidationClosedPort(XenIfaceIoctlHandle handle, ushort domain) {
         using var notification = new EventWaitHandle(false, EventResetMode.ManualReset);
-        using var bind = Ioctl(handle, IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-            new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
-                RemoteDomain = domain,
-                Mask = 1,
-                Event = notification.SafeWaitHandle.DangerousGetHandle()
-            }, sizeof(uint));
-        AssertSucceeded(bind);
-        using var channel = new XenIfaceTestEventChannel(handle, unchecked((uint)bind.ReadInt32()));
+        using var channel = XenIfaceTestEventChannel.BindUnbound(handle, domain, notification, mask: 1);
         Assert.True(channel.Close(), "EVTCHN_CLOSE must complete synchronously and succeed");
         return channel.Port;
     }

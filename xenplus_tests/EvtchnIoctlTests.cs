@@ -8,6 +8,18 @@ namespace XenPlus;
 [Trait("Category", "XenIfaceIoctl")]
 [Collection("XenIfaceIoctl")]
 public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : IClassFixture<XenIfaceIoctlFixture> {
+    static PendingIoctl BeginBindUnbound(XenIfaceIoctlHandle handle, nint evt) {
+        return Ioctl(
+            handle,
+            IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
+            new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
+                RemoteDomain = 0,
+                Mask = 0,
+                Event = evt
+            },
+            sizeof(uint));
+    }
+
     [Fact]
     [Trait("CaseId", "E01-BIND-CLOSE")]
     [Trait("Profile", "local")]
@@ -16,20 +28,8 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
         var (_, handle) = fixture.OpenDevice();
         using var handleLifetime = handle;
         using var notification = new EventWaitHandle(false, EventResetMode.ManualReset);
-        using var bind = Ioctl(
-            handle,
-            IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-            new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
-                RemoteDomain = domain,
-                Mask = 0,
-                Event = notification.SafeWaitHandle.DangerousGetHandle()
-            },
-            sizeof(uint));
-        AssertSucceeded(bind);
-        var channel = new XenIfaceTestEventChannel(handle, unchecked((uint)bind.ReadInt32()));
-        using (channel) {
-            Assert.True(channel.Close(), "EVTCHN_CLOSE must complete synchronously and succeed");
-        }
+        using var channel = XenIfaceTestEventChannel.BindUnbound(handle, domain, notification);
+        Assert.True(channel.Close(), "EVTCHN_CLOSE must complete synchronously and succeed");
     }
 
     [Fact]
@@ -70,7 +70,7 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Fact]
     [Trait("CaseId", "E05-BUFFER-ERRORS")]
     [Trait("Profile", "local")]
-    public unsafe void E05EventChannelRejectsMalformedBuffersAndUnknownPorts() {
+    public void E05EventChannelRejectsMalformedBuffersAndUnknownPorts() {
         var (_, handle) = fixture.OpenDevice();
         using var handleLifetime = handle;
         using var notification = new EventWaitHandle(false, EventResetMode.ManualReset);
@@ -86,42 +86,18 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
             sizeof(uint))) {
             AssertRejected(longBind);
         }
-        using (var nullEventBind = handle.Ioctl(
-            IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-            Unsafe.SizeOf<XENIFACE_EVTCHN_BIND_UNBOUND_IN>(),
-            sizeof(uint),
-            p => *(XENIFACE_EVTCHN_BIND_UNBOUND_IN*)p = new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
-                RemoteDomain = 0,
-                Mask = 0,
-                Event = 0
-            })) {
+        using (var nullEventBind = BeginBindUnbound(handle, 0)) {
             AssertRejected(nullEventBind);
         }
         using (var wrongObject = new Mutex()) {
-            using var wrongTypeBind = handle.Ioctl(
-                IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-                Unsafe.SizeOf<XENIFACE_EVTCHN_BIND_UNBOUND_IN>(),
-                sizeof(uint),
-                p => *(XENIFACE_EVTCHN_BIND_UNBOUND_IN*)p = new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
-                    RemoteDomain = 0,
-                    Mask = 0,
-                    Event = wrongObject.SafeWaitHandle.DangerousGetHandle()
-                });
+            using var wrongTypeBind = BeginBindUnbound(handle, wrongObject.SafeWaitHandle.DangerousGetHandle());
             AssertRejected(wrongTypeBind);
         }
         using (var restrictedEvent = XenIfaceTestHandleDuplication.DuplicateEvent(
             notification.SafeWaitHandle,
             (uint)SYNCHRONIZATION_ACCESS_RIGHTS.SYNCHRONIZATION_SYNCHRONIZE,
             sameAccess: false)) {
-            using var insufficientAccessBind = handle.Ioctl(
-                IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-                Unsafe.SizeOf<XENIFACE_EVTCHN_BIND_UNBOUND_IN>(),
-                sizeof(uint),
-                p => *(XENIFACE_EVTCHN_BIND_UNBOUND_IN*)p = new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
-                    RemoteDomain = 0,
-                    Mask = 0,
-                    Event = restrictedEvent.DangerousGetHandle()
-                });
+            using var insufficientAccessBind = BeginBindUnbound(handle, restrictedEvent.DangerousGetHandle());
             AssertRejected(insufficientAccessBind);
         }
         using (var unknownClose = Ioctl(
@@ -154,35 +130,24 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
         using var ownerLifetime = owner;
         using var other = XenIfaceIoctlHandle.Open(path);
         using var notification = new EventWaitHandle(false, EventResetMode.ManualReset);
-        using var bind = Ioctl(
-            owner,
-            IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-            new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
-                RemoteDomain = domain,
-                Mask = 0,
-                Event = notification.SafeWaitHandle.DangerousGetHandle()
-            },
-            sizeof(uint));
-        AssertSucceeded(bind);
-        var port = unchecked((uint)bind.ReadInt32());
-        using var channel = new XenIfaceTestEventChannel(owner, port);
+        using var channel = XenIfaceTestEventChannel.BindUnbound(owner, domain, notification);
         using (var wrongClose = Ioctl(
             other,
             IOCTL_XENIFACE_EVTCHN_CLOSE,
-            new XENIFACE_EVTCHN_CLOSE_IN { LocalPort = port })) {
+            new XENIFACE_EVTCHN_CLOSE_IN { LocalPort = channel.Port })) {
             Assert.False(wrongClose.IsPending, "Closing another file object's port unexpectedly returned STATUS_PENDING");
             AssertRejected(wrongClose);
         }
         using (var wrongNotify = Ioctl(
             other,
             IOCTL_XENIFACE_EVTCHN_NOTIFY,
-            new XENIFACE_EVTCHN_NOTIFY_IN { LocalPort = port })) {
+            new XENIFACE_EVTCHN_NOTIFY_IN { LocalPort = channel.Port })) {
             AssertRejected(wrongNotify);
         }
         using (var wrongUnmask = Ioctl(
             other,
             IOCTL_XENIFACE_EVTCHN_UNMASK,
-            new XENIFACE_EVTCHN_UNMASK_IN { LocalPort = port })) {
+            new XENIFACE_EVTCHN_UNMASK_IN { LocalPort = channel.Port })) {
             AssertRejected(wrongUnmask);
         }
         Assert.True(channel.Close(), "EVTCHN_CLOSE must complete synchronously and succeed");
@@ -196,37 +161,16 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
         var (_, handle) = fixture.OpenDevice();
         using var handleLifetime = handle;
         using var notification = new EventWaitHandle(false, EventResetMode.ManualReset);
-        using var bind = Ioctl(
-            handle,
-            IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-            new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
-                RemoteDomain = domain,
-                Mask = 0,
-                Event = notification.SafeWaitHandle.DangerousGetHandle()
-            },
-            sizeof(uint));
-        AssertSucceeded(bind);
-        var port = unchecked((uint)bind.ReadInt32());
-        using var channel = new XenIfaceTestEventChannel(handle, port);
+        using var channel = XenIfaceTestEventChannel.BindUnbound(handle, domain, notification);
         Assert.True(channel.Close(), "EVTCHN_CLOSE must complete synchronously and succeed");
         using (var duplicate = Ioctl(
             handle,
             IOCTL_XENIFACE_EVTCHN_CLOSE,
-            new XENIFACE_EVTCHN_CLOSE_IN { LocalPort = port })) {
+            new XENIFACE_EVTCHN_CLOSE_IN { LocalPort = channel.Port })) {
             Assert.False(duplicate.IsPending, "A duplicate EVTCHN_CLOSE unexpectedly returned STATUS_PENDING");
             AssertRejected(duplicate);
         }
-        using var smoke = Ioctl(
-            handle,
-            IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-            new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
-                RemoteDomain = domain,
-                Mask = 0,
-                Event = notification.SafeWaitHandle.DangerousGetHandle()
-            },
-            sizeof(uint));
-        AssertSucceeded(smoke);
-        using var smokeChannel = new XenIfaceTestEventChannel(handle, unchecked((uint)smoke.ReadInt32()));
+        using var smokeChannel = XenIfaceTestEventChannel.BindUnbound(handle, domain, notification);
     }
 
     [Fact]
@@ -238,17 +182,7 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
         using var handleLifetime = handle;
         using var notification = new EventWaitHandle(false, EventResetMode.ManualReset);
         for (var i = 0; i < 64; i++) {
-            using var bind = Ioctl(
-                handle,
-                IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-                new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
-                    RemoteDomain = domain,
-                    Mask = 0,
-                    Event = notification.SafeWaitHandle.DangerousGetHandle()
-                },
-                sizeof(uint));
-            AssertSucceeded(bind);
-            using var channel = new XenIfaceTestEventChannel(handle, unchecked((uint)bind.ReadInt32()));
+            using var channel = XenIfaceTestEventChannel.BindUnbound(handle, domain, notification);
             Assert.True(channel.Close(), "Each stress-loop EVTCHN_CLOSE must complete synchronously and succeed");
         }
     }
