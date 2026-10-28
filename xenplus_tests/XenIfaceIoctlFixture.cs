@@ -5,9 +5,8 @@ using System.Text;
 namespace XenPlus;
 
 public sealed class XenIfaceIoctlFixture {
-    internal (string Path, XenIfaceIoctlHandle Handle) OpenDevice() {
-        var path = XenIfaceIoctlDeviceDiscovery.RequireActiveDevicePath();
-        return (path, XenIfaceIoctlHandle.Open(path));
+    internal XenIfaceIoctlHandle OpenDevice() {
+        return XenIfaceIoctlHandle.Open(XenIfaceIoctlDeviceDiscovery.RequireActiveDevicePath());
     }
 
     /// <remarks>
@@ -15,8 +14,7 @@ public sealed class XenIfaceIoctlFixture {
     /// </remarks>
     public ushort RequireDomainId() {
         const int DomainIdBufferLength = 6; // Five decimal ushort digits plus the terminating NUL.
-        var (_, handle) = OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = OpenDevice();
         var path = Encoding.ASCII.GetBytes("domid\0");
         using var request = handle.Ioctl(
             XenIfaceIoctl.IOCTL_XENIFACE_STORE_READ,

@@ -29,8 +29,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("ExternalCoordination", "true")]
     public void G17V2RevokeWhileRemoteMapsCallerBufferDoesNotLetRemoteWritesLand() {
         var token = XenIfaceIoctlCoordination.RequireToken();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var buffer = XenIfaceTestMemoryRegion.AllocateCommitted(RemotePages);
         WriteGuestMarkers(buffer.Address, token);
         using var grant = PermitV2(handle, Dom0, buffer.Address, pages: RemotePages);
@@ -60,8 +59,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("ExternalCoordination", "true")]
     public void G17V2RevokeWhileRemoteMapsDriverPagesFails() {
         var token = XenIfaceIoctlCoordination.RequireToken();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var grant = PermitV2(handle, Dom0, 0, pages: RemotePages);
         using var partner = XenIfaceRemotePartner.Open(handle, token);
         WriteGuestMarkers(grant.Address, token);
@@ -92,8 +90,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("ExternalCoordination", "true")]
     public void G17V2CancelWhileRemoteMapsCallerBufferDoesNotLetRemoteWritesLand() {
         var token = XenIfaceIoctlCoordination.RequireToken();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var buffer = XenIfaceTestMemoryRegion.AllocateCommitted(RemotePages);
         WriteGuestMarkers(buffer.Address, token);
         using var grant = PermitV2(handle, Dom0, buffer.Address, pages: RemotePages);

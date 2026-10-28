@@ -11,8 +11,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "isolated")]
     public void G16PermitRejectsZeroAndOverflowPageCounts() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var memory = XenIfaceTestMemoryRegion.AllocateCommitted();
         var overflowPages = checked(uint.MaxValue / (uint)PageSize + 1u);
 
@@ -32,8 +31,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "isolated")]
     public void G16PermitRejectsMorePagesThanFitInItsOutput() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var memory = XenIfaceTestMemoryRegion.AllocateCommitted(pages: 2);
         var required = XenIfaceIoctlAbi.PermitOutputLength(2);
 
@@ -56,8 +54,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "isolated")]
     public void G16MapRejectsCountsLargerThanTheSuppliedReferenceArray() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         var maximumPages = uint.MaxValue / (uint)PageSize;
 
         foreach (var legacy in new[] { true, false }) {
@@ -75,8 +72,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "isolated")]
     public void G16MapRejectsTruncatedHeadersAndWrongOutputLengths() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
 
         foreach (var legacy in new[] { true, false }) {
             var code = legacy ? IOCTL_XENIFACE_GNTTAB_MAP_FOREIGN_PAGES : IOCTL_XENIFACE_GNTTAB_MAP_FOREIGN_PAGES_V2;
@@ -112,8 +108,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "isolated")]
     public void G16MapRejectsAnOversizedReferenceTailEvenWithASmallDeclaredCount() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         var maximumReferenceBytes = checked((int)(uint.MaxValue / (uint)PageSize) * sizeof(uint));
 
         foreach (var legacy in new[] { true, false }) {
@@ -130,8 +125,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "isolated")]
     public void G16NotifyOffsetIsBoundedByDeclaredPagesRatherThanBufferCapacity() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var memory = XenIfaceTestMemoryRegion.AllocateCommitted(pages: 2);
         var extraReferences = Enumerable.Repeat(uint.MaxValue, 17).ToArray();
 
@@ -155,8 +149,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "local")]
     public unsafe void G16PermitWritesOnlyItsDeclaredReferencesInALargerOutput() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var memory = XenIfaceTestMemoryRegion.AllocateCommitted();
         var outputLength = XenIfaceIoctlAbi.PermitOutputLength(17);
 
@@ -177,8 +170,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "isolated")]
     public void G16PermitIgnoresBogusNotifyFieldsWhenTheirFlagsAreClear() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var memory = XenIfaceTestMemoryRegion.AllocateCommitted();
         memory.WriteByte(127, 0xA6);
         memory.WriteByte(PageSize - 1, 0x73);
@@ -198,8 +190,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "isolated")]
     public void G16PermitCleanupCompletesWithUnknownOrClosedNotifyPorts() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var memory = XenIfaceTestMemoryRegion.AllocateCommitted();
         var closedPort = CreateValidationClosedPort(handle, domain);
 
@@ -234,8 +225,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "isolated")]
     public void G16MapRejectsForgedReferencesAndDomainsWithoutStrandingValidGrants() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         foreach (var legacy in new[] { true, false }) {
             // Every reference is invalid: never install a same-domain grant mapping.
             foreach (var invalidReferences in new uint[][] { [uint.MaxValue], [uint.MaxValue, uint.MaxValue] }) {

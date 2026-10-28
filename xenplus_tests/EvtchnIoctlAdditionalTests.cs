@@ -8,9 +8,8 @@ public sealed partial class EvtchnIoctlTests {
     [Trait("Profile", "loopback")]
     public void E04ResetEventsProveHandshakeProgressForAutoAndManualReset() {
         var domain = fixture.RequireDomainId();
-        var (path, a) = fixture.OpenDevice();
-        using var aLifetime = a;
-        using var b = XenIfaceIoctlHandle.Open(path);
+        using var a = fixture.OpenDevice();
+        using var b = a.OpenAnother();
         foreach (var eventMode in new[] { EventResetMode.ManualReset, EventResetMode.AutoReset }) {
             using var eventA = new EventWaitHandle(false, eventMode);
             using var eventB = new EventWaitHandle(false, eventMode);

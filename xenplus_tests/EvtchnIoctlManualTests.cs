@@ -10,9 +10,8 @@ public sealed partial class EvtchnIoctlTests {
     [Trait("ExternalCoordination", "true")]
     public async Task E11EventChannelPairContinuesAcrossExternallyManagedCpuAddition() {
         var domain = fixture.RequireDomainId();
-        var (path, a) = fixture.OpenDevice();
-        using var aLifetime = a;
-        using var b = XenIfaceIoctlHandle.Open(path);
+        using var a = fixture.OpenDevice();
+        using var b = a.OpenAnother();
         using var eventA = new EventWaitHandle(false, EventResetMode.ManualReset);
         using var eventB = new EventWaitHandle(false, EventResetMode.ManualReset);
         using var pair = new XenIfaceTestEventChannelPair(a, b, domain, eventA, eventB);

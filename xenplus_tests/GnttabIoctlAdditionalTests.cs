@@ -10,8 +10,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "local")]
     public void G07V1RequestIdZeroCoexistsWithV2GrantInBothOrders() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
 
         {
             using var v1First = PermitV1(handle, domain, 0);
@@ -43,9 +42,8 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "loopback")]
     public void G04RevokeSetsByteAndSignalsPairedEventChannel() {
         var domain = fixture.RequireDomainId();
-        var (path, handleA) = fixture.OpenDevice();
-        using var a = handleA;
-        using var b = XenIfaceIoctlHandle.Open(path);
+        using var a = fixture.OpenDevice();
+        using var b = a.OpenAnother();
         using var eventA = new EventWaitHandle(false, EventResetMode.ManualReset);
         using var eventB = new EventWaitHandle(false, EventResetMode.ManualReset);
         using var page = XenIfaceTestMemoryRegion.AllocateCommitted();
@@ -62,7 +60,7 @@ public sealed partial class GnttabIoctlTests {
         eventB.Reset();
 
         using var grant = PermitV2(
-            handleA,
+            a,
             domain,
             page.Address,
             XENIFACE_GNTTAB_USE_NOTIFY_OFFSET | XENIFACE_GNTTAB_USE_NOTIFY_PORT,
@@ -83,8 +81,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "isolated")]
     public void G13IssuingThreadExitCompletesPermitWithOperationAborted() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
 
         var issuer = new G13Issuer(handle, domain);
         var issuingThread = new Thread(issuer.Issue) {

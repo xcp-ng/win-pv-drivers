@@ -25,8 +25,7 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Trait("Profile", "local")]
     public void E01BindUnboundAndClose() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var notification = new EventWaitHandle(false, EventResetMode.ManualReset);
         using var channel = XenIfaceTestEventChannel.BindUnbound(handle, domain, notification);
         Assert.True(channel.Close(), "EVTCHN_CLOSE must complete synchronously and succeed");
@@ -37,9 +36,8 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Trait("Profile", "loopback")]
     public void E02SelfDomainEventChannelsNotifyInBothDirections() {
         var domain = fixture.RequireDomainId();
-        var (path, a) = fixture.OpenDevice();
-        using var aHandle = a;
-        using var b = XenIfaceIoctlHandle.Open(path);
+        using var a = fixture.OpenDevice();
+        using var b = a.OpenAnother();
         using var eventA = new EventWaitHandle(false, EventResetMode.ManualReset);
         using var eventB = new EventWaitHandle(false, EventResetMode.ManualReset);
         using var pair = new XenIfaceTestEventChannelPair(a, b, domain, eventA, eventB);
@@ -52,9 +50,8 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Trait("Profile", "loopback")]
     public void E03MaskedNotificationIsDeliveredAfterUnmask() {
         var domain = fixture.RequireDomainId();
-        var (path, a) = fixture.OpenDevice();
-        using var aHandle = a;
-        using var b = XenIfaceIoctlHandle.Open(path);
+        using var a = fixture.OpenDevice();
+        using var b = a.OpenAnother();
         using var eventA = new EventWaitHandle(false, EventResetMode.ManualReset);
         using var eventB = new EventWaitHandle(false, EventResetMode.ManualReset);
         using var pair = new XenIfaceTestEventChannelPair(a, b, domain, eventA, eventB, maskB: 1);
@@ -71,8 +68,7 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Trait("CaseId", "E05-BUFFER-ERRORS")]
     [Trait("Profile", "local")]
     public void E05EventChannelRejectsMalformedBuffersAndUnknownPorts() {
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var notification = new EventWaitHandle(false, EventResetMode.ManualReset);
         using (var shortBind = handle.Ioctl(
             IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
@@ -126,9 +122,8 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Trait("Profile", "local")]
     public void E06IndependentDeviceOpensCannotCloseEachOthersChannels() {
         var domain = fixture.RequireDomainId();
-        var (path, owner) = fixture.OpenDevice();
-        using var ownerLifetime = owner;
-        using var other = XenIfaceIoctlHandle.Open(path);
+        using var owner = fixture.OpenDevice();
+        using var other = owner.OpenAnother();
         using var notification = new EventWaitHandle(false, EventResetMode.ManualReset);
         using var channel = XenIfaceTestEventChannel.BindUnbound(owner, domain, notification);
         using (var wrongClose = Ioctl(
@@ -158,8 +153,7 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Trait("Profile", "local")]
     public void E09DoubleCloseReturnsFailureAndSmallOperationStillWorks() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var notification = new EventWaitHandle(false, EventResetMode.ManualReset);
         using var channel = XenIfaceTestEventChannel.BindUnbound(handle, domain, notification);
         Assert.True(channel.Close(), "EVTCHN_CLOSE must complete synchronously and succeed");
@@ -178,8 +172,7 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Trait("Profile", "local")]
     public void E10BoundedBindCloseStressKeepsTheInterfaceUsable() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var notification = new EventWaitHandle(false, EventResetMode.ManualReset);
         for (var i = 0; i < 64; i++) {
             using var channel = XenIfaceTestEventChannel.BindUnbound(handle, domain, notification);

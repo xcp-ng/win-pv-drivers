@@ -8,10 +8,9 @@ public sealed partial class EvtchnIoctlTests {
     [Trait("Profile", "local")]
     public void E07DuplicatedDeviceHandleRetainsItsFileObject() {
         var domain = fixture.RequireDomainId();
-        var (_, owner) = fixture.OpenDevice();
-        using var ownerLifetime = owner;
+        using var owner = fixture.OpenDevice();
         using var duplicateDevice = XenIfaceIoctlHandle.FromSafeHandle(
-            XenIfaceTestHandleDuplication.DuplicateFile(owner.SafeHandle));
+            XenIfaceTestHandleDuplication.DuplicateFile(owner.SafeHandle), owner.Path);
         using var eventObject = new EventWaitHandle(false, EventResetMode.ManualReset);
 
         // Bound through the original handle, closed through the duplicate after the original is gone.
@@ -28,11 +27,10 @@ public sealed partial class EvtchnIoctlTests {
     [Trait("Profile", "loopback")]
     public void E07PeerNotificationUsesDuplicatedEventAfterOriginalDeviceCloses() {
         var domain = fixture.RequireDomainId();
-        var (path, owner) = fixture.OpenDevice();
-        using var ownerLifetime = owner;
+        using var owner = fixture.OpenDevice();
         using var duplicateDevice = XenIfaceIoctlHandle.FromSafeHandle(
-            XenIfaceTestHandleDuplication.DuplicateFile(owner.SafeHandle));
-        using var peer = XenIfaceIoctlHandle.Open(path);
+            XenIfaceTestHandleDuplication.DuplicateFile(owner.SafeHandle), owner.Path);
+        using var peer = owner.OpenAnother();
         using var eventA = new EventWaitHandle(false, EventResetMode.ManualReset);
         using var eventObserver = new EventWaitHandle(false, EventResetMode.ManualReset) {
             SafeWaitHandle = XenIfaceTestHandleDuplication.DuplicateEvent(eventA.SafeWaitHandle, 0, sameAccess: true),

@@ -13,8 +13,7 @@ public sealed class Wow64AbiTests(XenIfaceIoctlFixture fixture) : IClassFixture<
     public unsafe void Wow64EventChannelBindUsesTheNativeWindowsX64DriverContract() {
         RequireWow64();
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var notification = new EventWaitHandle(false, EventResetMode.ManualReset);
 
         using var bind = handle.Ioctl(
@@ -45,8 +44,7 @@ public sealed class Wow64AbiTests(XenIfaceIoctlFixture fixture) : IClassFixture<
     public unsafe void Wow64V1GrantUsesTheNativeWindowsX64DriverContract() {
         RequireWow64();
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         var requestId = XenIfaceIoctlFixture.NewRequestId();
         using var permit = handle.Ioctl(
             IOCTL_XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS,
@@ -82,8 +80,7 @@ public sealed class Wow64AbiTests(XenIfaceIoctlFixture fixture) : IClassFixture<
     public unsafe void Wow64V2GrantUsesTheNativeWindowsX64DriverContract() {
         RequireWow64();
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var permit = handle.Ioctl(
             IOCTL_XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_V2,
             Unsafe.SizeOf<XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_IN_V2>(),
