@@ -54,29 +54,7 @@ public sealed partial class GnttabIoctlTests {
         page.WriteByte(offset - 1, 0x39);
         page.WriteByte(offset, 0xA6);
         page.WriteByte(offset + 1, 0x73);
-        using var bindA = Ioctl(
-            a,
-            IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-            new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
-                RemoteDomain = domain,
-                Mask = 0,
-                Event = eventA.SafeWaitHandle.DangerousGetHandle()
-            },
-            sizeof(uint));
-        AssertSucceeded(bindA);
-        using var channelA = new XenIfaceTestEventChannel(a, unchecked((uint)bindA.ReadInt32()));
-        using var bindB = Ioctl(
-            b,
-            IOCTL_XENIFACE_EVTCHN_BIND_INTERDOMAIN,
-            new XENIFACE_EVTCHN_BIND_INTERDOMAIN_IN {
-                RemoteDomain = domain,
-                RemotePort = channelA.Port,
-                Mask = 0,
-                Event = eventB.SafeWaitHandle.DangerousGetHandle()
-            },
-            sizeof(uint));
-        AssertSucceeded(bindB);
-        using var channelB = new XenIfaceTestEventChannel(b, unchecked((uint)bindB.ReadInt32()));
+        using var pair = new XenIfaceTestEventChannelPair(a, b, domain, eventA, eventB);
 
         // The interdomain bind notifies B asynchronously; observe it before resetting for revoke.
         Assert.True(eventB.WaitOne(CompletionTimeout), "Bind-time notification on B was not delivered");
@@ -89,7 +67,7 @@ public sealed partial class GnttabIoctlTests {
             page.Address,
             XENIFACE_GNTTAB_USE_NOTIFY_OFFSET | XENIFACE_GNTTAB_USE_NOTIFY_PORT,
             offset,
-            channelA.Port);
+            pair.A.Port);
 
         Assert.False(eventB.WaitOne(ObservationTimeout), "The paired endpoint was signaled before revoke");
         grant.Revoke();

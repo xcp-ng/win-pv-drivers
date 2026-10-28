@@ -42,51 +42,9 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
         using var b = XenIfaceIoctlHandle.Open(path);
         using var eventA = new EventWaitHandle(false, EventResetMode.ManualReset);
         using var eventB = new EventWaitHandle(false, EventResetMode.ManualReset);
+        using var pair = new XenIfaceTestEventChannelPair(a, b, domain, eventA, eventB);
 
-        using var bindA = Ioctl(
-            a,
-            IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-            new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
-                RemoteDomain = domain,
-                Mask = 0,
-                Event = eventA.SafeWaitHandle.DangerousGetHandle()
-            },
-            sizeof(uint));
-        AssertSucceeded(bindA);
-        var portA = unchecked((uint)bindA.ReadInt32());
-        using var channelA = new XenIfaceTestEventChannel(a, portA);
-        using var bindB = Ioctl(
-            b,
-            IOCTL_XENIFACE_EVTCHN_BIND_INTERDOMAIN,
-            new XENIFACE_EVTCHN_BIND_INTERDOMAIN_IN {
-                RemoteDomain = domain,
-                RemotePort = portA,
-                Mask = 0,
-                Event = eventB.SafeWaitHandle.DangerousGetHandle()
-            },
-            sizeof(uint));
-        AssertSucceeded(bindB);
-        var portB = unchecked((uint)bindB.ReadInt32());
-        using var channelB = new XenIfaceTestEventChannel(b, portB);
-        eventA.Reset();
-        eventB.Reset();
-
-        using (var notifyA = Ioctl(
-            a,
-            IOCTL_XENIFACE_EVTCHN_NOTIFY,
-            new XENIFACE_EVTCHN_NOTIFY_IN { LocalPort = portA })) {
-            AssertSucceeded(notifyA);
-        }
-        Assert.True(eventB.WaitOne(CompletionTimeout), "Endpoint B did not observe A's notify");
-        eventB.Reset();
-        using (var notifyB = Ioctl(
-            b,
-            IOCTL_XENIFACE_EVTCHN_NOTIFY,
-            new XENIFACE_EVTCHN_NOTIFY_IN { LocalPort = portB })) {
-            AssertSucceeded(notifyB);
-        }
-        Assert.True(eventA.WaitOne(CompletionTimeout), "Endpoint A did not observe B's notify");
-
+        pair.Handshake();
     }
 
     [Fact]
@@ -99,46 +57,13 @@ public sealed partial class EvtchnIoctlTests(XenIfaceIoctlFixture fixture) : ICl
         using var b = XenIfaceIoctlHandle.Open(path);
         using var eventA = new EventWaitHandle(false, EventResetMode.ManualReset);
         using var eventB = new EventWaitHandle(false, EventResetMode.ManualReset);
-        using var bindA = Ioctl(
-            a,
-            IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-            new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
-                RemoteDomain = domain,
-                Mask = 0,
-                Event = eventA.SafeWaitHandle.DangerousGetHandle()
-            },
-            sizeof(uint));
-        AssertSucceeded(bindA);
-        var portA = unchecked((uint)bindA.ReadInt32());
-        using var channelA = new XenIfaceTestEventChannel(a, portA);
-        using var bindB = Ioctl(
-            b,
-            IOCTL_XENIFACE_EVTCHN_BIND_INTERDOMAIN,
-            new XENIFACE_EVTCHN_BIND_INTERDOMAIN_IN {
-                RemoteDomain = domain,
-                RemotePort = portA,
-                Mask = 1,
-                Event = eventB.SafeWaitHandle.DangerousGetHandle()
-            },
-            sizeof(uint));
-        AssertSucceeded(bindB);
-        var portB = unchecked((uint)bindB.ReadInt32());
-        using var channelB = new XenIfaceTestEventChannel(b, portB);
+        using var pair = new XenIfaceTestEventChannelPair(a, b, domain, eventA, eventB, maskB: 1);
         eventA.Reset();
         eventB.Reset();
-        using (var notify = Ioctl(
-            a,
-            IOCTL_XENIFACE_EVTCHN_NOTIFY,
-            new XENIFACE_EVTCHN_NOTIFY_IN { LocalPort = portA })) {
-            AssertSucceeded(notify);
-        }
+
+        pair.A.Notify();
         Assert.False(eventB.WaitOne(ObservationTimeout), "A masked endpoint delivered before unmask");
-        using (var unmask = Ioctl(
-            b,
-            IOCTL_XENIFACE_EVTCHN_UNMASK,
-            new XENIFACE_EVTCHN_UNMASK_IN { LocalPort = portB })) {
-            AssertSucceeded(unmask);
-        }
+        pair.B.Unmask();
         Assert.True(eventB.WaitOne(CompletionTimeout), "Pending notification was not delivered after unmask");
     }
 
