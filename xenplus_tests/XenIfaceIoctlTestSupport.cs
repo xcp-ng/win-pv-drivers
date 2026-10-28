@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using Windows.Win32;
 using Windows.Win32.System.SystemInformation;
 
@@ -34,6 +35,12 @@ static class XenIfaceIoctlTestSupport {
         Action<nint>? writeOutput = null) where T : struct {
         var inputLength = Unsafe.SizeOf<T>();
         return handle.Ioctl(code, inputLength, outputLength, p => Marshal.StructureToPtr(input, p, false), writeOutput);
+    }
+
+    /// <summary>Submits a XenStore IOCTL whose input is ASCII text; callers supply the NUL terminators.</summary>
+    public static PendingIoctl StoreIoctl(XenIfaceIoctlHandle handle, uint code, string input, int outputLength) {
+        var bytes = Encoding.ASCII.GetBytes(input);
+        return handle.Ioctl(code, bytes.Length, outputLength, buffer => { Marshal.Copy(bytes, 0, buffer, bytes.Length); });
     }
 
     public static void AssertSucceeded(PendingIoctl call) {

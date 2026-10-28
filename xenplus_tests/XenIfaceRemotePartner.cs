@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Text;
 using static XenPlus.XenIfaceIoctl;
 using static XenPlus.XenIfaceIoctlTestSupport;
 
@@ -84,12 +82,7 @@ sealed class XenIfaceRemotePartner : IDisposable {
     }
 
     string? Read(string key) {
-        var path = Encoding.ASCII.GetBytes(KeyPath(key) + "\0");
-        using var request = _handle.Ioctl(
-            IOCTL_XENIFACE_STORE_READ,
-            path.Length,
-            ValueBufferLength,
-            buffer => { Marshal.Copy(path, 0, buffer, path.Length); });
+        using var request = StoreIoctl(_handle, IOCTL_XENIFACE_STORE_READ, KeyPath(key) + "\0", ValueBufferLength);
         if (request.IsPending && !request.WaitTerminal(CompletionTimeout)) {
             return null;
         }
@@ -101,23 +94,13 @@ sealed class XenIfaceRemotePartner : IDisposable {
 
     void Write(string key, string value) {
         // Input: NUL-terminated path, NUL-terminated value, final NUL terminator.
-        var input = Encoding.ASCII.GetBytes(KeyPath(key) + "\0" + value + "\0\0");
-        using var request = _handle.Ioctl(
-            IOCTL_XENIFACE_STORE_WRITE,
-            input.Length,
-            0,
-            buffer => { Marshal.Copy(input, 0, buffer, input.Length); });
+        using var request = StoreIoctl(_handle, IOCTL_XENIFACE_STORE_WRITE, KeyPath(key) + "\0" + value + "\0\0", 0);
         AssertSucceeded(request);
     }
 
     /// <summary>Best effort; a missing key or a refusal is not an error.</summary>
     void Remove(string key) {
-        var path = Encoding.ASCII.GetBytes(KeyPath(key) + "\0");
-        using var request = _handle.Ioctl(
-            IOCTL_XENIFACE_STORE_REMOVE,
-            path.Length,
-            0,
-            buffer => { Marshal.Copy(path, 0, buffer, path.Length); });
+        using var request = StoreIoctl(_handle, IOCTL_XENIFACE_STORE_REMOVE, KeyPath(key) + "\0", 0);
         if (request.IsPending) {
             request.WaitTerminal(CompletionTimeout);
         }
