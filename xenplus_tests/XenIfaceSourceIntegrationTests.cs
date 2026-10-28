@@ -129,54 +129,41 @@ public class XenIfaceSourceIntegrationTests(XenIfaceSourceFixture fixture) : ICl
         var cancellationToken = TestContext.Current.CancellationToken;
         await fixture.RequireActiveDeviceAsync(cancellationToken);
         using var storePath = fixture.GetTempStorePath();
+        // Each case owns its source so a failed recovery cannot contaminate the shared fixture. The detached original is
+        // also cleaned up, after the source, in case a regression keeps the worker from retiring its notification.
+        using var detached = new DisposeStack();
         using var source = new XenIfaceSource(NullLogger<XenIfaceSource>.Instance);
         var original = await WaitForActiveDeviceAsync(source, cancellationToken);
-        var rebound = new TaskCompletionSource<XenIfaceDevice>(TaskCreationOptions.RunContinuationsAsynchronously);
+        detached.Push(original);
+        using var observer = new ResumedObserver(source, original);
 
-        void OnResumed(object? sender, XenIfaceResumedEventArgs args) {
+        // Inject notifications at the managed callback boundary. The device and all subsequent IOCTLs are real;
+        // no Windows device disable/enable or arrival notification is used to rescue canceled removal.
+        if (queryRemoveFirst) {
+            source.OnDeviceCallback(CM_NOTIFY_ACTION_DEVICEQUERYREMOVE, original);
             lock (source.SyncRoot) {
-                if (source.Active is XenIfaceDevice active && !ReferenceEquals(active, original)) {
-                    rebound.TrySetResult(active);
-                }
+                Assert.Null(source.Active);
+                Assert.True(original.Handle.IsClosed);
+            }
+
+            // Query-remove alone must not reopen the device before Windows reports its outcome.
+            await Assert.ThrowsAsync<TimeoutException>(
+                () => observer.Resumed.WaitAsync(DeviceRemovalBlockedTimeout, cancellationToken));
+            lock (source.SyncRoot) {
+                Assert.Null(source.Active);
             }
         }
 
-        source.Resumed += OnResumed;
-        try {
-            // Inject notifications at the managed callback boundary. The device and all subsequent IOCTLs are real;
-            // no Windows device disable/enable or arrival notification is used to rescue canceled removal.
-            if (queryRemoveFirst) {
-                source.OnDeviceCallback(CM_NOTIFY_ACTION_DEVICEQUERYREMOVE, original);
-                lock (source.SyncRoot) {
-                    Assert.Null(source.Active);
-                    Assert.True(original.Handle.IsClosed);
-                }
+        // Windows can also send QUERYREMOVEFAILED without a preceding QUERYREMOVE.
+        source.OnDeviceCallback(CM_NOTIFY_ACTION_DEVICEQUERYREMOVEFAILED, original);
+        var replacement = await observer.Resumed.WaitAsync(EventTimeout, cancellationToken);
+        Assert.NotSame(original, replacement);
+        Assert.Equal(original.DevicePath, replacement.DevicePath);
+        Assert.True(original.Handle.IsClosed);
 
-                // Query-remove alone must not reopen the device before Windows reports its outcome.
-                await Assert.ThrowsAsync<TimeoutException>(
-                    () => rebound.Task.WaitAsync(DeviceRemovalBlockedTimeout, cancellationToken));
-                lock (source.SyncRoot) {
-                    Assert.Null(source.Active);
-                }
-            }
-
-            // Windows can also send QUERYREMOVEFAILED without a preceding QUERYREMOVE.
-            source.OnDeviceCallback(CM_NOTIFY_ACTION_DEVICEQUERYREMOVEFAILED, original);
-            var replacement = await rebound.Task.WaitAsync(EventTimeout, cancellationToken);
-            Assert.NotSame(original, replacement);
-            Assert.Equal(original.DevicePath, replacement.DevicePath);
-            Assert.True(original.Handle.IsClosed);
-
-            using var h = source.Lock();
-            h.StoreWriteStrict(storePath.Path, "recovered after canceled removal");
-            Assert.Equal("recovered after canceled removal", h.StoreReadStrict(storePath.Path));
-        } finally {
-            source.Resumed -= OnResumed;
-            // Each case owns its source so a failed recovery cannot contaminate the shared fixture. Also clean up
-            // the detached original if the regression prevents the worker from retiring its notification.
-            source.Dispose();
-            original.Dispose();
-        }
+        using var h = source.Lock();
+        h.StoreWriteStrict(storePath.Path, "recovered after canceled removal");
+        Assert.Equal("recovered after canceled removal", h.StoreReadStrict(storePath.Path));
     }
 
     [Fact]
@@ -184,49 +171,26 @@ public class XenIfaceSourceIntegrationTests(XenIfaceSourceFixture fixture) : ICl
         var cancellationToken = TestContext.Current.CancellationToken;
         await fixture.RequireActiveDeviceAsync(cancellationToken);
         using var storePath = fixture.GetTempStorePath();
+        using var detached = new DisposeStack();
         using var source = new XenIfaceSource(NullLogger<XenIfaceSource>.Instance);
         var original = await WaitForActiveDeviceAsync(source, cancellationToken);
-        var rebound = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var watchTriggered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var observeWatch = false;
+        detached.Push(original);
         using var watch = source.WatchAdd(storePath.Path);
+        using var observer = new ResumedObserver(source, original);
+        using var watchObserver = new WatchObserver(watch);
 
-        void OnResumed(object? sender, XenIfaceResumedEventArgs args) {
-            lock (source.SyncRoot) {
-                if (source.Active is XenIfaceDevice active && !ReferenceEquals(active, original)) {
-                    rebound.TrySetResult();
-                }
-            }
+        await WaitForWatchReadyAsync(watch, cancellationToken);
+        source.OnDeviceCallback(CM_NOTIFY_ACTION_DEVICEQUERYREMOVE, original);
+        source.OnDeviceCallback(CM_NOTIFY_ACTION_DEVICEQUERYREMOVEFAILED, original);
+
+        // No REMOVEPENDING, REMOVECOMPLETE or interface arrival follows canceled removal.
+        await observer.Resumed.WaitAsync(EventTimeout, cancellationToken);
+        await WaitForWatchReadyAsync(watch, cancellationToken);
+
+        watchObserver.Arm();
+        using (var h = source.Lock()) {
+            h.StoreWriteStrict(storePath.Path, "changed after canceled removal");
         }
-
-        void OnWatchTriggered(object? sender, XenIfaceWatchEventArgs args) {
-            if (Volatile.Read(ref observeWatch)) {
-                watchTriggered.TrySetResult();
-            }
-        }
-
-        source.Resumed += OnResumed;
-        watch.WatchTriggered += OnWatchTriggered;
-        try {
-            await WaitForWatchReadyAsync(watch, cancellationToken);
-            source.OnDeviceCallback(CM_NOTIFY_ACTION_DEVICEQUERYREMOVE, original);
-            source.OnDeviceCallback(CM_NOTIFY_ACTION_DEVICEQUERYREMOVEFAILED, original);
-
-            // No REMOVEPENDING, REMOVECOMPLETE or interface arrival follows canceled removal.
-            await rebound.Task.WaitAsync(EventTimeout, cancellationToken);
-            await WaitForWatchReadyAsync(watch, cancellationToken);
-
-            Volatile.Write(ref observeWatch, true);
-            using (var h = source.Lock()) {
-                h.StoreWriteStrict(storePath.Path, "changed after canceled removal");
-            }
-            await watchTriggered.Task.WaitAsync(EventTimeout, cancellationToken);
-        } finally {
-            source.Resumed -= OnResumed;
-            watch.WatchTriggered -= OnWatchTriggered;
-            watch.Dispose();
-            source.Dispose();
-            original.Dispose();
-        }
+        await watchObserver.Triggered.WaitAsync(EventTimeout, cancellationToken);
     }
 }
