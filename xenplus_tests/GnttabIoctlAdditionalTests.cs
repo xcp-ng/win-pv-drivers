@@ -1,5 +1,4 @@
 using static XenPlus.XENIFACE_GNTTAB_PAGE_FLAGS;
-using static XenPlus.XenIfaceIoctl;
 using static XenPlus.XenIfaceIoctlTestSupport;
 
 namespace XenPlus;

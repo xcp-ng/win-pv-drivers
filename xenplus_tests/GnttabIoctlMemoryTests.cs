@@ -5,9 +5,6 @@ using static XenPlus.XenIfaceIoctlTestSupport;
 namespace XenPlus;
 
 public sealed partial class GnttabIoctlTests {
-    const uint MemReserve = 0x2000;
-    const uint MemFree = 0x10000;
-
     [Fact]
     [Trait("CaseId", "G15-READWRITE-ON-READONLY")]
     [Trait("Profile", "isolated")]
@@ -31,7 +28,7 @@ public sealed partial class GnttabIoctlTests {
         var domain = fixture.RequireDomainId();
         using var handle = fixture.OpenDevice();
         using var memory = XenIfaceTestMemoryRegion.Reserve();
-        Assert.Equal(MemReserve, memory.QueryState());
+        Assert.Equal(VIRTUAL_ALLOCATION_TYPE.MEM_RESERVE, memory.QueryState());
 
         AssertRejectedWithSmoke(handle, domain, BeginPermitV2(handle, domain, memory.Address));
     }
@@ -43,9 +40,7 @@ public sealed partial class GnttabIoctlTests {
         var domain = fixture.RequireDomainId();
         using var handle = fixture.OpenDevice();
         using var memory = XenIfaceTestMemoryRegion.AllocateUnmapped();
-        Assert.Equal(MemFree, memory.QueryState());
-
-        Assert.Equal(MemFree, memory.QueryState());
+        Assert.Equal(VIRTUAL_ALLOCATION_TYPE.MEM_FREE, memory.QueryState());
         AssertRejectedWithSmoke(handle, domain, BeginPermitV2(handle, domain, memory.Address));
     }
 
@@ -57,7 +52,7 @@ public sealed partial class GnttabIoctlTests {
         using var handle = fixture.OpenDevice();
         using var memory = XenIfaceTestMemoryRegion.AllocateCommitted();
         memory.DecommitPage();
-        Assert.Equal(MemReserve, memory.QueryState());
+        Assert.Equal(VIRTUAL_ALLOCATION_TYPE.MEM_RESERVE, memory.QueryState());
 
         AssertRejectedWithSmoke(handle, domain, BeginPermitV2(handle, domain, memory.Address));
     }

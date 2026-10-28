@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Security.Principal;
 using Microsoft.Extensions.Logging.Abstractions;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using XenPlus.XenIface;
@@ -36,11 +35,6 @@ public sealed class XenIfaceSourceFixture : IDisposable {
 
     internal XenIfaceSource Source { get; } = new(NullLogger<XenIfaceSource>.Instance);
 
-    static bool IsAdministrator() {
-        using var identity = WindowsIdentity.GetCurrent();
-        return new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
-    }
-
     internal bool TryGetActiveDevicePath(out string? devicePath) {
         lock (Source.SyncRoot) {
             devicePath = Source.Active?.DevicePath;
@@ -63,7 +57,7 @@ public sealed class XenIfaceSourceFixture : IDisposable {
 
     internal async Task<string> RequireActiveDeviceAsync(CancellationToken cancellationToken) {
         Assert.SkipUnless(
-            IsAdministrator(),
+            XenIfaceIoctlDeviceDiscovery.IsAdministrator(),
             "XenIface API tests require an elevated test process");
 
         if (!_active) {
