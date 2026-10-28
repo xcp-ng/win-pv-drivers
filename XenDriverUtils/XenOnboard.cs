@@ -32,7 +32,7 @@ namespace XenDriverUtils {
                 (Guid?)null,
                 null,
                 HWND.Null,
-                SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES);
+                flags);
             foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)) {
                 List<string> deviceIds = DriverUtils.GetDeviceHardwareAndCompatibleIds(devInfo, devInfoData);
                 bool found = false;
