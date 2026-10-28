@@ -18,8 +18,8 @@ public sealed partial class GnttabIoctlTests {
         foreach (var legacy in new[] { true, false }) {
             foreach (var pages in new[] { 0u, overflowPages, uint.MaxValue }) {
                 // Submit forged metadata with a small real output buffer; never allocate gigabytes.
-                using var invalid = BeginValidationPermit(handle, legacy, domain, memory.Address,
-                    pages, XenIfaceIoctlAbi.PermitOutputLength(1));
+                using var invalid = BeginPermit(handle, legacy, domain, memory.Address,
+                    pages: pages, outputLength: XenIfaceIoctlAbi.PermitOutputLength(1));
                 AssertRejected(invalid);
                 AssertValidationGrantSmoke(handle, domain);
             }
@@ -42,7 +42,7 @@ public sealed partial class GnttabIoctlTests {
                 XenIfaceIoctlAbi.PermitOutputLength(1),
                 required - 1
             }) {
-                using var invalid = BeginValidationPermit(handle, legacy, domain, memory.Address, 2, outputLength);
+                using var invalid = BeginPermit(handle, legacy, domain, memory.Address, pages: 2, outputLength: outputLength);
                 AssertRejected(invalid);
                 AssertValidationGrantSmoke(handle, domain);
             }
@@ -131,8 +131,8 @@ public sealed partial class GnttabIoctlTests {
 
         foreach (var legacy in new[] { true, false }) {
             foreach (var offset in new[] { (uint)PageSize, (uint)PageSize + 1u, uint.MaxValue }) {
-                using (var permit = BeginValidationPermit(handle, legacy, domain, memory.Address,
-                    1, XenIfaceIoctlAbi.PermitOutputLength(17), XENIFACE_GNTTAB_USE_NOTIFY_OFFSET, offset)) {
+                using (var permit = BeginPermit(handle, legacy, domain, memory.Address, flags: XENIFACE_GNTTAB_USE_NOTIFY_OFFSET,
+                    notifyOffset: offset, outputLength: XenIfaceIoctlAbi.PermitOutputLength(17))) {
                     AssertRejected(permit);
                 }
                 using (var map = BeginValidationMap(handle, legacy, domain, 1, extraReferences,
@@ -246,36 +246,12 @@ public sealed partial class GnttabIoctlTests {
         }
     }
 
-    static PendingIoctl BeginValidationPermit(XenIfaceIoctlHandle handle, bool legacy, ushort domain,
-        nint address, uint pages, int outputLength, XENIFACE_GNTTAB_PAGE_FLAGS flags = 0,
-        uint notifyOffset = 0, uint notifyPort = 0, uint requestId = 0, Action<nint>? writeOutput = null) {
-        return legacy
-            ? Ioctl(handle, IOCTL_XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS,
-                new XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_IN {
-                    RequestId = requestId,
-                    RemoteDomain = domain,
-                    NumberPages = pages,
-                    Flags = flags,
-                    NotifyOffset = notifyOffset,
-                    NotifyPort = notifyPort
-                }, outputLength, writeOutput)
-            : Ioctl(handle, IOCTL_XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_V2,
-                new XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_IN_V2 {
-                    RemoteDomain = domain,
-                    Address = address,
-                    NumberPages = pages,
-                    Flags = flags,
-                    NotifyOffset = notifyOffset,
-                    NotifyPort = notifyPort
-                }, outputLength, writeOutput);
-    }
-
     static XenIfaceTestGrant CreateValidationGrant(XenIfaceIoctlHandle handle, bool legacy, ushort domain,
         nint address, int outputLength, XENIFACE_GNTTAB_PAGE_FLAGS flags = 0,
         uint notifyOffset = 0, uint notifyPort = 0, Action<nint>? writeOutput = null) {
         var requestId = XenIfaceIoctlFixture.NewRequestId();
-        var request = BeginValidationPermit(handle, legacy, domain, address, 1, outputLength,
-            flags, notifyOffset, notifyPort, requestId, writeOutput);
+        var request = BeginPermit(handle, legacy, domain, address, requestId, flags, notifyOffset, notifyPort,
+            outputLength: outputLength, writeOutput: writeOutput);
         if (legacy) {
             return XenIfaceTestGrant.CreateV1(handle, requestId, request);
         } else {
