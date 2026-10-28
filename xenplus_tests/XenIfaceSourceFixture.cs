@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Principal;
 using Microsoft.Extensions.Logging.Abstractions;
+using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using XenPlus.XenIface;
 
 namespace XenPlus;
@@ -30,7 +31,7 @@ public sealed class XenIfaceSourceFixture : IDisposable {
     }
 
     static readonly TimeSpan DeviceTimeout = TimeSpan.FromSeconds(5);
-    internal static readonly TimeSpan PnputilTimeout = TimeSpan.FromSeconds(30);
+    internal static readonly TimeSpan DeviceStateChangeTimeout = TimeSpan.FromSeconds(30);
     bool _active = true;
 
     internal XenIfaceSource Source { get; } = new(NullLogger<XenIfaceSource>.Instance);
@@ -103,73 +104,27 @@ public sealed class XenIfaceSourceFixture : IDisposable {
         return new TempStorePath(Source);
     }
 
-    static async Task<(int ExitCode, string Output)> RunPnputilAsync(
-        string command,
-        string instanceId,
-        CancellationToken cancellationToken,
-        bool requireSuccess = true) {
-
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeout.CancelAfter(PnputilTimeout);
-
-        var startInfo = new ProcessStartInfo {
-            FileName = Path.Combine(Environment.SystemDirectory, "pnputil.exe"),
-            CreateNoWindow = true,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-        };
-        startInfo.ArgumentList.Add(command);
-        startInfo.ArgumentList.Add(instanceId);
-
-        using var process = Process.Start(startInfo) ??
-            throw new InvalidOperationException("pnputil did not start");
-        var stdout = process.StandardOutput.ReadToEndAsync(timeout.Token);
-        var stderr = process.StandardError.ReadToEndAsync(timeout.Token);
-
-        try {
-            await process.WaitForExitAsync(timeout.Token);
-        } catch {
-            if (!process.HasExited) {
-                process.Kill(entireProcessTree: true);
-            }
-            throw;
-        }
-
-        var output = await stdout;
-        var error = await stderr;
-        if (requireSuccess && process.ExitCode != 0) {
-            throw new InvalidOperationException(
-                $"pnputil {command} failed with exit code {process.ExitCode}: {output}{error}");
-        }
-        return (process.ExitCode, $"{output}{error}");
-    }
-
-    internal Task<(int ExitCode, string Output)> TryDisableDeviceAsync(
-        string instanceId,
-        CancellationToken cancellationToken) {
-        // A veto is expected by the caller. Do not require success or wait for the source to become inactive.
-        return RunPnputilAsync("/disable-device", instanceId, cancellationToken, requireSuccess: false);
+    /// <summary>
+    /// Returns the CfgMgr32 result without requiring success. Callers expecting a veto check for CR_REMOVE_VETOED.
+    /// </summary>
+    internal static Task<CONFIGRET> TryDisableDeviceAsync(string instanceId, CancellationToken cancellationToken) {
+        // The disable blocks until PnP finishes query-remove and removal, which includes delivering notifications to
+        // this process. Keep it off the caller's thread. The native call cannot be cancelled: a timeout or
+        // cancellation only abandons the wait.
+        return Task.Run(() => XenIfaceDeviceState.Disable(instanceId), cancellationToken)
+            .WaitAsync(DeviceStateChangeTimeout, cancellationToken);
     }
 
     internal async Task DisableDeviceAsync(string instanceId, CancellationToken cancellationToken) {
-        await RunPnputilAsync("/disable-device", instanceId, cancellationToken);
+        Cfgmgr32.CheckConfigret(await TryDisableDeviceAsync(instanceId, cancellationToken));
         // Device removal notifications should detach the active XenIfaceDevice.
         await WaitForDeviceStateAsync(active: false, cancellationToken);
     }
 
     internal async Task EnableDeviceAsync(string instanceId, CancellationToken cancellationToken) {
-        var rebootRequired = XenIfaceDeviceState.Enable(instanceId);
-        TestContext.Current.TestOutputHelper?.WriteLine(
-            rebootRequired ?
-                $"Enabled {instanceId} through SetupAPI; Windows still reports a reboot is required." :
-                $"Enabled {instanceId} through SetupAPI.");
-
-        // A successful configuration change with DI_NEEDREBOOT/DI_NEEDRESTART is not an enable failure.
+        XenIfaceDeviceState.Enable(instanceId);
         // Live-rebind tests verify their own Resumed/watch postconditions separately.
-        if (!rebootRequired) {
-            await WaitForDeviceStateAsync(active: true, cancellationToken);
-        }
+        await WaitForDeviceStateAsync(active: true, cancellationToken);
     }
 
     /// <summary>

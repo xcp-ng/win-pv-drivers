@@ -1,81 +1,36 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
-using Windows.Win32.Foundation;
 
-using static Windows.Win32.Devices.DeviceAndDriverInstallation.DI_FUNCTION;
-using static Windows.Win32.Devices.DeviceAndDriverInstallation.SETUP_DI_DEVICE_INSTALL_FLAGS;
-using static Windows.Win32.Devices.DeviceAndDriverInstallation.SETUP_DI_PROPERTY_CHANGE_SCOPE;
-using static Windows.Win32.Devices.DeviceAndDriverInstallation.SETUP_DI_STATE_CHANGE;
+using static Windows.Win32.Devices.DeviceAndDriverInstallation.CM_LOCATE_DEVNODE_FLAGS;
 
 namespace XenPlus;
 
+/// <summary>
+/// Changes device state through CfgMgr32 rather than SetupAPI DICS_DISABLE: the default class installer turns a
+/// query-remove veto into a disable deferred to the next boot and reports DI_NEEDREBOOT, so the refusal cannot be
+/// observed and leaves the device disabled after a reboot. Without CM_DISABLE_PERSIST, a disable lasts only until
+/// the next boot, so nothing outlives the boot even if a test aborts before re-enabling the device.
+/// </summary>
 static class XenIfaceDeviceState {
-    /// <summary>
-    /// Restore the enabled configuration using SetupAPI. Success can still require a system reboot.
-    /// </summary>
-    public static unsafe bool Enable(string instanceId) {
-        var nativeInfo = PInvokeT.SetupDiCreateDeviceInfoList((Guid*)null, HWND.Null);
-        using var info = new SetupDiDestroyDeviceInfoListSafeHandle(nativeInfo.Value, ownsHandle: true);
-        if (info.IsInvalid) {
-            throw new Win32Exception(Marshal.GetLastPInvokeError(), nameof(PInvokeT.SetupDiCreateDeviceInfoList));
-        }
-
-        var device = new SP_DEVINFO_DATA {
-            cbSize = (uint)sizeof(SP_DEVINFO_DATA)
-        };
+    static unsafe uint Locate(string instanceId) {
+        uint devInst;
         fixed (char* id = instanceId) {
-            if (!PInvokeT.SetupDiOpenDeviceInfo(nativeInfo, id, HWND.Null, 0, &device)) {
-                throw new Win32Exception(Marshal.GetLastPInvokeError(), nameof(PInvokeT.SetupDiOpenDeviceInfo));
-            }
+            // Reuse xenplus's CsWin32 declaration through IVT.
+            Cfgmgr32.CheckConfigret(PInvoke.CM_Locate_DevNode(&devInst, id, CM_LOCATE_DEVNODE_NORMAL));
         }
-
-        // Enable globally before enabling in the current hardware profile, following Microsoft's DevCon sample:
-        // https://github.com/microsoft/Windows-driver-samples/blob/main/setup/devcon/cmds.cpp (ControlCallback).
-        var rebootRequired = false;
-        try {
-            rebootRequired = EnableInScope(info, nativeInfo, ref device, DICS_FLAG_GLOBAL);
-        } catch (Win32Exception ex) {
-            // DevCon also continues to the current-profile enable when the global attempt fails.
-            TestContext.Current.TestOutputHelper?.WriteLine($"Global enable attempt failed: {ex.Message}");
-        }
-        rebootRequired |= EnableInScope(info, nativeInfo, ref device, DICS_FLAG_CONFIGSPECIFIC);
-        return rebootRequired;
+        return devInst;
     }
 
-    static unsafe bool EnableInScope(
-        SetupDiDestroyDeviceInfoListSafeHandle info,
-        HDEVINFO nativeInfo,
-        ref SP_DEVINFO_DATA device,
-        SETUP_DI_PROPERTY_CHANGE_SCOPE scope) {
+    /// <summary>
+    /// Disable the device until the next boot. The call blocks until Windows has removed the device, and returns
+    /// CR_REMOVE_VETOED when query-remove is vetoed.
+    /// </summary>
+    public static CONFIGRET Disable(string instanceId) {
+        // Report a veto to the caller instead of displaying it.
+        return PInvokeT.CM_Disable_DevNode(Locate(instanceId), PInvokeT.CM_DISABLE_UI_NOT_OK);
+    }
 
-        var change = new SP_PROPCHANGE_PARAMS {
-            ClassInstallHeader = new SP_CLASSINSTALL_HEADER {
-                cbSize = (uint)sizeof(SP_CLASSINSTALL_HEADER),
-                InstallFunction = DIF_PROPERTYCHANGE
-            },
-            StateChange = DICS_ENABLE,
-            Scope = scope,
-            HwProfile = 0
-        };
-        fixed (SP_DEVINFO_DATA* devicePointer = &device) {
-            if (!PInvokeT.SetupDiSetClassInstallParams(
-                nativeInfo, devicePointer, &change.ClassInstallHeader, (uint)sizeof(SP_PROPCHANGE_PARAMS))) {
-                throw new Win32Exception(Marshal.GetLastPInvokeError(), $"SetupDiSetClassInstallParams ({scope})");
-            }
-            if (!PInvokeT.SetupDiCallClassInstaller(DIF_PROPERTYCHANGE, nativeInfo, devicePointer)) {
-                throw new Win32Exception(Marshal.GetLastPInvokeError(), $"SetupDiCallClassInstaller ({scope})");
-            }
-        }
-
-        var install = new SP_DEVINSTALL_PARAMS_W {
-            cbSize = (uint)Unsafe.SizeOf<SP_DEVINSTALL_PARAMS_W>()
-        };
-        if (!PInvokeT.SetupDiGetDeviceInstallParams(info, device, ref install)) {
-            throw new Win32Exception(Marshal.GetLastPInvokeError(), nameof(PInvokeT.SetupDiGetDeviceInstallParams));
-        }
-        return (install.Flags & (DI_NEEDREBOOT | DI_NEEDRESTART)) != 0;
+    public static void Enable(string instanceId) {
+        Cfgmgr32.CheckConfigret(PInvokeT.CM_Enable_DevNode(Locate(instanceId), 0));
     }
 }

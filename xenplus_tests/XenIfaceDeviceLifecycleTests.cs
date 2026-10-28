@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging.Abstractions;
+using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using XenPlus.XenIface;
 
 using static XenPlus.XenIfaceSourceTestSupport;
@@ -9,13 +10,13 @@ namespace XenPlus;
 public sealed class XenIfaceDeviceLifecycleCollection {
 }
 
-// These tests change Windows device state and can leave a reboot required. Select them explicitly, in isolation.
+// These tests disable the device until it is re-enabled or the next boot. Select them explicitly, in isolation.
 [Collection("XenIfaceDeviceLifecycle")]
 [Trait("Category", "XenIface")]
 [Trait("Category", "XenIfaceDeviceLifecycle")]
 public class XenIfaceDeviceLifecycleTests(XenIfaceSourceFixture fixture) : IClassFixture<XenIfaceSourceFixture> {
     [Fact(Explicit = true)]
-    public async Task PnputilVetoedDisableRebindsSourceAndRearmsWatch() {
+    public async Task VetoedDisableRebindsSourceAndRearmsWatch() {
         var cancellationToken = TestContext.Current.CancellationToken;
         await fixture.RequireActiveDeviceAsync(cancellationToken);
         using var storePath = fixture.GetTempStorePath();
@@ -49,14 +50,15 @@ public class XenIfaceDeviceLifecycleTests(XenIfaceSourceFixture fixture) : IClas
             await WaitForWatchReadyAsync(watch, cancellationToken);
 
             // No synthetic callbacks: keeping the duplicated native handle open makes Windows cancel removal.
-            var (ExitCode, Output) = await fixture.TryDisableDeviceAsync(instanceId, cancellationToken);
+            var disableResult = await XenIfaceSourceFixture.TryDisableDeviceAsync(instanceId, cancellationToken);
+            Assert.Equal(CONFIGRET.CR_REMOVE_VETOED, disableResult);
             var failureNotification = await Task.WhenAny(
                 blocker.QueryRemoveFailed,
                 Task.Delay(EventTimeout, cancellationToken));
             cancellationToken.ThrowIfCancellationRequested();
             Assert.True(
                 ReferenceEquals(failureNotification, blocker.QueryRemoveFailed),
-                $"Windows did not report QUERYREMOVEFAILED. pnputil exit code {ExitCode}:\n{Output}");
+                "Windows did not report QUERYREMOVEFAILED");
             Assert.True(blocker.QueryRemove.IsCompletedSuccessfully, "Windows did not report QUERYREMOVE");
             Assert.False(blocker.RemovalObserved, "Windows proceeded to removal despite the outstanding handle");
 
@@ -71,8 +73,8 @@ public class XenIfaceDeviceLifecycleTests(XenIfaceSourceFixture fixture) : IClas
             await WaitForWatchReadyAsync(watch, cancellationToken);
             Volatile.Write(ref observeWatch, true);
             using (var h = source.Lock()) {
-                h.StoreWriteStrict(storePath.Path, "changed after pnputil veto");
-                Assert.Equal("changed after pnputil veto", h.StoreReadStrict(storePath.Path));
+                h.StoreWriteStrict(storePath.Path, "changed after disable veto");
+                Assert.Equal("changed after disable veto", h.StoreReadStrict(storePath.Path));
             }
             await watchTriggered.Task.WaitAsync(EventTimeout, cancellationToken);
         } catch (Exception ex) {
@@ -85,8 +87,8 @@ public class XenIfaceDeviceLifecycleTests(XenIfaceSourceFixture fixture) : IClas
             watch.Dispose();
             source.Dispose();
             original.Dispose();
-            // Restore the enabled configuration through SetupAPI after the assertions, even if cancellation was
-            // requested. Report any remaining reboot requirement and preserve both test and cleanup failures.
+            // Re-enable the device after the assertions, even if cancellation was requested. Preserve both test and
+            // cleanup failures.
             await fixture.EnableDeviceAsync(instanceId, TestContext.Current.CancellationToken);
         }
     }
@@ -115,7 +117,7 @@ public class XenIfaceDeviceLifecycleTests(XenIfaceSourceFixture fixture) : IClas
             }
 
             // Reopening the interface registers the suspend event and raises Resumed through SuspendCallback.
-            await resumed.Task.WaitAsync(XenIfaceSourceFixture.PnputilTimeout, cancellationToken);
+            await resumed.Task.WaitAsync(XenIfaceSourceFixture.DeviceStateChangeTimeout, cancellationToken);
             Assert.NotNull(fixture.Source.Active);
         } finally {
             fixture.Source.Resumed -= onResumed;
@@ -158,7 +160,7 @@ public class XenIfaceDeviceLifecycleTests(XenIfaceSourceFixture fixture) : IClas
             }
 
             // Resumed is raised only after SuspendCallback has rearmed every registered watch.
-            await resumed.Task.WaitAsync(XenIfaceSourceFixture.PnputilTimeout, cancellationToken);
+            await resumed.Task.WaitAsync(XenIfaceSourceFixture.DeviceStateChangeTimeout, cancellationToken);
             await WaitForWatchReadyAsync(watch, cancellationToken);
 
             // Ignore registration/rearm signals and require a subsequent store change to trigger the watch.
@@ -191,7 +193,7 @@ public class XenIfaceDeviceLifecycleTests(XenIfaceSourceFixture fixture) : IClas
             try {
                 await handleAcquired.Task.WaitAsync(EventTimeout, cancellationToken);
 
-                // RunPnputilAsync starts pnputil synchronously before returning its incomplete task.
+                // DisableDeviceAsync queues the blocking disable before returning its incomplete task.
                 disableTask = fixture.DisableDeviceAsync(instanceId, cancellationToken);
 
                 // The device-removal callback cannot finish while this handle owns the source lock.
@@ -204,7 +206,7 @@ public class XenIfaceDeviceLifecycleTests(XenIfaceSourceFixture fixture) : IClas
             }
 
             // Releasing the handle lets the callback complete and the source detach the device.
-            await disableTask.WaitAsync(XenIfaceSourceFixture.PnputilTimeout, cancellationToken);
+            await disableTask.WaitAsync(XenIfaceSourceFixture.DeviceStateChangeTimeout, cancellationToken);
             Assert.Null(fixture.Source.Active);
         } finally {
             await fixture.EnableDeviceAsync(instanceId, TestContext.Current.CancellationToken);

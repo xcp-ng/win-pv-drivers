@@ -1,5 +1,8 @@
 ALL_PROCESSOR_GROUPS
 CancelIoEx
+CM_Disable_DevNode
+CM_DISABLE_UI_NOT_OK
+CM_Enable_DevNode
 DeviceIoControl
 DuplicateHandle
 EmptyWorkingSet
@@ -15,12 +18,6 @@ METHOD_BUFFERED
 METHOD_NEITHER
 PSAPI_WORKING_SET_EX_INFORMATION
 QueryWorkingSetEx
-SetupDiCallClassInstaller
-SetupDiCreateDeviceInfoList
-SetupDiGetDeviceInstallParams
-SetupDiOpenDeviceInfo
-SetupDiSetClassInstallParams
-SP_PROPCHANGE_PARAMS
 SYNCHRONIZATION_ACCESS_RIGHTS
 VirtualAlloc
 VirtualFree
