@@ -97,10 +97,12 @@ class Program {
                 noReboot = true;
             } else if ("-noConfirm".Equals(arg, StringComparison.OrdinalIgnoreCase)) {
                 confirm = false;
-            } else if ("-onboard".Equals(arg, StringComparison.OrdinalIgnoreCase)) {
+            } else if ("-onboard".Equals(arg, StringComparison.OrdinalIgnoreCase) &&
+                i + 1 < args.Length &&
+                !args[i + 1].StartsWith('-')) {
                 onboardFamily = args[++i];
             } else {
-                Console.WriteLine("Usage: XenClean [-dryRun] [-noReboot] [-noConfirm]");
+                Console.WriteLine("Usage: XenClean [-dryRun] [-noReboot] [-noConfirm] [-onboard <family>]");
                 return (int)exitCode;
             }
         }
