@@ -178,8 +178,8 @@ class Program {
 
             if (logPath == null) {
                 Logger.Log(LogLevel.Alert, "No temporary log was created");
-            } else if (exitCode < ExitCode.ReadyForOnboard) {
-                // Don't delete the temp file when we did something meaningful.
+            } else if (exitCode == ExitCode.ReadyForOnboard || exitCode == ExitCode.OnboardDenied) {
+                // Don't delete the temp file when we did something meaningful or denied onboarding.
                 var copiedLogPath = Path.Combine(Environment.GetEnvironmentVariable("SystemDrive") + "\\", runName + ".log");
                 Logger.LogFormat(LogLevel.Interactive, "Program done, copying log to {0}", copiedLogPath);
                 try {
