@@ -1,5 +1,4 @@
 using static XenPlus.XENIFACE_GNTTAB_PAGE_FLAGS;
-using static XenPlus.XenIfaceIoctl;
 using static XenPlus.XenIfaceIoctlTestSupport;
 
 namespace XenPlus;
@@ -10,8 +9,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "local")]
     public void G07V1RequestIdZeroCoexistsWithV2GrantInBothOrders() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
 
         {
             using var v1First = PermitV1(handle, domain, 0);
@@ -43,9 +41,8 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "loopback")]
     public void G04RevokeSetsByteAndSignalsPairedEventChannel() {
         var domain = fixture.RequireDomainId();
-        var (path, handleA) = fixture.OpenDevice();
-        using var a = handleA;
-        using var b = XenIfaceIoctlHandle.Open(path);
+        using var a = fixture.OpenDevice();
+        using var b = a.OpenAnother();
         using var eventA = new EventWaitHandle(false, EventResetMode.ManualReset);
         using var eventB = new EventWaitHandle(false, EventResetMode.ManualReset);
         using var page = XenIfaceTestMemoryRegion.AllocateCommitted();
@@ -54,29 +51,7 @@ public sealed partial class GnttabIoctlTests {
         page.WriteByte(offset - 1, 0x39);
         page.WriteByte(offset, 0xA6);
         page.WriteByte(offset + 1, 0x73);
-        using var bindA = Ioctl(
-            a,
-            IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-            new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
-                RemoteDomain = domain,
-                Mask = 0,
-                Event = eventA.SafeWaitHandle.DangerousGetHandle()
-            },
-            sizeof(uint));
-        AssertSucceeded(bindA);
-        using var channelA = new XenIfaceTestEventChannel(a, unchecked((uint)bindA.ReadInt32()));
-        using var bindB = Ioctl(
-            b,
-            IOCTL_XENIFACE_EVTCHN_BIND_INTERDOMAIN,
-            new XENIFACE_EVTCHN_BIND_INTERDOMAIN_IN {
-                RemoteDomain = domain,
-                RemotePort = channelA.Port,
-                Mask = 0,
-                Event = eventB.SafeWaitHandle.DangerousGetHandle()
-            },
-            sizeof(uint));
-        AssertSucceeded(bindB);
-        using var channelB = new XenIfaceTestEventChannel(b, unchecked((uint)bindB.ReadInt32()));
+        using var pair = new XenIfaceTestEventChannelPair(a, b, domain, eventA, eventB);
 
         // The interdomain bind notifies B asynchronously; observe it before resetting for revoke.
         Assert.True(eventB.WaitOne(CompletionTimeout), "Bind-time notification on B was not delivered");
@@ -84,12 +59,12 @@ public sealed partial class GnttabIoctlTests {
         eventB.Reset();
 
         using var grant = PermitV2(
-            handleA,
+            a,
             domain,
             page.Address,
             XENIFACE_GNTTAB_USE_NOTIFY_OFFSET | XENIFACE_GNTTAB_USE_NOTIFY_PORT,
             offset,
-            channelA.Port);
+            pair.A.Port);
 
         Assert.False(eventB.WaitOne(ObservationTimeout), "The paired endpoint was signaled before revoke");
         grant.Revoke();
@@ -105,8 +80,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "isolated")]
     public void G13IssuingThreadExitCompletesPermitWithOperationAborted() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
 
         var issuer = new G13Issuer(handle, domain);
         var issuingThread = new Thread(issuer.Issue) {

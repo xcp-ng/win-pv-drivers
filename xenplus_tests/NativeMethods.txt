@@ -1,5 +1,8 @@
 ALL_PROCESSOR_GROUPS
 CancelIoEx
+CM_Disable_DevNode
+CM_DISABLE_UI_NOT_OK
+CM_Enable_DevNode
 DeviceIoControl
 DuplicateHandle
 EmptyWorkingSet
@@ -8,13 +11,14 @@ FILE_DEVICE_UNKNOWN
 GetActiveProcessorCount
 GetActiveProcessorGroupCount
 GetCurrentProcess
-GetSystemInfo
 GetOverlappedResult
+GetSystemInfo
+GlobalMemoryStatusEx
 METHOD_BUFFERED
 METHOD_NEITHER
 PSAPI_WORKING_SET_EX_INFORMATION
-SYNCHRONIZATION_ACCESS_RIGHTS
 QueryWorkingSetEx
+SYNCHRONIZATION_ACCESS_RIGHTS
 VirtualAlloc
 VirtualFree
 VirtualProtect

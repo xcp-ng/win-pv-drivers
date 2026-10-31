@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using static XenPlus.XenIfaceIoctl;
 using static XenPlus.XenIfaceIoctlTestSupport;
 
@@ -13,29 +12,22 @@ public sealed class Wow64AbiTests(XenIfaceIoctlFixture fixture) : IClassFixture<
     public void Wow64EventChannelBindUsesTheNativeWindowsX64DriverContract() {
         RequireWow64();
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var notification = new EventWaitHandle(false, EventResetMode.ManualReset);
 
-        using var bind = handle.Ioctl(
+        using var bind = Ioctl(
+            handle,
             IOCTL_XENIFACE_EVTCHN_BIND_UNBOUND,
-            Marshal.SizeOf<XENIFACE_EVTCHN_BIND_UNBOUND_IN>(),
-            sizeof(uint),
-            p => Marshal.StructureToPtr(new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
+            new XENIFACE_EVTCHN_BIND_UNBOUND_IN {
                 RemoteDomain = domain,
                 Mask = 0,
                 Event = notification.SafeWaitHandle.DangerousGetHandle()
             },
-            p,
-            false));
+            sizeof(uint));
         var bound = bind.ImmediateSuccess;
-        uint port = 0;
         if (bound) {
-            port = unchecked((uint)bind.ReadInt32());
-            using var close = handle.Ioctl(IOCTL_XENIFACE_EVTCHN_CLOSE, Marshal.SizeOf<XENIFACE_EVTCHN_CLOSE_IN>(), 0,
-                p => Marshal.StructureToPtr(new XENIFACE_EVTCHN_CLOSE_IN { LocalPort = port }, p, false));
-            Assert.False(close.IsPending, "WOW64 EVTCHN_CLOSE unexpectedly returned STATUS_PENDING");
-            Assert.True(close.ImmediateSuccess, $"Bind succeeded but close failed with {close.ImmediateError}");
+            using var channel = new XenIfaceTestEventChannel(handle, unchecked((uint)bind.ReadInt32()));
+            Assert.True(channel.Close(), "Bind succeeded but close failed");
         }
 
         Assert.True(bound, $"A valid native x86 event-channel bind was rejected with Win32 error {bind.ImmediateError}; the x64 driver does not translate this WOW64 ABI");
@@ -47,14 +39,12 @@ public sealed class Wow64AbiTests(XenIfaceIoctlFixture fixture) : IClassFixture<
     public void Wow64V1GrantUsesTheNativeWindowsX64DriverContract() {
         RequireWow64();
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         var requestId = XenIfaceIoctlFixture.NewRequestId();
-        using var permit = handle.Ioctl(
+        using var permit = Ioctl(
+            handle,
             IOCTL_XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS,
-            Marshal.SizeOf<XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_IN>(),
-            nint.Size + sizeof(uint),
-            p => Marshal.StructureToPtr(new XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_IN {
+            new XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_IN {
                 RequestId = requestId,
                 RemoteDomain = domain,
                 NumberPages = 1,
@@ -62,18 +52,14 @@ public sealed class Wow64AbiTests(XenIfaceIoctlFixture fixture) : IClassFixture<
                 NotifyOffset = 0,
                 NotifyPort = 0
             },
-            p,
-            false));
+            XenIfaceIoctlAbi.PermitOutputLength(1));
 
         var granted = permit.IsPending;
         if (granted) {
-            using var revoke = handle.Ioctl(
+            using var revoke = Ioctl(
+                handle,
                 IOCTL_XENIFACE_GNTTAB_REVOKE_FOREIGN_ACCESS,
-                Marshal.SizeOf<XENIFACE_GNTTAB_REVOKE_FOREIGN_ACCESS_IN>(),
-                0,
-                p => Marshal.StructureToPtr(new XENIFACE_GNTTAB_REVOKE_FOREIGN_ACCESS_IN { RequestId = requestId },
-                p,
-                false));
+                new XENIFACE_GNTTAB_REVOKE_FOREIGN_ACCESS_IN { RequestId = requestId });
             Assert.True(revoke.ImmediateSuccess, $"Permit succeeded but revoke failed with {revoke.ImmediateError}");
             Assert.True(permit.WaitTerminal(CompletionTimeout), "The V1 permit request did not complete after revoke");
             Assert.True(permit.TerminalSuccess, $"V1 permit ended with {permit.TerminalError}");
@@ -88,13 +74,11 @@ public sealed class Wow64AbiTests(XenIfaceIoctlFixture fixture) : IClassFixture<
     public void Wow64V2GrantUsesTheNativeWindowsX64DriverContract() {
         RequireWow64();
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
-        using var permit = handle.Ioctl(
+        using var handle = fixture.OpenDevice();
+        using var permit = Ioctl(
+            handle,
             IOCTL_XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_V2,
-            Marshal.SizeOf<XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_IN_V2>(),
-            nint.Size + sizeof(uint),
-            p => Marshal.StructureToPtr(new XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_IN_V2 {
+            new XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_IN_V2 {
                 RemoteDomain = domain,
                 Address = 0,
                 NumberPages = 1,
@@ -102,19 +86,14 @@ public sealed class Wow64AbiTests(XenIfaceIoctlFixture fixture) : IClassFixture<
                 NotifyOffset = 0,
                 NotifyPort = 0
             },
-            p,
-            false));
+            XenIfaceIoctlAbi.PermitOutputLength(1));
 
         var granted = permit.IsPending;
         if (granted) {
-            var address = permit.ReadIntPtr();
-            using var revoke = handle.Ioctl(
+            using var revoke = Ioctl(
+                handle,
                 IOCTL_XENIFACE_GNTTAB_REVOKE_FOREIGN_ACCESS_V2,
-                Marshal.SizeOf<XENIFACE_GNTTAB_REVOKE_FOREIGN_ACCESS_IN_V2>(),
-                0,
-                p => Marshal.StructureToPtr(new XENIFACE_GNTTAB_REVOKE_FOREIGN_ACCESS_IN_V2 { Address = address },
-                p,
-                false));
+                new XENIFACE_GNTTAB_REVOKE_FOREIGN_ACCESS_IN_V2 { Address = permit.ReadIntPtr() });
             Assert.True(revoke.ImmediateSuccess, $"Permit succeeded but V2 revoke failed with {revoke.ImmediateError}");
             Assert.True(permit.WaitTerminal(CompletionTimeout), "The V2 permit request did not complete after revoke");
             Assert.True(permit.TerminalSuccess, $"V2 permit ended with {permit.TerminalError}");

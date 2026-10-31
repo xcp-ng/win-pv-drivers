@@ -10,7 +10,7 @@ static class XenIfaceIoctlDeviceDiscovery {
         0x47e1,
         0x8b, 0xf7, 0x97, 0x93, 0xf3, 0x15, 0x45, 0x65);
 
-    static bool IsAdministrator() {
+    public static bool IsAdministrator() {
         using var identity = WindowsIdentity.GetCurrent();
         return new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
     }

@@ -37,7 +37,7 @@ param (
 $ErrorActionPreference = "Stop"
 
 # Drivers are ordered by build date first so the Hmm gives you a more granular revision number (down to the minute).
-$DriverTime = (Get-Date -Format Hmm)
+$DriverTime = (Get-Date -Format Hmm).TrimStart('0')
 
 $OutputPath = "$PSScriptRoot\driver-bins"
 Remove-Item -Path $OutputPath -Force -Recurse -ErrorAction SilentlyContinue

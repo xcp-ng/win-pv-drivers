@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Security.Principal;
 using Microsoft.Extensions.Logging.Abstractions;
+using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using XenPlus.XenIface;
 
 namespace XenPlus;
@@ -30,15 +30,10 @@ public sealed class XenIfaceSourceFixture : IDisposable {
     }
 
     static readonly TimeSpan DeviceTimeout = TimeSpan.FromSeconds(5);
-    internal static readonly TimeSpan PnputilTimeout = TimeSpan.FromSeconds(30);
+    internal static readonly TimeSpan DeviceStateChangeTimeout = TimeSpan.FromSeconds(30);
     bool _active = true;
 
     internal XenIfaceSource Source { get; } = new(NullLogger<XenIfaceSource>.Instance);
-
-    static bool IsAdministrator() {
-        using var identity = WindowsIdentity.GetCurrent();
-        return new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
-    }
 
     internal bool TryGetActiveDevicePath(out string? devicePath) {
         lock (Source.SyncRoot) {
@@ -62,7 +57,7 @@ public sealed class XenIfaceSourceFixture : IDisposable {
 
     internal async Task<string> RequireActiveDeviceAsync(CancellationToken cancellationToken) {
         Assert.SkipUnless(
-            IsAdministrator(),
+            XenIfaceIoctlDeviceDiscovery.IsAdministrator(),
             "XenIface API tests require an elevated test process");
 
         if (!_active) {
@@ -80,7 +75,7 @@ public sealed class XenIfaceSourceFixture : IDisposable {
         return devicePath!;
     }
 
-    static string DeviceInterfacePathToInstanceId(string devicePath) {
+    internal static string DeviceInterfacePathToInstanceId(string devicePath) {
         var prefixLength =
             devicePath.StartsWith(@"\\?\", StringComparison.Ordinal) ||
             devicePath.StartsWith(@"\\.\", StringComparison.Ordinal) ?
@@ -103,54 +98,26 @@ public sealed class XenIfaceSourceFixture : IDisposable {
         return new TempStorePath(Source);
     }
 
-    static async Task RunPnputilAsync(
-        string command,
-        string instanceId,
-        CancellationToken cancellationToken) {
-
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeout.CancelAfter(PnputilTimeout);
-
-        var startInfo = new ProcessStartInfo {
-            FileName = Path.Combine(Environment.SystemDirectory, "pnputil.exe"),
-            CreateNoWindow = true,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-        };
-        startInfo.ArgumentList.Add(command);
-        startInfo.ArgumentList.Add(instanceId);
-
-        using var process = Process.Start(startInfo) ??
-            throw new InvalidOperationException("pnputil did not start");
-        var stdout = process.StandardOutput.ReadToEndAsync(timeout.Token);
-        var stderr = process.StandardError.ReadToEndAsync(timeout.Token);
-
-        try {
-            await process.WaitForExitAsync(timeout.Token);
-        } catch {
-            if (!process.HasExited) {
-                process.Kill(entireProcessTree: true);
-            }
-            throw;
-        }
-
-        var output = await stdout;
-        var error = await stderr;
-        if (process.ExitCode != 0) {
-            throw new InvalidOperationException(
-                $"pnputil {command} failed with exit code {process.ExitCode}: {output}{error}");
-        }
+    /// <summary>
+    /// Returns the CfgMgr32 result without requiring success. Callers expecting a veto check for CR_REMOVE_VETOED.
+    /// </summary>
+    internal static Task<CONFIGRET> TryDisableDeviceAsync(string instanceId, CancellationToken cancellationToken) {
+        // The disable blocks until PnP finishes query-remove and removal, which includes delivering notifications to
+        // this process. Keep it off the caller's thread. The native call cannot be cancelled: a timeout or
+        // cancellation only abandons the wait.
+        return Task.Run(() => XenIfaceDeviceState.Disable(instanceId), cancellationToken)
+            .WaitAsync(DeviceStateChangeTimeout, cancellationToken);
     }
 
     internal async Task DisableDeviceAsync(string instanceId, CancellationToken cancellationToken) {
-        await RunPnputilAsync("/disable-device", instanceId, cancellationToken);
+        Cfgmgr32.CheckConfigret(await TryDisableDeviceAsync(instanceId, cancellationToken));
         // Device removal notifications should detach the active XenIfaceDevice.
         await WaitForDeviceStateAsync(active: false, cancellationToken);
     }
 
     internal async Task EnableDeviceAsync(string instanceId, CancellationToken cancellationToken) {
-        await RunPnputilAsync("/enable-device", instanceId, cancellationToken);
+        XenIfaceDeviceState.Enable(instanceId);
+        // Live-rebind tests verify their own Resumed/watch postconditions separately.
         await WaitForDeviceStateAsync(active: true, cancellationToken);
     }
 

@@ -5,16 +5,12 @@ using static XenPlus.XenIfaceIoctlTestSupport;
 namespace XenPlus;
 
 public sealed partial class GnttabIoctlTests {
-    const uint MemReserve = 0x2000;
-    const uint MemFree = 0x10000;
-
     [Fact]
     [Trait("CaseId", "G15-READWRITE-ON-READONLY")]
     [Trait("Profile", "isolated")]
     public void G15WritableGrantRejectsCommittedPageReadOnlyMemory() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var memory = XenIfaceTestMemoryRegion.AllocateCommitted();
         memory.WriteByte(0, 0x6B);
         memory.Protect(PAGE_PROTECTION_FLAGS.PAGE_READONLY);
@@ -30,10 +26,9 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "isolated")]
     public void G15GrantRejectsReservedButUncommittedMemory() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var memory = XenIfaceTestMemoryRegion.Reserve();
-        Assert.Equal(MemReserve, memory.QueryState());
+        Assert.Equal(VIRTUAL_ALLOCATION_TYPE.MEM_RESERVE, memory.QueryState());
 
         AssertRejectedWithSmoke(handle, domain, BeginPermitV2(handle, domain, memory.Address));
     }
@@ -43,13 +38,20 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "isolated")]
     public void G15GrantRejectsAnUnmappedCallerAddress() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
-        using var memory = XenIfaceTestMemoryRegion.AllocateUnmapped();
-        Assert.Equal(MemFree, memory.QueryState());
-
-        Assert.Equal(MemFree, memory.QueryState());
-        AssertRejectedWithSmoke(handle, domain, BeginPermitV2(handle, domain, memory.Address));
+        using var handle = fixture.OpenDevice();
+        // Another thread (e.g. the JIT) can reserve the freed range before the driver probes it, which turns the
+        // request into a valid grant of that thread's memory. Retry with a new address when that happened.
+        for (var attempt = 1; ; attempt++) {
+            using var memory = XenIfaceTestMemoryRegion.AllocateUnmapped();
+            Assert.Equal(VIRTUAL_ALLOCATION_TYPE.MEM_FREE, memory.QueryState());
+            var rejected = BeginPermitV2(handle, domain, memory.Address);
+            if (attempt < 3 && memory.QueryState() != VIRTUAL_ALLOCATION_TYPE.MEM_FREE) {
+                rejected.Dispose();
+                continue;
+            }
+            AssertRejectedWithSmoke(handle, domain, rejected);
+            return;
+        }
     }
 
     [Fact]
@@ -57,11 +59,10 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "isolated")]
     public void G15GrantRejectsCommittedRangeAfterPageWasDecommitted() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var memory = XenIfaceTestMemoryRegion.AllocateCommitted();
         memory.DecommitPage();
-        Assert.Equal(MemReserve, memory.QueryState());
+        Assert.Equal(VIRTUAL_ALLOCATION_TYPE.MEM_RESERVE, memory.QueryState());
 
         AssertRejectedWithSmoke(handle, domain, BeginPermitV2(handle, domain, memory.Address));
     }
@@ -71,8 +72,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "isolated")]
     public void G15GrantRejectsCommittedNoAccessMemory() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var memory = XenIfaceTestMemoryRegion.AllocateCommitted();
         memory.Protect(PAGE_PROTECTION_FLAGS.PAGE_NOACCESS);
         Assert.Equal(PAGE_PROTECTION_FLAGS.PAGE_NOACCESS, memory.QueryProtection());
@@ -85,8 +85,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "isolated")]
     public void G15GrantRejectsGuardPageMemory() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var memory = XenIfaceTestMemoryRegion.AllocateCommitted();
         memory.Protect(PAGE_PROTECTION_FLAGS.PAGE_READWRITE | PAGE_PROTECTION_FLAGS.PAGE_GUARD);
         Assert.Equal(PAGE_PROTECTION_FLAGS.PAGE_READWRITE | PAGE_PROTECTION_FLAGS.PAGE_GUARD, memory.QueryProtection());
@@ -99,8 +98,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "isolated")]
     public void G15GrantRejectsRangeWithSecondPageInaccessible() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var memory = XenIfaceTestMemoryRegion.AllocateCommitted(pages: 2);
         memory.ProtectPage(1, PAGE_PROTECTION_FLAGS.PAGE_NOACCESS);
         Assert.Equal(PAGE_PROTECTION_FLAGS.PAGE_NOACCESS, memory.QueryProtection(offset: PageSize));
@@ -113,8 +111,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "local")]
     public void G15GrantFaultsInUntouchedCommittedDemandZeroMemory() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var memory = XenIfaceTestMemoryRegion.AllocateCommitted();
 
         using var grant = PermitV2(handle, domain, memory.Address);
@@ -130,8 +127,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "local")]
     public void G15ReadonlyGrantAcceptsCommittedPageReadOnlyMemory() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var memory = XenIfaceTestMemoryRegion.AllocateCommitted();
         memory.WriteByte(0, 0x5D);
         memory.Protect(PAGE_PROTECTION_FLAGS.PAGE_READONLY);
@@ -149,8 +145,7 @@ public sealed partial class GnttabIoctlTests {
     [Trait("Profile", "isolated")]
     public void G15GrantFaultsInCommittedPageTrimmedOutsideTheWorkingSet() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var memory = XenIfaceTestMemoryRegion.AllocateCommitted();
         memory.WriteByte(0, 0x73);
         if (!memory.TrimOutsideWorkingSet()) {
