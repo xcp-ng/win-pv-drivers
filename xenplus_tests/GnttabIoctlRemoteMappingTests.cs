@@ -10,10 +10,14 @@ namespace XenPlus;
 
 /// <summary>
 /// G17: the grant is revoked (or its permit request is cancelled) while dom0 still maps it read-write.
-/// Prerequisites: the dom0 partner <c>xi-gntmap.py --xenstore</c> runs against this VM with the same token as
-/// <c>XENIFACE_IOCTL_COORDINATION_NAME</c>. The guest publishes the grant references, the partner maps them and
+/// Per case, start the partner in dom0 first (it waits up to 240 s; the guest waits 60 s per partner state):
+/// <c>python3 xi-gntmap.py --domid DOMID --vm-uuid UUID --xenstore --token TOKEN</c>.
+/// Then in the guest set <c>XENIFACE_IOCTL_COORDINATION_NAME=TOKEN</c> and run
+/// <c>xenplus_tests.exe -explicit only -trait CaseId=G17-V2-USER-BUFFER</c>.
+/// The guest publishes the grant references, the partner maps them and
 /// reports <c>mapped</c>, the guest ends the grant and publishes the result, the partner stamps
-/// <c>XIUAF:&lt;token&gt;:</c> over every mapped page and reports <c>stamped</c>, and the guest observes its memory.
+/// <c>XIUAF:TOKEN:</c> over every mapped page and reports <c>stamped</c>, and the guest observes its memory.
+/// Stopping the partner early via <c>RUN_DIR/stop</c> leaves that file behind; delete it before the next run.
 /// </summary>
 public sealed partial class GnttabIoctlTests {
     const int RemotePages = 4;

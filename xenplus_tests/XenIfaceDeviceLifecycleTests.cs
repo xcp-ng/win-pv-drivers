@@ -10,7 +10,13 @@ namespace XenPlus;
 public sealed class XenIfaceDeviceLifecycleCollection {
 }
 
-// These tests disable the device until it is re-enabled or the next boot. Select them explicitly, in isolation.
+/// <summary>
+/// Disables and re-enables the XenIface device. Elevated; no other XenIface tests or handle holders that ignore
+/// query-remove. No CaseId, so run directly, one at a time:
+/// <c>xenplus_tests.exe -explicit only -class XenPlus.XenIfaceDeviceLifecycleTests</c>.
+/// Each test re-enables the device in <c>finally</c>; if the runner is killed, the device stays disabled until reboot or
+/// <c>Get-PnpDevice | ? InstanceId -like 'XENBUS\*DEV_IFACE*' | Enable-PnpDevice -Confirm:$false</c>.
+/// </summary>
 [Collection("XenIfaceDeviceLifecycle")]
 [Trait("Category", "XenIface")]
 [Trait("Category", "XenIfaceDeviceLifecycle")]

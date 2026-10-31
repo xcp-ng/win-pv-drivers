@@ -7,7 +7,7 @@ namespace XenPlus;
 /// <summary>
 /// Guest side of the XenStore protocol shared with <c>xi-gntmap.py --xenstore</c>. The guest writes
 /// <c>refs</c>, <c>pages</c> and <c>guest-state</c>; the dom0 partner writes <c>partner-state</c>.
-/// All keys live under <c>data/xeniface-test/&lt;token&gt;/</c> relative to the guest's domain home.
+/// All keys live under <c>data/xeniface-test/TOKEN/</c> relative to the guest's domain home.
 /// </summary>
 sealed class XenIfaceRemotePartner : IDisposable {
     static readonly TimeSpan StateTimeout = TimeSpan.FromSeconds(60);

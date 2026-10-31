@@ -26,12 +26,13 @@ sealed class XenIfaceIoctlCoordination : IDisposable {
         const string environmentVariable = "XENIFACE_IOCTL_COORDINATION_NAME";
         var name = Environment.GetEnvironmentVariable(environmentVariable);
         if (string.IsNullOrWhiteSpace(name)) {
-            Assert.Skip($"Set -CoordinationName or {environmentVariable}; start the external partner with the same token");
+            Assert.Skip($"Set {environmentVariable}; start the external partner with the same token");
         }
         var coordinationName = name!;
-        if (coordinationName.Length > 64 || coordinationName.Any(character =>
-                !(character is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9' or '_' or '-'))) {
-            throw new InvalidDataException($"{environmentVariable} must contain 1-64 letters, digits, underscores, or hyphens");
+        // At most 32 characters so that the G17 stamp prefix XIUAF:<token>: fits in the partner's 63-byte record.
+        if (coordinationName.Length > 32 || coordinationName.Any(character =>
+                !(character is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9' or '-'))) {
+            throw new InvalidDataException($"{environmentVariable} must contain 1-32 letters, digits, or hyphens");
         }
         return coordinationName;
     }

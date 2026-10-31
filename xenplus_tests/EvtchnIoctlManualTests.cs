@@ -4,6 +4,12 @@ using static XenPlus.XenIfaceIoctlTestSupport;
 namespace XenPlus;
 
 public sealed partial class EvtchnIoctlTests {
+    /// <summary>
+    /// Needs fewer vCPUs online than the VM maximum.
+    /// Run <c>xenplus_tests.exe -explicit only -trait CaseId=E11-CPU-HOTPLUG</c>,
+    /// wait for <c>E11 ready active=N</c>, then within 10 min add a vCPU from the host
+    /// (e.g. <c>xe vm-vcpu-hotplug uuid=UUID new-vcpus=N+1</c>). Added vCPUs stay online until restart.
+    /// </summary>
     [Fact(Explicit = true)]
     [Trait("CaseId", "E11-CPU-HOTPLUG")]
     [Trait("Profile", "manual")]

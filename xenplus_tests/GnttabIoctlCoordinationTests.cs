@@ -3,6 +3,14 @@ using static XenPlus.XenIfaceIoctlTestSupport;
 
 namespace XenPlus;
 
+/// <summary>
+/// G06: a same-ID (V1) or same-address (V2) grant in another process must not affect the owner's request.
+/// Run the OWNER and CONTENDER cases of one scenario in two elevated processes in this VM, in either order, both with
+/// <c>XENIFACE_IOCTL_COORDINATION_NAME=TOKEN</c>:
+/// <c>xenplus_tests.exe -explicit only -trait CaseId=G06-V1-SAME-ID-OWNER/CONTENDER</c>.
+/// Sequence (<c>Global\XenIfaceIoctl-TOKEN-SCENARIO-*</c> events, 10 min each): owner-ready,
+/// contender-ready, owner-revoked, contender-done. V2 needs 0x10000000 free in both processes.
+/// </summary>
 public sealed partial class GnttabIoctlTests {
     [Theory(Explicit = true)]
     [InlineData(1u)]
