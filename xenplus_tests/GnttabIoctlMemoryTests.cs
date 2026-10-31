@@ -39,9 +39,19 @@ public sealed partial class GnttabIoctlTests {
     public void G15GrantRejectsAnUnmappedCallerAddress() {
         var domain = fixture.RequireDomainId();
         using var handle = fixture.OpenDevice();
-        using var memory = XenIfaceTestMemoryRegion.AllocateUnmapped();
-        Assert.Equal(VIRTUAL_ALLOCATION_TYPE.MEM_FREE, memory.QueryState());
-        AssertRejectedWithSmoke(handle, domain, BeginPermitV2(handle, domain, memory.Address));
+        // Another thread (e.g. the JIT) can reserve the freed range before the driver probes it, which turns the
+        // request into a valid grant of that thread's memory. Retry with a new address when that happened.
+        for (var attempt = 1; ; attempt++) {
+            using var memory = XenIfaceTestMemoryRegion.AllocateUnmapped();
+            Assert.Equal(VIRTUAL_ALLOCATION_TYPE.MEM_FREE, memory.QueryState());
+            var rejected = BeginPermitV2(handle, domain, memory.Address);
+            if (attempt < 3 && memory.QueryState() != VIRTUAL_ALLOCATION_TYPE.MEM_FREE) {
+                rejected.Dispose();
+                continue;
+            }
+            AssertRejectedWithSmoke(handle, domain, rejected);
+            return;
+        }
     }
 
     [Fact]
