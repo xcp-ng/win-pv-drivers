@@ -61,7 +61,7 @@ namespace XenDriverUtils {
                     LogLevel.Info);
 
                 if (process.ExitCode != 0) {
-                    Logger.LogFormat(LogLevel.Alert, "Copy-XenVifSettings.ps1 error {0}: {1}", process.ExitCode);
+                    Logger.LogFormat(LogLevel.Alert, "Copy-XenVifSettings.ps1 error {0}", process.ExitCode);
                     throw new Exception($"Copy-XenVifSettings.ps1 error {process.ExitCode}");
                 }
             } finally {

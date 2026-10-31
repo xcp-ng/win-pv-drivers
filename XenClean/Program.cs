@@ -97,10 +97,12 @@ class Program {
                 noReboot = true;
             } else if ("-noConfirm".Equals(arg, StringComparison.OrdinalIgnoreCase)) {
                 confirm = false;
-            } else if ("-onboard".Equals(arg, StringComparison.OrdinalIgnoreCase)) {
+            } else if ("-onboard".Equals(arg, StringComparison.OrdinalIgnoreCase) &&
+                i + 1 < args.Length &&
+                !args[i + 1].StartsWith('-')) {
                 onboardFamily = args[++i];
             } else {
-                Console.WriteLine("Usage: XenClean [-dryRun] [-noReboot] [-noConfirm]");
+                Console.WriteLine("Usage: XenClean [-dryRun] [-noReboot] [-noConfirm] [-onboard <family>]");
                 return (int)exitCode;
             }
         }
@@ -178,8 +180,8 @@ class Program {
 
             if (logPath == null) {
                 Logger.Log(LogLevel.Alert, "No temporary log was created");
-            } else if (exitCode < ExitCode.ReadyForOnboard) {
-                // Don't delete the temp file when we did something meaningful.
+            } else if (exitCode == ExitCode.ReadyForOnboard || exitCode == ExitCode.OnboardDenied) {
+                // Don't delete the temp file when we did something meaningful or denied onboarding.
                 var copiedLogPath = Path.Combine(Environment.GetEnvironmentVariable("SystemDrive") + "\\", runName + ".log");
                 Logger.LogFormat(LogLevel.Interactive, "Program done, copying log to {0}", copiedLogPath);
                 try {

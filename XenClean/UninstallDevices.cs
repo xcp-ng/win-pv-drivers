@@ -18,7 +18,7 @@ namespace XenClean {
             "Xenbus",
         };
 
-        static void RemoveDevices(XenDeviceInfo xenInfo, bool dryRun) {
+        static bool RemoveDevices(XenDeviceInfo xenInfo, bool dryRun) {
             using var devInfo = PInvoke.SetupDiGetClassDevs(
                 xenInfo.ClassGuid,
                 null,
@@ -49,14 +49,20 @@ namespace XenClean {
                     }
                 }
             }
+
+            return needsReboot;
         }
 
         public static void Execute(bool dryRun) {
+            bool needsReboot = false;
+
             foreach (var driver in UninstallOrder) {
                 var xenInfo = XenDeviceInfo.KnownDevices[driver];
                 Logger.LogFormat(LogLevel.Info, "Finding driver {0}", driver);
-                RemoveDevices(xenInfo, dryRun: dryRun);
+                needsReboot |= RemoveDevices(xenInfo, dryRun: dryRun);
             }
+
+            Logger.LogFormat(LogLevel.Info, "Device removal needs reboot: {0}", needsReboot);
         }
     }
 }
