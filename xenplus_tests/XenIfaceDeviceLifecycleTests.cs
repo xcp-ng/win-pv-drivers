@@ -11,9 +11,9 @@ public sealed class XenIfaceDeviceLifecycleCollection {
 }
 
 /// <summary>
-/// Disables and re-enables the XenIface device. Elevated; no other XenIface tests or handle holders that ignore
-/// query-remove. No CaseId, so run directly, one at a time:
-/// <c>xenplus_tests.exe -explicit only -class XenPlus.XenIfaceDeviceLifecycleTests</c>.
+/// Disables and re-enables the XenIface device. Elevated; no other handle holders that ignore query-remove. The
+/// collection disables parallelization, so xUnit runs it apart from the other XenIface tests. To run it alone:
+/// <c>xenplus_tests.exe -class XenPlus.XenIfaceDeviceLifecycleTests</c>.
 /// Each test re-enables the device in <c>finally</c>; if the runner is killed, the device stays disabled until reboot or
 /// <c>Get-PnpDevice | ? InstanceId -like 'XENBUS\*DEV_IFACE*' | Enable-PnpDevice -Confirm:$false</c>.
 /// </summary>
@@ -21,7 +21,7 @@ public sealed class XenIfaceDeviceLifecycleCollection {
 [Trait("Category", "XenIface")]
 [Trait("Category", "XenIfaceDeviceLifecycle")]
 public class XenIfaceDeviceLifecycleTests(XenIfaceSourceFixture fixture) : IClassFixture<XenIfaceSourceFixture> {
-    [Fact(Explicit = true)]
+    [Fact]
     public async Task VetoedDisableRebindsSourceAndRearmsWatch() {
         var cancellationToken = TestContext.Current.CancellationToken;
         await fixture.RequireActiveDeviceAsync(cancellationToken);
@@ -74,7 +74,7 @@ public class XenIfaceDeviceLifecycleTests(XenIfaceSourceFixture fixture) : IClas
         }
     }
 
-    [Fact(Explicit = true)]
+    [Fact]
     public async Task DisableAndReenableDeviceRebindsSource() {
         var cancellationToken = TestContext.Current.CancellationToken;
         var instanceId = await fixture.RequireActiveDeviceInstanceIdAsync(cancellationToken);
@@ -93,7 +93,7 @@ public class XenIfaceDeviceLifecycleTests(XenIfaceSourceFixture fixture) : IClas
         Assert.NotNull(fixture.Source.Active);
     }
 
-    [Fact(Explicit = true)]
+    [Fact]
     public async Task WatchIsRearmedAfterDisableAndReenable() {
         var cancellationToken = TestContext.Current.CancellationToken;
         var instanceId = await fixture.RequireActiveDeviceInstanceIdAsync(cancellationToken);
@@ -122,7 +122,7 @@ public class XenIfaceDeviceLifecycleTests(XenIfaceSourceFixture fixture) : IClas
         await watchObserver.Triggered.WaitAsync(EventTimeout, cancellationToken);
     }
 
-    [Fact(Explicit = true)]
+    [Fact]
     public async Task HandleDefersExternalDeviceDisableUntilDisposed() {
         var cancellationToken = TestContext.Current.CancellationToken;
         var instanceId = await fixture.RequireActiveDeviceInstanceIdAsync(cancellationToken);
