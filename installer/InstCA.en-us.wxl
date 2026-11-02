@@ -6,6 +6,7 @@
 Disable the &quot;Manage Citrix PV drivers via Windows Update&quot; feature and uninstall all existing drivers before continuing.
 You may need to run the XenClean tool." />
   <String Id="XenCheckIncompatibleDevicesText" Value="Checking for incompatible devices" />
+  <String Id="XenRemoveUnwantedDevicesText" Value="Removing unwanted devices" />
 
   <String Id="XenWindowsNotSupportedError" Value="This version of Windows is not supported. Minimum supported version: [XenMinSupportedVersion]. Current version: [XenWindowsNotSupported]." />
   <String Id="XenCheckWindowsVersionText" Value="Checking Windows version" />
