@@ -34,11 +34,15 @@ namespace InstallerTests {
         [Fact]
         public void TestMatchIncompatibleXenbus() {
             Assert.False(XenDeviceInfo.KnownDevices["Xenbus"].MatchesId(
-                "PCI\\VEN_5853&DEV_00FF&SUBSYS_00FF5853&REV_01",
+                "PCI\\VEN_5853&DEV_C000&SUBSYS_C0005853&REV_01",
                 checkKnown: true,
                 checkIncompatible: false));
             Assert.True(XenDeviceInfo.KnownDevices["Xenbus"].MatchesId(
-                "PCI\\VEN_5853&DEV_00FF&SUBSYS_00FF5853&REV_01",
+                "PCI\\VEN_5853&DEV_C000&SUBSYS_C0005853&REV_01",
+                checkKnown: false,
+                checkIncompatible: true));
+            Assert.True(XenDeviceInfo.KnownDevices["Xenbus"].MatchesId(
+                "PCI\\VEN_5853&DEV_C200&SUBSYS_C2005853&REV_01",
                 checkKnown: false,
                 checkIncompatible: true));
         }
@@ -57,6 +61,16 @@ namespace InstallerTests {
             // marked as incompatible.
             Assert.False(XenDeviceInfo.KnownDevices["Xenbus"].MatchesId(
                 "PCI\\VEN_5853&DEV_C147",
+                checkKnown: false,
+                checkIncompatible: true));
+        }
+
+        [Fact]
+        public void TestNoMatchC201() {
+            // This is a "KDNET device", not a xen platform device or pvdevice. Therefore it must not be
+            // marked as incompatible.
+            Assert.False(XenDeviceInfo.KnownDevices["Xenbus"].MatchesId(
+                "PCI\\VEN_5853&DEV_C201",
                 checkKnown: false,
                 checkIncompatible: true));
         }
