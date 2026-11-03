@@ -18,40 +18,50 @@ public sealed partial class GnttabIoctlTests(XenIfaceIoctlFixture fixture) : ICl
         AssertSucceeded(revoke);
     }
 
-    static XenIfaceTestGrant PermitV1(
+    /// <summary>Submits a V1 (<paramref name="legacy"/>, by request ID) or V2 (by address) permit.</summary>
+    /// <param name="outputLength">Defaults to the size needed for <paramref name="pages"/> references.</param>
+    static PendingIoctl BeginPermit(
         XenIfaceIoctlHandle handle,
-        ushort domain,
-        uint requestId,
-        XENIFACE_GNTTAB_PAGE_FLAGS flags = 0,
-        uint notifyOffset = 0,
-        uint notifyPort = 0,
-        uint pages = 1) {
-        var outputLength = XenIfaceIoctlAbi.PermitOutputLength(pages);
-        var pending = Ioctl(
-            handle,
-            IOCTL_XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS,
-            new XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_IN {
-                RequestId = requestId,
-                RemoteDomain = domain,
-                NumberPages = pages,
-                Flags = flags,
-                NotifyOffset = notifyOffset,
-                NotifyPort = notifyPort
-            },
-            outputLength);
-        return XenIfaceTestGrant.CreateV1(handle, requestId, pending);
-    }
-
-    static XenIfaceTestGrant PermitV2(
-        XenIfaceIoctlHandle handle,
+        bool legacy,
         ushort domain,
         nint address,
+        uint requestId = 0,
         XENIFACE_GNTTAB_PAGE_FLAGS flags = 0,
         uint notifyOffset = 0,
         uint notifyPort = 0,
-        uint pages = 1) {
-        var pending = BeginPermitV2(handle, domain, address, flags, notifyOffset, notifyPort, pages);
-        return XenIfaceTestGrant.CreateV2(handle, pending);
+        uint pages = 1,
+        int? outputLength = null,
+        Action<nint>? writeOutput = null) {
+        var length = outputLength ?? XenIfaceIoctlAbi.PermitOutputLength(pages);
+        if (legacy) {
+            return Ioctl(
+                handle,
+                IOCTL_XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS,
+                new XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_IN {
+                    RequestId = requestId,
+                    RemoteDomain = domain,
+                    NumberPages = pages,
+                    Flags = flags,
+                    NotifyOffset = notifyOffset,
+                    NotifyPort = notifyPort
+                },
+                length,
+                writeOutput);
+        } else {
+            return Ioctl(
+                handle,
+                IOCTL_XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_V2,
+                new XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_IN_V2 {
+                    RemoteDomain = domain,
+                    Address = address,
+                    NumberPages = pages,
+                    Flags = flags,
+                    NotifyOffset = notifyOffset,
+                    NotifyPort = notifyPort
+                },
+                length,
+                writeOutput);
+        }
     }
 
     static PendingIoctl BeginPermitV2(
@@ -62,18 +72,32 @@ public sealed partial class GnttabIoctlTests(XenIfaceIoctlFixture fixture) : ICl
         uint notifyOffset = 0,
         uint notifyPort = 0,
         uint pages = 1) {
-        return Ioctl(
+        return BeginPermit(handle, false, domain, address, 0, flags, notifyOffset, notifyPort, pages);
+    }
+
+    static XenIfaceTestGrant PermitV1(
+        XenIfaceIoctlHandle handle,
+        ushort domain,
+        uint requestId,
+        XENIFACE_GNTTAB_PAGE_FLAGS flags = 0,
+        uint notifyOffset = 0,
+        uint notifyPort = 0,
+        uint pages = 1) {
+        return XenIfaceTestGrant.CreateV1(
             handle,
-            IOCTL_XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_V2,
-            new XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_IN_V2 {
-                RemoteDomain = domain,
-                Address = address,
-                NumberPages = pages,
-                Flags = flags,
-                NotifyOffset = notifyOffset,
-                NotifyPort = notifyPort,
-            },
-            XenIfaceIoctlAbi.PermitOutputLength(pages));
+            requestId,
+            BeginPermit(handle, true, domain, 0, requestId, flags, notifyOffset, notifyPort, pages));
+    }
+
+    static XenIfaceTestGrant PermitV2(
+        XenIfaceIoctlHandle handle,
+        ushort domain,
+        nint address,
+        XENIFACE_GNTTAB_PAGE_FLAGS flags = 0,
+        uint notifyOffset = 0,
+        uint notifyPort = 0,
+        uint pages = 1) {
+        return XenIfaceTestGrant.CreateV2(handle, BeginPermitV2(handle, domain, address, flags, notifyOffset, notifyPort, pages));
     }
 
     [Fact]
@@ -81,13 +105,11 @@ public sealed partial class GnttabIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Trait("Profile", "local")]
     public void G01V1PermitAndRevokeLeavesTheRequestUsable() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using (handle) {
-            var requestId = XenIfaceIoctlFixture.NewRequestId();
-            using var grant = PermitV1(handle, domain, requestId);
-            Assert.NotEqual(0, grant.Request.ReadInt32(nint.Size));
-            grant.Revoke();
-        }
+        using var handle = fixture.OpenDevice();
+        var requestId = XenIfaceIoctlFixture.NewRequestId();
+        using var grant = PermitV1(handle, domain, requestId);
+        Assert.NotEqual(0, grant.Request.ReadInt32(nint.Size));
+        grant.Revoke();
     }
 
     [Fact]
@@ -95,11 +117,9 @@ public sealed partial class GnttabIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Trait("Profile", "local")]
     public void G01V2DriverAllocatedPermitAndRevoke() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using (handle) {
-            using var grant = PermitV2(handle, domain, 0);
-            grant.Revoke();
-        }
+        using var handle = fixture.OpenDevice();
+        using var grant = PermitV2(handle, domain, 0);
+        grant.Revoke();
     }
 
     [Fact]
@@ -107,8 +127,7 @@ public sealed partial class GnttabIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Trait("Profile", "local")]
     public void G01V2CallerOwnedPageRemainsUsableAfterRevoke() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var page = XenIfaceTestMemoryRegion.AllocateCommitted();
         page.WriteByte(0, 0x41);
         using var grant = PermitV2(handle, domain, page.Address);
@@ -123,8 +142,7 @@ public sealed partial class GnttabIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Trait("Profile", "local")]
     public void G04RevokeClearsOnlyTheSelectedByteInCallerMemory() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var page = XenIfaceTestMemoryRegion.AllocateCommitted();
         page.WriteByte(PageSize - 2, 0x56);
         page.WriteByte(PageSize - 1, 0x7a);
@@ -144,23 +162,11 @@ public sealed partial class GnttabIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Trait("Profile", "local")]
     public void G05NotifyOffsetAtAndBeyondRegionSizeIsRejected() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var page = XenIfaceTestMemoryRegion.AllocateCommitted();
         var pageSize = checked((uint)PageSize);
         foreach (var offset in new uint[] { pageSize, pageSize + 1u }) {
-            using var invalid = Ioctl(
-                handle,
-                IOCTL_XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_V2,
-                new XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_IN_V2 {
-                    RemoteDomain = domain,
-                    Address = page.Address,
-                    NumberPages = 1,
-                    Flags = XENIFACE_GNTTAB_USE_NOTIFY_OFFSET,
-                    NotifyOffset = offset,
-                    NotifyPort = 0,
-                },
-                XenIfaceIoctlAbi.PermitOutputLength(1));
+            using var invalid = BeginPermitV2(handle, domain, page.Address, XENIFACE_GNTTAB_USE_NOTIFY_OFFSET, offset);
             AssertRejected(invalid);
         }
     }
@@ -170,26 +176,13 @@ public sealed partial class GnttabIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Trait("Profile", "local")]
     public void G07DuplicateV1RequestIdDoesNotReplaceTheOriginal() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using (handle) {
-            var requestId = XenIfaceIoctlFixture.NewRequestId();
-            using var original = PermitV1(handle, domain, requestId);
-            using (var duplicate = Ioctl(
-                handle,
-                IOCTL_XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS,
-                new XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_IN {
-                    RequestId = requestId,
-                    RemoteDomain = domain,
-                    NumberPages = 1,
-                    Flags = 0,
-                    NotifyOffset = 0,
-                    NotifyPort = 0
-                },
-                XenIfaceIoctlAbi.PermitOutputLength(1))) {
-                AssertRejected(duplicate);
-            }
-            original.Revoke();
+        using var handle = fixture.OpenDevice();
+        var requestId = XenIfaceIoctlFixture.NewRequestId();
+        using var original = PermitV1(handle, domain, requestId);
+        using (var duplicate = BeginPermit(handle, true, domain, 0, requestId)) {
+            AssertRejected(duplicate);
         }
+        original.Revoke();
     }
 
     [Fact]
@@ -197,22 +190,10 @@ public sealed partial class GnttabIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Trait("Profile", "local")]
     public void G08V2DuplicateCallerAddressDoesNotReplaceOriginalGrant() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var page = XenIfaceTestMemoryRegion.AllocateCommitted();
         using var original = PermitV2(handle, domain, page.Address);
-        using (var duplicate = Ioctl(
-            handle,
-            IOCTL_XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_V2,
-            new XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_IN_V2 {
-                RemoteDomain = domain,
-                Address = page.Address,
-                NumberPages = 1,
-                Flags = 0,
-                NotifyOffset = 0,
-                NotifyPort = 0
-            },
-            XenIfaceIoctlAbi.PermitOutputLength(1))) {
+        using (var duplicate = BeginPermitV2(handle, domain, page.Address)) {
             AssertRejected(duplicate);
         }
         original.Revoke();
@@ -223,15 +204,13 @@ public sealed partial class GnttabIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Trait("Profile", "local")]
     public void G09LegacyRevokeIgnoresOutputLengthAsImplemented() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using (handle) {
-            var requestId = XenIfaceIoctlFixture.NewRequestId();
-            using var grant = PermitV1(handle, domain, requestId);
-            // The current legacy revoke contract ignores OutLen; keep the buffer allocated and observe it.
-            RevokeV1(handle, requestId, sizeof(uint));
-            Assert.True(grant.Request.WaitTerminal(CompletionTimeout));
-            Assert.True(grant.Request.TerminalSuccess, $"Permit request ended with {grant.Request.TerminalError}");
-        }
+        using var handle = fixture.OpenDevice();
+        var requestId = XenIfaceIoctlFixture.NewRequestId();
+        using var grant = PermitV1(handle, domain, requestId);
+        // The current legacy revoke contract ignores OutLen; keep the buffer allocated and observe it.
+        RevokeV1(handle, requestId, sizeof(uint));
+        Assert.True(grant.Request.WaitTerminal(CompletionTimeout));
+        Assert.True(grant.Request.TerminalSuccess, $"Permit request ended with {grant.Request.TerminalError}");
     }
 
     [Fact]
@@ -239,24 +218,11 @@ public sealed partial class GnttabIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Trait("Profile", "isolated")]
     public void G11InvalidCallerAddressFailsWithoutStrandingAValidGrant() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using (handle) {
-            using (var invalid = Ioctl(
-                handle,
-                IOCTL_XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_V2,
-                new XENIFACE_GNTTAB_PERMIT_FOREIGN_ACCESS_IN_V2 {
-                    RemoteDomain = domain,
-                    Address = 1,
-                    NumberPages = 1,
-                    Flags = 0,
-                    NotifyOffset = 0,
-                    NotifyPort = 0
-                },
-                XenIfaceIoctlAbi.PermitOutputLength(1))) {
-                AssertRejected(invalid);
-            }
-            using var smoke = PermitV2(handle, domain, 0);
+        using var handle = fixture.OpenDevice();
+        using (var invalid = BeginPermitV2(handle, domain, 1)) {
+            AssertRejected(invalid);
         }
+        using var smoke = PermitV2(handle, domain, 0);
     }
 
     [Fact]
@@ -264,15 +230,13 @@ public sealed partial class GnttabIoctlTests(XenIfaceIoctlFixture fixture) : ICl
     [Trait("Profile", "isolated")]
     public void G12CancelPendingGrantCompletesAndLeavesDeviceUsable() {
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using (handle) {
-            using var pending = BeginPermitV2(handle, domain, 0);
-            AssertPending(pending);
-            Assert.NotEqual(0, pending.ReadIntPtr());
-            Assert.True(pending.CancelAndWait(CompletionTimeout), "CancelIoEx did not reach terminal completion");
-            Assert.False(pending.TerminalSuccess, "Canceled permit unexpectedly completed successfully");
-            Assert.Equal(995, pending.TerminalError); // ERROR_OPERATION_ABORTED
-            using var smoke = PermitV2(handle, domain, 0);
-        }
+        using var handle = fixture.OpenDevice();
+        using var pending = BeginPermitV2(handle, domain, 0);
+        AssertPending(pending);
+        Assert.NotEqual(0, pending.ReadIntPtr());
+        Assert.True(pending.CancelAndWait(CompletionTimeout), "CancelIoEx did not reach terminal completion");
+        Assert.False(pending.TerminalSuccess, "Canceled permit unexpectedly completed successfully");
+        Assert.Equal(995, pending.TerminalError); // ERROR_OPERATION_ABORTED
+        using var smoke = PermitV2(handle, domain, 0);
     }
 }

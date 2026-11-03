@@ -3,6 +3,14 @@ using static XenPlus.XenIfaceIoctlTestSupport;
 
 namespace XenPlus;
 
+/// <summary>
+/// G06: a same-ID (V1) or same-address (V2) grant in another process must not affect the owner's request.
+/// Run the OWNER and CONTENDER cases of one scenario in two elevated processes in this VM, in either order, both with
+/// <c>XENIFACE_IOCTL_COORDINATION_NAME=TOKEN</c>:
+/// <c>xenplus_tests.exe -explicit only -trait CaseId=G06-V1-SAME-ID-OWNER/CONTENDER</c>.
+/// Sequence (<c>Global\XenIfaceIoctl-TOKEN-SCENARIO-*</c> events, 10 min each): owner-ready,
+/// contender-ready, owner-revoked, contender-done. V2 needs 0x10000000 free in both processes.
+/// </summary>
 public sealed partial class GnttabIoctlTests {
     [Theory(Explicit = true)]
     [InlineData(1u)]
@@ -12,8 +20,7 @@ public sealed partial class GnttabIoctlTests {
     public void G06V1OwnerRetainsItsRequestWhenContenderUsesTheSameId(uint requestId) {
         using var coordination = XenIfaceIoctlCoordination.Open("g06-v1");
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var grant = PermitV1(handle, domain, requestId);
 
         coordination.SignalOwnerReady();
@@ -31,8 +38,7 @@ public sealed partial class GnttabIoctlTests {
     public void G06V1ContenderRetainsItsRequestAfterOwnerRevokesTheSameId(uint requestId) {
         using var coordination = XenIfaceIoctlCoordination.Open("g06-v1");
         var domain = fixture.RequireDomainId();
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
 
         coordination.WaitOwnerReady();
         using (var foreignRevoke = Ioctl(
@@ -61,8 +67,7 @@ public sealed partial class GnttabIoctlTests {
         using var coordination = XenIfaceIoctlCoordination.Open("g06-v2");
         var domain = fixture.RequireDomainId();
         var address = (nint)addressValue;
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
         using var page = XenIfaceTestMemoryRegion.TryCreateAt(address);
         Assert.True(page is not null, $"Could not reserve G06 V2 address 0x{addressValue:X} in the owner process");
         using var grant = PermitV2(handle, domain, page!.Address);
@@ -83,8 +88,7 @@ public sealed partial class GnttabIoctlTests {
         using var coordination = XenIfaceIoctlCoordination.Open("g06-v2");
         var domain = fixture.RequireDomainId();
         var address = (nint)addressValue;
-        var (_, handle) = fixture.OpenDevice();
-        using var handleLifetime = handle;
+        using var handle = fixture.OpenDevice();
 
         coordination.WaitOwnerReady();
         using (var foreignRevoke = Ioctl(

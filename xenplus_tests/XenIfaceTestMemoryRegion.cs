@@ -112,6 +112,14 @@ sealed class XenIfaceTestMemoryRegion : SafeHandleZeroOrMinusOneIsInvalid {
     }
 
     public PAGE_PROTECTION_FLAGS QueryProtection(int offset = 0) {
+        return Query(offset).Protect;
+    }
+
+    public VIRTUAL_ALLOCATION_TYPE QueryState(int offset = 0) {
+        return Query(offset).State;
+    }
+
+    MEMORY_BASIC_INFORMATION Query(int offset) {
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(offset, Length);
         var information = default(MEMORY_BASIC_INFORMATION);
@@ -123,7 +131,7 @@ sealed class XenIfaceTestMemoryRegion : SafeHandleZeroOrMinusOneIsInvalid {
                 throw new Win32Exception(Marshal.GetLastPInvokeError(), "VirtualQuery failed");
             }
         }
-        return information.Protect;
+        return information;
     }
 
     public unsafe byte ReadByte(int offset) {
@@ -132,21 +140,6 @@ sealed class XenIfaceTestMemoryRegion : SafeHandleZeroOrMinusOneIsInvalid {
 
     public unsafe void WriteByte(int offset, byte value) {
         Volatile.Write(ref *(byte*)(Address + offset), value);
-    }
-
-    public uint QueryState(int offset = 0) {
-        ArgumentOutOfRangeException.ThrowIfNegative(offset);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(offset, Length);
-        var information = default(MEMORY_BASIC_INFORMATION);
-        unsafe {
-            if (PInvokeT.VirtualQuery(
-                (void*)(Address + offset),
-                &information,
-                (nuint)sizeof(MEMORY_BASIC_INFORMATION)) == 0) {
-                throw new Win32Exception(Marshal.GetLastPInvokeError(), "VirtualQuery failed");
-            }
-        }
-        return unchecked((uint)information.State);
     }
 
     public unsafe bool TrimOutsideWorkingSet() {

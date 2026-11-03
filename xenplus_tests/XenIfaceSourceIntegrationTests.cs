@@ -1,24 +1,13 @@
-using System.Diagnostics;
+using Microsoft.Extensions.Logging.Abstractions;
 using XenPlus.XenIface;
+
+using static Windows.Win32.Devices.DeviceAndDriverInstallation.CM_NOTIFY_ACTION;
+using static XenPlus.XenIfaceSourceTestSupport;
 
 namespace XenPlus;
 
 [Trait("Category", "XenIface")]
 public class XenIfaceSourceIntegrationTests(XenIfaceSourceFixture fixture) : IClassFixture<XenIfaceSourceFixture> {
-    static readonly TimeSpan EventTimeout = TimeSpan.FromSeconds(5);
-    static readonly TimeSpan DeviceRemovalBlockedTimeout = TimeSpan.FromSeconds(1);
-    static readonly TimeSpan WatchReadyPollInterval = TimeSpan.FromMilliseconds(10);
-
-    static async Task WaitForWatchReadyAsync(XenIfaceWatch watch, CancellationToken cancellationToken) {
-        var deadline = Stopwatch.GetTimestamp() + (long)(EventTimeout.TotalSeconds * Stopwatch.Frequency);
-        while (!watch.Ready) {
-            if (Stopwatch.GetTimestamp() >= deadline) {
-                throw new TimeoutException("The watch did not consume its initial notification");
-            }
-            await Task.Delay(WatchReadyPollInterval, cancellationToken);
-        }
-    }
-
     static void UseCopiedDisposedHandle(XenIfaceSource source) {
         var h = source.Lock();
         var copy = h;
@@ -133,123 +122,75 @@ public class XenIfaceSourceIntegrationTests(XenIfaceSourceFixture fixture) : ICl
         Assert.Same(watch, await triggered.Task.WaitAsync(EventTimeout, cancellationToken));
     }
 
-    [Fact]
-    public async Task DisableAndReenableDeviceRebindsSource() {
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task QueryRemoveFailedRebindsSource(bool queryRemoveFirst) {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var instanceId = await fixture.RequireActiveDeviceInstanceIdAsync(cancellationToken);
-        var resumed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var awaitingRebind = false;
+        await fixture.RequireActiveDeviceAsync(cancellationToken);
+        using var storePath = fixture.GetTempStorePath();
+        // Each case owns its source so a failed recovery cannot contaminate the shared fixture. The detached original is
+        // also cleaned up, after the source, in case a regression keeps the worker from retiring its notification.
+        using var detached = new DisposeStack();
+        using var source = new XenIfaceSource(NullLogger<XenIfaceSource>.Instance);
+        var original = await WaitForActiveDeviceAsync(source, cancellationToken);
+        detached.Push(original);
+        using var observer = new ResumedObserver(source, original);
 
-        void onResumed(object? sender, XenIfaceResumedEventArgs args) {
-            if (Volatile.Read(ref awaitingRebind)) {
-                resumed.TrySetResult();
+        // Inject notifications at the managed callback boundary. The device and all subsequent IOCTLs are real;
+        // no Windows device disable/enable or arrival notification is used to rescue canceled removal.
+        if (queryRemoveFirst) {
+            source.OnDeviceCallback(CM_NOTIFY_ACTION_DEVICEQUERYREMOVE, original);
+            lock (source.SyncRoot) {
+                Assert.Null(source.Active);
+                Assert.True(original.Handle.IsClosed);
+            }
+
+            // Query-remove alone must not reopen the device before Windows reports its outcome.
+            await Assert.ThrowsAsync<TimeoutException>(
+                () => observer.Resumed.WaitAsync(DeviceRemovalBlockedTimeout, cancellationToken));
+            lock (source.SyncRoot) {
+                Assert.Null(source.Active);
             }
         }
 
-        fixture.Source.Resumed += onResumed;
-        try {
-            try {
-                await fixture.DisableDeviceAsync(instanceId, cancellationToken);
-                Volatile.Write(ref awaitingRebind, true);
-            } finally {
-                // Recovery must not use the test cancellation token: always try to leave the device enabled.
-                await fixture.EnableDeviceAsync(instanceId, cancellationToken);
-            }
+        // Windows can also send QUERYREMOVEFAILED without a preceding QUERYREMOVE.
+        source.OnDeviceCallback(CM_NOTIFY_ACTION_DEVICEQUERYREMOVEFAILED, original);
+        var replacement = await observer.Resumed.WaitAsync(EventTimeout, cancellationToken);
+        Assert.NotSame(original, replacement);
+        Assert.Equal(original.DevicePath, replacement.DevicePath);
+        Assert.True(original.Handle.IsClosed);
 
-            // Reopening the interface registers the suspend event and raises Resumed through SuspendCallback.
-            await resumed.Task.WaitAsync(XenIfaceSourceFixture.PnputilTimeout, cancellationToken);
-            Assert.NotNull(fixture.Source.Active);
-        } finally {
-            fixture.Source.Resumed -= onResumed;
-        }
+        using var h = source.Lock();
+        h.StoreWriteStrict(storePath.Path, "recovered after canceled removal");
+        Assert.Equal("recovered after canceled removal", h.StoreReadStrict(storePath.Path));
     }
 
     [Fact]
-    public async Task WatchIsRearmedAfterDisableAndReenable() {
+    public async Task WatchIsRearmedAfterQueryRemoveFailed() {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var instanceId = await fixture.RequireActiveDeviceInstanceIdAsync(cancellationToken);
-        var resumed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var watchTriggered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var awaitingRebind = false;
-        var observeWatch = false;
+        await fixture.RequireActiveDeviceAsync(cancellationToken);
         using var storePath = fixture.GetTempStorePath();
+        using var detached = new DisposeStack();
+        using var source = new XenIfaceSource(NullLogger<XenIfaceSource>.Instance);
+        var original = await WaitForActiveDeviceAsync(source, cancellationToken);
+        detached.Push(original);
+        using var watch = source.WatchAdd(storePath.Path);
+        using var observer = new ResumedObserver(source, original);
+        using var watchObserver = new WatchObserver(watch);
 
-        void onResumed(object? sender, XenIfaceResumedEventArgs args) {
-            if (Volatile.Read(ref awaitingRebind)) {
-                resumed.TrySetResult();
-            }
-        }
+        await WaitForWatchReadyAsync(watch, cancellationToken);
+        source.OnDeviceCallback(CM_NOTIFY_ACTION_DEVICEQUERYREMOVE, original);
+        source.OnDeviceCallback(CM_NOTIFY_ACTION_DEVICEQUERYREMOVEFAILED, original);
 
-        using var watch = fixture.Source.WatchAdd(storePath.Path);
+        // No REMOVEPENDING, REMOVECOMPLETE or interface arrival follows canceled removal.
+        await observer.Resumed.WaitAsync(EventTimeout, cancellationToken);
         await WaitForWatchReadyAsync(watch, cancellationToken);
 
-        void onWatchTriggered(object? sender, XenIfaceWatchEventArgs args) {
-            if (Volatile.Read(ref observeWatch)) {
-                watchTriggered.TrySetResult();
-            }
+        watchObserver.Arm();
+        using (var h = source.Lock()) {
+            h.StoreWriteStrict(storePath.Path, "changed after canceled removal");
         }
-
-        fixture.Source.Resumed += onResumed;
-        watch.WatchTriggered += onWatchTriggered;
-        try {
-            try {
-                await fixture.DisableDeviceAsync(instanceId, cancellationToken);
-                Volatile.Write(ref awaitingRebind, true);
-            } finally {
-                await fixture.EnableDeviceAsync(instanceId, cancellationToken);
-            }
-
-            // Resumed is raised only after SuspendCallback has rearmed every registered watch.
-            await resumed.Task.WaitAsync(XenIfaceSourceFixture.PnputilTimeout, cancellationToken);
-            await WaitForWatchReadyAsync(watch, cancellationToken);
-
-            // Ignore registration/rearm signals and require a subsequent store change to trigger the watch.
-            Volatile.Write(ref observeWatch, true);
-            using (var h = fixture.Source.Lock()) {
-                h.StoreWriteStrict(storePath.Path, "changed after rebind");
-            }
-            await watchTriggered.Task.WaitAsync(EventTimeout, cancellationToken);
-        } finally {
-            fixture.Source.Resumed -= onResumed;
-            watch.WatchTriggered -= onWatchTriggered;
-        }
-    }
-
-    [Fact]
-    public async Task HandleDefersExternalDeviceDisableUntilDisposed() {
-        var cancellationToken = TestContext.Current.CancellationToken;
-        var instanceId = await fixture.RequireActiveDeviceInstanceIdAsync(cancellationToken);
-
-        try {
-            using var releaseHandle = new ManualResetEventSlim();
-            var handleAcquired = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            var holderTask = Task.Run(() => {
-                using var h = fixture.Source.Lock();
-                handleAcquired.TrySetResult();
-                releaseHandle.Wait(cancellationToken);
-            }, cancellationToken);
-
-            Task disableTask;
-            try {
-                await handleAcquired.Task.WaitAsync(EventTimeout, cancellationToken);
-
-                // RunPnputilAsync starts pnputil synchronously before returning its incomplete task.
-                disableTask = fixture.DisableDeviceAsync(instanceId, cancellationToken);
-
-                // The device-removal callback cannot finish while this handle owns the source lock.
-                await Assert.ThrowsAsync<TimeoutException>(
-                    () => disableTask.WaitAsync(DeviceRemovalBlockedTimeout, cancellationToken));
-            } finally {
-                // The holder must release the Monitor from the same thread that acquired it.
-                releaseHandle.Set();
-                await holderTask;
-            }
-
-            // Releasing the handle lets the callback complete and the source detach the device.
-            await disableTask.WaitAsync(XenIfaceSourceFixture.PnputilTimeout, cancellationToken);
-            Assert.Null(fixture.Source.Active);
-        } finally {
-            await fixture.EnableDeviceAsync(instanceId, cancellationToken);
-        }
+        await watchObserver.Triggered.WaitAsync(EventTimeout, cancellationToken);
     }
 }

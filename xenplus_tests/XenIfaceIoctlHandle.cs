@@ -5,9 +5,12 @@ namespace XenPlus;
 sealed class XenIfaceIoctlHandle : IDisposable {
     readonly SafeFileHandle _handle;
 
-    XenIfaceIoctlHandle(SafeFileHandle handle) {
+    XenIfaceIoctlHandle(SafeFileHandle handle, string path) {
         _handle = handle;
+        Path = path;
     }
+
+    public string Path { get; }
 
     public SafeFileHandle SafeHandle {
         get {
@@ -16,8 +19,8 @@ sealed class XenIfaceIoctlHandle : IDisposable {
     }
 
     /// <summary>Takes ownership of the supplied safe handle.</summary>
-    public static XenIfaceIoctlHandle FromSafeHandle(SafeFileHandle handle) {
-        return new(handle);
+    public static XenIfaceIoctlHandle FromSafeHandle(SafeFileHandle handle, string path) {
+        return new(handle, path);
     }
 
     public static XenIfaceIoctlHandle Open(string devicePath) {
@@ -26,7 +29,12 @@ sealed class XenIfaceIoctlHandle : IDisposable {
             FileMode.Open,
             FileAccess.ReadWrite,
             FileShare.ReadWrite,
-            FileOptions.Asynchronous));
+            FileOptions.Asynchronous), devicePath);
+    }
+
+    /// <summary>Opens a second, independent file object on the same device.</summary>
+    public XenIfaceIoctlHandle OpenAnother() {
+        return Open(Path);
     }
 
     /// <summary>Starts one raw overlapped IOCTL request.</summary>
