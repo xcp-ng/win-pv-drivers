@@ -57,6 +57,17 @@ namespace XenInstCA {
         }
 
         [CustomAction]
+        public static ActionResult RemoveUnwantedDevices(Session session) {
+            using var logScope = new LoggerScope(new MsiSessionLogger(session));
+            try {
+                XenOnboard.RemoveUnwantedDevices();
+            } catch (Exception ex) {
+                Logger.LogFormat(LogLevel.Alert, "Cannot remove unwanted devices: {0}", ex.ToString());
+            }
+            return ActionResult.Success;
+        }
+
+        [CustomAction]
         public static ActionResult XenvifBackup(Session session) {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
             if (XenCleanup.IsSafeMode()) {

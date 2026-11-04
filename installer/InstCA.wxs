@@ -22,6 +22,16 @@
   </Fragment>
 
   <Fragment>
+    <CustomAction Id="XenRemoveUnwantedDevices" BinaryRef="xeninst.dll" DllEntry="RemoveUnwantedDevices" Execute="deferred" Impersonate="no" />
+    <InstallExecuteSequence>
+      <Custom Action="XenRemoveUnwantedDevices" After="InstallInitialize" Condition="(NOT XEN_SKIP_CA) AND (NOT REMOVE)" />
+    </InstallExecuteSequence>
+    <UI>
+      <ProgressText Action="XenRemoveUnwantedDevices" Message="!(loc.XenRemoveUnwantedDevicesText)" />
+    </UI>
+  </Fragment>
+
+  <Fragment>
     <CustomAction Id="XenCheckWindowsVersion" BinaryRef="xeninst.dll" DllEntry="CheckWindowsVersion" Execute="firstSequence" Impersonate="no" />
     <InstallUISequence>
       <Custom Action="XenCheckWindowsVersion" Before="LaunchConditions" Condition="NOT XEN_SKIP_CA" />

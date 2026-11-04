@@ -51,7 +51,7 @@ namespace XenDriverUtils {
                         "PCI\\VEN_5853&DEV_0002",
                     },
                     IncompatibleIdRegexes: new List<string>() {
-                        "^PCI\\\\VEN_5853&DEV_(?<id>[0-9A-F]{4})&SUBSYS_\\k<id>5853&REV_01"
+                        "^PCI\\\\VEN_5853&DEV_(?<id>C000|C200)&SUBSYS_\\k<id>5853&REV_01"
                     }
                 )
             },
