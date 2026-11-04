@@ -24,7 +24,7 @@ namespace XenDriverUtils {
         // Unwanted devices are ghost devices that can be removed safely.
         // The list now is limited to C000 (Citrix devices) and
         // C200 (Xcp-ng devices).
-        const string UnwantedDevicesIdRegex = "^PCI\\\\VEN_5853&DEV_C[0|2]00&";
+        const string UnwantedDevicesIdRegex = "^PCI\\\\VEN_5853&DEV_C[02]00&";
 
         static bool HasUnwantedDeviceIds(List<string> deviceIds) {
             return deviceIds.Any(x => Regex.IsMatch(x, UnwantedDevicesIdRegex, RegexOptions.IgnoreCase));
