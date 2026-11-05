@@ -39,7 +39,7 @@ jobs:
         with:
           branding-data: ${{toJson(vars)}}
       - name: Build drivers
-        run: .\build-drivers.ps1 -Configuration Release -Platform x64
+        run: .\build-drivers.ps1 -Configuration Release -Platform x64 -StrictSbom
       - name: Catalog drivers
         run: |
           Import-Module .\scripts\artifact.psm1 -Force

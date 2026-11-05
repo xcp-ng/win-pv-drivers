@@ -104,55 +104,8 @@ if ($Target -ine "Clean") {
     if ($Sbom) {
         $SbomDir = "$VersionDir\sbom"
         New-Item -Path $SbomDir -ItemType Directory -Force | Out-Null
+        # Driver package SBOMs (xen drivers, xstdvga) are produced by their own builds (New-DriverSbom.ps1).
         $SbomComponents = @(
-            [PSCustomObject]@{
-                ComponentName = "xenbus"
-                SourcePath    = "$PSScriptRoot\xenbus"
-                BinaryPath    = "$DriversDir\xenbus"
-                Version       = (Get-PackageVersion xenbus)
-            }
-            [PSCustomObject]@{
-                ComponentName = "xencons"
-                SourcePath    = "$PSScriptRoot\xencons"
-                BinaryPath    = "$DriversDir\xencons"
-                Version       = (Get-PackageVersion xencons)
-            }
-            [PSCustomObject]@{
-                ComponentName = "xenhid"
-                SourcePath    = "$PSScriptRoot\xenhid"
-                BinaryPath    = "$DriversDir\xenhid"
-                Version       = (Get-PackageVersion xenhid)
-            }
-            [PSCustomObject]@{
-                ComponentName = "xeniface"
-                SourcePath    = "$PSScriptRoot\xeniface"
-                BinaryPath    = "$DriversDir\xeniface"
-                Version       = (Get-PackageVersion xeniface)
-            }
-            [PSCustomObject]@{
-                ComponentName = "xennet"
-                SourcePath    = "$PSScriptRoot\xennet"
-                BinaryPath    = "$DriversDir\xennet"
-                Version       = (Get-PackageVersion xennet)
-            }
-            [PSCustomObject]@{
-                ComponentName = "xenvbd"
-                SourcePath    = "$PSScriptRoot\xenvbd"
-                BinaryPath    = "$DriversDir\xenvbd"
-                Version       = (Get-PackageVersion xenvbd)
-            }
-            [PSCustomObject]@{
-                ComponentName = "xenvif"
-                SourcePath    = "$PSScriptRoot\xenvif"
-                BinaryPath    = "$DriversDir\xenvif"
-                Version       = (Get-PackageVersion xenvif)
-            }
-            [PSCustomObject]@{
-                ComponentName = "xenvkbd"
-                SourcePath    = "$PSScriptRoot\xenvkbd"
-                BinaryPath    = "$DriversDir\xenvkbd"
-                Version       = (Get-PackageVersion xenvkbd)
-            }
             [PSCustomObject]@{
                 ComponentName = "XenDriverUtils"
                 SourcePath    = "$PSScriptRoot\XenDriverUtils"
@@ -176,12 +129,6 @@ if ($Target -ine "Clean") {
                 SourcePath    = "$PSScriptRoot\xenplus"
                 BinaryPath    = $XenplusDir
                 Version       = (Get-PackageVersion xenplus)
-            }
-            [PSCustomObject]@{
-                ComponentName = "xstdvga"
-                SourcePath    = "$PSScriptRoot\xstdvga\vs2022"
-                BinaryPath    = $XstdvgaDir
-                Version       = (Get-PackageVersion xstdvga)
             }
             [PSCustomObject]@{
                 ComponentName = "DriverInstallCustomAction"

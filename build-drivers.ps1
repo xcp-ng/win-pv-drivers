@@ -27,7 +27,10 @@ param (
     [Parameter()]
     [string]$CodeQLSuite = "microsoft/windows-drivers@1.10.0:windows-driver-suites/recommended.qls",
     [Parameter()]
-    [string]$CodeQLDatabaseDir = "$PSScriptRoot\codeql-db"
+    [string]$CodeQLDatabaseDir = "$PSScriptRoot\codeql-db",
+    # Fail the build if a complete SBOM cannot be generated (instead of warning).
+    [Parameter()]
+    [switch]$StrictSbom
 )
 
 . $PSScriptRoot\branding.ps1
@@ -105,6 +108,18 @@ foreach ($repo in $Drivers) {
             Set-SignerFileSignature $DriverOutput\*.sys, $DriverOutput\*.dll, `
                 $DriverOutput\*.exe, $DriverOutput\*.cat
         }
+
+        # Generated last: the SBOM hashes the package files as they will be submitted.
+        $SbomArgs = @{
+            Driver         = $repo
+            PackagePath    = $DriverOutput
+            Platform       = $Platform
+            OutFile        = "$OutputPath\$Platform\$Configuration\_manifest\$repo.spdx.json"
+            MSBuildProject = "$PSScriptRoot\$repo\$SolutionDir\$repo\$repo.vcxproj"
+            Configuration  = "$ConfigurationBase $Configuration"
+            Strict         = $StrictSbom
+        }
+        & $PSScriptRoot\scripts\New-DriverSbom.ps1 @SbomArgs
     }
     finally {
         Pop-Location

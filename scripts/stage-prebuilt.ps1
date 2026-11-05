@@ -6,10 +6,12 @@ param (
     [Parameter(Mandatory)]
     [ValidateSet("x86", "x64")]
     [string]$Platform,
+    # Driver archives, extracted in order (e.g. one per driver).
     [Parameter()]
-    [string]$Drivers = "$PSScriptRoot\..\input\drivers.zip",
+    [string[]]$Drivers = "$PSScriptRoot\..\input\drivers.zip",
+    # Signed driver archives, overlaid in order onto the extracted drivers.
     [Parameter()]
-    [string]$DriversSigned,
+    [string[]]$DriversSigned,
     [Parameter()]
     [switch]$SignDrivers,
     [Parameter()]
@@ -75,13 +77,16 @@ $XstdvgaDir = Join-Path $ConfigurationDir "xstdvga"
 $ComponentsDir = Join-Path $ConfigurationDir "components"
 
 if ($Drivers) {
-    Expand-Artifact -Archive $Drivers -Destination $DriversDir -Replace
+    Remove-Item -LiteralPath $DriversDir -Recurse -Force -ErrorAction SilentlyContinue
+    foreach ($archive in $Drivers) {
+        Expand-Artifact -Archive $archive -Destination $DriversDir
+    }
     if ($SignDrivers) {
         Set-SignerFileSignature (Get-ChildItem $DriversDir -File -Recurse -Include *.sys, *.dll, *.exe, *.cat)
     }
 }
-if ($DriversSigned) {
-    Expand-Artifact -Archive $DriversSigned -Destination $DriversDir -StripComponents 1
+foreach ($archive in $DriversSigned) {
+    Expand-Artifact -Archive $archive -Destination $DriversDir -StripComponents 1
 }
 
 if ($Xenplus) {
