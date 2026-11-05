@@ -27,7 +27,8 @@ $CabinetTemplate = @(
     ".Set Compress=on"
 )
 
-Get-ChildItem -Directory $Path | ForEach-Object {
+# _manifest holds the driver SBOMs, which are submitted separately from the driver packages.
+Get-ChildItem -Directory $Path | Where-Object Name -ne "_manifest" | ForEach-Object {
     $subdir = $_.Name
     $CabinetTemplate += @(".Set DestinationDir=$subdir")
     Get-ChildItem $_.FullName -Recurse -File -Exclude $Exclude | ForEach-Object {

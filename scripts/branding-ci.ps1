@@ -108,5 +108,6 @@ $content = @"
 `$Env:MSI_UPGRADE_CODE_X64 = '$(Out-SafeString -PatternType Guid -InputObject $Env:MSI_UPGRADE_CODE_X64)'
 
 `$Env:PRODUCT_URL = '$(Out-SafeString -PatternType Uri -InputObject $Env:PRODUCT_URL)'
+`$Env:SBOM_NAMESPACE = '$(Out-SafeString -PatternType Uri -InputObject $Env:SBOM_NAMESPACE)'
 "@
 Set-Content -Path $OutFile -Value $content -Force

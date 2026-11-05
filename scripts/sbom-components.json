@@ -1,0 +1,109 @@
+{
+    "licenseListVersion": "3.27.0",
+    "agents": {
+        "microsoft": {
+            "name": "Microsoft Corporation",
+            "url": "https://www.microsoft.com/"
+        }
+    },
+    "components": {
+        "windows": {
+            "name": "Microsoft Windows",
+            "creator": "microsoft",
+            "purpose": "operatingSystem",
+            "versionFrom": "minimumWindows",
+            "license": "LicenseRef-scancode-ms-windows-os-2018"
+        },
+        "wdk": {
+            "name": "Windows Driver Kit",
+            "creator": "microsoft",
+            "purpose": "library",
+            "versionFrom": "wdk",
+            "license": "LicenseRef-scancode-ms-windows-driver-kit"
+        },
+        "windowsSdk": {
+            "name": "Windows Software Development Kit",
+            "creator": "microsoft",
+            "purpose": "library",
+            "versionFrom": "sdk",
+            "license": "LicenseRef-scancode-ms-windows-sdk-win10-net-6"
+        },
+        "msvcRuntime": {
+            "name": "Microsoft Visual C++ static runtime",
+            "creator": "microsoft",
+            "purpose": "library",
+            "versionFrom": "msvc",
+            "license": "LicenseRef-scancode-ms-visual-cpp-2015-runtime"
+        }
+    },
+    "staticLinkage": {
+        "kernelMode": [
+            "wdk"
+        ],
+        "userMode": [
+            "windowsSdk",
+            "msvcRuntime"
+        ]
+    },
+    "drivers": {
+        "xenbus": {
+            "license": "BSD-2-Clause",
+            "minimumWindowsVersion": "10.0.14393",
+            "dependsOn": []
+        },
+        "xencons": {
+            "license": "BSD-2-Clause",
+            "minimumWindowsVersion": "10.0.14393",
+            "dependsOn": [
+                "xenbus"
+            ]
+        },
+        "xenhid": {
+            "license": "BSD-2-Clause",
+            "minimumWindowsVersion": "10.0.14393",
+            "dependsOn": [
+                "xenvkbd"
+            ]
+        },
+        "xeniface": {
+            "license": "BSD-2-Clause",
+            "minimumWindowsVersion": "10.0.14393",
+            "dependsOn": [
+                "xenbus"
+            ]
+        },
+        "xennet": {
+            "license": "BSD-2-Clause",
+            "minimumWindowsVersion": "10.0.14393",
+            "dependsOn": [
+                "xenvif"
+            ]
+        },
+        "xenvbd": {
+            "license": "BSD-2-Clause",
+            "minimumWindowsVersion": "10.0.14393",
+            "dependsOn": [
+                "xenbus"
+            ]
+        },
+        "xenvif": {
+            "license": "BSD-2-Clause",
+            "minimumWindowsVersion": "10.0.14393",
+            "dependsOn": [
+                "xenbus"
+            ]
+        },
+        "xenvkbd": {
+            "license": "BSD-2-Clause",
+            "minimumWindowsVersion": "10.0.14393",
+            "dependsOn": [
+                "xenbus"
+            ]
+        },
+        "xstdvga": {
+            "license": "BSD-2-Clause",
+            "minimumWindowsVersion": "6.2",
+            "dependsOn": []
+        }
+    }
+}

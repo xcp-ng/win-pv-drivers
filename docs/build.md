@@ -77,7 +77,13 @@ $Env:MSI_UPGRADE_CODE_X64 = '{GUIDHERE-GUID-HERE-GUID-HEREGUIDHERE}'
 $Env:SIGNER = "<signer certificate thumbprint or PFX path>"
 
 # URL to be shown in the xenplus_session About box.
+# Also the contact URL of the vendor in driver SBOMs.
 $Env:PRODUCT_URL = "<put your branding URL here>"
+
+# Root of the element identifiers (IRIs) in driver SBOMs. It must be a namespace
+# owned by the vendor; it does not need to resolve, and is unrelated to PRODUCT_URL.
+# Required by driver builds, which generate the driver SBOMs.
+$Env:SBOM_NAMESPACE = "<put your SBOM namespace URL here>"
 ```
 
 Specify `$Env:SIGNER` in `branding.ps1` to choose a specific signing certificate thumbprint or PFX path.

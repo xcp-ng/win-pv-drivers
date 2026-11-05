@@ -33,3 +33,4 @@ runs:
         MSI_UPGRADE_CODE_X86: ${{fromJSON(inputs.branding-data).MSI_UPGRADE_CODE_X86}}
         MSI_UPGRADE_CODE_X64: ${{fromJSON(inputs.branding-data).MSI_UPGRADE_CODE_X64}}
         PRODUCT_URL: ${{fromJSON(inputs.branding-data).PRODUCT_URL}}
+        SBOM_NAMESPACE: ${{fromJSON(inputs.branding-data).SBOM_NAMESPACE}}
