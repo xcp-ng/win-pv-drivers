@@ -48,8 +48,6 @@ namespace XenInstCA {
 
         [CustomAction]
         public static ActionResult DriverInstallRollback(Session session) {
-            using var logScope = new LoggerScope(new MsiSessionLogger(session));
-            DriverUninstall(session);
             return ActionResult.Success;
         }
 
@@ -75,8 +73,6 @@ namespace XenInstCA {
 
         [CustomAction]
         public static ActionResult DriverUninstallRollback(Session session) {
-            using var logScope = new LoggerScope(new MsiSessionLogger(session));
-            DriverInstall(session);
             return ActionResult.Success;
         }
 

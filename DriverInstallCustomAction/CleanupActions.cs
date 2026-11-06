@@ -43,6 +43,7 @@ namespace XenInstCA {
                 "Xencons",
                 "Xeniface",
                 "Xenbus",
+                "Xstdvga",
             }) {
                 try {
                     XenCleanup.UninstallDriver(driverName, dryRun: false);
