@@ -12,16 +12,20 @@ namespace XenInstCA {
     internal class DriverData {
         public string DriverName { get; set; }
         public string InfPath { get; set; }
+        public bool InstallDeviceTryForce { get; set; }
     }
 
     public class DriverActions {
         private static DriverData GetDriverData(Session session) {
             if (!session.CustomActionData.TryGetValue("Driver", out var driverName)) return null;
             if (!session.CustomActionData.TryGetValue("Inf", out var infPath)) return null;
-            Logger.Log($"driverName {driverName} infPath {infPath}");
+            var installDeviceTryForce = session.CustomActionData.TryGetValue("InstallDeviceTryForce", out var tryForce)
+                && tryForce == "1";
+            Logger.Log($"driverName {driverName} infPath {infPath} installDeviceTryForce {installDeviceTryForce}");
             return new DriverData() {
                 DriverName = driverName,
                 InfPath = infPath,
+                InstallDeviceTryForce = installDeviceTryForce,
             };
         }
 
@@ -42,6 +46,13 @@ namespace XenInstCA {
             DriverUtils.InstallDriver(driver.InfPath, out var needsReboot);
             if (needsReboot) {
                 XenOnboard.CaScheduleReboot();
+            }
+
+            if (driver.InstallDeviceTryForce) {
+                DriverUtils.InstallDeviceTryForce(driver.InfPath, driver.DriverName, out var forceNeedsReboot);
+                if (forceNeedsReboot) {
+                    XenOnboard.CaScheduleReboot();
+                }
             }
             return ActionResult.Success;
         }

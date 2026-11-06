@@ -391,6 +391,42 @@ namespace XenDriverUtils {
             }
         }
 
+        public static void InstallDeviceTryForce(string infPath, string driverName, out bool needsReboot) {
+            needsReboot = false;
+
+            if (!XenDeviceInfo.KnownDevices.TryGetValue(driverName, out var xenInfo)) {
+                throw new KeyNotFoundException($"Unknown driver {driverName}");
+            }
+
+            var publishedInfPath = GetPublishedInfPath(infPath);
+            var publishedInfName = Path.GetFileName(publishedInfPath);
+            Logger.Log($"Published inf is {publishedInfPath}");
+
+            using var devInfo = PInvoke.SetupDiGetClassDevs(
+                xenInfo.ClassGuid,
+                null,
+                HWND.Null,
+                SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_PRESENT |
+                (xenInfo.ClassGuid.HasValue ? 0 : SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES));
+            foreach (var devInfoData in EnumerateDevices(devInfo)) {
+                var ids = GetDeviceHardwareAndCompatibleIds(devInfo, devInfoData);
+                if (ids.All(x => !xenInfo.MatchesId(x, checkKnown: true, checkIncompatible: false))) {
+                    continue;
+                }
+
+                var instanceId = GetDeviceInstanceId(devInfo, devInfoData);
+                if (HasCompatibleDriver(devInfo, devInfoData, publishedInfPath)) {
+                    Logger.Log($"Device {instanceId} is compatible with {publishedInfName}, skipping InstallDeviceForce");
+                    continue;
+                }
+
+                var currentInfName = GetDeviceDriverInfPath(devInfo, devInfoData);
+                Logger.Log($"Force installing {publishedInfName} on {instanceId} (current inf {currentInfName})");
+                InstallDeviceForce(devInfo, devInfoData, publishedInfPath, out var thisNeedsReboot);
+                needsReboot |= thisNeedsReboot;
+            }
+        }
+
         public static void UninstallDriver(string oemInfName, bool dryRun) {
             Logger.Log($"Uninstalling {oemInfName}");
             if (!dryRun) {

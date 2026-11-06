@@ -47,12 +47,21 @@
     Execute="rollback"
     Impersonate="no" />
 
+  <?ifdef $(XenDriverInstallDeviceTryForce) ?>
+  <SetProperty
+    Id="$(XenDriver)Install"
+    Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf];InstallDeviceTryForce=1"
+    After="CostFinalize"
+    Sequence="execute"
+    Condition="($$$(XenDriver)ComponentInstalled=3)" />
+  <?else ?>
   <SetProperty
     Id="$(XenDriver)Install"
     Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]"
     After="CostFinalize"
     Sequence="execute"
     Condition="($$$(XenDriver)ComponentInstalled=3)" />
+  <?endif ?>
   <SetProperty
     Id="$(XenDriver)InstallRollback"
     Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]"

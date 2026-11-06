@@ -5,6 +5,7 @@
     <?define XenComponentInstalledGuid="{022D52D9-DF26-449B-A42C-EA110397A6D0}" ?>
     <?define XenDriverDependsOn="Xenbus" ?>
     <?define XenDriverUpgradeNeedsReboot ?>
+    <?define XenDriverInstallDeviceTryForce ?>
     <?include ../Driver.wxi ?>
 
     <ComponentGroup Id="$(XenDriver)Component" Directory="$(XenDriver)Dir" Source="!(bindpath.driver-bins)$(XenDriver)">
