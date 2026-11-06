@@ -306,6 +306,70 @@ namespace XenDriverUtils {
             return needsReboot;
         }
 
+        public static bool UninstallDriver(string driverName, bool dryRun) {
+            bool needsReboot = false;
+
+            if (!XenDeviceInfo.KnownDevices.TryGetValue(driverName, out var xenInfo)) {
+                Logger.Log($"Unknown driver {driverName}");
+                return needsReboot;
+            }
+
+            var collectedInfPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            using (var devInfo = PInvoke.SetupDiGetClassDevs(
+                xenInfo.ClassGuid,
+                null,
+                HWND.Null,
+                xenInfo.ClassGuid.HasValue ? 0 : SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES)) {
+                foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)) {
+                    List<string> hardwareIds = DriverUtils.GetDeviceHardwareAndCompatibleIds(devInfo, devInfoData);
+                    if (hardwareIds.All(x => !xenInfo.MatchesId(x, checkKnown: true, checkIncompatible: false))) {
+                        continue;
+                    }
+
+                    var instanceId = DriverUtils.GetDeviceInstanceId(devInfo, devInfoData);
+                    if (instanceId != null) {
+                        Logger.Log($"Found {driverName} device: {instanceId}");
+                    } else {
+                        Logger.Log($"Found {driverName} device");
+                    }
+
+                    var infName = DriverUtils.GetDeviceDriverInfPath(devInfo, devInfoData);
+                    Logger.Log($"Current inf path: {infName}");
+                    if (!string.IsNullOrEmpty(infName)
+                            && infName!.StartsWith("oem", StringComparison.OrdinalIgnoreCase)) {
+                        collectedInfPaths.Add(infName);
+                    }
+
+                    if (!dryRun) {
+                        try {
+                            DriverUtils.UninstallDevice(devInfo, devInfoData, out var thisNeedsReboot);
+                            needsReboot |= thisNeedsReboot;
+                        } catch (Exception ex) {
+                            Logger.LogFormat(LogLevel.Interactive, "Cannot uninstall device: {0}", ex.ToString());
+                        }
+                    }
+                }
+            }
+
+            if (collectedInfPaths.Count > 0) {
+                foreach (var oemInfName in collectedInfPaths) {
+                    try {
+                        DriverUtils.UninstallDriver(oemInfName, dryRun: dryRun);
+                    } catch (Exception ex) {
+                        Logger.LogFormat(LogLevel.Interactive, "Cannot uninstall driver {0}: {1}", oemInfName, ex.ToString());
+                    }
+                }
+            }
+            // Why uninstall everything during DriverInstall?
+            // Some older drivers (e.g. old XCP-ng drivers) don't like it when downgraded from a newer version.
+            // Remove them all just to be sure.
+            // We should arguably require running XenClean first but this covers cases where older drivers are installed
+            // after ours.
+            DriverUtils.UninstallDriverByNames(dryRun: dryRun, driverName);
+
+            return needsReboot;
+        }
+
         public static void UninstallAllDrivers(bool dryRun) {
             DriverUtils.UninstallDriverByNames(dryRun: dryRun, XenDeviceInfo.KnownDevices.Keys.ToArray());
         }
