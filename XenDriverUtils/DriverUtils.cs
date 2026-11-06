@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using Windows.Win32;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using Windows.Win32.Devices.Properties;
@@ -391,6 +393,20 @@ namespace XenDriverUtils {
             }
         }
 
+        static uint? GetMaxBusRevision(IEnumerable<string> ids) {
+            uint? maxRevision = null;
+            foreach (var id in ids) {
+                var match = Regex.Match(id, "&REV_([0-9A-F]{8})", RegexOptions.IgnoreCase);
+                if (match.Success) {
+                    var revision = uint.Parse(match.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                    if (!maxRevision.HasValue || revision > maxRevision.Value) {
+                        maxRevision = revision;
+                    }
+                }
+            }
+            return maxRevision;
+        }
+
         public static void InstallDeviceTryForce(string infPath, string driverName, out bool needsReboot) {
             needsReboot = false;
 
@@ -418,6 +434,14 @@ namespace XenDriverUtils {
                 if (HasCompatibleDriver(devInfo, devInfoData, publishedInfPath)) {
                     Logger.Log($"Device {instanceId} is compatible with {publishedInfName}, skipping InstallDeviceForce");
                     continue;
+                }
+
+                if (xenInfo.MinimumBusRevision.HasValue) {
+                    var busRevision = GetMaxBusRevision(ids);
+                    if (!busRevision.HasValue || busRevision.Value < xenInfo.MinimumBusRevision.Value) {
+                        Logger.Log($"Device {instanceId} bus revision {busRevision:X8} is below {xenInfo.MinimumBusRevision.Value:X8}, skipping InstallDeviceForce");
+                        continue;
+                    }
                 }
 
                 var currentInfName = GetDeviceDriverInfPath(devInfo, devInfoData);

@@ -9,16 +9,20 @@ namespace XenDriverUtils {
         public Guid? ClassGuid { get; }
         public IReadOnlyList<string> HardwareIds { get; }
         public IReadOnlyList<string> IncompatibleIdRegexes { get; } = new List<string>();
+        // Minimum bus revision (the REV_ in the device's IDs) that InstallDeviceTryForce requires
+        public uint? MinimumBusRevision { get; }
 
         public XenDeviceInfo(
             Guid? ClassGuid,
             IEnumerable<string?> HardwareIds,
-            IEnumerable<string>? IncompatibleIdRegexes = null) {
+            IEnumerable<string>? IncompatibleIdRegexes = null,
+            uint? MinimumBusRevision = null) {
             this.ClassGuid = ClassGuid;
             this.HardwareIds = HardwareIds.OfType<string>().ToList();
             if (IncompatibleIdRegexes is not null) {
                 this.IncompatibleIdRegexes = new List<string>(IncompatibleIdRegexes);
             }
+            this.MinimumBusRevision = MinimumBusRevision;
         }
 
         public bool MatchesId(string deviceId, bool checkKnown, bool checkIncompatible) {
@@ -132,7 +136,9 @@ namespace XenDriverUtils {
                     },
                     IncompatibleIdRegexes: new List<string>() {
                         "^XENBUS\\\\VEN_[A-Z0-9]{2}[0-9A-F]{4}&DEV_VBD",
-                    }
+                    },
+                    // needed by the xenvbd GNTTAB V4->V5 shim
+                    MinimumBusRevision: 0x09000005
                 )
             },
             {
