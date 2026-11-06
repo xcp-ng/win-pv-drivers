@@ -340,6 +340,22 @@ namespace XenDriverUtils {
             return result;
         }
 
+        static bool HasCompatibleDriver(
+            SetupDiDestroyDeviceInfoListSafeHandle devInfo,
+            SP_DEVINFO_DATA devInfoData,
+            string publishedInfPath) {
+            try {
+                return BuildSingleInfDriverList(
+                    devInfo,
+                    devInfoData,
+                    publishedInfPath,
+                    SETUP_DI_DRIVER_TYPE.SPDIT_COMPATDRIVER,
+                    0).Count > 0;
+            } finally {
+                PInvoke.SetupDiDestroyDriverInfoList(devInfo, devInfoData, SETUP_DI_DRIVER_TYPE.SPDIT_COMPATDRIVER);
+            }
+        }
+
         static void InstallDeviceForce(
             SetupDiDestroyDeviceInfoListSafeHandle devInfo,
             SP_DEVINFO_DATA devInfoData,
