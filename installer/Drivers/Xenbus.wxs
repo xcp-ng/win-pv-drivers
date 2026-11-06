@@ -75,7 +75,6 @@
       Id="XenbusServiceDelete"
       Value="Services=xenbus_monitor,xenbus,xenfilt"
       After="CostFinalize"
-      Sequence="execute"
-      Condition="NOT XEN_SKIP_CA" />
+      Sequence="execute" />
   </Fragment>
 </Wix>

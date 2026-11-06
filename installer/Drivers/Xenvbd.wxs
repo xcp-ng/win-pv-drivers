@@ -29,7 +29,6 @@
       Id="$(XenDriver)ServiceDelete"
       Value="Services=xendisk,xenvbd"
       After="CostFinalize"
-      Sequence="execute"
-      Condition="NOT XEN_SKIP_CA" />
+      Sequence="execute" />
   </Fragment>
 </Wix>

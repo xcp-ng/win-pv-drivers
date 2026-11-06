@@ -86,7 +86,7 @@
         since we suppress xenbus_monitor reboot requests during installation, manually schedule reboot for concerned drivers anyway;
         see Driver.wxi for the reboot hook
       -->
-      <ScheduleReboot After="InstallFinalize" Condition="XenNeedsReboot" />
+      <ScheduleReboot After="InstallFinalize" Condition="(NOT XEN_SKIP_CA) AND XenNeedsReboot" />
     </InstallExecuteSequence>
 
     <CustomActionRef Id="XenCheckIncompatibleDevices" />

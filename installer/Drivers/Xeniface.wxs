@@ -22,7 +22,6 @@
       Id="$(XenDriver)ServiceDelete"
       Value="Services=xenagent,xeniface"
       After="CostFinalize"
-      Sequence="execute"
-      Condition="NOT XEN_SKIP_CA" />
+      Sequence="execute" />
   </Fragment>
 </Wix>
