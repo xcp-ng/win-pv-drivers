@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Windows.Win32;
+using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using Windows.Win32.Foundation;
 
 namespace XenDriverUtils {
@@ -242,6 +243,97 @@ namespace XenDriverUtils {
                         Marshal.GetLastWin32Error());
                 }
             }
+        }
+
+        static readonly IReadOnlyList<string> DeviceUninstallOrder = new List<string>() {
+            "Xenvbd",
+            "Xennet",
+            "Xenvif",
+            "Xenhid",
+            "Xenvkbd",
+            "Xencons",
+            "Xeniface",
+            "Xendevice",
+            "Xenclass",
+            "Xenbus",
+        };
+
+        static bool UninstallDevices(XenDeviceInfo xenInfo, bool dryRun) {
+            using var devInfo = PInvoke.SetupDiGetClassDevs(
+                xenInfo.ClassGuid,
+                null,
+                HWND.Null,
+                xenInfo.ClassGuid.HasValue ? 0 : SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES);
+            bool needsReboot = false;
+
+            foreach (var devInfoData in DriverUtils.EnumerateDevices(devInfo)) {
+                List<string> compatibleIds = DriverUtils.GetDeviceHardwareAndCompatibleIds(devInfo, devInfoData);
+                if (compatibleIds.All(x => !xenInfo.MatchesId(x, checkKnown: true, checkIncompatible: true))) {
+                    continue;
+                }
+
+                var instanceId = DriverUtils.GetDeviceInstanceId(devInfo, devInfoData);
+                if (instanceId != null) {
+                    Logger.Log($"Found device: {instanceId}");
+                } else {
+                    Logger.Log($"Found device");
+                }
+
+                Logger.LogFormat(LogLevel.Interactive, "Uninstalling device {0}", instanceId ?? "");
+                if (!dryRun) {
+                    try {
+                        DriverUtils.UninstallDevice(devInfo, devInfoData, out var thisNeedsReboot);
+                        needsReboot |= thisNeedsReboot;
+                    } catch (Exception ex) {
+                        Logger.LogFormat(LogLevel.Interactive, "Cannot uninstall device: {0}", ex.ToString());
+                    }
+                }
+            }
+
+            return needsReboot;
+        }
+
+        public static bool UninstallAllDevices(bool dryRun) {
+            bool needsReboot = false;
+
+            foreach (var driver in DeviceUninstallOrder) {
+                var xenInfo = XenDeviceInfo.KnownDevices[driver];
+                Logger.LogFormat(LogLevel.Info, "Finding driver {0}", driver);
+                needsReboot |= UninstallDevices(xenInfo, dryRun: dryRun);
+            }
+
+            Logger.LogFormat(LogLevel.Info, "Device removal needs reboot: {0}", needsReboot);
+            return needsReboot;
+        }
+
+        public static void UninstallAllDrivers(bool dryRun) {
+            DriverUtils.UninstallDriverByNames(dryRun: dryRun, XenDeviceInfo.KnownDevices.Keys.ToArray());
+        }
+
+        public static bool FindAnyDrivers() {
+            return DriverUtils.FindDriverByNames(XenDeviceInfo.KnownDevices.Keys.ToArray());
+        }
+
+        public static void DeleteAllServices(bool removeNonDriverServices, bool dryRun) {
+            using var scm = PInvoke.OpenSCManager((string)null!, null, PInvoke.SC_MANAGER_ALL_ACCESS);
+            if (scm.IsInvalid) {
+                Logger.Log($"Cannot open SCM: error {Marshal.GetLastWin32Error()}");
+                return;
+            }
+            foreach (var service in DeleteableServices) {
+                if (service.Item2 || removeNonDriverServices) {
+                    DeleteService(scm, service.Item1, dryRun: dryRun);
+                }
+            }
+        }
+
+        public static void ResetRegistry(bool dryRun) {
+            ResetStartOverride(dryRun);
+
+            XenfiltClassCleanup(dryRun);
+            ResetAllUnplug(dryRun);
+
+            XenfiltReset(dryRun);
         }
 
         public static bool IsSafeMode() {
