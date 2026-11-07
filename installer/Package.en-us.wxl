@@ -26,5 +26,4 @@ You may need to run the XenClean tool." />
   <String Id="MaintenanceWelcomeDlgDescription" Overridable="yes" Value="The Setup Wizard allows you to change the way [ProductName] features are installed on your computer or to remove it from your computer. Click Next to continue or Cancel to exit the Setup Wizard.&#13;&#10;&#13;&#10;Notice: Changing, repairing or removing [ProductName] may temporarily interrupt network connectivity." />
 
   <String Id="FatalErrorDescription1" Overridable="yes" Value="[ProductName] Setup Wizard ended prematurely because of an error. To protect system operation, all Xen PV drivers have been removed. To install this program at a later time, run Setup Wizard again." />
-  <String Id="UserExitDescription1" Overridable="yes" Value="[ProductName] setup was interrupted. To protect system operation, all Xen PV drivers have been removed. To install this program at a later time, please run the installation again." />
 </WixLocalization>
