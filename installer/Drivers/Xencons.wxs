@@ -19,7 +19,6 @@
       Id="$(XenDriver)ServiceDelete"
       Value="Services=xencons_monitor,xencons"
       After="CostFinalize"
-      Sequence="execute"
-      Condition="NOT XEN_SKIP_CA" />
+      Sequence="execute" />
   </Fragment>
 </Wix>

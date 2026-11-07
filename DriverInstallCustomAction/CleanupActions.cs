@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using Windows.Win32;
 using WixToolset.Dtf.WindowsInstaller;
 using XenDriverUtils;
@@ -26,6 +27,45 @@ namespace XenInstCA {
             using var logScope = new LoggerScope(new MsiSessionLogger(session));
             XenCleanup.ResetUnplug(UnplugType.Nics, dryRun: false);
             XenCleanup.ResetStartOverride(dryRun: false);
+            return ActionResult.Success;
+        }
+
+        [CustomAction]
+        public static ActionResult XenRollbackAll(Session session) {
+            using var logScope = new LoggerScope(new MsiSessionLogger(session));
+
+            foreach (var driverName in new[] {
+                "Xenvbd",
+                "Xennet",
+                "Xenvif",
+                "Xenhid",
+                "Xenvkbd",
+                "Xencons",
+                "Xeniface",
+                "Xenbus",
+                "Xstdvga",
+            }) {
+                try {
+                    XenCleanup.UninstallDriver(driverName, dryRun: false);
+                } catch (Exception ex) {
+                    Logger.LogFormat(LogLevel.Alert, "Cannot uninstall {0}: {1}", driverName, ex.ToString());
+                }
+            }
+
+            try {
+                XenCleanup.DeleteAllServices(removeNonDriverServices: false, dryRun: false);
+            } catch (Exception ex) {
+                Logger.LogFormat(LogLevel.Alert, "Cannot delete services: {0}", ex.ToString());
+            }
+
+            DriverActions.DriverWaitInstallFinish(session);
+
+            XenCleanup.ResetStartOverride(dryRun: false);
+            XenCleanup.XenfiltClassCleanup(dryRun: false);
+            XenCleanup.ResetAllUnplug(dryRun: false);
+
+            XenOnboard.CaScheduleReboot();
+
             return ActionResult.Success;
         }
 

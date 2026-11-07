@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using Windows.Win32;
 using Windows.Win32.Devices.DeviceAndDriverInstallation;
 using Windows.Win32.Devices.Properties;
@@ -257,6 +259,195 @@ namespace XenDriverUtils {
                             throw new Win32Exception(err, $"DiInstallDriver {err}");
                     }
                 }
+            }
+        }
+
+        static string GetPublishedInfPath(string infPath) {
+            var buf = new char[(int)PInvoke.MAX_PATH];
+            unsafe {
+                fixed (char* pInfPath = infPath)
+                fixed (char* pBuf = buf) {
+                    if (!PInvoke.SetupCopyOEMInf(
+                            pInfPath,
+                            default,
+                            OEM_SOURCE_MEDIA_TYPE.SPOST_NONE,
+                            SP_COPY_STYLE.SP_COPY_NOOVERWRITE,
+                            pBuf,
+                            (uint)buf.Length,
+                            null,
+                            null)) {
+                        var err = Marshal.GetLastWin32Error();
+                        if ((WIN32_ERROR)err != WIN32_ERROR.ERROR_FILE_EXISTS) {
+                            throw new Win32Exception(err, $"SetupCopyOEMInf {err}");
+                        }
+                    }
+                }
+            }
+            return new string(buf).TrimEnd('\0');
+        }
+
+        static DevInstallParams GetDeviceInstallParams(
+            SetupDiDestroyDeviceInfoListSafeHandle devInfo,
+            SP_DEVINFO_DATA devInfoData) {
+            var installParams = new DevInstallParams {
+                cbSize = DevInstallParams.Size
+            };
+            if (!SetupDiInterop.GetDeviceInstallParams(devInfo, devInfoData, ref installParams)) {
+                var err = Marshal.GetLastWin32Error();
+                throw new Win32Exception(err, $"SetupDiGetDeviceInstallParams {err}");
+            }
+            return installParams;
+        }
+
+        static void SetDeviceInstallParams(
+            SetupDiDestroyDeviceInfoListSafeHandle devInfo,
+            SP_DEVINFO_DATA devInfoData,
+            DevInstallParams installParams) {
+            if (!SetupDiInterop.SetDeviceInstallParams(devInfo, devInfoData, ref installParams)) {
+                var err = Marshal.GetLastWin32Error();
+                throw new Win32Exception(err, $"SetupDiSetDeviceInstallParams {err}");
+            }
+        }
+
+        static List<DrvInfoData> BuildSingleInfDriverList(
+            SetupDiDestroyDeviceInfoListSafeHandle devInfo,
+            SP_DEVINFO_DATA devInfoData,
+            string publishedInfPath,
+            SETUP_DI_DRIVER_TYPE driverType,
+            SETUP_DI_DEVICE_INSTALL_FLAGS extraFlags) {
+            var installParams = GetDeviceInstallParams(devInfo, devInfoData);
+            installParams.SetDriverPath(publishedInfPath);
+            installParams.Flags |= SETUP_DI_DEVICE_INSTALL_FLAGS.DI_ENUMSINGLEINF | extraFlags;
+            SetDeviceInstallParams(devInfo, devInfoData, installParams);
+
+            if (!PInvoke.SetupDiBuildDriverInfoList(devInfo, ref devInfoData, driverType)) {
+                var err = Marshal.GetLastWin32Error();
+                throw new Win32Exception(err, $"SetupDiBuildDriverInfoList({publishedInfPath}) {err}");
+            }
+
+            var result = new List<DrvInfoData>();
+            for (uint i = 0; ; i++) {
+                var drvInfoData = new DrvInfoData {
+                    cbSize = DrvInfoData.Size
+                };
+                if (!SetupDiInterop.EnumDriverInfo(devInfo, devInfoData, driverType, i, ref drvInfoData)) {
+                    var err = Marshal.GetLastWin32Error();
+                    if ((WIN32_ERROR)err == WIN32_ERROR.ERROR_NO_MORE_ITEMS) {
+                        break;
+                    }
+                    throw new Win32Exception(err, $"SetupDiEnumDriverInfo {err}");
+                }
+                result.Add(drvInfoData);
+            }
+            return result;
+        }
+
+        static bool HasCompatibleDriver(
+            SetupDiDestroyDeviceInfoListSafeHandle devInfo,
+            SP_DEVINFO_DATA devInfoData,
+            string publishedInfPath) {
+            try {
+                return BuildSingleInfDriverList(
+                    devInfo,
+                    devInfoData,
+                    publishedInfPath,
+                    SETUP_DI_DRIVER_TYPE.SPDIT_COMPATDRIVER,
+                    0).Count > 0;
+            } finally {
+                PInvoke.SetupDiDestroyDriverInfoList(devInfo, devInfoData, SETUP_DI_DRIVER_TYPE.SPDIT_COMPATDRIVER);
+            }
+        }
+
+        static void InstallDeviceForce(
+            SetupDiDestroyDeviceInfoListSafeHandle devInfo,
+            SP_DEVINFO_DATA devInfoData,
+            string publishedInfPath,
+            out bool needsReboot) {
+            try {
+                var drivers = BuildSingleInfDriverList(
+                    devInfo,
+                    devInfoData,
+                    publishedInfPath,
+                    SETUP_DI_DRIVER_TYPE.SPDIT_CLASSDRIVER,
+                    SETUP_DI_DEVICE_INSTALL_FLAGS.DI_DONOTCALLCONFIGMG | SETUP_DI_DEVICE_INSTALL_FLAGS.DI_QUIETINSTALL);
+                if (drivers.Count != 1) {
+                    throw new InvalidOperationException(
+                        $"Expected exactly 1 driver in {publishedInfPath} for device {GetDeviceInstanceId(devInfo, devInfoData)}, found {drivers.Count}");
+                }
+                var drvInfoData = drivers[0];
+                if (!SetupDiInterop.SetSelectedDriver(devInfo, devInfoData, ref drvInfoData)) {
+                    var err = Marshal.GetLastWin32Error();
+                    throw new Win32Exception(err, $"SetupDiSetSelectedDriver {err}");
+                }
+
+                if (!PInvoke.SetupDiCallClassInstaller(DI_FUNCTION.DIF_INSTALLDEVICE, devInfo, devInfoData)) {
+                    var err = Marshal.GetLastWin32Error();
+                    throw new Win32Exception(err, $"SetupDiCallClassInstaller(DIF_INSTALLDEVICE) {err}");
+                }
+
+                // DI_DONOTCALLCONFIGMG means the device isn't restarted, so SetupAPI never sets DI_NEEDREBOOT.
+                // The new driver only loads after a reboot.
+                needsReboot = true;
+            } finally {
+                PInvoke.SetupDiDestroyDriverInfoList(devInfo, devInfoData, SETUP_DI_DRIVER_TYPE.SPDIT_CLASSDRIVER);
+            }
+        }
+
+        static uint? GetMaxBusRevision(IEnumerable<string> ids) {
+            uint? maxRevision = null;
+            foreach (var id in ids) {
+                var match = Regex.Match(id, "&REV_([0-9A-F]{8})", RegexOptions.IgnoreCase);
+                if (match.Success) {
+                    var revision = uint.Parse(match.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                    if (!maxRevision.HasValue || revision > maxRevision.Value) {
+                        maxRevision = revision;
+                    }
+                }
+            }
+            return maxRevision;
+        }
+
+        public static void InstallDeviceTryForce(string infPath, string driverName, out bool needsReboot) {
+            needsReboot = false;
+
+            if (!XenDeviceInfo.KnownDevices.TryGetValue(driverName, out var xenInfo)) {
+                throw new KeyNotFoundException($"Unknown driver {driverName}");
+            }
+
+            var publishedInfPath = GetPublishedInfPath(infPath);
+            var publishedInfName = Path.GetFileName(publishedInfPath);
+            Logger.Log($"Published inf is {publishedInfPath}");
+
+            using var devInfo = PInvoke.SetupDiGetClassDevs(
+                xenInfo.ClassGuid,
+                null,
+                HWND.Null,
+                SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_PRESENT |
+                (xenInfo.ClassGuid.HasValue ? 0 : SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES));
+            foreach (var devInfoData in EnumerateDevices(devInfo)) {
+                var ids = GetDeviceHardwareAndCompatibleIds(devInfo, devInfoData);
+                if (ids.All(x => !xenInfo.MatchesId(x, checkKnown: true, checkIncompatible: false))) {
+                    continue;
+                }
+
+                var instanceId = GetDeviceInstanceId(devInfo, devInfoData);
+                if (HasCompatibleDriver(devInfo, devInfoData, publishedInfPath)) {
+                    Logger.Log($"Device {instanceId} is compatible with {publishedInfName}, skipping InstallDeviceForce");
+                    continue;
+                }
+
+                if (xenInfo.MinimumBusRevision.HasValue) {
+                    var busRevision = GetMaxBusRevision(ids);
+                    if (!busRevision.HasValue || busRevision.Value < xenInfo.MinimumBusRevision.Value) {
+                        Logger.Log($"Device {instanceId} bus revision {busRevision:X8} is below {xenInfo.MinimumBusRevision.Value:X8}, skipping InstallDeviceForce");
+                        continue;
+                    }
+                }
+
+                var currentInfName = GetDeviceDriverInfPath(devInfo, devInfoData);
+                Logger.Log($"Force installing {publishedInfName} on {instanceId} (current inf {currentInfName})");
+                InstallDeviceForce(devInfo, devInfoData, publishedInfPath, out var thisNeedsReboot);
+                needsReboot |= thisNeedsReboot;
             }
         }
 

@@ -71,8 +71,7 @@
       Id="ConfigureXenplusService"
       Value="Service=$(ServiceName)"
       After="CostFinalize"
-      Sequence="execute"
-      Condition="NOT XEN_SKIP_CA" />
+      Sequence="execute" />
 
     <CustomAction
       Id="ConfigureXenplusService"

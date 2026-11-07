@@ -24,8 +24,15 @@
     <!-- remove remnant Xenfilt config from Citrix/WU drivers -->
     <CustomAction Id="XenfiltReset" BinaryRef="xeninst.dll" DllEntry="XenfiltReset" Execute="deferred" Impersonate="no" />
 
+    <CustomAction Id="XenRollbackAll" BinaryRef="xeninst.dll" DllEntry="XenRollbackAll" Execute="rollback" Impersonate="no" />
+
     <!-- manually lay out Xenbus so that it goes before/after all other drivers during install/uninstall -->
     <InstallExecuteSequence>
+      <!-- scheduled before all driver uninstalls/installs so that it runs after all of their rollbacks -->
+      <Custom
+        Action="XenRollbackAll"
+        Before="DeleteServices"
+        Condition="(NOT XEN_SKIP_CA) AND XenDriverNeedsRollback" />
       <!-- only do XenfiltReset on new installs -->
       <Custom
         Action="XenfiltReset"
@@ -68,7 +75,6 @@
       Id="XenbusServiceDelete"
       Value="Services=xenbus_monitor,xenbus,xenfilt"
       After="CostFinalize"
-      Sequence="execute"
-      Condition="NOT XEN_SKIP_CA" />
+      Sequence="execute" />
   </Fragment>
 </Wix>

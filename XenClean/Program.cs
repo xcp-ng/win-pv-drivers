@@ -23,7 +23,7 @@ class Program {
         }
 
         UninstallProducts.FindRelatedProducts(onboardFamily, out var foundCompatible, out var foundIncompatible);
-        var foundDrivers = UninstallDrivers.FindDrivers();
+        var foundDrivers = XenCleanup.FindAnyDrivers();
         var foundXenbus = XenOnboard.HasIncompatibleXenbus();
 
         Logger.LogFormat(
@@ -72,10 +72,10 @@ class Program {
             UninstallProducts.Execute(products, dryRun);
         }
 
-        UninstallDevices.Execute(dryRun);
-        UninstallDrivers.Execute(dryRun);
-        UninstallServices.Execute(!XenCleanup.IsSafeMode(), dryRun);
-        UninstallRegistry.Execute(dryRun);
+        XenCleanup.UninstallAllDevices(dryRun);
+        XenCleanup.UninstallAllDrivers(dryRun);
+        XenCleanup.DeleteAllServices(!XenCleanup.IsSafeMode(), dryRun);
+        XenCleanup.ResetRegistry(dryRun);
 
         return ExitCode.CleaningSucceeded;
     }

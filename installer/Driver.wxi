@@ -47,30 +47,39 @@
     Execute="rollback"
     Impersonate="no" />
 
+  <?ifdef $(XenDriverInstallDeviceTryForce) ?>
+  <SetProperty
+    Id="$(XenDriver)Install"
+    Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf];InstallDeviceTryForce=1"
+    After="CostFinalize"
+    Sequence="execute"
+    Condition="($$$(XenDriver)ComponentInstalled=3)" />
+  <?else ?>
   <SetProperty
     Id="$(XenDriver)Install"
     Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]"
     After="CostFinalize"
     Sequence="execute"
-    Condition="(NOT XEN_SKIP_CA) AND ($$$(XenDriver)ComponentInstalled=3)" />
+    Condition="($$$(XenDriver)ComponentInstalled=3)" />
+  <?endif ?>
   <SetProperty
     Id="$(XenDriver)InstallRollback"
     Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]"
     After="CostFinalize"
     Sequence="execute"
-    Condition="(NOT XEN_SKIP_CA) AND ($$$(XenDriver)ComponentInstalled=3)" />
+    Condition="($$$(XenDriver)ComponentInstalled=3)" />
   <SetProperty
     Id="$(XenDriver)Uninstall"
     Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]"
     After="CostFinalize"
     Sequence="execute"
-    Condition="(NOT XEN_SKIP_CA) AND ($$$(XenDriver)ComponentInstalled=2)" />
+    Condition="($$$(XenDriver)ComponentInstalled=2)" />
   <SetProperty
     Id="$(XenDriver)UninstallRollback"
     Value="Driver=$(XenDriver);Inf=[#$(XenDriver).inf]"
     After="CostFinalize"
     Sequence="execute"
-    Condition="(NOT XEN_SKIP_CA) AND ($$$(XenDriver)ComponentInstalled=2)" />
+    Condition="($$$(XenDriver)ComponentInstalled=2)" />
 
   <!-- we can use the standard DeleteServices action, but we use our CA instead since we want to reuse the action in XenClean -->
   <CustomAction
@@ -138,6 +147,14 @@
 
   <?endif ?>
 
+  <SetProperty
+    Id="XenDriverNeedsRollback"
+    Action="$(XenDriver)NeedsRollback"
+    Value="1"
+    After="CostFinalize"
+    Sequence="execute"
+    Condition="(($$$(XenDriver)ComponentInstalled=2) OR ($$$(XenDriver)ComponentInstalled=3))" />
+
   <?ifdef $(XenDriverUpgradeNeedsReboot) ?>
   <SetProperty
     Id="XenNeedsReboot"
@@ -145,6 +162,6 @@
     Value="1"
     Before="InstallFinalize"
     Sequence="execute"
-    Condition="(NOT XEN_SKIP_CA) AND (($$$(XenDriver)ComponentInstalled=2) OR ($$$(XenDriver)ComponentInstalled=3))" />
+    Condition="(($$$(XenDriver)ComponentInstalled=2) OR ($$$(XenDriver)ComponentInstalled=3))" />
   <?endif ?>
 </Include>

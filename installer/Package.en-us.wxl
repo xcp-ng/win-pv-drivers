@@ -20,4 +20,11 @@ You may need to run the XenClean tool." />
   <String Id="DowngradeError" Value="A newer version of [ProductName] is already installed." />
   <String Id="UnsupportedUpgradeError" Value="Cannot upgrade from your current version of [ProductName]. Try upgrading to an older version first." />
   <String Id="Unpatched350UpgradeError" Value="Upgrade from 9.2.350 is blocked. Apply the 9.2.351 compatibility update before installing this release." />
+
+  <String Id="WelcomeDlgDescription" Overridable="yes" Value="The Setup Wizard will install [ProductName] on your computer. Click Next to continue or Cancel to exit the Setup Wizard.&#13;&#10;&#13;&#10;Notice: Installing [ProductName] may temporarily interrupt network connectivity." />
+  <String Id="WelcomeUpdateDlgDescriptionUpdate" Overridable="yes" Value="The Setup Wizard will update [ProductName] on your computer. Click Next to continue or Cancel to exit the Setup Wizard.&#13;&#10;&#13;&#10;Notice: Updating [ProductName] may temporarily interrupt network connectivity." />
+  <String Id="MaintenanceWelcomeDlgDescription" Overridable="yes" Value="The Setup Wizard allows you to change the way [ProductName] features are installed on your computer or to remove it from your computer. Click Next to continue or Cancel to exit the Setup Wizard.&#13;&#10;&#13;&#10;Notice: Changing, repairing or removing [ProductName] may temporarily interrupt network connectivity." />
+
+  <String Id="FatalErrorDescription1" Overridable="yes" Value="[ProductName] Setup Wizard ended prematurely because of an error. To protect system operation, all Xen PV drivers have been removed. To install this program at a later time, run Setup Wizard again." />
+  <String Id="UserExitDescription1" Overridable="yes" Value="[ProductName] setup was interrupted. To protect system operation, all Xen PV drivers have been removed. To install this program at a later time, please run the installation again." />
 </WixLocalization>
