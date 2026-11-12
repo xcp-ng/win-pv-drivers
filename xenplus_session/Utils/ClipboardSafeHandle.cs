@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.Memory;
@@ -43,6 +44,32 @@ sealed class ClipboardSafeHandle(HGLOBAL h, CLIPBOARD_FORMAT format, bool ownsHa
                 }
 
                 return new string(chars);
+            } finally {
+                PInvoke.GlobalUnlock(this);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Reads the first 4 bytes of the clipboard data as a DWORD (e.g. CanIncludeInClipboardHistory).
+    /// </summary>
+    public bool TryGetUInt32(out uint value) {
+        value = 0;
+        if (IsInvalid) {
+            return false;
+        }
+        using var shref = this.Borrow();
+        unsafe {
+            var locked = PInvoke.GlobalLock(this);
+            if (locked == null) {
+                return false;
+            }
+            try {
+                if (PInvoke.GlobalSize(this) < sizeof(uint)) {
+                    return false;
+                }
+                value = Unsafe.Read<uint>(locked);
+                return true;
             } finally {
                 PInvoke.GlobalUnlock(this);
             }
