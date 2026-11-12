@@ -13,10 +13,10 @@ namespace XenDriverUtils {
             using var identity = WindowsIdentity.GetCurrent();
             var isAdmin = new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
             if (isAdmin) {
-                return $"O:BAG:BAD:(A;;GA;;;BA)(A;;GA;;;SY)";
+                return $"O:BAG:BAD:P(A;OICI;GA;;;BA)(A;OICI;GA;;;SY)";
             } else {
                 var user = identity.User?.ToString() ?? throw new IOException("Cannot determine current user");
-                return $"O:{user}G:{user}D:(A;;GA;;;{user})(A;;GA;;;BA)(A;;GA;;;SY)";
+                return $"O:{user}G:{user}D:P(A;OICI;GA;;;{user})(A;OICI;GA;;;BA)(A;OICI;GA;;;SY)";
             }
         }
 
