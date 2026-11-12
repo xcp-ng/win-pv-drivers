@@ -4,6 +4,10 @@ using XenPlus.Features;
 using XenPlus.VifConfigure;
 using XenPlus.XenIface;
 
+#if !DEBUG
+using Microsoft.Extensions.Hosting.WindowsServices;
+#endif
+
 namespace XenPlus;
 
 static class ServiceKeys {
@@ -29,10 +33,11 @@ class Program {
         var mitigations = new Mitigations(earlyLogger);
         mitigations.EnableAll();
 
-        using var single = new SingleInstance("{28A507F2-2098-43BF-B34C-EB2780C210D4}");
-        if (!single.IsTaken) {
+#if !DEBUG
+        if (!WindowsServiceHelpers.IsWindowsService()) {
             return;
         }
+#endif
 
         var configDir = GetConfigDir();
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings() {
