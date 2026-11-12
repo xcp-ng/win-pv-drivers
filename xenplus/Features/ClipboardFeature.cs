@@ -400,6 +400,10 @@ sealed class ClipboardFeature(
             }
             try {
                 await pipe.WaitForConnectionAsync(ct);
+            } catch (IOException ex) when (!ct.IsCancellationRequested) {
+                pipe.Dispose();
+                _logger.LogDebug(ex, "Client connection failed");
+                continue;
             } catch {
                 pipe.Dispose();
                 throw;
