@@ -9,14 +9,19 @@ using Windows.Win32.Security;
 
 namespace XenDriverUtils {
     public static class PathUtils {
-        static string GetSecureSD() {
+        /// <summary>
+        /// Protected SDDL granting full access only to Administrators, SYSTEM and (when not elevated) the current user.
+        /// </summary>
+        /// <param name="container">Make the ACEs inheritable by children (for directories).</param>
+        public static string GetSecureSddl(bool container) {
+            var flags = container ? "OICI" : "";
             using var identity = WindowsIdentity.GetCurrent();
             var isAdmin = new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
             if (isAdmin) {
-                return $"O:BAG:BAD:P(A;OICI;GA;;;BA)(A;OICI;GA;;;SY)";
+                return $"O:BAG:BAD:P(A;{flags};GA;;;BA)(A;{flags};GA;;;SY)";
             } else {
                 var user = identity.User?.ToString() ?? throw new IOException("Cannot determine current user");
-                return $"O:{user}G:{user}D:P(A;OICI;GA;;;{user})(A;OICI;GA;;;BA)(A;OICI;GA;;;SY)";
+                return $"O:{user}G:{user}D:P(A;{flags};GA;;;{user})(A;{flags};GA;;;BA)(A;{flags};GA;;;SY)";
             }
         }
 
@@ -24,7 +29,7 @@ namespace XenDriverUtils {
             var tempRoot = Path.GetTempPath();
 
             if (!PInvoke.ConvertStringSecurityDescriptorToSecurityDescriptor(
-                GetSecureSD(),
+                GetSecureSddl(container: true),
                 PInvoke.SDDL_REVISION_1,
                 out var sd)) {
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
