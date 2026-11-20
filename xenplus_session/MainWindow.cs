@@ -101,6 +101,10 @@ sealed class MainWindow() : Window(typeof(MainWindow).FullName!, "xenplus_sessio
 
             string s;
             using (var openClipboard = new OpenClipboardSafeHandle(hwnd)) {
+                if (openClipboard.IsExcludedFromMonitoring()) {
+                    Debug.WriteLine("clipboard content opted out of monitoring, not reporting");
+                    return;
+                }
                 using var cb = ClipboardSafeHandle.GetClipboard(CLIPBOARD_FORMAT.CF_UNICODETEXT);
                 s = cb.GetString().ReplaceLineEndings("\n");
                 Debug.WriteLine("got clipboard of length {0}", s.Length);
