@@ -148,45 +148,45 @@ sealed class ClipboardFeature(
     }
 
     async Task ServeClientLoopAsync(uint sid, ClipboardClient client, CancellationToken ct) {
-        try {
-            while (!ct.IsCancellationRequested) {
-                var lengthBytes = new byte[sizeof(int)];
-                await client.Stream.ReadExactlyAsync(lengthBytes, ct);
-                var length = BitConverter.ToInt32(lengthBytes);
-                if (length <= 0 || length > MaxIncomingMessageSize) {
-                    throw new InvalidDataException("client went over the line");
+        while (!ct.IsCancellationRequested) {
+            var lengthBytes = new byte[sizeof(int)];
+            await client.Stream.ReadExactlyAsync(lengthBytes, ct);
+            var length = BitConverter.ToInt32(lengthBytes);
+            if (length <= 0 || length > MaxIncomingMessageSize) {
+                throw new InvalidDataException("client went over the line");
+            }
+
+            ClientMessage? msg;
+            using (var frame = ArrayPoolLease<byte>.RentExact(length, clearArray: true)) {
+                await client.Stream.ReadExactlyAsync(frame.Memory, ct);
+                msg = JsonSerializer.Deserialize(frame.Span, ClipboardMessageContext.Default.ClientMessage);
+            }
+
+            if (msg is ReportClipboardMessage reportClipboard) {
+                var allowTest = _options.Value.UnsafeAllowAnySessionForTest;
+
+                DebugLogTrace(
+                    "client {0} got ReportClipboardMessage length {1}",
+                    sid,
+                    reportClipboard?.Text?.Length ?? -1);
+
+                // avoid taking _reportClipboardLock if client is not accepted
+                var consoleSid = PInvoke.WTSGetActiveConsoleSessionId();
+                if ((consoleSid == InvalidSessionId || sid != consoleSid) && !allowTest) {
+                    continue;
                 }
 
-                ClientMessage? msg;
-                using (var frame = ArrayPoolLease<byte>.RentExact(length, clearArray: true)) {
-                    await client.Stream.ReadExactlyAsync(frame.Memory, ct);
-                    msg = JsonSerializer.Deserialize(frame.Span, ClipboardMessageContext.Default.ClientMessage);
+                using var reportScope = await _reportClipboardLock.EnterScopeAsync(ct);
+
+                // _reportClipboardLock.EnterScopeAsync could have waited
+                consoleSid = PInvoke.WTSGetActiveConsoleSessionId();
+                if ((consoleSid == InvalidSessionId || sid != consoleSid) && !allowTest) {
+                    continue;
                 }
 
-                if (msg is ReportClipboardMessage reportClipboard) {
-                    var allowTest = _options.Value.UnsafeAllowAnySessionForTest;
+                DebugLogTrace("ReportClipboard length {}", reportClipboard?.Text?.Length ?? 0);
 
-                    DebugLogTrace(
-                        "client {0} got ReportClipboardMessage length {1}",
-                        sid,
-                        reportClipboard?.Text?.Length ?? -1);
-
-                    // avoid taking _reportClipboardLock if client is not accepted
-                    var consoleSid = PInvoke.WTSGetActiveConsoleSessionId();
-                    if ((consoleSid == InvalidSessionId || sid != consoleSid) && !allowTest) {
-                        continue;
-                    }
-
-                    using var reportScope = await _reportClipboardLock.EnterScopeAsync(ct);
-
-                    // _reportClipboardLock.EnterScopeAsync could have waited
-                    consoleSid = PInvoke.WTSGetActiveConsoleSessionId();
-                    if ((consoleSid == InvalidSessionId || sid != consoleSid) && !allowTest) {
-                        continue;
-                    }
-
-                    DebugLogTrace("ReportClipboard length {}", reportClipboard?.Text?.Length ?? 0);
-
+                try {
                     foreach (var chunk in (reportClipboard?.Text ?? "").Chunk(ClientChunkSize).Append([])) {
                         DebugLogTrace("writing chunk of length {}", chunk.Length);
 
@@ -195,17 +195,18 @@ sealed class ClipboardFeature(
 
                         await WriteChunk(chunk, timeout.Token);
                     }
+                } catch {
+                    // Reset a partially written chunk train to the best of our ability. Only the client that owns
+                    // _reportClipboardLock and started this train may do this: any other client resetting the node
+                    // would fake the toolstack's acknowledgement for the console user's train.
+                    try {
+                        using var h = _xi.Lock();
+                        h.StoreRemove(ReportClipboardPath);
+                    } catch {
+                    }
+                    throw;
                 }
             }
-        } catch {
-            // attempt to reset the client report_clipboard to the best of our ability
-            // don't mess with it too much as worst case, we can always retry later
-            try {
-                using var h = _xi.Lock();
-                h.StoreRemove(ReportClipboardPath);
-            } catch {
-            }
-            throw;
         }
     }
 
@@ -400,6 +401,10 @@ sealed class ClipboardFeature(
             }
             try {
                 await pipe.WaitForConnectionAsync(ct);
+            } catch (IOException ex) when (!ct.IsCancellationRequested) {
+                pipe.Dispose();
+                _logger.LogDebug(ex, "Client connection failed");
+                continue;
             } catch {
                 pipe.Dispose();
                 throw;

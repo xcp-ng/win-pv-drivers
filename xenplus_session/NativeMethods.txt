@@ -34,7 +34,9 @@ GlobalAlloc
 GlobalLock
 GlobalSize
 GlobalUnlock
+IsClipboardFormatAvailable
 OpenClipboard
+RegisterClipboardFormat
 SetClipboardData
 
 _LI_METRIC

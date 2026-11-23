@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using System.Security.AccessControl;
 using XenClean;
 using XenDriverUtils;
 
@@ -185,7 +186,18 @@ class Program {
                 var copiedLogPath = Path.Combine(Environment.GetEnvironmentVariable("SystemDrive") + "\\", runName + ".log");
                 Logger.LogFormat(LogLevel.Interactive, "Program done, copying log to {0}", copiedLogPath);
                 try {
-                    File.Copy(logPath, copiedLogPath);
+                    // C:\ grants Authenticated Users Modify on new files; create the copy with a protected ACL instead.
+                    var security = new FileSecurity();
+                    security.SetSecurityDescriptorSddlForm(PathUtils.GetSecureSddl(container: false));
+                    using var source = new FileStream(logPath, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete);
+                    using var dest = new FileInfo(copiedLogPath).Create(
+                        FileMode.CreateNew,
+                        FileSystemRights.Write,
+                        FileShare.Delete,
+                        4096,
+                        FileOptions.None,
+                        security);
+                    source.CopyTo(dest);
                 } catch (Exception ex) {
                     Logger.LogFormat(LogLevel.Alert, "Cannot copy log ({0} {1}); find the full log at {2}", ex.HResult, ex.Message, logPath);
                 }
